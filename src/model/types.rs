@@ -1,0 +1,43 @@
+use serde::{Deserialize, Deserializer};
+use std::str::FromStr;
+
+
+#[derive(Debug)]
+pub(crate) enum Size {
+    Points(f32),
+    Percent(f32),
+    Auto,
+}
+
+impl<'de> Deserialize<'de> for Size {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>,
+    {
+        if let Ok(value) = f32::deserialize(deserializer) {
+            Ok(Size::Points(value))
+        } else {
+            todo!()
+        }
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct Color(svgtypes::Color);
+
+impl<'de> Deserialize<'de> for Color {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+        let color = svgtypes::Color::from_str(&value).map_err(|_| {
+            serde::de::Error::custom("Invalid color")
+        })?;
+        Ok(Color(color))
+    }
+}
+
+impl From<&Color> for svgtypes::Color {
+    fn from(value: &Color) -> Self {
+        value.0
+    }
+}
