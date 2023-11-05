@@ -1,6 +1,3 @@
-import os
-
-
 def test_render_outputs(tmp_path, deck):
     out_svg = tmp_path / "svgs"
     out_png = tmp_path / "pngs"
@@ -9,7 +6,9 @@ def test_render_outputs(tmp_path, deck):
     slide = deck.new_slide()
     slide.box(width=400, height=200, bg_color="blue")
     slide.box(width=200, height=400, bg_color="red")
-    deck.new_slide(bg_color="green")
+
+    slide = deck.new_slide(bg_color="green")
+    slide.box(width="auto", height="auto", bg_color="black")
     deck.render(output_pdf=out_pdf, output_svg=out_svg, output_png=out_png, debug=True)
 
     with open(out_svg / "0-1.svg") as f:

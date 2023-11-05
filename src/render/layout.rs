@@ -12,7 +12,7 @@ impl From<&Size> for tf::Dimension {
     fn from(value: &Size) -> Self {
         match value {
             Size::Points(v) => tf::Dimension::Points(*v),
-            Size::Percent(v) => tf::Dimension::Percent(*v),
+            Size::Percent(v) => tf::Dimension::Percent(*v / 100.0),
             Size::Auto => tf::Dimension::Auto,
         }
     }

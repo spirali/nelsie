@@ -1,2 +1,2 @@
-def to_step_value(obj):
-    return {"const": obj}
+def to_step_value(obj, parser=None):
+    return {"const": parser(obj)}
