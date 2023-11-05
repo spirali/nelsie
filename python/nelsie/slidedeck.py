@@ -5,7 +5,7 @@ from .render import render_slides
 
 
 class Slide(BoxBuilder):
-    def __init__(self, width: float, height: float, bg_color="white"):
+    def __init__(self, width: float, height: float, bg_color: str):
         self.width = width
         self.height = height
         self.root_box = Box(self, self.width, self.height, bg_color=bg_color)
@@ -25,15 +25,32 @@ class Slide(BoxBuilder):
 
 
 class SlideDeck:
-    def __init__(self, *, nelsie_bin: str, width=1024, height=768):
+    def __init__(
+        self,
+        *,
+        nelsie_bin: str,
+        width: float = 1024,
+        height: float = 768,
+        bg_color: str = "white"
+    ):
         self.nelsie_bin = nelsie_bin
         self.width = width
         self.height = height
+        self.bg_color = bg_color
 
         self.slides: list[Slide] = []
 
-    def new_slide(self, width: Optional[float] = None, height: Optional[float] = None):
-        slide = Slide(width=width or self.width, height=height or self.height)
+    def new_slide(
+        self,
+        width: Optional[float] = None,
+        height: Optional[float] = None,
+        bg_color: Optional[str] = None,
+    ):
+        slide = Slide(
+            width=width or self.width,
+            height=height or self.height,
+            bg_color=bg_color or self.bg_color,
+        )
         self.slides.append(slide)
         return slide
 

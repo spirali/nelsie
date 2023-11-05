@@ -1,6 +1,6 @@
+use clap::Parser;
+use nelsie::{render_slide_deck, OutputConfig, Result};
 use std::path::PathBuf;
-use nelsie::{Result, render_slide_deck, OutputConfig};
-use clap::{Parser};
 
 #[derive(Parser)]
 struct Cli {
@@ -26,7 +26,6 @@ fn main() -> Result<()> {
     } else {
         log::LevelFilter::Info
     });
-
 
     let input = std::io::read_to_string(std::io::stdin())?;
     let output_cfg = OutputConfig {

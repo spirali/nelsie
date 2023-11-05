@@ -1,15 +1,21 @@
-use std::rc::Rc;
-use resvg::tiny_skia;
+use super::text::{get_text_size, render_text};
 use crate::model::{Color, Node, Step};
-use taffy::{prelude as tf, Taffy};
-use taffy::style::{Dimension, FlexDirection, JustifyContent, Style};
-use taffy::style_helpers::TaffyMaxContent;
-use usvg;
-use usvg::{CharacterPosition, Fill, NonZeroPositiveF32, Text, TextAnchor, TextChunk, TextFlow, TextRendering, WritingMode};
-use usvg_tree::{AlignmentBaseline, DominantBaseline, Font, FontStretch, FontStyle, LengthAdjust, PaintOrder, TextDecoration, TextSpan, Visibility};
 use crate::render::core::RenderConfig;
 use crate::render::layout::LayoutContext;
-use super::text::{get_text_size, render_text};
+use resvg::tiny_skia;
+use std::rc::Rc;
+use taffy::style::{Dimension, FlexDirection, JustifyContent, Style};
+use taffy::style_helpers::TaffyMaxContent;
+use taffy::{prelude as tf, Taffy};
+use usvg;
+use usvg::{
+    CharacterPosition, Fill, NonZeroPositiveF32, Text, TextAnchor, TextChunk, TextFlow,
+    TextRendering, WritingMode,
+};
+use usvg_tree::{
+    AlignmentBaseline, DominantBaseline, Font, FontStretch, FontStyle, LengthAdjust, PaintOrder,
+    TextDecoration, TextSpan, Visibility,
+};
 
 pub(crate) struct RenderContext<'a> {
     step: Step,
@@ -39,20 +45,35 @@ impl<'a> RenderContext<'a> {
         let layout = self.taffy.layout(tf_node).unwrap();
         if let Some(color) = &node.bg_color.get(self.step) {
             let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
-                tiny_skia::Rect::from_xywh(layout.location.x, layout.location.y, layout.size.width, layout.size.height).unwrap(),
+                tiny_skia::Rect::from_xywh(
+                    layout.location.x,
+                    layout.location.y,
+                    layout.size.width,
+                    layout.size.height,
+                )
+                .unwrap(),
             )));
             path.fill = Some(Fill {
                 paint: usvg::Paint::Color(color.into()),
                 ..Default::default()
             });
-            self.svg_node.append(usvg::Node::new(usvg::NodeKind::Path(path)));
+            self.svg_node
+                .append(usvg::Node::new(usvg::NodeKind::Path(path)));
         }
 
         if let Some(text) = &node.text {
-            self.svg_node.append(render_text(&text, layout.location.x, layout.location.y + layout.size.height - 7.0));
+            self.svg_node.append(render_text(
+                &text,
+                layout.location.x,
+                layout.location.y + layout.size.height - 7.0,
+            ));
         }
 
-        for (n, tf_n) in node.children.iter().zip(self.taffy.children(tf_node).unwrap()) {
+        for (n, tf_n) in node
+            .children
+            .iter()
+            .zip(self.taffy.children(tf_node).unwrap())
+        {
             self.render_helper(n, tf_n);
         }
     }
@@ -86,12 +107,12 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
 
 #[cfg(test)]
 mod tests {
-    use crate::common::{Node, StepValue};
-    use super::{render_to_svg_tree};
-    use usvg::{Color, fontdb, TreeParsing, TreeWriting, XmlOptions};
-    use usvg::TreeTextToPath;
     use super::super::text::get_text_size;
+    use super::render_to_svg_tree;
     use crate::common::Size;
+    use crate::common::{Node, StepValue};
+    use usvg::TreeTextToPath;
+    use usvg::{fontdb, Color, TreeParsing, TreeWriting, XmlOptions};
 
     #[test]
     fn test_render() {
@@ -123,7 +144,6 @@ mod tests {
         let mut fontdb = fontdb::Database::new();
         fontdb.load_system_fonts();
         tree.convert_text(&fontdb);
-
 
         println!("{}", tree.to_string(&XmlOptions::default()));
 

@@ -1,6 +1,6 @@
-use std::fmt::Debug;
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
+use std::fmt::Debug;
 
 pub type Step = u32;
 

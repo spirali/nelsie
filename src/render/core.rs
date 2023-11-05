@@ -1,12 +1,12 @@
-use std::path::Path;
-use resvg::tiny_skia;
-use usvg::{TreeTextToPath, TreeWriting, XmlOptions};
-use crate::model::{Node, Slide, Step};
-use crate::{NelsieError, OutputConfig};
-use crate::render::GlobalResources;
-use crate::render::svg::render_to_svg_tree;
 use crate::common::fileutils::ensure_directory;
+use crate::model::{Node, Slide, Step};
+use crate::render::svg::render_to_svg_tree;
+use crate::render::GlobalResources;
 use crate::Result;
+use crate::{NelsieError, OutputConfig};
+use resvg::tiny_skia;
+use std::path::Path;
+use usvg::{TreeTextToPath, TreeWriting, XmlOptions};
 
 pub(crate) struct RenderConfig<'a> {
     pub global_res: &'a GlobalResources,
@@ -17,7 +17,7 @@ pub(crate) struct RenderConfig<'a> {
     pub output_png: Option<&'a Path>,
 }
 
-pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<()> {
+pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<usvg::Tree> {
     log::debug!("Rendering step {}", render_cfg.step);
     let mut tree = render_to_svg_tree(render_cfg);
     tree.convert_text(render_cfg.global_res.font_db());
@@ -25,9 +25,13 @@ pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<()> {
     // Write SVG
     if let Some(output) = render_cfg.output_svg {
         let svg = tree.to_string(&XmlOptions::default());
-        std::fs::write(output, svg).map_err(|e|
-            NelsieError::GenericError(format!("Cannot write target SVG file: {}: {}", output.display(), e))
-        )?;
+        std::fs::write(output, svg).map_err(|e| {
+            NelsieError::GenericError(format!(
+                "Cannot write target SVG file: {}: {}",
+                output.display(),
+                e
+            ))
+        })?;
     }
 
     // Write PNG
@@ -38,8 +42,13 @@ pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<()> {
         let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
         let render_ts = tiny_skia::Transform::from_scale(zoom, zoom);
         rtree.render(render_ts, &mut pixmap.as_mut());
-        pixmap.save_png(output).map_err(|e|
-            NelsieError::GenericError(format!("Cannot write target PNG file: {}: {}", output.display(), e)))?;
+        pixmap.save_png(output).map_err(|e| {
+            NelsieError::GenericError(format!(
+                "Cannot write target PNG file: {}: {}",
+                output.display(),
+                e
+            ))
+        })?;
     }
-    Ok(())
+    Ok(tree)
 }

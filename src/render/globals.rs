@@ -9,9 +9,7 @@ impl GlobalResources {
         log::debug!("Loading system font database");
         let mut font_db = fontdb::Database::new();
         font_db.load_system_fonts();
-        GlobalResources {
-            font_db
-        }
+        GlobalResources { font_db }
     }
 
     pub fn font_db(&self) -> &fontdb::Database {

@@ -1,5 +1,9 @@
-use usvg_tree::{AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStretch, FontStyle, LengthAdjust, NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow, TextRendering, TextSpan, Visibility, WritingMode};
-use usvg::{Color, fontdb, NonZeroPositiveF32, TreeTextToPath};
+use usvg::{fontdb, Color, NonZeroPositiveF32, TreeTextToPath};
+use usvg_tree::{
+    AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStretch, FontStyle,
+    LengthAdjust, NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow,
+    TextRendering, TextSpan, Visibility, WritingMode,
+};
 
 pub(crate) fn get_text_size(text: &str) -> (f32, f32) {
     let text_node = render_text(text, 0.0, 0.0);
@@ -23,7 +27,7 @@ pub(crate) fn get_text_size(text: &str) -> (f32, f32) {
             let bbox = path.text_bbox.unwrap();
             (bbox.width(), bbox.height())
         }
-        _ => unreachable!()
+        _ => unreachable!(),
     };
     result
 }
@@ -36,7 +40,9 @@ pub(crate) fn render_text(text: &str, x: f32, y: f32) -> usvg::Node {
             y: None,
             dx: None,
             dy: None,
-        }; n_chars];
+        };
+        n_chars
+    ];
     pos_list[0].x = Some(x);
     pos_list[0].y = Some(y);
     let rot_list = vec![0.0; n_chars];

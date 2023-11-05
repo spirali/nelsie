@@ -19,3 +19,4 @@ clap = { version = "4", features = ["derive"] }
 svgtypes = "0.12.0"
 log = "0.4"
 env_logger = "0.10"
+pdf-writer = "0.9"
