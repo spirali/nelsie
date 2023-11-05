@@ -10,6 +10,9 @@ pub(crate) struct Node {
     pub width: StepValue<Size>,
     pub height: StepValue<Size>,
 
+    pub row: StepValue<bool>,
+    pub reverse: StepValue<bool>,
+
     pub bg_color: StepValue<Option<Color>>,
     pub text: Option<String>,
 }

@@ -8,7 +8,14 @@ class Slide(BoxBuilder):
     def __init__(self, width: float, height: float, bg_color: str):
         self.width = width
         self.height = height
-        self.root_box = Box(self, self.width, self.height, bg_color=bg_color)
+        self.root_box = Box(
+            self,
+            width=self.width,
+            height=self.height,
+            row=False,
+            reverse=False,
+            bg_color=bg_color,
+        )
 
     def get_slide(self):
         return self

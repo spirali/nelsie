@@ -43,9 +43,16 @@ impl LayoutContext {
             )
         };
 
+        let flex_direction = match (node.row.get(self.step), node.reverse.get(self.step)) {
+            (false, false) => tf::FlexDirection::Column,
+            (true, false) => tf::FlexDirection::Row,
+            (false, true) => tf::FlexDirection::ColumnReverse,
+            (true, true) => tf::FlexDirection::RowReverse,
+        };
+
         let style = tf::Style {
             size: tf::Size { width, height },
-            flex_direction: tf::FlexDirection::Column,
+            flex_direction,
             justify_content: Some(tf::JustifyContent::Center),
             align_items: Some(tf::AlignItems::Center),
             ..Default::default()

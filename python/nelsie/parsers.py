@@ -22,7 +22,13 @@ def parse_size(value):
 
 
 def parse_color(value):
-    if isinstance(value, str):
+    if value is None or isinstance(value, str):
         # TODO: Validate color
         return value
     raise ParsingException(f"Invalid color definition: {value!r}")
+
+
+def check_type(obj, cls, name):
+    if isinstance(obj, cls):
+        return obj
+    raise TypeError(f"Attribute {name} is should be {cls}")
