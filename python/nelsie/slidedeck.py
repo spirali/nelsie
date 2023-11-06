@@ -8,6 +8,7 @@ class Slide(BoxBuilder):
     def __init__(self, width: float, height: float, bg_color: str):
         self.width = width
         self.height = height
+        self.n_steps = 0
         self.root_box = Box(
             self,
             width=self.width,
@@ -23,11 +24,15 @@ class Slide(BoxBuilder):
     def add_box(self, box: Box):
         self.root_box.add_box(box)
 
+    def update_min_steps(self, n_steps: int):
+        self.n_steps = max(self.n_steps, n_steps)
+
     def render(self):
         return {
             "width": self.width,
             "height": self.height,
             "node": self.root_box.render(),
+            "n_steps": self.n_steps,
         }
 
 

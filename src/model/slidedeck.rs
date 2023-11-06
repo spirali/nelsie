@@ -7,15 +7,10 @@ pub(crate) struct Slide {
     pub width: f32,
     pub height: f32,
     pub node: Node,
+    pub n_steps: Step,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct SlideDeck {
     pub slides: Vec<Slide>,
-}
-
-impl Slide {
-    pub fn n_steps(&self) -> Step {
-        1
-    }
 }

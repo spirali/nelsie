@@ -12,7 +12,8 @@
 * General
     * ~~Rendering PDF, SVG, PNG~~
     * @slide decorator
-    * Step values
+    * ~~Step values~~
+    * Equivalent for "next"/"next+"/"last"/"last+" (not as keywords but as an explicit counter)
     * Box debugging visualization
     * Parallel rendering [if needed]
     * Box rotations
@@ -22,6 +23,7 @@
 * Layout
     * ~~Box size~~
     * ~~Direction~~
+    * z-level
     * Min size & Max size
     * Aspect ratio
     * Margin

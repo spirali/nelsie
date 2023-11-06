@@ -1,5 +1,5 @@
 from .parsers import parse_size, parse_color, check_type
-from .steps import to_step_value, StepValue
+from .steps import process_step_value, InSteps
 
 Size = int | float | str
 
@@ -14,11 +14,11 @@ class BoxBuilder:
     def box(
         self,
         *,
-        width: Size | StepValue[Size] = "auto",
-        height: Size | StepValue[Size] = "auto",
-        row: bool | StepValue[bool] = False,
-        reverse: bool | StepValue[bool] = False,
-        bg_color: str | None | StepValue[str | None] = None,
+        width: Size | InSteps[Size] = "auto",
+        height: Size | InSteps[Size] = "auto",
+        row: bool | InSteps[bool] = False,
+        reverse: bool | InSteps[bool] = False,
+        bg_color: str | None | InSteps[str | None] = None,
     ):
         box = Box(
             slide=self.get_slide(),
@@ -37,20 +37,27 @@ class Box(BoxBuilder):
         self,
         slide,
         *,
-        width: Size | StepValue[Size],
-        height: Size | StepValue[Size],
-        row: bool | StepValue[bool],
-        reverse: bool | StepValue[bool],
-        bg_color: str | None | StepValue[str | None],
+        width: Size | InSteps[Size],
+        height: Size | InSteps[Size],
+        row: bool | InSteps[bool],
+        reverse: bool | InSteps[bool],
+        bg_color: str | None | InSteps[str | None],
     ):
         self.slide = slide
-        self.width = to_step_value(width, parse_size)
-        self.height = to_step_value(height, parse_size)
-        self.bg_color = to_step_value(bg_color, parse_color)
-        self.bg_color = to_step_value(bg_color, parse_color)
-        self.row = to_step_value(row, lambda x: check_type(x, bool, "row"))
-        self.reverse = to_step_value(reverse, lambda x: check_type(x, bool, "reverse"))
+        self._set_attr("width", width, parse_size)
+        self._set_attr("height", height, parse_size)
+        self._set_attr("bg_color", bg_color, parse_color)
+        self._set_attr("row", row, lambda x: check_type(x, bool))
+        self._set_attr("reverse", reverse, lambda x: check_type(x, bool))
         self.children = []
+
+    def _set_attr(self, name, value, parser=None):
+        try:
+            result, n_steps = process_step_value(value, parser)
+        except ValueError as e:
+            raise ValueError(f"Invalid value for '{name}': {e}")
+        self.slide.update_min_steps(n_steps)
+        setattr(self, name, result)
 
     def get_slide(self):
         return self.slide

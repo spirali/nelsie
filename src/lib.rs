@@ -43,24 +43,23 @@ fn render_slide(
     slide: &Slide,
 ) -> Result<Vec<usvg::Tree>> {
     log::debug!("Rendering slide {}", slide_idx);
-    let step = 1;
+    (1..=slide.n_steps).map(|step| {
+        let output_svg = output_cfg
+            .output_svg
+            .map(|p| p.join(format!("{}-{}.svg", slide_idx, step)));
+        let output_png = output_cfg
+            .output_png
+            .map(|p| p.join(format!("{}-{}.png", slide_idx, step)));
 
-    let output_svg = output_cfg
-        .output_svg
-        .map(|p| p.join(format!("{}-{}.svg", slide_idx, step)));
-    let output_png = output_cfg
-        .output_png
-        .map(|p| p.join(format!("{}-{}.png", slide_idx, step)));
-
-    let render_cfg = RenderConfig {
-        global_res,
-        output_svg: output_svg.as_deref(),
-        output_png: output_png.as_deref(),
-        slide,
-        step,
-    };
-    let tree = render_slide_step(&render_cfg)?;
-    Ok(vec![tree])
+        let render_cfg = RenderConfig {
+            global_res,
+            output_svg: output_svg.as_deref(),
+            output_png: output_png.as_deref(),
+            slide,
+            step,
+        };
+        render_slide_step(&render_cfg)
+    }).collect()
 }
 
 pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
@@ -91,7 +90,7 @@ pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
 
     let global_res = GlobalResources::new();
 
-    let n_steps = slide_deck.slides.iter().map(|s| s.n_steps()).sum();
+    let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));
 
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {

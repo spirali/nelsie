@@ -1,10 +1,6 @@
 import re
 
 
-class ParsingException(Exception):
-    pass
-
-
 SIZE_REGEXP = re.compile(r"^(\d+(?:\.\d+)?)(%)?$")
 
 
@@ -18,17 +14,17 @@ def parse_size(value):
         if match:
             number, percent = match.groups()
             return {"percent": float(number)} if percent else {"points": float(number)}
-    raise ParsingException(f"Invalid size definition: {value!r}")
+    raise ValueError(f"Invalid size definition: {value!r}")
 
 
 def parse_color(value):
     if value is None or isinstance(value, str):
         # TODO: Validate color
         return value
-    raise ParsingException(f"Invalid color definition: {value!r}")
+    raise ValueError(f"Invalid color definition: {value!r}")
 
 
-def check_type(obj, cls, name):
+def check_type(obj, cls):
     if isinstance(obj, cls):
         return obj
-    raise TypeError(f"Attribute {name} is should be {cls}")
+    raise TypeError(f"Expected {cls} got {type(obj)}")

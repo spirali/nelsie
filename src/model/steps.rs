@@ -8,6 +8,7 @@ pub type Step = u32;
 #[serde(rename_all = "lowercase")]
 pub(crate) enum StepValue<T: Debug> {
     Const(T),
+    Steps(Vec<T>),
 }
 
 impl<T: Debug + DeserializeOwned> StepValue<T> {
@@ -16,13 +17,12 @@ impl<T: Debug + DeserializeOwned> StepValue<T> {
     }
 
     pub fn get(&self, step: Step) -> &T {
+        assert!(step > 0);
         match self {
             StepValue::Const(v) => v,
+            StepValue::Steps(steps) => {
+                steps.get((step - 1) as usize).unwrap_or_else(|| steps.last().unwrap())
+            }
         }
-        /*match self.indices.get(step as usize) {
-            Some(Some(idx)) => Some(&self.values[*idx as usize]),
-            Some(None) => None,
-            None => self.indices.last().unwrap().map(|idx| &self.values[idx as usize])
-        }*/
     }
 }
