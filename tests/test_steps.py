@@ -78,3 +78,11 @@ def test_render_steps(deck):
         height=InSteps({1: "75%", "2+": "25%"}),
         bg_color=InSteps(["red", "green", "blue"]),
     )
+
+
+@check(n_slides=4)
+def test_show_steps(deck):
+    slide = deck.new_slide(width=200, height=200)
+    b = slide.box(show="2+", width=100, height=100, bg_color="red")
+    b.box(show="1, 3", width=40, height=40, bg_color="blue")
+    b.box(show="4", width=40, height=40, bg_color="green")

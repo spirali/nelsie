@@ -20,9 +20,9 @@ impl<T: Debug + DeserializeOwned> StepValue<T> {
         assert!(step > 0);
         match self {
             StepValue::Const(v) => v,
-            StepValue::Steps(steps) => {
-                steps.get((step - 1) as usize).unwrap_or_else(|| steps.last().unwrap())
-            }
+            StepValue::Steps(steps) => steps
+                .get((step - 1) as usize)
+                .unwrap_or_else(|| steps.last().unwrap()),
         }
     }
 }

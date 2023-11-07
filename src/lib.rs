@@ -4,7 +4,7 @@ mod render;
 
 use crate::common::fileutils::ensure_directory;
 use crate::model::{Node, Slide, SlideDeck};
-use crate::render::{render_slide_step, GlobalResources, RenderConfig, PdfBuilder};
+use crate::render::{render_slide_step, GlobalResources, PdfBuilder, RenderConfig};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
@@ -43,23 +43,25 @@ fn render_slide(
     slide: &Slide,
 ) -> Result<Vec<usvg::Tree>> {
     log::debug!("Rendering slide {}", slide_idx);
-    (1..=slide.n_steps).map(|step| {
-        let output_svg = output_cfg
-            .output_svg
-            .map(|p| p.join(format!("{}-{}.svg", slide_idx, step)));
-        let output_png = output_cfg
-            .output_png
-            .map(|p| p.join(format!("{}-{}.png", slide_idx, step)));
+    (1..=slide.n_steps)
+        .map(|step| {
+            let output_svg = output_cfg
+                .output_svg
+                .map(|p| p.join(format!("{}-{}.svg", slide_idx, step)));
+            let output_png = output_cfg
+                .output_png
+                .map(|p| p.join(format!("{}-{}.png", slide_idx, step)));
 
-        let render_cfg = RenderConfig {
-            global_res,
-            output_svg: output_svg.as_deref(),
-            output_png: output_png.as_deref(),
-            slide,
-            step,
-        };
-        render_slide_step(&render_cfg)
-    }).collect()
+            let render_cfg = RenderConfig {
+                global_res,
+                output_svg: output_svg.as_deref(),
+                output_png: output_png.as_deref(),
+                slide,
+                step,
+            };
+            render_slide_step(&render_cfg)
+        })
+        .collect()
 }
 
 pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
@@ -103,11 +105,7 @@ pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
     if let Some(builder) = pdf_builder {
         let path = output_cfg.output_pdf.unwrap();
         builder.write(path).map_err(|e| {
-            NelsieError::GenericError(format!(
-                "Writing PDF file {}: {}",
-                path.display(),
-                e
-            ))
+            NelsieError::GenericError(format!("Writing PDF file {}: {}", path.display(), e))
         })?;
     }
 

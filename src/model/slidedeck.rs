@@ -1,6 +1,6 @@
 use super::node::Node;
-use serde::Deserialize;
 use crate::model::Step;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Slide {

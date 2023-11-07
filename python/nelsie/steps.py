@@ -81,10 +81,17 @@ class InSteps(Generic[T]):
             return [parser(v) for v in self.values]
 
 
-def process_step_value(obj, parser=None):
+def process_step_value(obj, parser=None) -> (dict, int):
     if isinstance(obj, InSteps):
         return {"steps": obj.expand_values(parser)}, obj.n_steps
     return {"const": parser(obj) if parser is not None else obj}, 1
+
+
+def process_step_bool_def(obj) -> (dict, int):
+    if isinstance(obj, bool):
+        return {"const": obj}, 1
+    values, n_steps = parse_steps(obj)
+    return {"steps": values}, n_steps
 
 
 def _expand_list(seq: Sequence, open: bool) -> (list[bool], int):

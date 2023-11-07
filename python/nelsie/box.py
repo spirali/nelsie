@@ -1,5 +1,5 @@
-from .parsers import parse_size, parse_color, check_type
-from .steps import process_step_value, InSteps
+from .parsers import parse_size, parse_color, check_type, check_type_bool
+from .steps import process_step_value, InSteps, process_step_bool_def
 
 Size = int | float | str
 
@@ -14,6 +14,7 @@ class BoxBuilder:
     def box(
         self,
         *,
+        show: bool | str = True,
         width: Size | InSteps[Size] = "auto",
         height: Size | InSteps[Size] = "auto",
         row: bool | InSteps[bool] = False,
@@ -22,6 +23,7 @@ class BoxBuilder:
     ):
         box = Box(
             slide=self.get_slide(),
+            show=show,
             width=width,
             height=height,
             bg_color=bg_color,
@@ -37,6 +39,7 @@ class Box(BoxBuilder):
         self,
         slide,
         *,
+        show: bool | str,
         width: Size | InSteps[Size],
         height: Size | InSteps[Size],
         row: bool | InSteps[bool],
@@ -44,11 +47,15 @@ class Box(BoxBuilder):
         bg_color: str | None | InSteps[str | None],
     ):
         self.slide = slide
+
+        self.show, n_steps = process_step_bool_def(show)
+        self.slide.update_min_steps(n_steps)
+
         self._set_attr("width", width, parse_size)
         self._set_attr("height", height, parse_size)
         self._set_attr("bg_color", bg_color, parse_color)
-        self._set_attr("row", row, lambda x: check_type(x, bool))
-        self._set_attr("reverse", reverse, lambda x: check_type(x, bool))
+        self._set_attr("row", row, check_type_bool)
+        self._set_attr("reverse", reverse, check_type_bool)
         self.children = []
 
     def _set_attr(self, name, value, parser=None):
@@ -69,6 +76,7 @@ class Box(BoxBuilder):
         result = {
             "width": self.width,
             "height": self.height,
+            "show": self.show,
             "row": self.row,
             "reverse": self.reverse,
             "bg_color": self.bg_color,

@@ -11,6 +11,7 @@ class Slide(BoxBuilder):
         self.n_steps = 0
         self.root_box = Box(
             self,
+            show=True,
             width=self.width,
             height=self.height,
             row=False,

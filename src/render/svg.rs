@@ -4,6 +4,7 @@ use crate::render::core::RenderConfig;
 use crate::render::layout::LayoutContext;
 use resvg::tiny_skia;
 use std::rc::Rc;
+use taffy::geometry::Point;
 use taffy::style::{Dimension, FlexDirection, JustifyContent, Style};
 use taffy::style_helpers::TaffyMaxContent;
 use taffy::{prelude as tf, Taffy};
@@ -41,17 +42,17 @@ impl<'a> RenderContext<'a> {
         }
     }
 
-    fn render_helper(&self, node: &Node, tf_node: tf::Node) {
+    fn render_helper(&self, node: &Node, parent_x: f32, parent_y: f32, tf_node: tf::Node) {
+        if !node.show.get(self.step) {
+            return;
+        }
         let layout = self.taffy.layout(tf_node).unwrap();
+        let x = layout.location.x + parent_x;
+        let y = layout.location.y + parent_y;
+
         if let Some(color) = &node.bg_color.get(self.step) {
             let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
-                tiny_skia::Rect::from_xywh(
-                    layout.location.x,
-                    layout.location.y,
-                    layout.size.width,
-                    layout.size.height,
-                )
-                .unwrap(),
+                tiny_skia::Rect::from_xywh(x, y, layout.size.width, layout.size.height).unwrap(),
             )));
             path.fill = Some(Fill {
                 paint: usvg::Paint::Color(color.into()),
@@ -74,12 +75,12 @@ impl<'a> RenderContext<'a> {
             .iter()
             .zip(self.taffy.children(tf_node).unwrap())
         {
-            self.render_helper(n, tf_n);
+            self.render_helper(n, x, y, tf_n);
         }
     }
 
     pub(crate) fn render_to_svg(self, node: &Node, tf_node: tf::Node) -> usvg::Node {
-        self.render_helper(node, tf_node);
+        self.render_helper(node, 0.0, 0.0, tf_node);
         self.svg_node
     }
 }

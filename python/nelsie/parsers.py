@@ -28,3 +28,7 @@ def check_type(obj, cls):
     if isinstance(obj, cls):
         return obj
     raise TypeError(f"Expected {cls} got {type(obj)}")
+
+
+def check_type_bool(obj):
+    return check_type(obj, bool)

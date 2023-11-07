@@ -1,6 +1,6 @@
-use std::path::Path;
-use pdf_writer::{Content, Name, Rect, Ref};
 use pdf_writer::Finish;
+use pdf_writer::{Content, Name, Rect, Ref};
+use std::path::Path;
 
 pub(crate) struct PdfBuilder {
     pdf: pdf_writer::Pdf,
@@ -37,7 +37,9 @@ impl PdfBuilder {
         pdf.catalog(catalog_id).pages(page_tree_id);
 
         let page_ids: Vec<Ref> = (0..n_pages).map(|_| alloc_ref.bump()).collect();
-        pdf.pages(page_tree_id).kids(page_ids.iter().copied()).count(page_ids.len() as i32);
+        pdf.pages(page_tree_id)
+            .kids(page_ids.iter().copied())
+            .count(page_ids.len() as i32);
 
         PdfBuilder {
             pdf,
@@ -68,13 +70,14 @@ impl PdfBuilder {
         let svg_name = Name(name_str.as_bytes());
         let mut resources = page.resources();
 
-        let svg_id = self.alloc_ref.bump();  // !!! no .bump has to occur until convert_tree_into !!!
+        let svg_id = self.alloc_ref.bump(); // !!! no .bump has to occur until convert_tree_into !!!
 
         resources.x_objects().pair(svg_name, svg_id);
         resources.finish();
         page.finish();
 
-        self.alloc_ref = svg2pdf::convert_tree_into(&tree, svg2pdf::Options::default(), &mut self.pdf, svg_id);
+        self.alloc_ref =
+            svg2pdf::convert_tree_into(&tree, svg2pdf::Options::default(), &mut self.pdf, svg_id);
         let mut content = Content::new();
         content
             .transform([tree.size.width(), 0.0, 0.0, tree.size.height(), 0.0, 0.0])

@@ -14,8 +14,8 @@ pub(crate) struct Color(svgtypes::Color);
 
 impl<'de> Deserialize<'de> for Color {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         let value = String::deserialize(deserializer)?;
         let color = svgtypes::Color::from_str(&value)
