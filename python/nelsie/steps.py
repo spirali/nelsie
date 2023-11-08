@@ -1,26 +1,21 @@
-from typing import TypeVar, Generic, Sequence
+from typing import TypeVar, Generic, Sequence, Callable
 import re
+
+from .export import ExportConstStepValue, ExportComplexStepValue, ExportStepValue
 
 
 StepDef = int | Sequence[int] | str
 
-#
-# class StepCounter:
-#     def __init__(self):
-#         self.step = 1
-#
-#     def update(self, value):
-#         self.step = max(self.step, value)
-#
-#     def last(self):
-#         return self.step
-#
-#     def next(self):
-#         self.step += 1
-#         return self.step
+
+def to_steps(obj):
+    if isinstance(obj, InSteps):
+        return obj
+    else:
+        return InSteps([obj])
 
 
 T = TypeVar("T")
+S = TypeVar("S")
 
 
 class InSteps(Generic[T]):
@@ -33,70 +28,54 @@ class InSteps(Generic[T]):
             self.values = values
             self.n_steps = n_steps or len(values)
         elif isinstance(values, dict):
-            open_keys = 0
-            for key in values:
-                if isinstance(key, str) and key.rstrip().endswith("+"):
-                    open_keys += 1
-            if open_keys == 0 or open_keys > 1:
-                raise ValueError(
-                    "Exactly one step definition has to be unbounded (ends with '+' sign)"
-                )
-            tmp = []
-            max_n_steps = 1
-            for key, value in values.items():
-                step, n_steps = parse_steps(key)
-                max_n_steps = max(max_n_steps, n_steps)
-                tmp.append((step, value))
-            size = max(len(x[0]) for x in tmp)
-            used = [False] * size
-            result = [None] * size
-
-            for key, value in tmp:
-                if key[-1]:  # This is open step def
-                    if len(key) < size:
-                        raise ValueError(
-                            f"Multiple definitions assigned for step {len(key) + 1}"
-                        )
-                for i, enabled in enumerate(key):
-                    if not enabled:
-                        continue
-                    if used[i]:
-                        raise ValueError(
-                            f"Multiple definitions assigned for step {i+1}"
-                        )
-                    used[i] = True
-                    result[i] = value
-            unset_steps = [i + 1 for i, u in enumerate(used) if not u]
-            if unset_steps:
-                raise ValueError(f"Step(s) {unset_steps} have no defined values")
-            self.n_steps = n_steps or max_n_steps
-            self.values = result
+            self.values, n = self._values_from_dict(values)
+            self.n_steps = n_steps or n
         else:
             raise ValueError("Invalid type for values")
 
-    def expand_values(self, parser):
-        if parser is None:
-            return self.values
+    def get(self, step: int) -> T:
+        if step < len(self.values):
+            return self.values[step]
         else:
-            return [parser(v) for v in self.values]
+            return self.values[-1]
+
+    @staticmethod
+    def _values_from_dict(data):
+        tmp = []
+        n_steps = 1
+        for key, value in data.items():
+            in_steps = parse_steps(key)
+            n_steps = max(n_steps, in_steps.n_steps)
+            tmp.append((in_steps, value))
+
+        used = [False] * n_steps
+        values = [None] * n_steps
+
+        for in_steps, value in tmp:
+            for i in range(n_steps):
+                if not in_steps.get(i):
+                    continue
+                if used[i]:
+                    raise ValueError(f"Multiple definitions assigned for step {i+1}")
+                used[i] = True
+                values[i] = value
+        if not all(used):
+            raise ValueError(f"Value not defined for step {used.index(False) + 1}")
+        return values, n_steps
+
+    def map(self, fn):
+        return InSteps([fn(v) for v in self.values], n_steps=self.n_steps)
+
+    def export(self):
+        if len(self.values) == 1:
+            return ExportConstStepValue(self.values[0])
+        else:
+            return ExportComplexStepValue(self.values)
 
 
-def process_step_value(obj, parser=None) -> (dict, int):
-    if isinstance(obj, InSteps):
-        return {"steps": obj.expand_values(parser)}, obj.n_steps
-    return {"const": parser(obj) if parser is not None else obj}, 1
-
-
-def process_step_bool_def(obj) -> (dict, int):
-    if isinstance(obj, bool):
-        return {"const": obj}, 1
-    values, n_steps = parse_steps(obj)
-    return {"steps": values}, n_steps
-
-
-def _expand_list(seq: Sequence, open: bool) -> (list[bool], int):
+def _expand_list(seq: Sequence, open: bool) -> InSteps[bool]:
     if not seq:
-        return [False]
+        return InSteps([False], 0)
     for value in seq:
         if not isinstance(value, int):
             raise ValueError("Step definition by sequence has to contains integers")
@@ -106,13 +85,13 @@ def _expand_list(seq: Sequence, open: bool) -> (list[bool], int):
     result = [False] * (max_value + (1 if not open else 0))
     for value in seq:
         result[value - 1] = True
-    return result, max_value
+    return InSteps(result, max_value)
 
 
-def _expand_single(position: int, open: bool) -> (list[bool], int):
+def _expand_single(position: int, open: bool) -> InSteps[bool]:
     result = [False] * (position + (1 if not open else 0))
     result[position - 1] = True
-    return result, position
+    return InSteps(result, position)
 
 
 STEP_DEF_CHECK_REGEXP = re.compile(
@@ -121,7 +100,10 @@ STEP_DEF_CHECK_REGEXP = re.compile(
 STEP_DEF_SPLIT_REGEXP = re.compile(r"\d+-\d+|\d+")
 
 
-def parse_steps(obj: StepDef) -> (list[bool], int):
+def parse_steps(obj: StepDef) -> InSteps[bool]:
+    if isinstance(obj, bool):
+        return InSteps([obj])
+
     if isinstance(obj, int):
         if obj < 1:
             raise ValueError("Step cannot be a zero or negative integer")
@@ -142,3 +124,18 @@ def parse_steps(obj: StepDef) -> (list[bool], int):
     if isinstance(obj, Sequence):
         return _expand_list(obj, False)
     raise ValueError("Step cannot be a non-positive integer")
+
+
+def export_step_value(
+    obj: InSteps[T] | T, slide, export_value_fn: Callable[[T], S] | None = None
+) -> ExportStepValue[S]:
+    if isinstance(obj, InSteps):
+        slide.update_min_steps(obj.n_steps)
+        if export_value_fn:
+            obj = obj.map(export_value_fn)
+        return obj.export()
+    else:
+        if export_value_fn:
+            return ExportConstStepValue(export_value_fn(obj))
+        else:
+            return ExportConstStepValue(obj)

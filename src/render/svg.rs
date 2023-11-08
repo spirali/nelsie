@@ -60,6 +60,9 @@ impl<'a> RenderContext<'a> {
             });
             self.svg_node
                 .append(usvg::Node::new(usvg::NodeKind::Path(path)));
+
+            // DEBUG
+            self.svg_node.append(render_text("Hello world", 200.0, 200.0))
         }
 
         if let Some(text) = &node.text {
@@ -70,12 +73,14 @@ impl<'a> RenderContext<'a> {
             ));
         }
 
-        for (n, tf_n) in node
-            .children
-            .iter()
-            .zip(self.taffy.children(tf_node).unwrap())
-        {
-            self.render_helper(n, x, y, tf_n);
+        if let Some(children) = &node.children {
+            for (n, tf_n) in
+            children
+                .iter()
+                .zip(self.taffy.children(tf_node).unwrap())
+            {
+                self.render_helper(n, x, y, tf_n);
+            }
         }
     }
 

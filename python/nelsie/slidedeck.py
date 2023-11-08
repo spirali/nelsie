@@ -1,5 +1,7 @@
+import dataclasses
 from typing import Optional
 
+from .export import ExportSlideDeck, ExportSlide
 from .box import Box, BoxBuilder
 from .render import render_slides
 
@@ -28,13 +30,13 @@ class Slide(BoxBuilder):
     def update_min_steps(self, n_steps: int):
         self.n_steps = max(self.n_steps, n_steps)
 
-    def render(self):
-        return {
-            "width": self.width,
-            "height": self.height,
-            "node": self.root_box.render(),
-            "n_steps": self.n_steps,
-        }
+    def export(self) -> ExportSlide:
+        return ExportSlide(
+            width=self.width,
+            height=self.height,
+            node=self.root_box.export(),
+            n_steps=self.n_steps,
+        )
 
 
 class SlideDeck:
@@ -67,6 +69,9 @@ class SlideDeck:
         self.slides.append(slide)
         return slide
 
+    def export(self) -> ExportSlideDeck:
+        return ExportSlideDeck(slides=[slide.export() for slide in self.slides])
+
     def render(
         self,
         *,
@@ -77,5 +82,11 @@ class SlideDeck:
     ):
         if output_pdf is None and output_png is None and output_svg is None:
             raise Exception("No output file is defined")
-        root = {"slides": [slide.render() for slide in self.slides]}
-        render_slides(self.nelsie_bin, root, output_pdf, output_svg, output_png, debug)
+        render_slides(
+            self.nelsie_bin,
+            dataclasses.asdict(self.export()),
+            output_pdf,
+            output_svg,
+            output_png,
+            debug,
+        )

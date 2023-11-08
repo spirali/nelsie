@@ -3,8 +3,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Node {
-    #[serde(default)]
-    pub children: Vec<Node>,
+    pub children: Option<Vec<Node>>,
 
     pub show: StepValue<bool>,
 

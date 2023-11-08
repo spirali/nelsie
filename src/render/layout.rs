@@ -26,6 +26,8 @@ impl LayoutContext {
     fn compute_layout_helper(&self, taffy: &mut tf::Taffy, node: &Node) -> tf::Node {
         let tf_children: Vec<_> = node
             .children
+            .as_ref()
+            .unwrap_or_default()
             .iter()
             .map(|n| self.compute_layout_helper(taffy, n))
             .collect();

@@ -40,9 +40,7 @@ pub(crate) fn render_text(text: &str, x: f32, y: f32) -> usvg::Node {
             y: None,
             dx: None,
             dy: None,
-        };
-        n_chars
-    ];
+        }; n_chars];
     pos_list[0].x = Some(x);
     pos_list[0].y = Some(y);
     let rot_list = vec![0.0; n_chars];
@@ -50,9 +48,13 @@ pub(crate) fn render_text(text: &str, x: f32, y: f32) -> usvg::Node {
         paint: usvg::Paint::Color(Color::black()),
         ..Default::default()
     };
+    let fill2 = Fill {
+        paint: usvg::Paint::Color(Color::new_rgb(0, 255, 0)),
+        ..Default::default()
+    };
     let span = TextSpan {
         start: 0,
-        end: n_chars,
+        end: 6,
         fill: Some(fill),
         stroke: None,
         paint_order: PaintOrder::FillAndStroke,
@@ -79,11 +81,42 @@ pub(crate) fn render_text(text: &str, x: f32, y: f32) -> usvg::Node {
         text_length: None,
         length_adjust: LengthAdjust::default(),
     };
+
+    let span2 = TextSpan {
+        start: 6,
+        end: 11,
+        fill: Some(fill2),
+        stroke: None,
+        paint_order: PaintOrder::FillAndStroke,
+        font: Font {
+            families: vec!["Ubuntu".to_string()],
+            style: FontStyle::Normal,
+            stretch: FontStretch::Normal,
+            weight: 400,
+        },
+        font_size: NonZeroPositiveF32::new(48.0).unwrap(),
+        small_caps: false,
+        apply_kerning: false,
+        decoration: TextDecoration {
+            underline: None,
+            overline: None,
+            line_through: None,
+        },
+        dominant_baseline: DominantBaseline::Auto,
+        alignment_baseline: AlignmentBaseline::Auto,
+        baseline_shift: vec![],
+        visibility: Visibility::Visible,
+        letter_spacing: 0.0,
+        word_spacing: 0.0,
+        text_length: None,
+        length_adjust: LengthAdjust::default(),
+    };
+
     let chunks = vec![TextChunk {
         x: Some(x),
         y: Some(y),
         anchor: TextAnchor::Start,
-        spans: vec![span],
+        spans: vec![span, span2],
         text_flow: TextFlow::Linear,
         text: text.to_string(),
     }];

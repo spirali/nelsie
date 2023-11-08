@@ -1,7 +1,7 @@
-from .parsers import parse_size, parse_color, check_type, check_type_bool
-from .steps import process_step_value, InSteps, process_step_bool_def
-
-Size = int | float | str
+from .export import ExportNode, ExportStepValue
+from .parsers import parse_size, check_color, check_type, check_type_bool
+from .steps import InSteps, parse_steps, to_steps, export_step_value
+from .basictypes import Size
 
 
 class BoxBuilder:
@@ -48,23 +48,24 @@ class Box(BoxBuilder):
     ):
         self.slide = slide
 
-        self.show, n_steps = process_step_bool_def(show)
-        self.slide.update_min_steps(n_steps)
+        show_steps = parse_steps(show)
+        self.slide.update_min_steps(show_steps.n_steps)
 
-        self._set_attr("width", width, parse_size)
-        self._set_attr("height", height, parse_size)
-        self._set_attr("bg_color", bg_color, parse_color)
-        self._set_attr("row", row, check_type_bool)
-        self._set_attr("reverse", reverse, check_type_bool)
+        self.node = ExportNode(
+            show=export_step_value(show_steps, self.slide),
+            width=self._export_attr("width", width, parse_size),
+            height=self._export_attr("height", height, parse_size),
+            bg_color=self._export_attr("bg_color", bg_color, check_color),
+            row=self._export_attr("row", row, check_type_bool),
+            reverse=self._export_attr("reverse", reverse, check_type_bool),
+        )
         self.children = []
 
-    def _set_attr(self, name, value, parser=None):
+    def _export_attr(self, name, value, parser) -> ExportStepValue:
         try:
-            result, n_steps = process_step_value(value, parser)
+            return export_step_value(value, self.slide, parser)
         except ValueError as e:
             raise ValueError(f"Invalid value for '{name}': {e}")
-        self.slide.update_min_steps(n_steps)
-        setattr(self, name, result)
 
     def get_slide(self):
         return self.slide
@@ -72,16 +73,7 @@ class Box(BoxBuilder):
     def add_box(self, box: "Box"):
         self.children.append(box)
 
-    def render(self):
-        result = {
-            "width": self.width,
-            "height": self.height,
-            "show": self.show,
-            "row": self.row,
-            "reverse": self.reverse,
-            "bg_color": self.bg_color,
-        }
-        if not self.children:
-            return result
-        result["children"] = [child.render() for child in self.children]
-        return result
+    def export(self) -> ExportNode:
+        if self.children:
+            self.node.children = [child.export() for child in self.children]
+        return self.node

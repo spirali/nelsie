@@ -1,10 +1,12 @@
 import re
 
+from .basictypes import Size
+from .export import ExportSize
 
 SIZE_REGEXP = re.compile(r"^(\d+(?:\.\d+)?)(%)?$")
 
 
-def parse_size(value):
+def parse_size(value: Size) -> ExportSize:
     if value == "auto":
         return value
     if isinstance(value, (int, float)):
@@ -17,7 +19,7 @@ def parse_size(value):
     raise ValueError(f"Invalid size definition: {value!r}")
 
 
-def parse_color(value):
+def check_color(value: str) -> str:
     if value is None or isinstance(value, str):
         # TODO: Validate color
         return value

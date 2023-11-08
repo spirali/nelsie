@@ -1,5 +1,5 @@
 from nelsie import InSteps
-from nelsie.steps import process_step_value, parse_steps
+from nelsie.steps import parse_steps
 
 import pytest
 
@@ -7,18 +7,22 @@ from testutils import check
 
 
 def test_parse_steps():
-    assert parse_steps(3) == ([False, False, True, False], 3)
-    assert parse_steps([1, 3, 5]) == ([True, False, True, False, True, False], 5)
-    assert parse_steps([1, 2]) == ([True, True, False], 2)
+    def p(obj):
+        in_steps = parse_steps(obj)
+        return in_steps.values, in_steps.n_steps
+
+    assert p(3) == ([False, False, True, False], 3)
+    assert p([1, 3, 5]) == ([True, False, True, False, True, False], 5)
+    assert p([1, 2]) == ([True, True, False], 2)
 
     with pytest.raises(ValueError, match="Step cannot be a zero or negative integer"):
-        parse_steps(0)
+        p(0)
     with pytest.raises(ValueError, match="Step cannot be a zero or negative integer"):
-        parse_steps([0])
+        p([0])
 
-    assert parse_steps("10") == (9 * [False] + [True, False], 10)
-    assert parse_steps("1,2,4") == ([True, True, False, True, False], 4)
-    assert parse_steps("2-4,7") == (
+    assert p("10") == (9 * [False] + [True, False], 10)
+    assert p("1,2,4") == ([True, True, False, True, False], 4)
+    assert p("2-4,7") == (
         [
             False,
             True,
@@ -32,40 +36,42 @@ def test_parse_steps():
         7,
     )
 
-    assert parse_steps("2-4,7+") == ([False, True, True, True, False, False, True], 7)
-    assert parse_steps("3+") == ([False, False, True], 3)
-    assert parse_steps("3,2 , 1") == ([True, True, True, False], 3)
+    assert p("2-4,7+") == ([False, True, True, True, False, False, True], 7)
+    assert p("3+") == ([False, False, True], 3)
+    assert p("3,2 , 1") == ([True, True, True, False], 3)
 
 
 def test_step_values():
-    assert process_step_value(123) == ({"const": 123}, 1)
+    def check(in_steps, values, n_steps):
+        assert in_steps.values == values
+        assert in_steps.n_steps == n_steps
 
-    assert process_step_value(InSteps(["red", "red", "blue"])) == (
-        {"steps": ["red", "red", "blue"]},
-        3,
-    )
+    check(InSteps(["red", "red", "blue"]), ["red", "red", "blue"], 3)
 
     with pytest.raises(ValueError, match="cannot be an empty list"):
         InSteps([])
 
-    assert process_step_value(
-        InSteps({"2": "black", (1, 3): "orange", "4+": "green"})
-    ) == ({"steps": ["orange", "black", "orange", "green"]}, 4)
+    check(
+        InSteps({"2": "black", (1, 3): "orange", "4+": "green"}),
+        ["orange", "black", "orange", "green"],
+        4,
+    )
 
-    assert process_step_value(InSteps({"2": "black", "1,3,4+": "green"})) == (
-        {"steps": ["green", "black", "green", "green"]},
+    check(
+        InSteps({"2": "black", "1,3,4+": "green"}),
+        ["green", "black", "green", "green"],
         4,
     )
 
     with pytest.raises(ValueError, match="Multiple definitions assigned for step 4"):
-        InSteps({"4": "black", "1,2,3+": "green"})
+        print(InSteps({"4": "black", "1,2,3+": "green"}).values)
 
-    with pytest.raises(ValueError, match="have no defined values"):
+    with pytest.raises(ValueError, match="Value not defined for step 2"):
         InSteps({"4+": "black", "1,3": "green"})
 
     with pytest.raises(
         ValueError,
-        match="Exactly one step definition has to be unbounded",
+        match="Multiple definitions assigned for step 3",
     ):
         InSteps({"2+": "black", "1,3+": "green"})
 
