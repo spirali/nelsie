@@ -3,8 +3,10 @@ use crate::render::text::get_text_size;
 use taffy::prelude as tf;
 use taffy::prelude::TaffyMaxContent;
 use taffy::style::AvailableSpace;
+use crate::render::GlobalResources;
 
-pub(crate) struct LayoutContext {
+pub(crate) struct LayoutContext<'a> {
+    global_res: &'a GlobalResources,
     step: Step,
 }
 
@@ -18,25 +20,25 @@ impl From<&Size> for tf::Dimension {
     }
 }
 
-impl LayoutContext {
-    pub fn new(step: Step) -> Self {
-        LayoutContext { step }
+impl<'a> LayoutContext<'a> {
+    pub fn new(global_res: &'a GlobalResources, step: Step) -> Self {
+        LayoutContext { global_res, step }
     }
 
     fn compute_layout_helper(&self, taffy: &mut tf::Taffy, node: &Node) -> tf::Node {
         let tf_children: Vec<_> = node
             .children
             .as_ref()
-            .unwrap_or_default()
-            .iter()
-            .map(|n| self.compute_layout_helper(taffy, n))
-            .collect();
+            .map(|children|
+                children.iter()
+                    .map(|n| self.compute_layout_helper(taffy, n))
+                    .collect()).unwrap_or_default();
 
         // let w = node.width.get(self.step);
         // let h = node.height.get(self.step);
 
-        let (width, height) = if let Some(text) = &node.text {
-            let (width, height) = get_text_size(&text);
+        let (width, height) = if let Some(text) = &node.text.get(self.step) {
+            let (width, height) = get_text_size(self.global_res.font_db(), text);
             (tf::Dimension::Points(width), tf::Dimension::Points(height))
         } else {
             (

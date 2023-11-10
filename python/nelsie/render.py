@@ -27,6 +27,7 @@ def render_slides(
         args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE
     )
     stdout, _stderr = p.communicate(data.encode())
+    print(stdout.decode())
     if p.returncode != 0:
         stdout = stdout.decode()
         raise Exception("Rendering failed:\n" + stdout)

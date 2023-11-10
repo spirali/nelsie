@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import TypeVar, Generic, Literal
 
+from .text import StyledText
+
 T = TypeVar("T")
 
 
@@ -40,6 +42,7 @@ class ExportNode:
     reverse: ExportStepValue[bool]
 
     bg_color: ExportStepValue[str]
+    text: ExportStepValue[StyledText]
 
     children: list["ExportNode"] | None = None
 

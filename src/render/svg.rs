@@ -4,6 +4,7 @@ use crate::render::core::RenderConfig;
 use crate::render::layout::LayoutContext;
 use resvg::tiny_skia;
 use std::rc::Rc;
+use log::log;
 use taffy::geometry::Point;
 use taffy::style::{Dimension, FlexDirection, JustifyContent, Style};
 use taffy::style_helpers::TaffyMaxContent;
@@ -60,16 +61,13 @@ impl<'a> RenderContext<'a> {
             });
             self.svg_node
                 .append(usvg::Node::new(usvg::NodeKind::Path(path)));
-
-            // DEBUG
-            self.svg_node.append(render_text("Hello world", 200.0, 200.0))
         }
 
-        if let Some(text) = &node.text {
+        if let Some(text) = &node.text.get(self.step) {
             self.svg_node.append(render_text(
-                &text,
-                layout.location.x,
-                layout.location.y + layout.size.height - 7.0,
+                text,
+                x,
+                y,
             ));
         }
 
@@ -91,11 +89,11 @@ impl<'a> RenderContext<'a> {
 }
 
 pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
-    println!("Creating layout");
-    let layout_builder = LayoutContext::new(render_cfg.step);
+    log::debug!("Creating layout");
+    let layout_builder = LayoutContext::new(render_cfg.global_res, render_cfg.step);
     let (taffy, tf_node) = layout_builder.compute_layout(render_cfg.slide);
 
-    println!("Rendering to svg");
+    log::debug!("Rendering to svg");
     let render_ctx = RenderContext::new(render_cfg.step, 0, &taffy);
     let root_svg_node = render_ctx.render_to_svg(&render_cfg.slide.node, tf_node);
 
@@ -109,67 +107,4 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
         root: root_svg_node,
     };
     tree
-}
-
-#[cfg(test)]
-mod tests {
-    use super::super::text::get_text_size;
-    use super::render_to_svg_tree;
-    use crate::common::Size;
-    use crate::common::{Node, StepValue};
-    use usvg::TreeTextToPath;
-    use usvg::{fontdb, Color, TreeParsing, TreeWriting, XmlOptions};
-
-    #[test]
-    fn test_render() {
-        let node = Node {
-            width: StepValue::Const(Size::Points(800.0)),
-            height: StepValue::Const(Size::Points(600.0)),
-            bg_color: None,
-            text: None,
-            children: vec![
-                Node {
-                    width: StepValue::Const(Size::Points(100.0)),
-                    height: StepValue::Const(Size::Points(100.0)),
-                    children: vec![],
-                    bg_color: Some(Color::new_rgb(255, 0, 0)),
-                    text: Some("Ahoj světe!!!".to_string()),
-                },
-                Node {
-                    width: StepValue::Const(Size::Points(300.0)),
-                    height: StepValue::Const(Size::Points(200.0)),
-                    children: vec![],
-                    text: None,
-                    bg_color: Some(Color::new_rgb(0, 0, 255)),
-                },
-            ],
-        };
-        let mut tree = render_to_svg_tree(&node);
-        println!("{}", tree.to_string(&XmlOptions::default()));
-
-        let mut fontdb = fontdb::Database::new();
-        fontdb.load_system_fonts();
-        tree.convert_text(&fontdb);
-
-        println!("{}", tree.to_string(&XmlOptions::default()));
-
-        let pdf = svg2pdf::convert_tree(&tree, svg2pdf::Options::default());
-        std::fs::write("/tmp/x.pdf", pdf).unwrap();
-    }
-
-    #[test]
-    fn test_xxx() {
-        let svg_data = std::fs::read("/home/spirali/projects/nelsie/test3.svg").unwrap();
-        let mut tree = usvg::Tree::from_data(&svg_data, &Default::default()).unwrap();
-        println!("{:?}", tree.root.first_child().unwrap());
-        let mut fontdb = fontdb::Database::new();
-        fontdb.load_system_fonts();
-        tree.convert_text(&fontdb);
-        println!("{}", tree.to_string(&Default::default()));
-    }
-
-    #[test]
-    fn test_text_size() {
-        println!("{:?}", get_text_size("Ahoj"));
-    }
 }

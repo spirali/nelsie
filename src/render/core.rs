@@ -1,4 +1,3 @@
-use crate::common::fileutils::ensure_directory;
 use crate::model::{Node, Slide, Step};
 use crate::render::svg::render_to_svg_tree;
 use crate::render::GlobalResources;

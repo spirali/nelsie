@@ -1,5 +1,6 @@
 use super::{Color, Size, StepValue};
 use serde::Deserialize;
+use crate::model::text::StyledText;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Node {
@@ -14,5 +15,5 @@ pub(crate) struct Node {
     pub reverse: StepValue<bool>,
 
     pub bg_color: StepValue<Option<Color>>,
-    pub text: Option<String>,
+    pub text: StepValue<Option<StyledText>>,
 }

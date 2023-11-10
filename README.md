@@ -43,6 +43,8 @@
     * Rounded box corners
 * Text
     * Style parsing & rendering
+    * Text align: left, right, center
+    * Detecting invalid fonts
     * Line box
     * Inline box
     * Syntax highlight

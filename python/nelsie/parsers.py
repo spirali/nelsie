@@ -19,13 +19,6 @@ def parse_size(value: Size) -> ExportSize:
     raise ValueError(f"Invalid size definition: {value!r}")
 
 
-def check_color(value: str) -> str:
-    if value is None or isinstance(value, str):
-        # TODO: Validate color
-        return value
-    raise ValueError(f"Invalid color definition: {value!r}")
-
-
 def check_type(obj, cls):
     if isinstance(obj, cls):
         return obj

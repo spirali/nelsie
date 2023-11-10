@@ -1,18 +1,28 @@
 import dataclasses
 from typing import Optional
 
+from .textstyles import TextStyleManager, DEFAULT_STYLE, TextStylesProviderMixin
 from .export import ExportSlideDeck, ExportSlide
 from .box import Box, BoxBuilder
 from .render import render_slides
 
 
-class Slide(BoxBuilder):
-    def __init__(self, width: float, height: float, bg_color: str):
+class Slide(BoxBuilder, TextStylesProviderMixin):
+    def __init__(
+        self,
+        style_manager: TextStyleManager,
+        width: float,
+        height: float,
+        bg_color: str,
+    ):
+        self.style_manager = style_manager
         self.width = width
         self.height = height
         self.n_steps = 0
         self.root_box = Box(
-            self,
+            slide=self,
+            # As this box is hidden and exposed only through Slide, do NOT copy, but share it directly
+            style_manager=self.style_manager,
             show=True,
             width=self.width,
             height=self.height,
@@ -39,7 +49,7 @@ class Slide(BoxBuilder):
         )
 
 
-class SlideDeck:
+class SlideDeck(TextStylesProviderMixin):
     def __init__(
         self,
         *,
@@ -53,6 +63,7 @@ class SlideDeck:
         self.height = height
         self.bg_color = bg_color
 
+        self.style_manager = TextStyleManager({"default": DEFAULT_STYLE})
         self.slides: list[Slide] = []
 
     def new_slide(
@@ -62,6 +73,7 @@ class SlideDeck:
         bg_color: Optional[str] = None,
     ):
         slide = Slide(
+            style_manager=self.style_manager.copy(),
             width=width or self.width,
             height=height or self.height,
             bg_color=bg_color or self.bg_color,
