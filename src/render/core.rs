@@ -1,8 +1,8 @@
-use crate::model::{Node, Slide, Step};
+use crate::model::{Slide, Step};
 use crate::render::svg::render_to_svg_tree;
 use crate::render::GlobalResources;
 use crate::Result;
-use crate::{NelsieError, OutputConfig};
+use crate::{NelsieError};
 use resvg::tiny_skia;
 use std::path::Path;
 use usvg::{TreeTextToPath, TreeWriting, XmlOptions};

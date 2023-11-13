@@ -3,9 +3,9 @@ mod model;
 mod render;
 
 use crate::common::fileutils::ensure_directory;
-use crate::model::{Node, Slide, SlideDeck};
+use crate::model::{Slide, SlideDeck};
 use crate::render::{render_slide_step, GlobalResources, PdfBuilder, RenderConfig};
-use std::path::{Path, PathBuf};
+use std::path::{Path};
 use thiserror::Error;
 
 #[derive(Debug, Error)]

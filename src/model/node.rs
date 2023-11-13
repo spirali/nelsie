@@ -1,6 +1,6 @@
 use super::{Color, Size, StepValue};
-use serde::Deserialize;
 use crate::model::text::StyledText;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Node {

@@ -1,9 +1,9 @@
 use crate::model::{Node, Size, Slide, Step};
 use crate::render::text::get_text_size;
-use taffy::prelude as tf;
-use taffy::prelude::TaffyMaxContent;
-use taffy::style::AvailableSpace;
 use crate::render::GlobalResources;
+use taffy::prelude as tf;
+
+use taffy::style::AvailableSpace;
 
 pub(crate) struct LayoutContext<'a> {
     global_res: &'a GlobalResources,
@@ -29,10 +29,13 @@ impl<'a> LayoutContext<'a> {
         let tf_children: Vec<_> = node
             .children
             .as_ref()
-            .map(|children|
-                children.iter()
+            .map(|children| {
+                children
+                    .iter()
                     .map(|n| self.compute_layout_helper(taffy, n))
-                    .collect()).unwrap_or_default();
+                    .collect()
+            })
+            .unwrap_or_default();
 
         // let w = node.width.get(self.step);
         // let h = node.height.get(self.step);

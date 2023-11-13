@@ -1,23 +1,19 @@
-use super::text::{get_text_size, render_text};
+use super::text::{render_text};
 use crate::model::{Color, Node, Step};
 use crate::render::core::RenderConfig;
 use crate::render::layout::LayoutContext;
+
 use resvg::tiny_skia;
 use std::rc::Rc;
-use log::log;
-use taffy::geometry::Point;
-use taffy::style::{Dimension, FlexDirection, JustifyContent, Style};
-use taffy::style_helpers::TaffyMaxContent;
+
+
+
 use taffy::{prelude as tf, Taffy};
-use usvg;
+
 use usvg::{
-    CharacterPosition, Fill, NonZeroPositiveF32, Text, TextAnchor, TextChunk, TextFlow,
-    TextRendering, WritingMode,
+    Fill,
 };
-use usvg_tree::{
-    AlignmentBaseline, DominantBaseline, Font, FontStretch, FontStyle, LengthAdjust, PaintOrder,
-    TextDecoration, TextSpan, Visibility,
-};
+
 
 pub(crate) struct RenderContext<'a> {
     step: Step,
@@ -64,19 +60,11 @@ impl<'a> RenderContext<'a> {
         }
 
         if let Some(text) = &node.text.get(self.step) {
-            self.svg_node.append(render_text(
-                text,
-                x,
-                y,
-            ));
+            self.svg_node.append(render_text(text, x, y));
         }
 
         if let Some(children) = &node.children {
-            for (n, tf_n) in
-            children
-                .iter()
-                .zip(self.taffy.children(tf_node).unwrap())
-            {
+            for (n, tf_n) in children.iter().zip(self.taffy.children(tf_node).unwrap()) {
                 self.render_helper(n, x, y, tf_n);
             }
         }
@@ -98,13 +86,13 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     let root_svg_node = render_ctx.render_to_svg(&render_cfg.slide.node, tf_node);
 
     let size = usvg::Size::from_wh(render_cfg.slide.width, render_cfg.slide.height).unwrap();
-    let tree = usvg_tree::Tree {
+    
+    usvg_tree::Tree {
         size,
         view_box: usvg::ViewBox {
             rect: size.to_non_zero_rect(0.0, 0.0),
             aspect: usvg::AspectRatio::default(),
         },
         root: root_svg_node,
-    };
-    tree
+    }
 }
