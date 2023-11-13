@@ -42,7 +42,10 @@
     * Paths
     * Rounded box corners
 * Text
-    * Style parsing & rendering
+    * ~~Style parsing & text rendering~~
+    * Steps in styles
+    * All basic TextSyle properties
+    * TextStyle priorities
     * Text align: left, right, center
     * Detecting invalid fonts
     * Line box
