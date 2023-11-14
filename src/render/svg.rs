@@ -1,7 +1,7 @@
 use super::text::{render_text};
 use crate::model::{Color, Node, Step};
 use crate::render::core::RenderConfig;
-use crate::render::layout::LayoutContext;
+use crate::render::layout::{ComputedLayout, LayoutContext};
 
 use resvg::tiny_skia;
 use std::rc::Rc;
@@ -14,10 +14,10 @@ use usvg::{
 };
 
 
-pub(crate) struct RenderContext<'a> {
+pub(crate) struct RenderContext {
     step: Step,
     z_level: i32,
-    taffy: &'a Taffy,
+    layout: ComputedLayout,
     svg_node: usvg::Node,
 }
 
@@ -28,27 +28,24 @@ impl From<&Color> for usvg::Color {
     }
 }
 
-impl<'a> RenderContext<'a> {
-    pub fn new(step: Step, z_level: i32, taffy: &'a Taffy) -> Self {
+impl<'a> RenderContext {
+    pub fn new(step: Step, z_level: i32, layout: ComputedLayout) -> Self {
         RenderContext {
             step,
             z_level,
-            taffy,
+            layout,
             svg_node: usvg::Node::new(usvg::NodeKind::Group(usvg::Group::default())),
         }
     }
 
-    fn render_helper(&self, node: &Node, parent_x: f32, parent_y: f32, tf_node: tf::Node) {
+    fn render_helper(&self, node: &Node) {
         if !node.show.at_step(self.step) {
             return;
         }
-        let layout = self.taffy.layout(tf_node).unwrap();
-        let x = layout.location.x + parent_x;
-        let y = layout.location.y + parent_y;
-
         if let Some(color) = &node.bg_color.at_step(self.step) {
+            let (x, y, width, height) = self.layout.xywh(node.node_id);
             let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
-                tiny_skia::Rect::from_xywh(x, y, layout.size.width, layout.size.height).unwrap(),
+                tiny_skia::Rect::from_xywh(x, y, width, height).unwrap(),
             )));
             path.fill = Some(Fill {
                 paint: usvg::Paint::Color(color.into()),
@@ -59,18 +56,19 @@ impl<'a> RenderContext<'a> {
         }
 
         if let Some(text) = &node.text.at_step(self.step) {
+            let (x, y) = self.layout.xy(node.node_id);
             self.svg_node.append(render_text(&text, x, y));
         }
 
         if let Some(children) = &node.children {
-            for (n, tf_n) in children.iter().zip(self.taffy.children(tf_node).unwrap()) {
-                self.render_helper(n, x, y, tf_n);
+            for child in children {
+                self.render_helper(child);
             }
         }
     }
 
-    pub(crate) fn render_to_svg(self, node: &Node, tf_node: tf::Node) -> usvg::Node {
-        self.render_helper(node, 0.0, 0.0, tf_node);
+    pub(crate) fn render_to_svg(self, node: &Node) -> usvg::Node {
+        self.render_helper(node);
         self.svg_node
     }
 }
@@ -78,11 +76,13 @@ impl<'a> RenderContext<'a> {
 pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     log::debug!("Creating layout");
     let layout_builder = LayoutContext::new(render_cfg.global_res, render_cfg.step);
-    let (taffy, tf_node) = layout_builder.compute_layout(render_cfg.slide);
+    let layout = layout_builder.compute_layout(render_cfg.slide);
+
+    println!("LAYOUT {:?}", layout);
 
     log::debug!("Rendering to svg");
-    let render_ctx = RenderContext::new(render_cfg.step, 0, &taffy);
-    let root_svg_node = render_ctx.render_to_svg(&render_cfg.slide.node, tf_node);
+    let render_ctx = RenderContext::new(render_cfg.step, 0, layout);
+    let root_svg_node = render_ctx.render_to_svg(&render_cfg.slide.node);
 
     let size = usvg::Size::from_wh(render_cfg.slide.width, render_cfg.slide.height).unwrap();
 

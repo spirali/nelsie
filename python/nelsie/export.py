@@ -44,6 +44,7 @@ class ExportStyledText:
 
 @dataclass
 class ExportNode:
+    node_id: int
     width: ExportStepValue[ExportSize]
     height: ExportStepValue[ExportSize]
 

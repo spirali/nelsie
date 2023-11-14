@@ -64,6 +64,7 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         self.slide.update_min_steps(show_steps.n_steps)
 
         self.node = ExportNode(
+            node_id=slide.new_box_id(),
             show=export_step_value(show_steps, self.slide),
             width=self._export_attr("width", width, parse_size),
             height=self._export_attr("height", height, parse_size),

@@ -20,6 +20,7 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
         self.width = width
         self.height = height
         self.n_steps = 0
+        self.box_id_counter = 0
         self.root_box = Box(
             slide=self,
             # As this box is hidden and exposed only through Slide, do NOT copy, but share it directly
@@ -31,6 +32,10 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
             reverse=False,
             bg_color=bg_color,
         )
+
+    def new_box_id(self):
+        self.box_id_counter += 1
+        return self.box_id_counter
 
     def get_slide(self):
         return self
