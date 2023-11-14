@@ -80,6 +80,14 @@ class InSteps(Generic[T]):
         )
 
 
+def zip_in_steps(in_steps: Sequence[InSteps[T]]) -> InSteps[T]:
+    assert in_steps
+    n = max(len(s.values) for s in in_steps)
+    values = [[s.get(i) for s in in_steps] for i in range(n)]
+    n_steps = max(s.n_steps for s in in_steps)
+    return InSteps(values, n_steps=n_steps)
+
+
 def _expand_list(seq: Sequence, open: bool) -> InSteps[bool]:
     if not seq:
         return InSteps([False], 0)

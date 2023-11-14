@@ -64,7 +64,7 @@ def test_step_values():
     )
 
     with pytest.raises(ValueError, match="Multiple definitions assigned for step 4"):
-        print(InSteps({"4": "black", "1,2,3+": "green"}).values)
+        InSteps({"4": "black", "1,2,3+": "green"})
 
     with pytest.raises(ValueError, match="Value not defined for step 2"):
         InSteps({"4+": "black", "1,3": "green"})

@@ -23,7 +23,7 @@ pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f
     let mut width: f32 = 0.0;
     if let Some(child) = tree.root.first_child() {
         let mut children = child.children();
-        for line in text.styled_lines {
+        for line in &text.styled_lines {
             width = width.max(
                 (0..line.spans.len())
                     .map(|_| {
@@ -44,7 +44,7 @@ pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f
     (width, text.height())
 }
 
-fn create_svg_span(text_styles: &[&TextStyle], chunk: &Span) -> TextSpan {
+fn create_svg_span(text_styles: &[TextStyle], chunk: &Span) -> TextSpan {
     let text_style = &text_styles[chunk.style_idx as usize];
     let fill = Fill {
         paint: usvg::Paint::Color((&text_style.color).into()),
@@ -83,7 +83,7 @@ fn create_svg_span(text_styles: &[&TextStyle], chunk: &Span) -> TextSpan {
     }
 }
 
-fn render_line(text_styles: &[&TextStyle], styled_line: &StyledLine, x: f32, y: f32) -> TextChunk {
+fn render_line(text_styles: &[TextStyle], styled_line: &StyledLine, x: f32, y: f32) -> TextChunk {
     TextChunk {
         x: Some(x),
         y: Some(y),

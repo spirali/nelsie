@@ -43,7 +43,7 @@
     * Rounded box corners
 * Text
     * ~~Style parsing & text rendering~~
-    * Steps in styles
+    * ~~Steps in styles~~
     * All basic TextSyle properties
     * TextStyle priorities
     * Text align: left, right, center

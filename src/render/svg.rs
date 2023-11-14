@@ -59,7 +59,7 @@ impl<'a> RenderContext<'a> {
         }
 
         if let Some(text) = &node.text.at_step(self.step) {
-            self.svg_node.append(render_text(&text.at_step(self.step), x, y));
+            self.svg_node.append(render_text(&text, x, y));
         }
 
         if let Some(children) = &node.children {

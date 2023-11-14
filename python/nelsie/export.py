@@ -37,7 +37,7 @@ ExportStepValue = ExportConstStepValue[T] | ExportComplexStepValue[T]
 class ExportStyledText:
     styled_lines: list[StyledLine]
     # SteppedTextStyle is intermediate product, for export it has tobe changed to ExportStepValue
-    styles: list[ExportStepValue[TextStyle]]
+    styles: list[TextStyle]
     default_font_size: float
     default_line_spacing: float
 

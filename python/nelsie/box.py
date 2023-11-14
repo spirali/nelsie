@@ -63,8 +63,6 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         show_steps = parse_steps(show)
         self.slide.update_min_steps(show_steps.n_steps)
 
-        print("!!!!", text)
-
         self.node = ExportNode(
             show=export_step_value(show_steps, self.slide),
             width=self._export_attr("width", width, parse_size),
@@ -72,13 +70,10 @@ class Box(BoxBuilder, TextStylesProviderMixin):
             bg_color=self._export_attr("bg_color", bg_color, check_color),
             row=self._export_attr("row", row, check_type_bool),
             reverse=self._export_attr("reverse", reverse, check_type_bool),
-            text=export_step_value(
-                text,
-                self.get_slide(),
-                lambda t: export_styled_text(self.slide, t) if t is not None else None,
-            ),
+            text=export_styled_text(text, self.slide)
+            if text
+            else export_step_value(None, self.slide),
         )
-        print(">>>", self.node.text)
         self.children = []
 
     def text(

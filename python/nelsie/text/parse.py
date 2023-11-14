@@ -1,7 +1,8 @@
 from typing import Sequence
 
-from nelsie.export import ExportStyledText
+from nelsie.export import ExportStyledText, ExportStepValue
 from nelsie.steps.stepsexport import export_step_value
+from nelsie.steps.insteps import to_steps, zip_in_steps
 from .texttypes import StyledText, StyledSpan, StyledLine
 from .textstyle import TextStyle
 from .manager import TextStyleManager, update_stepped_text_style
@@ -97,16 +98,20 @@ def parse_styled_text(
     )
 
 
-def export_styled_text(slide, styled_text: StyledText) -> ExportStyledText:
-    return ExportStyledText(
-        styled_lines=styled_text.styled_lines,
-        styles=[
-            export_step_value(
-                style,
-                slide,
-            )
-            for style in styled_text.styles
-        ],
-        default_font_size=styled_text.default_font_size,
-        default_line_spacing=styled_text.default_line_spacing,
+def export_styled_text(
+    styled_text: StyledText, slide
+) -> ExportStepValue[ExportStyledText]:
+    def make_export_styled_text(styles):
+        return ExportStyledText(
+            styled_lines=styled_text.styled_lines,
+            styles=styles,
+            default_font_size=styled_text.default_font_size,
+            default_line_spacing=styled_text.default_line_spacing,
+        )
+
+    return export_step_value(
+        zip_in_steps([to_steps(style) for style in styled_text.styles]).map(
+            make_export_styled_text
+        ),
+        slide,
     )

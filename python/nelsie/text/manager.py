@@ -53,6 +53,4 @@ def update_stepped_text_style(
         return style1.update(style2)
     style1 = to_steps(style1)
     style2 = to_steps(style2)
-    print(style1.values)
-    print(style2.values)
     return style1.zip(style2).map(lambda pair: pair[0].update(pair[1]))

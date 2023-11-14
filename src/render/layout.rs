@@ -41,7 +41,7 @@ impl<'a> LayoutContext<'a> {
         // let h = node.height.get(self.step);
 
         let (width, height) = if let Some(text) = &node.text.at_step(self.step) {
-            let (width, height) = get_text_size(self.global_res.font_db(), &text.at_step(self.step));
+            let (width, height) = get_text_size(self.global_res.font_db(), &text);
             (tf::Dimension::Points(width), tf::Dimension::Points(height))
         } else {
             (
