@@ -1,8 +1,11 @@
-from .text import StyledText, parse_styled_text
-from .textstyles import TextStyleManager, TextStylesProviderMixin, TextStyle
+from .text.texttypes import StyledText
+from .text.parse import parse_styled_text, export_styled_text
+from .text.manager import TextStyleManager, TextStylesProviderMixin
+from .text.textstyle import TextStyle
 from .export import ExportNode, ExportStepValue
-from .parsers import parse_size, check_type, check_type_bool
-from .steps import InSteps, parse_steps, to_steps, export_step_value
+from .steps.stepsexport import export_step_value
+from .parsers import parse_size, check_type_bool
+from .steps.insteps import InSteps, parse_steps
 from .basictypes import Size
 from .colors import check_color
 
@@ -60,6 +63,8 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         show_steps = parse_steps(show)
         self.slide.update_min_steps(show_steps.n_steps)
 
+        print("!!!!", text)
+
         self.node = ExportNode(
             show=export_step_value(show_steps, self.slide),
             width=self._export_attr("width", width, parse_size),
@@ -67,8 +72,13 @@ class Box(BoxBuilder, TextStylesProviderMixin):
             bg_color=self._export_attr("bg_color", bg_color, check_color),
             row=self._export_attr("row", row, check_type_bool),
             reverse=self._export_attr("reverse", reverse, check_type_bool),
-            text=export_step_value(text, self.get_slide()),
+            text=export_step_value(
+                text,
+                self.get_slide(),
+                lambda t: export_styled_text(self.slide, t) if t is not None else None,
+            ),
         )
+        print(">>>", self.node.text)
         self.children = []
 
     def text(

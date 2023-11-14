@@ -1,8 +1,5 @@
-from typing import TypeVar, Generic, Sequence, Callable
+from typing import TypeVar, Generic, Sequence
 import re
-
-from .export import ExportConstStepValue, ExportComplexStepValue, ExportStepValue
-
 
 StepDef = int | Sequence[int] | str
 
@@ -16,6 +13,15 @@ def to_steps(obj):
 
 T = TypeVar("T")
 S = TypeVar("S")
+
+
+def _extend_values(values: list[T], n: int) -> list[T]:
+    if len(values) >= n:
+        return values
+    result = values[:]
+    while len(result) < n:
+        result.append(values[-1])
+    return result
 
 
 class InSteps(Generic[T]):
@@ -66,11 +72,12 @@ class InSteps(Generic[T]):
     def map(self, fn):
         return InSteps([fn(v) for v in self.values], n_steps=self.n_steps)
 
-    def export(self):
-        if len(self.values) == 1:
-            return ExportConstStepValue(self.values[0])
-        else:
-            return ExportComplexStepValue(self.values)
+    def zip(self, other: "InSteps[S]") -> "InSteps[(S, T)]":
+        n = max(len(self.values), len(other.values))
+        return InSteps(
+            list(zip(_extend_values(self.values, n), _extend_values(other.values, n))),
+            n_steps=max(self.n_steps, other.n_steps),
+        )
 
 
 def _expand_list(seq: Sequence, open: bool) -> InSteps[bool]:
@@ -124,18 +131,3 @@ def parse_steps(obj: StepDef) -> InSteps[bool]:
     if isinstance(obj, Sequence):
         return _expand_list(obj, False)
     raise ValueError("Step cannot be a non-positive integer")
-
-
-def export_step_value(
-    obj: InSteps[T] | T, slide, export_value_fn: Callable[[T], S] | None = None
-) -> ExportStepValue[S]:
-    if isinstance(obj, InSteps):
-        slide.update_min_steps(obj.n_steps)
-        if export_value_fn:
-            obj = obj.map(export_value_fn)
-        return obj.export()
-    else:
-        if export_value_fn:
-            return ExportConstStepValue(export_value_fn(obj))
-        else:
-            return ExportConstStepValue(obj)

@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import TypeVar, Generic, Literal
 
-from .text import StyledText
+from .text.textstyle import TextStyle
+from .text.texttypes import StyledLine
 
 T = TypeVar("T")
 
@@ -32,6 +33,15 @@ class ExportComplexStepValue(Generic[T]):
 ExportStepValue = ExportConstStepValue[T] | ExportComplexStepValue[T]
 
 
+@dataclass(frozen=True)
+class ExportStyledText:
+    styled_lines: list[StyledLine]
+    # SteppedTextStyle is intermediate product, for export it has tobe changed to ExportStepValue
+    styles: list[ExportStepValue[TextStyle]]
+    default_font_size: float
+    default_line_spacing: float
+
+
 @dataclass
 class ExportNode:
     width: ExportStepValue[ExportSize]
@@ -42,7 +52,7 @@ class ExportNode:
     reverse: ExportStepValue[bool]
 
     bg_color: ExportStepValue[str]
-    text: ExportStepValue[StyledText]
+    text: ExportStepValue[ExportStyledText]
 
     children: list["ExportNode"] | None = None
 

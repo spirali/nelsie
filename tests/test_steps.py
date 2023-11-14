@@ -1,5 +1,5 @@
 from nelsie import InSteps
-from nelsie.steps import parse_steps
+from nelsie.steps.insteps import parse_steps
 
 import pytest
 

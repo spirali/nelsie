@@ -1,28 +1,10 @@
-from dataclasses import dataclass
 from typing import Sequence
 
-from .textstyles import TextStyle, TextStyleManager
-
-
-@dataclass(frozen=True)
-class StyledSpan:
-    start: int
-    length: int
-    style_idx: int
-
-
-@dataclass(frozen=True)
-class StyledLine:
-    spans: list[StyledSpan]
-    text: str
-
-
-@dataclass(frozen=True)
-class StyledText:
-    styled_lines: list[StyledLine]
-    styles: list[TextStyle]
-    default_font_size: float
-    default_line_spacing: float
+from nelsie.export import ExportStyledText
+from nelsie.steps.stepsexport import export_step_value
+from .texttypes import StyledText, StyledSpan, StyledLine
+from .textstyle import TextStyle
+from .manager import TextStyleManager, update_stepped_text_style
 
 
 def _find_first(string, start, c1, c2) -> int:
@@ -61,7 +43,9 @@ def parse_styled_text(
                 style_names.append(style_name_stack[:])
                 style = base_style
                 for name in style_name_stack:
-                    style = style.update(style_manager.get_style(name))
+                    style = update_stepped_text_style(
+                        style, style_manager.get_style(name)
+                    )
                 styles.append(style)
             spans.append(StyledSpan(len(raw_line), len(added_text), style_idx))
         return added_text
@@ -110,4 +94,19 @@ def parse_styled_text(
         styles=styles,
         default_line_spacing=base_style.line_spacing,
         default_font_size=base_style.size,
+    )
+
+
+def export_styled_text(slide, styled_text: StyledText) -> ExportStyledText:
+    return ExportStyledText(
+        styled_lines=styled_text.styled_lines,
+        styles=[
+            export_step_value(
+                style,
+                slide,
+            )
+            for style in styled_text.styles
+        ],
+        default_font_size=styled_text.default_font_size,
+        default_line_spacing=styled_text.default_line_spacing,
     )

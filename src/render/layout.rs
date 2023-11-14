@@ -40,17 +40,17 @@ impl<'a> LayoutContext<'a> {
         // let w = node.width.get(self.step);
         // let h = node.height.get(self.step);
 
-        let (width, height) = if let Some(text) = &node.text.get(self.step) {
-            let (width, height) = get_text_size(self.global_res.font_db(), text);
+        let (width, height) = if let Some(text) = &node.text.at_step(self.step) {
+            let (width, height) = get_text_size(self.global_res.font_db(), &text.at_step(self.step));
             (tf::Dimension::Points(width), tf::Dimension::Points(height))
         } else {
             (
-                node.width.get(self.step).into(),
-                node.height.get(self.step).into(),
+                node.width.at_step(self.step).into(),
+                node.height.at_step(self.step).into(),
             )
         };
 
-        let flex_direction = match (node.row.get(self.step), node.reverse.get(self.step)) {
+        let flex_direction = match (node.row.at_step(self.step), node.reverse.at_step(self.step)) {
             (false, false) => tf::FlexDirection::Column,
             (true, false) => tf::FlexDirection::Row,
             (false, true) => tf::FlexDirection::ColumnReverse,

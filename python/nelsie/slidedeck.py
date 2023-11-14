@@ -1,7 +1,8 @@
 import dataclasses
 from typing import Optional
 
-from .textstyles import TextStyleManager, DEFAULT_STYLE, TextStylesProviderMixin
+from .text.textstyle import DEFAULT_STYLE
+from .text.manager import TextStylesProviderMixin, TextStyleManager
 from .export import ExportSlideDeck, ExportSlide
 from .box import Box, BoxBuilder
 from .render import render_slides

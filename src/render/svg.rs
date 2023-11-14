@@ -7,7 +7,6 @@ use resvg::tiny_skia;
 use std::rc::Rc;
 
 
-
 use taffy::{prelude as tf, Taffy};
 
 use usvg::{
@@ -40,14 +39,14 @@ impl<'a> RenderContext<'a> {
     }
 
     fn render_helper(&self, node: &Node, parent_x: f32, parent_y: f32, tf_node: tf::Node) {
-        if !node.show.get(self.step) {
+        if !node.show.at_step(self.step) {
             return;
         }
         let layout = self.taffy.layout(tf_node).unwrap();
         let x = layout.location.x + parent_x;
         let y = layout.location.y + parent_y;
 
-        if let Some(color) = &node.bg_color.get(self.step) {
+        if let Some(color) = &node.bg_color.at_step(self.step) {
             let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
                 tiny_skia::Rect::from_xywh(x, y, layout.size.width, layout.size.height).unwrap(),
             )));
@@ -59,8 +58,8 @@ impl<'a> RenderContext<'a> {
                 .append(usvg::Node::new(usvg::NodeKind::Path(path)));
         }
 
-        if let Some(text) = &node.text.get(self.step) {
-            self.svg_node.append(render_text(text, x, y));
+        if let Some(text) = &node.text.at_step(self.step) {
+            self.svg_node.append(render_text(&text.at_step(self.step), x, y));
         }
 
         if let Some(children) = &node.children {
@@ -86,7 +85,7 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     let root_svg_node = render_ctx.render_to_svg(&render_cfg.slide.node, tf_node);
 
     let size = usvg::Size::from_wh(render_cfg.slide.width, render_cfg.slide.height).unwrap();
-    
+
     usvg_tree::Tree {
         size,
         view_box: usvg::ViewBox {

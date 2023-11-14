@@ -1,7 +1,9 @@
 from testutils import check
-from nelsie import TextStyle
-from nelsie.textstyles import DEFAULT_STYLE, TextStyleManager
-from nelsie.text import parse_styled_text, StyledSpan, StyledLine
+from nelsie import TextStyle, InSteps
+from nelsie.text.textstyle import DEFAULT_STYLE
+from nelsie.text.manager import TextStyleManager
+from nelsie.text.texttypes import StyledSpan, StyledLine
+from nelsie.text.parse import parse_styled_text
 
 
 def test_text_update():
@@ -13,7 +15,7 @@ def test_text_update():
     assert s3.line_spacing == 1.5
 
 
-def test_text_style_manager():
+def test_text_style_manager_no_steps():
     manager = TextStyleManager({"default": DEFAULT_STYLE})
     manager.set_style("red", TextStyle(color="red", size=123))
 
@@ -32,6 +34,21 @@ def test_text_style_manager():
     manager2.set_style("red", TextStyle("orange"))
     assert manager.get_style("red") == TextStyle(color="blue")
     assert manager2.get_style("red") == TextStyle(color="orange")
+
+
+def test_text_style_manager_steps():
+    manager = TextStyleManager({"default": DEFAULT_STYLE})
+    manager.set_style("red", TextStyle(color="red", size=123))
+    manager.update_style("red", InSteps({"1,3": TextStyle(size=15), "2": TextStyle()}))
+    manager.update_style(
+        "red", InSteps({"1-3": TextStyle(), "4": TextStyle(color="green")})
+    )
+    assert manager.get_style("red").values == [
+        TextStyle(color="red", size=15),
+        TextStyle(color="red", size=123),
+        TextStyle(color="red", size=15),
+        TextStyle(color="green", size=15),
+    ]
 
 
 def test_parse_text():
@@ -135,7 +152,7 @@ def test_parse_text():
 
 
 @check(n_slides=4)
-def test_render_text(deck):
+def test_render_text_basic(deck):
     deck.set_style("highlight", TextStyle(color="orange"))
     slide = deck.new_slide()
     slide.set_style("small", TextStyle(size=8))
@@ -153,3 +170,15 @@ def test_render_text(deck):
     slide.box(bg_color="#f88").text(
         "Now follows: ~big{Big text}\nNext line\nNext line\nNext line"
     )
+
+
+@check(n_slides=2)
+def test_render_text_steps(deck):
+    deck.set_style("highlight", TextStyle(color="orange"))
+    slide = deck.new_slide(width=300, height=100)
+    slide.set_style(
+        "my_style",
+        InSteps({1: TextStyle(color="green"), 2: TextStyle(color="orange", size=64)}),
+    )
+    #    slide.box(bg_color="#f88").text("Say ~my_style{hello}!")
+    slide.box().text("Say ~my_style{hello}!")

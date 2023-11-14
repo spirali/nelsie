@@ -16,7 +16,7 @@ impl<T: Debug + DeserializeOwned> StepValue<T> {
         StepValue::Const(value)
     }
 
-    pub fn get(&self, step: Step) -> &T {
+    pub fn at_step(&self, step: Step) -> &T {
         assert!(step > 0);
         match self {
             StepValue::Const(v) => v,
