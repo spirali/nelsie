@@ -43,9 +43,9 @@ impl<'a> RenderContext {
             return;
         }
         if let Some(color) = &node.bg_color.at_step(self.step) {
-            let (x, y, width, height) = self.layout.xywh(node.node_id);
+            let rect = self.layout.rect(node.node_id).unwrap();
             let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
-                tiny_skia::Rect::from_xywh(x, y, width, height).unwrap(),
+                tiny_skia::Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).unwrap(),
             )));
             path.fill = Some(Fill {
                 paint: usvg::Paint::Color(color.into()),
@@ -56,8 +56,8 @@ impl<'a> RenderContext {
         }
 
         if let Some(text) = &node.text.at_step(self.step) {
-            let (x, y) = self.layout.xy(node.node_id);
-            self.svg_node.append(render_text(&text, x, y));
+            let rect = self.layout.rect(node.node_id).unwrap();
+            self.svg_node.append(render_text(&text, rect.x, rect.y));
         }
 
         if let Some(children) = &node.children {

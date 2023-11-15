@@ -1,9 +1,8 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use crate::model::{Node, NodeId, PosAndSizeExpr, Size, Slide, Step};
 use crate::render::text::get_text_size;
 use crate::render::GlobalResources;
-use taffy::prelude as tf;
-
+use taffy::{prelude as tf};
 use taffy::style::AvailableSpace;
 
 pub(crate) struct LayoutContext<'a> {
@@ -12,16 +11,16 @@ pub(crate) struct LayoutContext<'a> {
 }
 
 #[derive(Debug)]
-struct ExprNodeRect {
-    x: PosAndSizeExpr,
-    y: PosAndSizeExpr,
-    width: PosAndSizeExpr,
-    height: PosAndSizeExpr,
+pub(crate) struct Rectangle {
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 #[derive(Default, Debug)]
 pub(crate) struct ComputedLayout {
-    node_rects: HashMap<NodeId, ExprNodeRect>,
+    node_rects: HashMap<NodeId, Rectangle>,
 }
 
 impl ComputedLayout {
@@ -31,33 +30,21 @@ impl ComputedLayout {
             PosAndSizeExpr::X { .. } => { todo!() }
             PosAndSizeExpr::Y { .. } => { todo!() }
             PosAndSizeExpr::Width { node_id, fraction } => {
-                assert!(*node_id < current_id);
-                self.eval(*node_id, &self.node_rects[&node_id].width) * fraction
+                self.node_rects[&node_id].width * fraction
             }
             PosAndSizeExpr::Height { node_id, fraction } => {
-                assert!(*node_id < current_id);
-                self.eval(*node_id, &self.node_rects[&node_id].height) * fraction
+                self.node_rects[&node_id].height * fraction
             }
             PosAndSizeExpr::Sum { expressions } => { expressions.iter().map(|e| self.eval(current_id, e)).sum() }
         }
     }
 
-    fn set_rect(&mut self, node_id: NodeId, rect: ExprNodeRect) {
+    fn set_rect(&mut self, node_id: NodeId, rect: Rectangle) {
         assert!(self.node_rects.insert(node_id, rect).is_none());
     }
 
-    fn rect(&self, node_id: NodeId) -> Option<&ExprNodeRect> {
+    pub fn rect(&self, node_id: NodeId) -> Option<&Rectangle> {
         self.node_rects.get(&node_id)
-    }
-
-    pub fn xywh(&self, node_id: NodeId) -> (f32, f32, f32, f32) {
-        let rect = &self.node_rects[&node_id];
-        (self.eval(node_id, &rect.x), self.eval(node_id, &rect.y), self.eval(node_id, &rect.width), self.eval(node_id, &rect.height))
-    }
-
-    pub fn xy(&self, node_id: NodeId) -> (f32, f32) {
-        let rect = &self.node_rects[&node_id];
-        (self.eval(node_id, &rect.x), self.eval(node_id, &rect.y))
     }
 }
 
@@ -119,25 +106,19 @@ impl<'a> LayoutContext<'a> {
         taffy.new_with_children(style, &tf_children).unwrap()
     }
 
-    pub fn compose_final_layer_helper(&self, node: &Node, parent: Option<&Node>, taffy: &tf::Taffy, tf_node: tf::Node, out: &mut ComputedLayout) {
+    fn gather_taffy_layout<'b>(&self, node: &'b Node, parent: Option<&Node>, taffy: &tf::Taffy, tf_node: tf::Node, out: &mut BTreeMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>) {
         let layout_rect = taffy.layout(tf_node).unwrap();
-        let (p_x, p_y) = parent.map(|p| {
-            let r = out.rect(p.node_id).unwrap();
-            (r.x.clone(), r.y.clone())
-        }).unwrap_or_else(|| (PosAndSizeExpr::new_const(0.0), PosAndSizeExpr::new_const(0.0)));
-        let x = PosAndSizeExpr::new_sum(&p_x, &PosAndSizeExpr::new_const(layout_rect.location.x));
-        let y = PosAndSizeExpr::new_sum(&p_y, &PosAndSizeExpr::new_const(layout_rect.location.y));
-        let width = PosAndSizeExpr::new_const(layout_rect.size.width);
-        let height = PosAndSizeExpr::new_const(layout_rect.size.height);
-        out.set_rect(node.node_id, ExprNodeRect {
-            x,
-            y,
-            width,
-            height,
-        });
+        out.insert(node.node_id, (
+            parent.map(|p| p.node_id),
+            &node, Rectangle {
+                x: layout_rect.location.x,
+                y: layout_rect.location.y,
+                width: layout_rect.size.width,
+                height: layout_rect.size.height,
+            }));
         if let Some(children) = &node.children {
             for (child, tf_child) in children.iter().zip(taffy.children(tf_node).unwrap()) {
-                self.compose_final_layer_helper(child, Some(node), taffy, tf_child, out);
+                self.gather_taffy_layout(child, Some(node), taffy, tf_child, out);
             }
         }
     }
@@ -150,8 +131,21 @@ impl<'a> LayoutContext<'a> {
             height: AvailableSpace::Definite(slide.height),
         };
         taffy.compute_layout(tf_node, size).unwrap();
+        let mut node_entries = BTreeMap::new();
+        self.gather_taffy_layout(&slide.node, None, &taffy, tf_node, &mut node_entries);
         let mut result = ComputedLayout::default();
-        self.compose_final_layer_helper(&slide.node, None, &taffy, tf_node, &mut result);
+        for (parent_id, node, rect) in node_entries.values() {
+            let (parent_x, parent_y) = parent_id.map(|node_id| {
+                let r = result.rect(node_id).unwrap();
+                (r.x, r.y)
+            }).unwrap_or((0.0, 0.0));
+            result.set_rect(node.node_id, Rectangle {
+                x: parent_x + rect.x,
+                y: parent_y + rect.y,
+                width: rect.width,
+                height: rect.height,
+            });
+        }
         result
     }
 }
