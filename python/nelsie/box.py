@@ -66,6 +66,8 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         self.node = ExportNode(
             node_id=slide.new_box_id(),
             show=export_step_value(show_steps, self.slide),
+            x=export_step_value(None, self.slide),
+            y=export_step_value(None, self.slide),
             width=self._export_attr("width", width, parse_size),
             height=self._export_attr("height", height, parse_size),
             bg_color=self._export_attr("bg_color", bg_color, check_color),

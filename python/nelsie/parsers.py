@@ -1,21 +1,25 @@
 import re
 
 from .basictypes import Size
-from .export import ExportSize
+from .export import ExportSize, PointsSize, FractionSize, AUTO_SIZE
 
 SIZE_REGEXP = re.compile(r"^(\d+(?:\.\d+)?)(%)?$")
 
 
 def parse_size(value: Size) -> ExportSize:
     if value == "auto":
-        return value
+        return AUTO_SIZE
     if isinstance(value, (int, float)):
-        return {"points": value}
+        return PointsSize(float(value))
     if isinstance(value, str):
         match = SIZE_REGEXP.match(value)
         if match:
             number, percent = match.groups()
-            return {"percent": float(number)} if percent else {"points": float(number)}
+            return (
+                FractionSize(float(number) / 100.0)
+                if percent
+                else PointsSize(float(number))
+            )
     raise ValueError(f"Invalid size definition: {value!r}")
 
 

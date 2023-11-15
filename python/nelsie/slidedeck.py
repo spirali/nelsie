@@ -1,6 +1,6 @@
-import dataclasses
 from typing import Optional
 
+from .serialization import serialize
 from .text.textstyle import DEFAULT_STYLE
 from .text.manager import TextStylesProviderMixin, TextStyleManager
 from .export import ExportSlideDeck, ExportSlide
@@ -102,7 +102,7 @@ class SlideDeck(TextStylesProviderMixin):
             raise Exception("No output file is defined")
         render_slides(
             self.nelsie_bin,
-            dataclasses.asdict(self.export()),
+            serialize(self.export()),
             output_pdf,
             output_svg,
             output_png,

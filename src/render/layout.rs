@@ -1,5 +1,5 @@
 use std::collections::{BTreeMap, HashMap};
-use crate::model::{Node, NodeId, PosAndSizeExpr, Size, Slide, Step};
+use crate::model::{Node, NodeId, LayoutExpr, Size, Slide, Step};
 use crate::render::text::get_text_size;
 use crate::render::GlobalResources;
 use taffy::{prelude as tf};
@@ -24,18 +24,18 @@ pub(crate) struct ComputedLayout {
 }
 
 impl ComputedLayout {
-    fn eval(&self, current_id: NodeId, expr: &PosAndSizeExpr) -> f32 {
+    fn eval(&self, expr: &LayoutExpr) -> f32 {
         match expr {
-            PosAndSizeExpr::Const { value } => *value,
-            PosAndSizeExpr::X { .. } => { todo!() }
-            PosAndSizeExpr::Y { .. } => { todo!() }
-            PosAndSizeExpr::Width { node_id, fraction } => {
+            LayoutExpr::ConstValue { value } => *value,
+            LayoutExpr::X { .. } => { todo!() }
+            LayoutExpr::Y { .. } => { todo!() }
+            LayoutExpr::Width { node_id, fraction } => {
                 self.node_rects[&node_id].width * fraction
             }
-            PosAndSizeExpr::Height { node_id, fraction } => {
+            LayoutExpr::Height { node_id, fraction } => {
                 self.node_rects[&node_id].height * fraction
             }
-            PosAndSizeExpr::Sum { expressions } => { expressions.iter().map(|e| self.eval(current_id, e)).sum() }
+            LayoutExpr::Sum { expressions } => { expressions.iter().map(|e| self.eval(e)).sum() }
         }
     }
 
@@ -48,12 +48,16 @@ impl ComputedLayout {
     }
 }
 
+fn is_layout_managed(node: &Node, parent: Option<&Node>, step: Step) -> bool {
+    parent.map(|p| node.main_axis_position(*p.row.at_step(step)).at_step(step).is_none()).unwrap_or(true)
+}
+
 
 impl From<&Size> for tf::Dimension {
     fn from(value: &Size) -> Self {
         match value {
-            Size::Points(v) => tf::Dimension::Points(*v),
-            Size::Percent(v) => tf::Dimension::Percent(*v / 100.0),
+            Size::Points { value } => tf::Dimension::Points(*value),
+            Size::Fraction { value } => tf::Dimension::Percent(*value),
             Size::Auto => tf::Dimension::Auto,
         }
     }
@@ -64,14 +68,14 @@ impl<'a> LayoutContext<'a> {
         LayoutContext { global_res, step }
     }
 
-    fn compute_layout_helper(&self, taffy: &mut tf::Taffy, node: &Node) -> tf::Node {
+    fn compute_layout_helper(&self, taffy: &mut tf::Taffy, node: &Node, parent: Option<&Node>) -> tf::Node {
         let tf_children: Vec<_> = node
             .children
             .as_ref()
             .map(|children| {
                 children
                     .iter()
-                    .map(|n| self.compute_layout_helper(taffy, n))
+                    .map(|child| self.compute_layout_helper(taffy, child, Some(node)))
                     .collect()
             })
             .unwrap_or_default();
@@ -96,7 +100,14 @@ impl<'a> LayoutContext<'a> {
             (true, true) => tf::FlexDirection::RowReverse,
         };
 
+        let display = if is_layout_managed(node, parent, self.step) {
+            tf::Display::Flex
+        } else {
+            tf::Display::None
+        };
+
         let style = tf::Style {
+            display,
             size: tf::Size { width, height },
             flex_direction,
             justify_content: Some(tf::JustifyContent::Center),
@@ -125,7 +136,7 @@ impl<'a> LayoutContext<'a> {
 
     pub fn compute_layout(&self, slide: &Slide) -> ComputedLayout {
         let mut taffy = tf::Taffy::new();
-        let tf_node = self.compute_layout_helper(&mut taffy, &slide.node);
+        let tf_node = self.compute_layout_helper(&mut taffy, &slide.node, None);
         let size = tf::Size {
             width: AvailableSpace::Definite(slide.width),
             height: AvailableSpace::Definite(slide.height),
@@ -140,8 +151,8 @@ impl<'a> LayoutContext<'a> {
                 (r.x, r.y)
             }).unwrap_or((0.0, 0.0));
             result.set_rect(node.node_id, Rectangle {
-                x: parent_x + rect.x,
-                y: parent_y + rect.y,
+                x: node.x.at_step(self.step).as_ref().map(|x| result.eval(x)).unwrap_or_else(|| parent_x + rect.x),
+                y: node.y.at_step(self.step).as_ref().map(|y| result.eval(y)).unwrap_or_else(|| parent_y + rect.y),
                 width: rect.width,
                 height: rect.height,
             });

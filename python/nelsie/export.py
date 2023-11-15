@@ -8,16 +8,25 @@ T = TypeVar("T")
 
 
 @dataclass
-class PointsSize(Generic[T]):
-    points: float
+class PointsSize:
+    _tag = "points"
+    value: float
 
 
 @dataclass
-class PercentSize(Generic[T]):
-    percent: float
+class FractionSize:
+    _tag = "fraction"
+    value: float
 
 
-ExportSize = PercentSize | PointsSize | Literal["auto"]
+@dataclass
+class AutoSize:
+    _tag = "auto"
+
+
+AUTO_SIZE = AutoSize()
+
+ExportSize = FractionSize | PointsSize | AutoSize
 
 
 @dataclass
@@ -45,6 +54,10 @@ class ExportStyledText:
 @dataclass
 class ExportNode:
     node_id: int
+
+    x: ExportStepValue[None]
+    y: ExportStepValue[None]
+
     width: ExportStepValue[ExportSize]
     height: ExportStepValue[ExportSize]
 

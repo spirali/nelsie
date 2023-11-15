@@ -1,6 +1,6 @@
 use serde::{Deserialize, Deserializer};
 use std::str::FromStr;
-use crate::model::PosAndSizeExpr::Const;
+use crate::model::LayoutExpr::ConstValue;
 
 #[derive(Debug, Deserialize, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub(crate) struct NodeId(u32);
@@ -15,41 +15,24 @@ impl NodeId {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[serde(tag = "type")]
 pub(crate) enum Size {
-    Points(f32),
-    Percent(f32),
+    Points { value: f32 },
+    Fraction { value: f32 },
     Auto,
 }
 
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "snake_case")]
-#[cfg_attr(test, derive(PartialEq))]
-pub(crate) enum PosAndSizeExpr {
-    Const { value: f32 },
+#[serde(tag = "type")]
+pub(crate) enum LayoutExpr {
+    ConstValue { value: f32 },
     X { node_id: NodeId },
     Y { node_id: NodeId },
     Width { node_id: NodeId, fraction: f32 },
     Height { node_id: NodeId, fraction: f32 },
-    Sum { expressions: Vec<PosAndSizeExpr> },
-}
-
-impl PosAndSizeExpr {
-    pub fn new_const(value: f32) -> Self {
-        Const { value }
-    }
-    pub fn new_sum(expr1: &Self, expr2: &Self) -> Self {
-        match (expr1, expr2) {
-            (x, Const { value: 0.0 }) | (Const { value: 0.0 }, x) => x.clone(),
-            (Const { value: value1 }, Const { value: value2 }) => Const { value: value1 + value2 },
-            (PosAndSizeExpr::Sum { expressions: es }, x) => {
-                let mut expressions = es.clone();
-                expressions.push(x.clone());
-                PosAndSizeExpr::Sum { expressions }
-            }
-            _ => todo!(),
-        }
-    }
+    Sum { expressions: Vec<LayoutExpr> },
 }
 
 #[derive(Debug)]
@@ -77,20 +60,6 @@ impl From<&Color> for svgtypes::Color {
 // A conditionally-compiled module
 #[cfg(test)]
 mod test {
-    use crate::model::{NodeId, PosAndSizeExpr};
-    use crate::model::PosAndSizeExpr::{Const, Sum, X};
-
-    #[test]
-    pub fn test_expressions_sum_build() {
-        let e0 = Const { value: 0.0 };
-        let e1 = Const { value: 1.0 };
-        let e2 = Const { value: 2.0 };
-        let e4 = X { node_id: NodeId::new(5) };
-        let e5 = Sum { expressions: vec![e2.clone(), e4.clone()] };
-        let e6 = X { node_id: NodeId::new(5) };
-
-        assert_eq!(PosAndSizeExpr::new_sum(&e0, &e1), e1);
-        assert_eq!(PosAndSizeExpr::new_sum(&e2, &e0), e2);
-        assert_eq!(PosAndSizeExpr::new_sum(&e5, &e6), Sum { expressions: vec![e2.clone(), e4.clone(), e6.clone()] });
-    }
+    use crate::model::{NodeId, LayoutExpr};
+    use crate::model::LayoutExpr::{ConstValue, Sum, X};
 }
