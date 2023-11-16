@@ -50,7 +50,6 @@ pub(crate) struct StyledText {
     pub default_line_spacing: f32,
 }
 
-
 impl StyledText {
     pub fn height(&self) -> f32 {
         self.styled_lines

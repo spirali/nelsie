@@ -1,8 +1,8 @@
-use std::collections::{BTreeMap, HashMap};
-use crate::model::{Node, NodeId, LayoutExpr, Size, Slide, Step};
+use crate::model::{LayoutExpr, Node, NodeId, Size, Slide, Step};
 use crate::render::text::get_text_size;
 use crate::render::GlobalResources;
-use taffy::{prelude as tf};
+use std::collections::{BTreeMap, HashMap};
+use taffy::prelude as tf;
 use taffy::style::AvailableSpace;
 
 pub(crate) struct LayoutContext<'a> {
@@ -24,18 +24,19 @@ pub(crate) struct ComputedLayout {
 }
 
 impl ComputedLayout {
+    fn _rect(&self, node_id: NodeId) -> &Rectangle {
+        self.rect(node_id)
+            .expect("Node id not found, ordering not correct?")
+    }
+
     fn eval(&self, expr: &LayoutExpr) -> f32 {
         match expr {
             LayoutExpr::ConstValue { value } => *value,
-            LayoutExpr::X { .. } => { todo!() }
-            LayoutExpr::Y { .. } => { todo!() }
-            LayoutExpr::Width { node_id, fraction } => {
-                self.node_rects[&node_id].width * fraction
-            }
-            LayoutExpr::Height { node_id, fraction } => {
-                self.node_rects[&node_id].height * fraction
-            }
-            LayoutExpr::Sum { expressions } => { expressions.iter().map(|e| self.eval(e)).sum() }
+            LayoutExpr::X { node_id } => self._rect(*node_id).x,
+            LayoutExpr::Y { node_id } => self._rect(*node_id).y,
+            LayoutExpr::Width { node_id, fraction } => self._rect(*node_id).width * fraction,
+            LayoutExpr::Height { node_id, fraction } => self._rect(*node_id).height * fraction,
+            LayoutExpr::Sum { expressions } => expressions.iter().map(|e| self.eval(e)).sum(),
         }
     }
 
@@ -49,9 +50,14 @@ impl ComputedLayout {
 }
 
 fn is_layout_managed(node: &Node, parent: Option<&Node>, step: Step) -> bool {
-    parent.map(|p| node.main_axis_position(*p.row.at_step(step)).at_step(step).is_none()).unwrap_or(true)
+    parent
+        .map(|p| {
+            node.main_axis_position(*p.row.at_step(step))
+                .at_step(step)
+                .is_none()
+        })
+        .unwrap_or(true)
 }
-
 
 impl From<&Size> for tf::Dimension {
     fn from(value: &Size) -> Self {
@@ -68,7 +74,12 @@ impl<'a> LayoutContext<'a> {
         LayoutContext { global_res, step }
     }
 
-    fn compute_layout_helper(&self, taffy: &mut tf::Taffy, node: &Node, parent: Option<&Node>) -> tf::Node {
+    fn compute_layout_helper(
+        &self,
+        taffy: &mut tf::Taffy,
+        node: &Node,
+        parent: Option<&Node>,
+    ) -> tf::Node {
         let tf_children: Vec<_> = node
             .children
             .as_ref()
@@ -100,14 +111,14 @@ impl<'a> LayoutContext<'a> {
             (true, true) => tf::FlexDirection::RowReverse,
         };
 
-        let display = if is_layout_managed(node, parent, self.step) {
-            tf::Display::Flex
+        let position = if is_layout_managed(node, parent, self.step) {
+            tf::Position::Relative
         } else {
-            tf::Display::None
+            tf::Position::Absolute
         };
 
         let style = tf::Style {
-            display,
+            position,
             size: tf::Size { width, height },
             flex_direction,
             justify_content: Some(tf::JustifyContent::Center),
@@ -117,16 +128,28 @@ impl<'a> LayoutContext<'a> {
         taffy.new_with_children(style, &tf_children).unwrap()
     }
 
-    fn gather_taffy_layout<'b>(&self, node: &'b Node, parent: Option<&Node>, taffy: &tf::Taffy, tf_node: tf::Node, out: &mut BTreeMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>) {
+    fn gather_taffy_layout<'b>(
+        &self,
+        node: &'b Node,
+        parent: Option<&Node>,
+        taffy: &tf::Taffy,
+        tf_node: tf::Node,
+        out: &mut BTreeMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>,
+    ) {
         let layout_rect = taffy.layout(tf_node).unwrap();
-        out.insert(node.node_id, (
-            parent.map(|p| p.node_id),
-            &node, Rectangle {
-                x: layout_rect.location.x,
-                y: layout_rect.location.y,
-                width: layout_rect.size.width,
-                height: layout_rect.size.height,
-            }));
+        out.insert(
+            node.node_id,
+            (
+                parent.map(|p| p.node_id),
+                &node,
+                Rectangle {
+                    x: layout_rect.location.x,
+                    y: layout_rect.location.y,
+                    width: layout_rect.size.width,
+                    height: layout_rect.size.height,
+                },
+            ),
+        );
         if let Some(children) = &node.children {
             for (child, tf_child) in children.iter().zip(taffy.children(tf_node).unwrap()) {
                 self.gather_taffy_layout(child, Some(node), taffy, tf_child, out);
@@ -146,16 +169,31 @@ impl<'a> LayoutContext<'a> {
         self.gather_taffy_layout(&slide.node, None, &taffy, tf_node, &mut node_entries);
         let mut result = ComputedLayout::default();
         for (parent_id, node, rect) in node_entries.values() {
-            let (parent_x, parent_y) = parent_id.map(|node_id| {
-                let r = result.rect(node_id).unwrap();
-                (r.x, r.y)
-            }).unwrap_or((0.0, 0.0));
-            result.set_rect(node.node_id, Rectangle {
-                x: node.x.at_step(self.step).as_ref().map(|x| result.eval(x)).unwrap_or_else(|| parent_x + rect.x),
-                y: node.y.at_step(self.step).as_ref().map(|y| result.eval(y)).unwrap_or_else(|| parent_y + rect.y),
-                width: rect.width,
-                height: rect.height,
-            });
+            let (parent_x, parent_y) = parent_id
+                .map(|node_id| {
+                    let r = result.rect(node_id).unwrap();
+                    (r.x, r.y)
+                })
+                .unwrap_or((0.0, 0.0));
+            result.set_rect(
+                node.node_id,
+                Rectangle {
+                    x: node
+                        .x
+                        .at_step(self.step)
+                        .as_ref()
+                        .map(|x| result.eval(x))
+                        .unwrap_or_else(|| parent_x + rect.x),
+                    y: node
+                        .y
+                        .at_step(self.step)
+                        .as_ref()
+                        .map(|y| result.eval(y))
+                        .unwrap_or_else(|| parent_y + rect.y),
+                    width: rect.width,
+                    height: rect.height,
+                },
+            );
         }
         result
     }

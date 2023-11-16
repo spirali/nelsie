@@ -1,7 +1,7 @@
 use super::{Color, Size, StepValue};
-use crate::model::text::{StyledText};
+use crate::model::text::StyledText;
+use crate::model::{LayoutExpr, NodeId, Step};
 use serde::Deserialize;
-use crate::model::{NodeId, LayoutExpr, Step};
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Node {

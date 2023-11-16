@@ -23,9 +23,12 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
         self.box_id_counter = 0
         self.root_box = Box(
             slide=self,
+            parent_id=None,
             # As this box is hidden and exposed only through Slide, do NOT copy, but share it directly
             style_manager=self.style_manager,
             show=True,
+            x=None,
+            y=None,
             width=self.width,
             height=self.height,
             row=False,
@@ -39,6 +42,9 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
 
     def get_slide(self):
         return self
+
+    def get_box(self):
+        return self.root_box
 
     def add_box(self, box: Box):
         self.root_box.add_box(box)

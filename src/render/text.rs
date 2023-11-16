@@ -110,7 +110,9 @@ pub(crate) fn render_text(styled_text: &StyledText, x: f32, y: f32) -> usvg::Nod
             y: None,
             dx: None,
             dy: None,
-        }; n_chars];
+        };
+        n_chars
+    ];
     let rot_list = vec![0.0; n_chars];
 
     let mut current_y = y;

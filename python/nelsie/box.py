@@ -4,9 +4,9 @@ from .text.manager import TextStyleManager, TextStylesProviderMixin
 from .text.textstyle import TextStyle
 from .export import ExportNode, ExportStepValue
 from .steps.stepsexport import export_step_value
-from .parsers import parse_size, check_type_bool
+from .parsers import parse_size, check_type_bool, parse_position
 from .steps.insteps import InSteps, parse_steps
-from .basictypes import Size
+from .basictypes import Size, Position
 from .colors import check_color
 
 
@@ -17,10 +17,15 @@ class BoxBuilder(TextStylesProviderMixin):
     def get_slide(self):
         raise NotImplementedError
 
+    def get_box(self):
+        raise NotImplementedError
+
     def box(
         self,
         *,
         show: bool | str = True,
+        x: Position | InSteps[Position] = None,
+        y: Position | InSteps[Position] = None,
         width: Size | InSteps[Size] = "auto",
         height: Size | InSteps[Size] = "auto",
         row: bool | InSteps[bool] = False,
@@ -28,10 +33,14 @@ class BoxBuilder(TextStylesProviderMixin):
         bg_color: str | None | InSteps[str | None] = None,
         text: StyledText | None = None,
     ):
+        parent_box = self.get_box()
         box = Box(
             slide=self.get_slide(),
+            parent_id=parent_box.box_id if parent_box else None,
             style_manager=self.style_manager.copy(),
             show=show,
+            x=x,
+            y=y,
             width=width,
             height=height,
             bg_color=bg_color,
@@ -48,8 +57,11 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         self,
         *,
         slide,
+        parent_id: int | None,
         style_manager: TextStyleManager,
         show: bool | str,
+        x: Position | InSteps[Position],
+        y: Position | InSteps[Position],
         width: Size | InSteps[Size],
         height: Size | InSteps[Size],
         row: bool | InSteps[bool],
@@ -66,8 +78,8 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         self.node = ExportNode(
             node_id=slide.new_box_id(),
             show=export_step_value(show_steps, self.slide),
-            x=export_step_value(None, self.slide),
-            y=export_step_value(None, self.slide),
+            x=self._export_attr("x", x, lambda v: parse_position(parent_id, v, True)),
+            y=self._export_attr("y", y, lambda v: parse_position(parent_id, v, False)),
             width=self._export_attr("width", width, parse_size),
             height=self._export_attr("height", height, parse_size),
             bg_color=self._export_attr("bg_color", bg_color, check_color),
@@ -78,6 +90,10 @@ class Box(BoxBuilder, TextStylesProviderMixin):
             else export_step_value(None, self.slide),
         )
         self.children = []
+
+    @property
+    def box_id(self):
+        return self.node.node_id
 
     def text(
         self,
@@ -107,6 +123,9 @@ class Box(BoxBuilder, TextStylesProviderMixin):
 
     def get_slide(self):
         return self.slide
+
+    def get_box(self):
+        return self
 
     def add_box(self, box: "Box"):
         self.children.append(box)

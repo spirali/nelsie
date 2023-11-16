@@ -1,4 +1,4 @@
-use super::text::{render_text};
+use super::text::render_text;
 use crate::model::{Color, Node, Step};
 use crate::render::core::RenderConfig;
 use crate::render::layout::{ComputedLayout, LayoutContext};
@@ -6,13 +6,9 @@ use crate::render::layout::{ComputedLayout, LayoutContext};
 use resvg::tiny_skia;
 use std::rc::Rc;
 
-
 use taffy::{prelude as tf, Taffy};
 
-use usvg::{
-    Fill,
-};
-
+use usvg::Fill;
 
 pub(crate) struct RenderContext {
     step: Step,
@@ -78,7 +74,7 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     let layout_builder = LayoutContext::new(render_cfg.global_res, render_cfg.step);
     let layout = layout_builder.compute_layout(render_cfg.slide);
 
-    println!("LAYOUT {:?}", layout);
+    log::debug!("Layout {:?}", layout);
 
     log::debug!("Rendering to svg");
     let render_ctx = RenderContext::new(render_cfg.step, 0, layout);

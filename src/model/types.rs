@@ -1,6 +1,6 @@
+use crate::model::LayoutExpr::ConstValue;
 use serde::{Deserialize, Deserializer};
 use std::str::FromStr;
-use crate::model::LayoutExpr::ConstValue;
 
 #[derive(Debug, Deserialize, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub(crate) struct NodeId(u32);
@@ -12,7 +12,6 @@ impl NodeId {
     }
 }
 
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
@@ -21,7 +20,6 @@ pub(crate) enum Size {
     Fraction { value: f32 },
     Auto,
 }
-
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "snake_case")]
@@ -40,8 +38,8 @@ pub(crate) struct Color(svgtypes::Color);
 
 impl<'de> Deserialize<'de> for Color {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         let value = String::deserialize(deserializer)?;
         let color = svgtypes::Color::from_str(&value)
@@ -56,10 +54,9 @@ impl From<&Color> for svgtypes::Color {
     }
 }
 
-
 // A conditionally-compiled module
 #[cfg(test)]
 mod test {
-    use crate::model::{NodeId, LayoutExpr};
     use crate::model::LayoutExpr::{ConstValue, Sum, X};
+    use crate::model::{LayoutExpr, NodeId};
 }
