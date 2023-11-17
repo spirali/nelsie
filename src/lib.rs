@@ -2,6 +2,7 @@ mod common;
 mod model;
 mod render;
 
+use std::collections::HashSet;
 use crate::common::fileutils::ensure_directory;
 use crate::model::{Slide, SlideDeck};
 use crate::render::{render_slide_step, GlobalResources, PdfBuilder, RenderConfig};
@@ -64,6 +65,17 @@ fn render_slide(
         .collect()
 }
 
+fn load_image_data(slide_deck: &SlideDeck, global_res: &mut GlobalResources) -> crate::Result<()> {
+    let mut paths = HashSet::new();
+    for slide in &slide_deck.slides {
+        slide.node.collect_image_paths(&mut paths);
+    }
+    for path in &paths {
+        global_res.load_image(path)?;
+    }
+    Ok(())
+}
+
 pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
     log::debug!("Input received:\n{}", data);
     let slide_deck = parse_slide_deck(data)?;
@@ -90,7 +102,9 @@ pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
         })?;
     }
 
-    let global_res = GlobalResources::new();
+    let mut global_res = GlobalResources::new();
+
+    load_image_data(&slide_deck, &mut global_res)?;
 
     let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));

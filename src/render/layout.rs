@@ -4,6 +4,7 @@ use crate::render::GlobalResources;
 use std::collections::{BTreeMap, HashMap};
 use taffy::prelude as tf;
 use taffy::style::{AvailableSpace, Dimension};
+use crate::render::image::get_image_size;
 
 pub(crate) struct LayoutContext<'a> {
     global_res: &'a GlobalResources,
@@ -103,6 +104,7 @@ impl<'a> LayoutContext<'a> {
                 .map(|content| {
                     let (w, h) = match content {
                         NodeContent::Text(text) => get_text_size(self.global_res.font_db(), &text),
+                        NodeContent::Image(image) => get_image_size(self.global_res, image),
                     };
                     (Some(Dimension::Points(w)), Some(Dimension::Points(h)))
                 })

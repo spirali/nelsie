@@ -55,5 +55,5 @@
     * Fit-in-box rendering
 * Images
     * loading SVG image + fragments
-    * loading raster images
+    * ~~loading raster images~~
     * loading ORA + fragments

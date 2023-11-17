@@ -25,4 +25,11 @@ impl<T: Debug + DeserializeOwned> StepValue<T> {
                 .unwrap_or_else(|| steps.last().unwrap()),
         }
     }
+
+    pub fn values(&self) -> impl Iterator<Item=&T> {
+        match self {
+            StepValue::Const(v) => itertools::Either::Left(std::iter::once(v)),
+            StepValue::Steps(v) => itertools::Either::Right(v.iter()),
+        }
+    }
 }

@@ -44,7 +44,13 @@ class StyledText:
     default_line_spacing: float
 
 
-NodeContent = StyledText | None
+@dataclass
+class Image:
+    _tag = "image"
+    filename: str
+
+
+NodeContent = StyledText | Image | None
 
 
 @dataclass

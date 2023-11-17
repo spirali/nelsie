@@ -15,12 +15,14 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
         width: float,
         height: float,
         bg_color: str,
+        image_directory: str | None,
     ):
         self.style_manager = style_manager
         self.width = width
         self.height = height
         self.n_steps = 0
         self.box_id_counter = 0
+        self.image_directory = image_directory
         self.root_box = Box(
             slide=self,
             parent_id=None,
@@ -68,12 +70,14 @@ class SlideDeck(TextStylesProviderMixin):
         nelsie_bin: str,
         width: float = 1024,
         height: float = 768,
-        bg_color: str = "white"
+        bg_color: str = "white",
+        image_directory: str | None = None
     ):
         self.nelsie_bin = nelsie_bin
         self.width = width
         self.height = height
         self.bg_color = bg_color
+        self.image_directory = image_directory
 
         self.style_manager = TextStyleManager({"default": DEFAULT_STYLE})
         self.slides: list[Slide] = []
@@ -83,12 +87,14 @@ class SlideDeck(TextStylesProviderMixin):
         width: Optional[float] = None,
         height: Optional[float] = None,
         bg_color: Optional[str] = None,
+        image_directory: str | None = None,
     ):
         slide = Slide(
             style_manager=self.style_manager.copy(),
             width=width or self.width,
             height=height or self.height,
             bg_color=bg_color or self.bg_color,
+            image_directory=image_directory or self.image_directory,
         )
         self.slides.append(slide)
         return slide

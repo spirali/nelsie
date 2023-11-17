@@ -1,7 +1,9 @@
+import os
+
 from .text.parse import parse_styled_text
 from .text.manager import TextStyleManager, TextStylesProviderMixin
 from .text.textstyle import TextStyle
-from .export import ExportNode, ExportStepValue, NodeContent
+from .export import ExportNode, ExportStepValue, NodeContent, Image
 from .steps.stepsexport import export_step_value
 from .parsers import parse_size, check_type_bool, parse_position
 from .steps.insteps import InSteps, parse_steps
@@ -18,6 +20,35 @@ class BoxBuilder(TextStylesProviderMixin):
 
     def get_box(self):
         raise NotImplementedError
+
+    def image(self, filename: str, **box_args):
+        slide = self.get_slide()
+        if slide.image_directory is not None:
+            filename = os.path.join(slide.image_directory, filename)
+        image = Image(os.path.abspath(filename))
+        return self.box(content=image, **box_args)
+
+    def text(
+        self,
+        text: str,
+        *,
+        style: str | TextStyle = "default",
+        delimiters: str | None = "~{}",
+        tab_width: int = 4,
+        **box_args,
+    ):
+        return self._text_box(text, style, delimiters, tab_width, box_args)
+
+    def _text_box(self, text, style, delimiters, tab_width, box_args):
+        text = text.replace("\t", " " * tab_width)
+        if isinstance(style, str):
+            style = self.style_manager.get_style(style)
+        elif isinstance(style, TextStyle):
+            self.style_manager.get_style("default").update(style)
+        else:
+            raise Exception("Invalid type for text style")
+        parsed_text = parse_styled_text(text, delimiters, style, self.style_manager)
+        return self.box(content=parsed_text, **box_args)
 
     def box(
         self,
@@ -91,28 +122,6 @@ class Box(BoxBuilder, TextStylesProviderMixin):
     @property
     def box_id(self):
         return self.node.node_id
-
-    def text(
-        self,
-        text: str,
-        *,
-        style: str | TextStyle = "default",
-        delimiters: str | None = "~{}",
-        tab_width: int = 4,
-        **box_args,
-    ):
-        return self._text_box(text, style, delimiters, tab_width, box_args)
-
-    def _text_box(self, text, style, delimiters, tab_width, box_args):
-        text = text.replace("\t", " " * tab_width)
-        if isinstance(style, str):
-            style = self.style_manager.get_style(style)
-        elif isinstance(style, TextStyle):
-            self.style_manager.get_style("default").update(style)
-        else:
-            raise Exception("Invalid type for text style")
-        parsed_text = parse_styled_text(text, delimiters, style, self.style_manager)
-        return self.box(content=parsed_text, **box_args)
 
     def _export_attr(self, name, value, parser) -> ExportStepValue:
         try:

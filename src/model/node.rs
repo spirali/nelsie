@@ -1,13 +1,17 @@
+use std::collections::HashSet;
+use std::path::Path;
 use super::{Color, Size, StepValue};
 use crate::model::text::StyledText;
 use crate::model::{LayoutExpr, NodeId, Step};
 use serde::Deserialize;
+use crate::model::image::Image;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 pub(crate) enum NodeContent {
     Text(StyledText),
+    Image(Image),
 }
 
 #[derive(Debug, Deserialize)]
@@ -36,6 +40,19 @@ impl Node {
             &self.x
         } else {
             &self.y
+        }
+    }
+
+    pub fn collect_image_paths<'a>(&'a self, out: &mut HashSet<&'a Path>) {
+        for content in self.content.values() {
+            if let Some(NodeContent::Image(image)) = content {
+                out.insert(image.filename.as_path());
+            }
+        }
+        if let Some(children) = &self.children {
+            for child in children {
+                child.collect_image_paths(out);
+            }
         }
     }
 }

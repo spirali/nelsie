@@ -9,8 +9,11 @@ use std::rc::Rc;
 use taffy::{prelude as tf, Taffy};
 
 use usvg::Fill;
+use crate::render::GlobalResources;
+use crate::render::image::render_image;
 
-pub(crate) struct RenderContext {
+pub(crate) struct RenderContext<'a> {
+    global_res: &'a GlobalResources,
     step: Step,
     z_level: i32,
     layout: ComputedLayout,
@@ -24,9 +27,10 @@ impl From<&Color> for usvg::Color {
     }
 }
 
-impl<'a> RenderContext {
-    pub fn new(step: Step, z_level: i32, layout: ComputedLayout) -> Self {
+impl<'a> RenderContext<'a> {
+    pub fn new(global_res: &'a GlobalResources, step: Step, z_level: i32, layout: ComputedLayout) -> Self {
         RenderContext {
+            global_res,
             step,
             z_level,
             layout,
@@ -57,6 +61,9 @@ impl<'a> RenderContext {
                 NodeContent::Text(text) => {
                     self.svg_node.append(render_text(&text, rect.x, rect.y));
                 }
+                NodeContent::Image(image) => {
+                    render_image(self.global_res, image, rect, &self.svg_node)
+                }
             }
         }
 
@@ -81,7 +88,7 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     log::debug!("Layout {:?}", layout);
 
     log::debug!("Rendering to svg");
-    let render_ctx = RenderContext::new(render_cfg.step, 0, layout);
+    let render_ctx = RenderContext::new(render_cfg.global_res, render_cfg.step, 0, layout);
     let root_svg_node = render_ctx.render_to_svg(&render_cfg.slide.node);
 
     let size = usvg::Size::from_wh(render_cfg.slide.width, render_cfg.slide.height).unwrap();
