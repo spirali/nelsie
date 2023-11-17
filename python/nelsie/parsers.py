@@ -2,14 +2,14 @@ import re
 
 from .layoutexpr import XExpr, ConstExpr, YExpr
 from .basictypes import Size
-from .export import ExportSize, PointsSize, FractionSize, AUTO_SIZE
+from .export import ExportSize, PointsSize, FractionSize
 
 SIZE_REGEXP = re.compile(r"^(\d+(?:\.\d+)?)(%)?$")
 
 
 def parse_size(value: Size) -> ExportSize:
-    if value == "auto":
-        return AUTO_SIZE
+    if value is None:
+        return None
     if isinstance(value, (int, float)):
         return PointsSize(float(value))
     if isinstance(value, str):

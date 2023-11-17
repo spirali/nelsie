@@ -19,14 +19,7 @@ class FractionSize:
     value: float
 
 
-@dataclass
-class AutoSize:
-    _tag = "auto"
-
-
-AUTO_SIZE = AutoSize()
-
-ExportSize = FractionSize | PointsSize | AutoSize
+ExportSize = FractionSize | PointsSize | None
 
 
 @dataclass
@@ -42,13 +35,16 @@ class ExportComplexStepValue(Generic[T]):
 ExportStepValue = ExportConstStepValue[T] | ExportComplexStepValue[T]
 
 
-@dataclass(frozen=True)
-class ExportStyledText:
+@dataclass
+class StyledText:
+    _tag = "text"
     styled_lines: list[StyledLine]
-    # SteppedTextStyle is intermediate product, for export it has tobe changed to ExportStepValue
     styles: list[TextStyle]
     default_font_size: float
     default_line_spacing: float
+
+
+NodeContent = StyledText | None
 
 
 @dataclass
@@ -66,7 +62,7 @@ class ExportNode:
     reverse: ExportStepValue[bool]
 
     bg_color: ExportStepValue[str]
-    text: ExportStepValue[ExportStyledText]
+    content: ExportStepValue[NodeContent]
 
     children: list["ExportNode"] | None = None
 

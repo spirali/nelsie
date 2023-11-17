@@ -1,4 +1,4 @@
-from nelsie.export import PointsSize, FractionSize, AUTO_SIZE
+from nelsie.export import PointsSize, FractionSize
 from nelsie.parsers import parse_size
 import pytest
 
@@ -13,7 +13,7 @@ def test_parse_size():
     assert parse_size("12%") == FractionSize(0.12)
     assert parse_size("12.234%") == FractionSize(0.12234)
 
-    assert parse_size("auto") is AUTO_SIZE
+    assert parse_size(None) is None
 
     with pytest.raises(ValueError, match="Invalid size definition"):
         parse_size("xxx")

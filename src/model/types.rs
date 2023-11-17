@@ -18,7 +18,6 @@ impl NodeId {
 pub(crate) enum Size {
     Points { value: f32 },
     Fraction { value: f32 },
-    Auto,
 }
 
 #[derive(Debug, Deserialize, Clone)]

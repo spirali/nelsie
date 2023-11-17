@@ -1,5 +1,5 @@
 use super::text::render_text;
-use crate::model::{Color, Node, Step};
+use crate::model::{Color, Node, NodeContent, Step};
 use crate::render::core::RenderConfig;
 use crate::render::layout::{ComputedLayout, LayoutContext};
 
@@ -51,9 +51,13 @@ impl<'a> RenderContext {
                 .append(usvg::Node::new(usvg::NodeKind::Path(path)));
         }
 
-        if let Some(text) = &node.text.at_step(self.step) {
+        if let Some(content) = &node.content.at_step(self.step) {
             let rect = self.layout.rect(node.node_id).unwrap();
-            self.svg_node.append(render_text(&text, rect.x, rect.y));
+            match content {
+                NodeContent::Text(text) => {
+                    self.svg_node.append(render_text(&text, rect.x, rect.y));
+                }
+            }
         }
 
         if let Some(children) = &node.children {

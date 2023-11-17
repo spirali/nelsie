@@ -1,9 +1,9 @@
-use crate::model::{LayoutExpr, Node, NodeId, Size, Slide, Step};
+use crate::model::{LayoutExpr, Node, NodeContent, NodeId, Size, Slide, Step};
 use crate::render::text::get_text_size;
 use crate::render::GlobalResources;
 use std::collections::{BTreeMap, HashMap};
 use taffy::prelude as tf;
-use taffy::style::AvailableSpace;
+use taffy::style::{AvailableSpace, Dimension};
 
 pub(crate) struct LayoutContext<'a> {
     global_res: &'a GlobalResources,
@@ -64,7 +64,6 @@ impl From<&Size> for tf::Dimension {
         match value {
             Size::Points { value } => tf::Dimension::Points(*value),
             Size::Fraction { value } => tf::Dimension::Percent(*value),
-            Size::Auto => tf::Dimension::Auto,
         }
     }
 }
@@ -94,15 +93,34 @@ impl<'a> LayoutContext<'a> {
         // let w = node.width.get(self.step);
         // let h = node.height.get(self.step);
 
-        let (width, height) = if let Some(text) = &node.text.at_step(self.step) {
-            let (width, height) = get_text_size(self.global_res.font_db(), &text);
-            (tf::Dimension::Points(width), tf::Dimension::Points(height))
+        let w = node.width.at_step(self.step);
+        let h = node.height.at_step(self.step);
+
+        let (content_w, content_h) = if w.is_none() || h.is_none() {
+            node.content
+                .at_step(self.step)
+                .as_ref()
+                .map(|content| {
+                    let (w, h) = match content {
+                        NodeContent::Text(text) => get_text_size(self.global_res.font_db(), &text),
+                    };
+                    (Some(Dimension::Points(w)), Some(Dimension::Points(h)))
+                })
+                .unwrap_or((None, None))
         } else {
-            (
-                node.width.at_step(self.step).into(),
-                node.height.at_step(self.step).into(),
-            )
+            (None, None)
         };
+
+        let width = w
+            .as_ref()
+            .map(|v| v.into())
+            .or(content_w)
+            .unwrap_or(Dimension::Auto);
+        let height = h
+            .as_ref()
+            .map(|v| v.into())
+            .or(content_h)
+            .unwrap_or(Dimension::Auto);
 
         let flex_direction = match (node.row.at_step(self.step), node.reverse.at_step(self.step)) {
             (false, false) => tf::FlexDirection::Column,

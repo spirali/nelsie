@@ -8,7 +8,7 @@ def test_render_outputs(tmp_path, deck):
     slide.box(width=200, height=400, bg_color="red")
 
     slide = deck.new_slide(bg_color="green")
-    slide.box(width="auto", height="auto", bg_color="black")
+    slide.box(width=None, height=None, bg_color="black")
     deck.render(output_pdf=out_pdf, output_svg=out_svg, output_png=out_png, debug=True)
 
     with open(out_svg / "0-1.svg") as f:

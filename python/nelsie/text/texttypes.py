@@ -16,7 +16,7 @@ class StyledLine:
 
 
 @dataclass(frozen=True)
-class StyledText:
+class SteppedStyledText:
     styled_lines: list[StyledLine]
     # SteppedTextStyle is intermediate product, for export it has tobe changed to ExportStepValue
     styles: list[SteppedTextStyle]

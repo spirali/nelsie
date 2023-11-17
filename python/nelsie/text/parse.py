@@ -1,9 +1,8 @@
 from typing import Sequence
 
-from nelsie.export import ExportStyledText, ExportStepValue
-from nelsie.steps.stepsexport import export_step_value
-from nelsie.steps.insteps import to_steps, zip_in_steps
-from .texttypes import StyledText, StyledSpan, StyledLine
+from nelsie.export import ExportStepValue, StyledText
+from nelsie.steps.insteps import to_steps, zip_in_steps, InSteps
+from .texttypes import StyledSpan, StyledLine, SteppedStyledText
 from .textstyle import TextStyle
 from .manager import TextStyleManager, update_stepped_text_style
 
@@ -23,7 +22,7 @@ def parse_styled_text(
     delimiters: Sequence[str],
     base_style: TextStyle,
     style_manager: TextStyleManager,
-) -> StyledText:
+) -> InSteps[StyledText]:
     start_sequence, start_block, end_block = delimiters
     assert start_sequence != start_block
     assert start_sequence != end_block
@@ -90,28 +89,12 @@ def parse_styled_text(
         styled_lines.append(StyledLine(spans=spans, text=raw_line))
         # abs_pos_index += len(raw_line) + 1  # Becuase of \n
 
-    return StyledText(
-        styled_lines=styled_lines,
-        styles=styles,
-        default_line_spacing=base_style.line_spacing,
-        default_font_size=base_style.size,
-    )
-
-
-def export_styled_text(
-    styled_text: StyledText, slide
-) -> ExportStepValue[ExportStyledText]:
-    def make_export_styled_text(styles):
-        return ExportStyledText(
-            styled_lines=styled_text.styled_lines,
+    def make_styled_text(styles):
+        return StyledText(
+            styled_lines=styled_lines,
             styles=styles,
-            default_font_size=styled_text.default_font_size,
-            default_line_spacing=styled_text.default_line_spacing,
+            default_font_size=base_style.size,
+            default_line_spacing=base_style.line_spacing,
         )
 
-    return export_step_value(
-        zip_in_steps([to_steps(style) for style in styled_text.styles]).map(
-            make_export_styled_text
-        ),
-        slide,
-    )
+    return zip_in_steps([to_steps(style) for style in styles]).map(make_styled_text)
