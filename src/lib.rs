@@ -2,10 +2,12 @@ mod common;
 mod model;
 mod render;
 
-use std::collections::{HashMap, HashSet};
 use crate::common::fileutils::ensure_directory;
 use crate::model::{Slide, SlideDeck};
-use crate::render::{render_slide_step, GlobalResources, PdfBuilder, RenderConfig, load_image_in_deck};
+use crate::render::{
+    load_image_in_deck, render_slide_step, GlobalResources, PdfBuilder, RenderConfig,
+};
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use usvg::fontdb;
@@ -76,10 +78,9 @@ fn render_slide(
         .collect()
 }
 
-
 pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
     log::debug!("Input received:\n{}", data);
-    let slide_deck = parse_slide_deck(data)?;
+    let mut slide_deck = parse_slide_deck(data)?;
 
     if let Some(dir) = output_cfg.output_svg {
         log::debug!("Ensuring SVG output directory: {}", dir.display());
@@ -106,7 +107,7 @@ pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
     let mut font_db = fontdb::Database::new();
     font_db.load_system_fonts();
 
-    let loaded_images = load_image_in_deck(&font_db, &slide_deck)?;
+    let loaded_images = load_image_in_deck(&font_db, &mut slide_deck)?;
 
     let global_res = GlobalResources::new(font_db, loaded_images);
 

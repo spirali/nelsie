@@ -8,9 +8,9 @@ use std::rc::Rc;
 
 use taffy::{prelude as tf, Taffy};
 
-use usvg::Fill;
-use crate::render::GlobalResources;
 use crate::render::image::render_image;
+use crate::render::GlobalResources;
+use usvg::Fill;
 
 pub(crate) struct RenderContext<'a> {
     global_res: &'a GlobalResources,
@@ -28,7 +28,12 @@ impl From<&Color> for usvg::Color {
 }
 
 impl<'a> RenderContext<'a> {
-    pub fn new(global_res: &'a GlobalResources, step: Step, z_level: i32, layout: ComputedLayout) -> Self {
+    pub fn new(
+        global_res: &'a GlobalResources,
+        step: Step,
+        z_level: i32,
+        layout: ComputedLayout,
+    ) -> Self {
         RenderContext {
             global_res,
             step,
@@ -62,7 +67,7 @@ impl<'a> RenderContext<'a> {
                     self.svg_node.append(render_text(&text, rect.x, rect.y));
                 }
                 NodeContent::Image(image) => {
-                    render_image(self.global_res, image, rect, &self.svg_node)
+                    render_image(self.global_res, self.step, image, rect, &self.svg_node)
                 }
             }
         }

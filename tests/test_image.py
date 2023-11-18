@@ -28,7 +28,7 @@ def test_render_raster_image_forced_size(deck):
     slide.image("testimg.png", height="80%", bg_color="gray")
 
 
-def test_render_svg_image(deck):
+@check(n_slides=4)
+def test_render_svg_image_steps(deck):
     slide = deck.new_slide(width=420, height=400)
     slide.image("test.svg", width="90%")
-    deck.render(output_pdf="/tmp/out.pdf")

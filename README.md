@@ -54,6 +54,6 @@
     * Merging own styles & syntax highlight
     * Fit-in-box rendering
 * Images
-    * loading SVG image + fragments
+    * ~~loading SVG image + fragments~~
     * ~~loading raster images~~
     * loading ORA + fragments

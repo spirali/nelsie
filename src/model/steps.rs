@@ -11,6 +11,13 @@ pub(crate) enum StepValue<T: Debug> {
     Steps(Vec<T>),
 }
 
+impl<T: Debug> StepValue<T> {
+    pub fn from_vec(vec: Vec<T>) -> Self {
+        assert!(!vec.is_empty());
+        StepValue::Steps(vec)
+    }
+}
+
 impl<T: Debug + DeserializeOwned> StepValue<T> {
     pub fn new_const(value: T) -> Self {
         StepValue::Const(value)
@@ -26,7 +33,7 @@ impl<T: Debug + DeserializeOwned> StepValue<T> {
         }
     }
 
-    pub fn values(&self) -> impl Iterator<Item=&T> {
+    pub fn values(&self) -> impl Iterator<Item = &T> {
         match self {
             StepValue::Const(v) => itertools::Either::Left(std::iter::once(v)),
             StepValue::Steps(v) => itertools::Either::Right(v.iter()),

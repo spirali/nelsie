@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="190.5704mm"
+   height="125.51298mm"
+   viewBox="0 0 190.5704 125.51298"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3 (1:1.3+202307231459+0e150ed6c4)"
+   sodipodi:docname="test.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="0.72248176"
+     inkscape:cx="580.63749"
+     inkscape:cy="468.52394"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer3" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-21.775728,-24.423916)">
+    <text
+       xml:space="preserve"
+       style="font-size:10.5833px;line-height:1.25;font-family:'Noto Sans Tifinagh';-inkscape-font-specification:'Noto Sans Tifinagh';letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="45.819218"
+       y="56.488499"
+       id="text1"><tspan
+         sodipodi:role="line"
+         id="tspan1"
+         style="stroke-width:0.264583"
+         x="45.819218"
+         y="56.488499">Test SVG</tspan></text>
+    <rect
+       style="fill:none;stroke-width:2;stroke:#ff6600;stroke-opacity:1"
+       id="rect1"
+       width="149.75714"
+       height="62.926357"
+       x="46.427593"
+       y="70.65609" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer **2+">
+    <path
+       sodipodi:type="star"
+       style="fill:none;stroke:#ffcc00;stroke-width:2;stroke-opacity:1"
+       id="path1"
+       inkscape:flatsided="false"
+       sodipodi:sides="5"
+       sodipodi:cx="34.438431"
+       sodipodi:cy="60.236504"
+       sodipodi:r1="18.275736"
+       sodipodi:r2="9.1378679"
+       sodipodi:arg1="1.1425313"
+       sodipodi:arg2="1.7708498"
+       inkscape:rounded="0"
+       inkscape:randomized="0"
+       d="m 42.028219,76.861715 -9.405681,-7.66959 -11.650249,3.400169 4.387697,-11.315368 -6.833876,-10.029335 12.117427,0.676307 7.42668,-9.598638 3.101285,11.733348 11.423817,4.097051 -10.200727,6.575301 z"
+       inkscape:transform-center-x="-1.1222833"
+       inkscape:transform-center-y="-0.64301702"
+       transform="translate(17.542155,17.875982)" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer3"
+     inkscape:label="Layer **3">
+    <rect
+       style="fill:#ff0000;stroke:none;stroke-width:2;stroke-opacity:1;fill-opacity:1"
+       id="rect2"
+       width="32.719448"
+       height="30.967169"
+       x="83.603867"
+       y="63.21838" />
+    <text
+       xml:space="preserve"
+       style="font-size:8.17832px;line-height:1.25;font-family:'Noto Sans Tifinagh';-inkscape-font-specification:'Noto Sans Tifinagh';letter-spacing:0px;word-spacing:0px;stroke-width:0.204458;fill:#f9f9f9"
+       x="87.833336"
+       y="81.372719"
+       id="text2"><tspan
+         sodipodi:role="line"
+         id="tspan2"
+         style="stroke-width:0.204458;fill:#f9f9f9"
+         x="87.833336"
+         y="81.372719">3 only</tspan></text>
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer4"
+     inkscape:label="Layer **4">
+    <ellipse
+       style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:2;stroke-opacity:1"
+       id="path2"
+       cx="146.40059"
+       cy="79.376892"
+       rx="14.819418"
+       ry="14.452701" />
+  </g>
+</svg>

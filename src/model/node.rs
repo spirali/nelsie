@@ -1,10 +1,10 @@
-use std::collections::HashSet;
-use std::path::Path;
 use super::{Color, Size, StepValue};
+use crate::model::image::Image;
 use crate::model::text::StyledText;
 use crate::model::{LayoutExpr, NodeId, Step};
 use serde::Deserialize;
-use crate::model::image::Image;
+use std::collections::HashSet;
+use std::path::Path;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]

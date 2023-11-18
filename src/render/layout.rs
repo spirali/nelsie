@@ -1,10 +1,10 @@
 use crate::model::{LayoutExpr, Node, NodeContent, NodeId, Size, Slide, Step};
+use crate::render::image::get_image_size;
 use crate::render::text::get_text_size;
 use crate::render::GlobalResources;
 use std::collections::{BTreeMap, HashMap};
 use taffy::prelude as tf;
 use taffy::style::{AvailableSpace, Dimension};
-use crate::render::image::get_image_size;
 
 pub(crate) struct LayoutContext<'a> {
     global_res: &'a GlobalResources,
@@ -72,7 +72,7 @@ impl From<&Size> for tf::Dimension {
 fn compute_content_default_size(global_res: &GlobalResources, content: &NodeContent) -> (f32, f32) {
     match content {
         NodeContent::Text(text) => get_text_size(global_res.font_db(), &text),
-        NodeContent::Image(image) => get_image_size(global_res, image)
+        NodeContent::Image(image) => get_image_size(global_res, image),
     }
 }
 
@@ -109,9 +109,14 @@ impl<'a> LayoutContext<'a> {
                 .at_step(self.step)
                 .as_ref()
                 .map(|content| {
-                    let (content_w, content_h) = compute_content_default_size(self.global_res, content);
+                    let (content_w, content_h) =
+                        compute_content_default_size(self.global_res, content);
                     if w.is_none() && h.is_none() {
-                        (Some(Dimension::Points(content_w)), Some(Dimension::Points(content_h)), None)
+                        (
+                            Some(Dimension::Points(content_w)),
+                            Some(Dimension::Points(content_h)),
+                            None,
+                        )
                     } else {
                         (None, None, Some(content_w / content_h))
                     }
