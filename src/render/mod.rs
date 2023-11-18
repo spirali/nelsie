@@ -9,3 +9,4 @@ mod image;
 pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use globals::GlobalResources;
 pub(crate) use pdf::PdfBuilder;
+pub(crate) use image::load_image_in_deck;

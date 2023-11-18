@@ -2,11 +2,11 @@ mod common;
 mod model;
 mod render;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use crate::common::fileutils::ensure_directory;
 use crate::model::{Slide, SlideDeck};
-use crate::render::{render_slide_step, GlobalResources, PdfBuilder, RenderConfig};
-use std::path::Path;
+use crate::render::{render_slide_step, GlobalResources, PdfBuilder, RenderConfig, load_image_in_deck};
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -65,16 +65,6 @@ fn render_slide(
         .collect()
 }
 
-fn load_image_data(slide_deck: &SlideDeck, global_res: &mut GlobalResources) -> crate::Result<()> {
-    let mut paths = HashSet::new();
-    for slide in &slide_deck.slides {
-        slide.node.collect_image_paths(&mut paths);
-    }
-    for path in &paths {
-        global_res.load_image(path)?;
-    }
-    Ok(())
-}
 
 pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
     log::debug!("Input received:\n{}", data);
@@ -102,9 +92,9 @@ pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
         })?;
     }
 
-    let mut global_res = GlobalResources::new();
+    let loaded_images = load_image_in_deck(&slide_deck)?;
 
-    load_image_data(&slide_deck, &mut global_res)?;
+    let global_res = GlobalResources::new(loaded_images);
 
     let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));
