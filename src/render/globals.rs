@@ -11,10 +11,8 @@ pub(crate) struct GlobalResources {
 
 
 impl GlobalResources {
-    pub fn new(loaded_images: HashMap<PathBuf, LoadedImage>) -> Self {
+    pub fn new(font_db: fontdb::Database, loaded_images: HashMap<PathBuf, LoadedImage>) -> Self {
         log::debug!("Loading system font database");
-        let mut font_db = fontdb::Database::new();
-        font_db.load_system_fonts();
         GlobalResources { font_db, loaded_images }
     }
 

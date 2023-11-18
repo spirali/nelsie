@@ -8,11 +8,16 @@ use crate::model::{Slide, SlideDeck};
 use crate::render::{render_slide_step, GlobalResources, PdfBuilder, RenderConfig, load_image_in_deck};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
+use usvg::fontdb;
 
 #[derive(Debug, Error)]
 pub enum NelsieError {
     #[error(transparent)]
     IoError(#[from] std::io::Error),
+    #[error(transparent)]
+    XmlError(#[from] roxmltree::Error),
+    #[error(transparent)]
+    SvgError(#[from] usvg::Error),
     #[error("Deserialization error: {0}")]
     DeserializationError(String),
     #[error("Error: {0}")]
@@ -32,6 +37,12 @@ impl From<serde_json::error::Error> for NelsieError {
         Self::DeserializationError(e.to_string())
     }
 }
+
+// impl From<roxmltree::Error> for NelsieError {
+//     fn from(e: roxmltree::Error) -> Self {
+//         Self::XmlError(e)
+//     }
+// }
 
 fn parse_slide_deck(data: &str) -> Result<SlideDeck> {
     serde_json::from_str(data).map_err(|e| e.into())
@@ -92,9 +103,12 @@ pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
         })?;
     }
 
-    let loaded_images = load_image_in_deck(&slide_deck)?;
+    let mut font_db = fontdb::Database::new();
+    font_db.load_system_fonts();
 
-    let global_res = GlobalResources::new(loaded_images);
+    let loaded_images = load_image_in_deck(&font_db, &slide_deck)?;
+
+    let global_res = GlobalResources::new(font_db, loaded_images);
 
     let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));

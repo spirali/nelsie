@@ -598,6 +598,7 @@ dependencies = [
  "log",
  "pdf-writer",
  "resvg",
+ "roxmltree",
  "serde",
  "serde_json",
  "serde_with",
