@@ -69,6 +69,13 @@ impl From<&Size> for tf::Dimension {
     }
 }
 
+fn compute_content_default_size(global_res: &GlobalResources, content: &NodeContent) -> (f32, f32) {
+    match content {
+        NodeContent::Text(text) => get_text_size(global_res.font_db(), &text),
+        NodeContent::Image(image) => get_image_size(global_res, image)
+    }
+}
+
 impl<'a> LayoutContext<'a> {
     pub fn new(global_res: &'a GlobalResources, step: Step) -> Self {
         LayoutContext { global_res, step }
@@ -97,20 +104,21 @@ impl<'a> LayoutContext<'a> {
         let w = node.width.at_step(self.step);
         let h = node.height.at_step(self.step);
 
-        let (content_w, content_h) = if w.is_none() || h.is_none() {
+        let (content_w, content_h, content_aspect_ratio) = if w.is_none() || h.is_none() {
             node.content
                 .at_step(self.step)
                 .as_ref()
                 .map(|content| {
-                    let (w, h) = match content {
-                        NodeContent::Text(text) => get_text_size(self.global_res.font_db(), &text),
-                        NodeContent::Image(image) => get_image_size(self.global_res, image),
-                    };
-                    (Some(Dimension::Points(w)), Some(Dimension::Points(h)))
+                    let (content_w, content_h) = compute_content_default_size(self.global_res, content);
+                    if w.is_none() && h.is_none() {
+                        (Some(Dimension::Points(content_w)), Some(Dimension::Points(content_h)), None)
+                    } else {
+                        (None, None, Some(content_w / content_h))
+                    }
                 })
-                .unwrap_or((None, None))
+                .unwrap_or((None, None, None))
         } else {
-            (None, None)
+            (None, None, None)
         };
 
         let width = w
@@ -141,6 +149,7 @@ impl<'a> LayoutContext<'a> {
             position,
             size: tf::Size { width, height },
             flex_direction,
+            aspect_ratio: content_aspect_ratio,
             justify_content: Some(tf::JustifyContent::Center),
             align_items: Some(tf::AlignItems::Center),
             ..Default::default()
