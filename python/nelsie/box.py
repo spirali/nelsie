@@ -21,11 +21,16 @@ class BoxBuilder(TextStylesProviderMixin):
     def get_box(self):
         raise NotImplementedError
 
-    def image(self, filename: str, **box_args):
+    def image(self, filename: str, enable_steps=True, shift_steps=0, **box_args):
+        assert shift_steps >= 0
         slide = self.get_slide()
         if slide.image_directory is not None:
             filename = os.path.join(slide.image_directory, filename)
-        image = Image(os.path.abspath(filename))
+        image = Image(
+            filename=os.path.abspath(filename),
+            enable_steps=enable_steps,
+            shift_steps=shift_steps,
+        )
         return self.box(content=image, **box_args)
 
     def text(

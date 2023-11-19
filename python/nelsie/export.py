@@ -48,6 +48,8 @@ class StyledText:
 class Image:
     _tag = "image"
     filename: str
+    enable_steps: bool
+    shift_steps: int
 
 
 NodeContent = StyledText | Image | None

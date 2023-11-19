@@ -32,3 +32,16 @@ def test_render_raster_image_forced_size(deck):
 def test_render_svg_image_steps(deck):
     slide = deck.new_slide(width=420, height=400)
     slide.image("test.svg", width="90%")
+
+
+@check(n_slides=1)
+def test_render_svg_image_no_steps(deck):
+    slide = deck.new_slide(width=420, height=400)
+    slide.image("test.svg", width="90%", enable_steps=False)
+
+
+@check(n_slides=6)
+def test_render_svg_image_shift(deck):
+    slide = deck.new_slide(width=100, height=100)
+    box = slide.box(width="90%", height="80%", bg_color="gray")
+    box.image("test.svg", width="80%", shift_steps=2)

@@ -3,8 +3,8 @@ use crate::model::image::Image;
 use crate::model::text::StyledText;
 use crate::model::{LayoutExpr, NodeId, Step};
 use serde::Deserialize;
-use std::collections::HashSet;
-use std::path::Path;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]

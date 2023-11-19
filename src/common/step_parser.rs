@@ -52,7 +52,8 @@ mod test {
     pub fn test_parse() {
         assert_eq!(
             parse_steps("3")
-                .unwrap().0
+                .unwrap()
+                .0
                 .values()
                 .copied()
                 .collect::<Vec<_>>(),
@@ -60,7 +61,8 @@ mod test {
         );
         assert_eq!(
             parse_steps("1,3")
-                .unwrap().0
+                .unwrap()
+                .0
                 .values()
                 .copied()
                 .collect::<Vec<_>>(),
@@ -68,7 +70,8 @@ mod test {
         );
         assert_eq!(
             parse_steps("1,2,4")
-                .unwrap().0
+                .unwrap()
+                .0
                 .values()
                 .copied()
                 .collect::<Vec<_>>(),
@@ -76,7 +79,8 @@ mod test {
         );
         assert_eq!(
             parse_steps("2+")
-                .unwrap().0
+                .unwrap()
+                .0
                 .values()
                 .copied()
                 .collect::<Vec<_>>(),
@@ -84,7 +88,8 @@ mod test {
         );
         assert_eq!(
             parse_steps("1, 3+")
-                .unwrap().0
+                .unwrap()
+                .0
                 .values()
                 .copied()
                 .collect::<Vec<_>>(),
@@ -92,7 +97,8 @@ mod test {
         );
         assert_eq!(
             parse_steps("2-7, 10+")
-                .unwrap().0
+                .unwrap()
+                .0
                 .values()
                 .copied()
                 .collect::<Vec<_>>(),

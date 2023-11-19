@@ -1,7 +1,8 @@
-use std::cmp::max;
-use crate::model::{Image, SlideDeck, Step, StepValue};
+use crate::common::step_parser::parse_steps_from_label;
+use crate::model::{Image, Node, NodeContent, SlideDeck, Step, StepValue};
 use crate::render::layout::Rectangle;
 use crate::render::GlobalResources;
+use std::cmp::max;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -9,7 +10,6 @@ use usvg::roxmltree::ExpandedName;
 use usvg::TreeParsing;
 use usvg::{fontdb, NonZeroRect, TreeTextToPath};
 use usvg_tree::{ImageKind, ImageRendering, NodeExt, NodeKind, ViewBox, Visibility};
-use crate::common::step_parser::parse_steps_from_label;
 
 use crate::NelsieError;
 
@@ -35,10 +35,8 @@ pub(crate) struct LoadedImage {
 impl LoadedImage {
     pub fn n_steps(&self) -> Step {
         match &self.data {
-            LoadedImageData::Png(_) |
-            LoadedImageData::Gif(_) |
-            LoadedImageData::Jpeg(_) => 1,
-            LoadedImageData::Svg(data) => data.n_steps
+            LoadedImageData::Png(_) | LoadedImageData::Gif(_) | LoadedImageData::Jpeg(_) => 1,
+            LoadedImageData::Svg(data) => data.n_steps,
         }
     }
 }
@@ -48,12 +46,14 @@ pub(crate) fn get_image_size(global_res: &GlobalResources, image: &Image) -> (f3
     (img.width, img.height)
 }
 
-
-fn strip_svg_for_step(step: Step, svg_data: &SvgImageData) -> usvg::Tree {
+fn prepare_svg_tree_for_step(step: Step, image: &Image, svg_data: &SvgImageData) -> usvg::Tree {
+    if !image.enable_steps || svg_data.id_visibility.is_empty() || step <= image.shift_steps {
+        return svg_data.tree.clone();
+    }
     let mut tree = svg_data.tree.clone();
     tree.root = tree.root.make_deep_copy();
     for (id, visibility) in &svg_data.id_visibility {
-        if !visibility.at_step(step) {
+        if !visibility.at_step(step - image.shift_steps) {
             if let Some(node) = tree.node_by_id(&id) {
                 node.detach();
             }
@@ -61,7 +61,6 @@ fn strip_svg_for_step(step: Step, svg_data: &SvgImageData) -> usvg::Tree {
     }
     tree
 }
-
 
 pub(crate) fn render_image(
     global_res: &GlobalResources,
@@ -72,25 +71,31 @@ pub(crate) fn render_image(
 ) {
     let img = global_res.get_image(&image.filename).unwrap();
 
-    let svg_image = usvg::Image {
-        id: String::new(),
-        transform: Default::default(),
-        visibility: Visibility::Visible,
-        view_box: ViewBox {
-            rect: usvg::Size::from_wh(rect.width, rect.height)
-                .unwrap()
-                .to_non_zero_rect(rect.x, rect.y),
-            aspect: Default::default(),
-        },
-        rendering_mode: ImageRendering::OptimizeQuality,
-        kind: match &img.data {
-            LoadedImageData::Png(data) => ImageKind::PNG(data.clone()),
-            LoadedImageData::Gif(data) => ImageKind::GIF(data.clone()),
-            LoadedImageData::Jpeg(data) => ImageKind::JPEG(data.clone()),
-            LoadedImageData::Svg(data) => ImageKind::SVG(strip_svg_for_step(step, data)),
-        },
-    };
-    svg_node.append(usvg::Node::new(NodeKind::Image(svg_image)))
+    if step <= image.shift_steps {
+        return;
+    }
+
+    if rect.width > 0.00001 && rect.height > 0.00001 {
+        let svg_image = usvg::Image {
+            id: String::new(),
+            transform: Default::default(),
+            visibility: Visibility::Visible,
+            view_box: ViewBox {
+                rect: usvg::Size::from_wh(rect.width, rect.height)
+                    .unwrap()
+                    .to_non_zero_rect(rect.x, rect.y),
+                aspect: Default::default(),
+            },
+            rendering_mode: ImageRendering::OptimizeQuality,
+            kind: match &img.data {
+                LoadedImageData::Png(data) => ImageKind::PNG(data.clone()),
+                LoadedImageData::Gif(data) => ImageKind::GIF(data.clone()),
+                LoadedImageData::Jpeg(data) => ImageKind::JPEG(data.clone()),
+                LoadedImageData::Svg(data) => ImageKind::SVG(prepare_svg_tree_for_step(step, image, data))
+            },
+        };
+        svg_node.append(usvg::Node::new(NodeKind::Image(svg_image)))
+    }
 }
 
 fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
@@ -122,8 +127,16 @@ fn load_svg_image(font_db: &fontdb::Database, raw_data: Vec<u8>) -> crate::Resul
         if let Some(label) =
             node.attribute(("http://www.inkscape.org/namespaces/inkscape", "label"))
         {
-            let (steps, n) = if let Some(v) = parse_steps_from_label(&label) { v } else { continue; };
-            let id = if let Some(id) = node.attribute("id") { id } else { continue; };
+            let (steps, n) = if let Some(v) = parse_steps_from_label(&label) {
+                v
+            } else {
+                continue;
+            };
+            let id = if let Some(id) = node.attribute("id") {
+                id
+            } else {
+                continue;
+            };
             n_steps = max(n_steps, n);
             id_visibility.push((id.to_string(), steps));
         }
@@ -134,7 +147,11 @@ fn load_svg_image(font_db: &fontdb::Database, raw_data: Vec<u8>) -> crate::Resul
     Ok(LoadedImage {
         width: tree.size.width(),
         height: tree.size.height(),
-        data: LoadedImageData::Svg(SvgImageData { tree, n_steps, id_visibility }),
+        data: LoadedImageData::Svg(SvgImageData {
+            tree,
+            n_steps,
+            id_visibility,
+        }),
     })
 }
 
@@ -154,6 +171,31 @@ fn load_image(font_db: &fontdb::Database, path: &Path) -> crate::Result<LoadedIm
             NelsieError::GenericError(format!("Image '{}' has unknown format", path.display()))
         })
     }
+}
+
+fn n_steps_from_images(node: &Node, loaded_images: &HashMap<PathBuf, LoadedImage>) -> Step {
+    let mut n_steps = 1;
+    for content in node.content.values() {
+        if let Some(NodeContent::Image(image)) = content {
+            if !image.enable_steps {
+                continue;
+            }
+            if let Some(loaded_img) = loaded_images.get(&image.filename) {
+                n_steps = max(n_steps, image.shift_steps + loaded_img.n_steps());
+            }
+        }
+    }
+    if let Some(children) = &node.children {
+        n_steps = max(
+            n_steps,
+            children
+                .iter()
+                .map(|child| n_steps_from_images(child, loaded_images))
+                .max()
+                .unwrap_or(1),
+        );
+    }
+    n_steps
 }
 
 pub(crate) fn load_image_in_deck(
@@ -178,7 +220,10 @@ pub(crate) fn load_image_in_deck(
         let mut paths = HashSet::new();
         slide.node.collect_image_paths(&mut paths);
         for path in paths.iter() {
-            slide.n_steps = max(loaded_images.get(*path).unwrap().n_steps(), slide.n_steps);
+            slide.n_steps = max(
+                n_steps_from_images(&slide.node, &loaded_images),
+                slide.n_steps,
+            );
         }
     }
     Ok(loaded_images)
