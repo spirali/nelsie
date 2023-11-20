@@ -4,11 +4,14 @@ use crate::render::layout::Rectangle;
 use crate::render::GlobalResources;
 use std::cmp::max;
 use std::collections::{HashMap, HashSet};
+use std::fs::File;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use usvg::roxmltree::ExpandedName;
 use usvg::TreeParsing;
 use usvg::{fontdb, NonZeroRect, TreeTextToPath};
+use std::io::Read;
+use imagesize::blob_size;
 use usvg_tree::{ImageKind, ImageRendering, NodeExt, NodeKind, ViewBox, Visibility};
 
 use crate::NelsieError;
@@ -19,11 +22,26 @@ pub(crate) struct SvgImageData {
     n_steps: Step,
 }
 
+pub(crate) struct OraLayer {
+    visibility: Option<StepValue<bool>>,
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
+    data: Arc<Vec<u8>>,
+}
+
+pub(crate) struct OraImageData {
+    layers: Vec<OraLayer>,
+    n_steps: Step,
+}
+
 pub(crate) enum LoadedImageData {
     Png(Arc<Vec<u8>>),
     Gif(Arc<Vec<u8>>),
     Jpeg(Arc<Vec<u8>>),
     Svg(SvgImageData),
+    Ora(OraImageData),
 }
 
 pub(crate) struct LoadedImage {
@@ -37,6 +55,7 @@ impl LoadedImage {
         match &self.data {
             LoadedImageData::Png(_) | LoadedImageData::Gif(_) | LoadedImageData::Jpeg(_) => 1,
             LoadedImageData::Svg(data) => data.n_steps,
+            LoadedImageData::Ora(data) => data.n_steps,
         }
     }
 }
@@ -62,6 +81,25 @@ fn prepare_svg_tree_for_step(step: Step, image: &Image, svg_data: &SvgImageData)
     tree
 }
 
+pub(crate) fn create_image_node(svg_node: &usvg::Node, rect: &Rectangle, kind: ImageKind) {
+    if rect.width > 0.00001 && rect.height > 0.00001 {
+        let svg_image = usvg::Image {
+            id: String::new(),
+            transform: Default::default(),
+            visibility: Visibility::Visible,
+            view_box: ViewBox {
+                rect: usvg::Size::from_wh(rect.width, rect.height)
+                    .unwrap()
+                    .to_non_zero_rect(rect.x, rect.y),
+                aspect: Default::default(),
+            },
+            rendering_mode: ImageRendering::OptimizeQuality,
+            kind,
+        };
+        svg_node.append(usvg::Node::new(NodeKind::Image(svg_image)))
+    }
+}
+
 pub(crate) fn render_image(
     global_res: &GlobalResources,
     step: Step,
@@ -75,26 +113,18 @@ pub(crate) fn render_image(
         return;
     }
 
-    if rect.width > 0.00001 && rect.height > 0.00001 {
-        let svg_image = usvg::Image {
-            id: String::new(),
-            transform: Default::default(),
-            visibility: Visibility::Visible,
-            view_box: ViewBox {
-                rect: usvg::Size::from_wh(rect.width, rect.height)
-                    .unwrap()
-                    .to_non_zero_rect(rect.x, rect.y),
-                aspect: Default::default(),
-            },
-            rendering_mode: ImageRendering::OptimizeQuality,
-            kind: match &img.data {
-                LoadedImageData::Png(data) => ImageKind::PNG(data.clone()),
-                LoadedImageData::Gif(data) => ImageKind::GIF(data.clone()),
-                LoadedImageData::Jpeg(data) => ImageKind::JPEG(data.clone()),
-                LoadedImageData::Svg(data) => ImageKind::SVG(prepare_svg_tree_for_step(step, image, data))
-            },
-        };
-        svg_node.append(usvg::Node::new(NodeKind::Image(svg_image)))
+    match &img.data {
+        LoadedImageData::Png(data) => create_image_node(svg_node, rect, ImageKind::PNG(data.clone())),
+        LoadedImageData::Gif(data) => create_image_node(svg_node, rect, ImageKind::GIF(data.clone())),
+        LoadedImageData::Jpeg(data) => create_image_node(svg_node, rect, ImageKind::JPEG(data.clone())),
+        LoadedImageData::Svg(data) => create_image_node(svg_node, rect, ImageKind::SVG(prepare_svg_tree_for_step(step, image, data))),
+        LoadedImageData::Ora(data) => {
+            for layer in &data.layers {
+                if !image.enable_steps || layer.visibility.as_ref().map(|v| *v.at_step(step)).unwrap_or(true) {
+                    create_image_node(svg_node, &Rectangle { x: layer.x + rect.x, y: layer.y + rect.y, width: layer.width, height: layer.height }, ImageKind::PNG(layer.data.clone()))
+                }
+            }
+        }
     }
 }
 
@@ -155,18 +185,86 @@ fn load_svg_image(font_db: &fontdb::Database, raw_data: Vec<u8>) -> crate::Resul
     })
 }
 
+fn read_archive_file_as_string<R: std::io::Seek + std::io::Read>(archive: &mut zip::ZipArchive<R>, filename: &str) -> zip::result::ZipResult<String> {
+    Ok(std::io::read_to_string(archive.by_name(filename)?)?)
+}
+
+fn option_unpack<T>(value: Option<T>) -> crate::Result<T>
+{
+    value.ok_or_else(|| NelsieError::GenericError("Invalid format".to_string()))
+}
+
+fn load_ora_stack<R: std::io::Seek + std::io::Read>(node: &roxmltree::Node, archive: &mut zip::ZipArchive<R>, layers: &mut Vec<OraLayer>, n_steps: &mut Step) -> crate::Result<()> {
+    for child in node.children() {
+        let tag = child.tag_name().name();
+        if tag == "layer" {
+            let visibility = parse_steps_from_label(child.attribute("name").unwrap_or("")).map(|(v, n)| {
+                *n_steps = max(*n_steps, n);
+                v
+            });
+            let src = option_unpack(child.attribute("src"))?;
+            let mut file = archive.by_name(src)?;
+            let mut image_data = Vec::new();
+            file.read_to_end(&mut image_data)?;
+            let (width, height) = blob_size(&image_data).map(|sz| (sz.width as f32, sz.height as f32)).unwrap_or((0.0, 0.0));
+            layers.push(OraLayer {
+                visibility,
+                x: child.attribute("x").and_then(|v| str::parse(v).ok()).unwrap_or(0.0),
+                y: child.attribute("y").and_then(|v| str::parse(v).ok()).unwrap_or(0.0),
+                width,
+                height,
+                data: Arc::new(image_data),
+            });
+        } else if tag == "stack" {
+            load_ora_stack(&child, archive, layers, n_steps)?;
+        }
+    }
+    Ok(())
+}
+
+fn load_ora_image(path: &Path) -> crate::Result<LoadedImage> {
+    let file = File::open(&path)?;
+    let mut archive = zip::ZipArchive::new(file)?;
+    if read_archive_file_as_string(&mut archive, "mimetype")? != "image/openraster" {
+        return Err(NelsieError::GenericError("Not an ORA format".to_string()));
+    }
+    let stack_data = read_archive_file_as_string(&mut archive, "stack.xml")?;
+    let stack_doc = roxmltree::Document::parse(&stack_data)?;
+    let image = option_unpack(stack_doc.root().first_child())?;
+    let width: f32 = image.attribute("w").and_then(|v| str::parse(v).ok()).unwrap_or(0.0);
+    let height: f32 = image.attribute("h").and_then(|v| str::parse(v).ok()).unwrap_or(0.0);
+
+    let mut layers = Vec::new();
+    let mut n_steps = 1;
+    load_ora_stack(&image, &mut archive, &mut layers, &mut n_steps)?;
+    layers.reverse();
+    Ok(LoadedImage {
+        width,
+        height,
+        data: LoadedImageData::Ora(OraImageData {
+            layers,
+            n_steps,
+        }),
+    })
+}
+
 fn load_image(font_db: &fontdb::Database, path: &Path) -> crate::Result<LoadedImage> {
     log::debug!("Loading image: {}", path.display());
-    let raw_data = std::fs::read(path)?;
     let extension = path
         .extension()
         .and_then(std::ffi::OsStr::to_str)
         .unwrap_or("");
     if extension == "svg" {
+        let raw_data = std::fs::read(path)?;
         load_svg_image(font_db, raw_data).map_err(|e| {
             NelsieError::GenericError(format!("Image '{}' load error: {}", path.display(), e))
         })
+    } else if extension == "ora" {
+        load_ora_image(path).map_err(|e| {
+            NelsieError::GenericError(format!("Image '{}' load error: {}", path.display(), e))
+        })
     } else {
+        let raw_data = std::fs::read(path)?;
         load_raster_image(raw_data).ok_or_else(|| {
             NelsieError::GenericError(format!("Image '{}' has unknown format", path.display()))
         })

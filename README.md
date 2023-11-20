@@ -56,6 +56,6 @@
 * Images
     * ~~loading SVG image + fragments~~
     * ~~loading raster images~~
-    * loading ORA + fragments
+    * ~~loading ORA + fragments~~
     * ~~ignore fragments~~
     * ~~shift_first_step~~

@@ -20,6 +20,8 @@ pub enum NelsieError {
     XmlError(#[from] roxmltree::Error),
     #[error(transparent)]
     SvgError(#[from] usvg::Error),
+    #[error(transparent)]
+    ZipError(#[from] zip::result::ZipError),
     #[error("Deserialization error: {0}")]
     DeserializationError(String),
     #[error("Error: {0}")]

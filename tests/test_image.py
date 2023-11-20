@@ -45,3 +45,18 @@ def test_render_svg_image_shift(deck):
     slide = deck.new_slide(width=100, height=100)
     box = slide.box(width="90%", height="80%", bg_color="gray")
     box.image("test.svg", width="80%", shift_steps=2)
+
+
+@check(n_slides=3)
+def test_render_ora_image_steps(deck):
+    slide = deck.new_slide(width=250, height=250)
+    box = slide.box(bg_color="gray")
+    box.image("test.ora")
+
+
+@check(n_slides=1)
+def test_render_ora_image_no_steps(deck):
+    slide = deck.new_slide(width=250, height=250)
+    box = slide.box(bg_color="gray")
+    box.image("test.ora", enable_steps=False)
+    deck.render(output_pdf="/tmp/out.pdf")

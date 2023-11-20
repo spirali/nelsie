@@ -22,6 +22,9 @@ class BoxBuilder(TextStylesProviderMixin):
         raise NotImplementedError
 
     def image(self, filename: str, enable_steps=True, shift_steps=0, **box_args):
+        """
+        Load image; supported formats: svg, png, jpeg, gif, ora
+        """
         assert shift_steps >= 0
         slide = self.get_slide()
         if slide.image_directory is not None:
