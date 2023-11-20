@@ -59,4 +59,10 @@ def test_render_ora_image_no_steps(deck):
     slide = deck.new_slide(width=250, height=250)
     box = slide.box(bg_color="gray")
     box.image("test.ora", enable_steps=False)
-    deck.render(output_pdf="/tmp/out.pdf")
+
+
+@check(n_slides=1)
+def test_render_ora_image_scale(deck):
+    slide = deck.new_slide(width=400, height=400)
+    slide.image("test.ora", width="80%", enable_steps=False, bg_color="gray")
+    slide.image("test.ora", height="20%", enable_steps=False, bg_color="gray")
