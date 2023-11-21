@@ -63,3 +63,10 @@ def test_layout_expr():
     c = ConstExpr(35.0)
     assert a + b == SumExpr([a, b])
     assert a + b + c == SumExpr([a, b, c])
+
+
+@check()
+def test_z_level(deck):
+    slide = deck.new_slide(width=100, height=100)
+    slide.box(x=0, y=0, width=75, height=75, z_level=1, bg_color="red")
+    slide.box(x=25, y=25, width=75, height=75, bg_color="green")

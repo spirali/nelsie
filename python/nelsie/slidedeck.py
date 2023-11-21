@@ -31,6 +31,7 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
             show=True,
             x=None,
             y=None,
+            z_level=0,
             width=self.width,
             height=self.height,
             row=False,

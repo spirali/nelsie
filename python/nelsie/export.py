@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import TypeVar, Generic, Literal
 
+from .layoutexpr import LayoutBaseExpr
 from .text.textstyle import TextStyle
 from .text.texttypes import StyledLine
 
@@ -59,8 +60,10 @@ NodeContent = StyledText | Image | None
 class ExportNode:
     node_id: int
 
-    x: ExportStepValue[None]
-    y: ExportStepValue[None]
+    x: ExportStepValue[None | LayoutBaseExpr]
+    y: ExportStepValue[None | LayoutBaseExpr]
+
+    z_level: ExportStepValue[int]
 
     width: ExportStepValue[ExportSize]
     height: ExportStepValue[ExportSize]

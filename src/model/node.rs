@@ -3,7 +3,7 @@ use crate::model::image::Image;
 use crate::model::text::{FontFamily, StyledText};
 use crate::model::{LayoutExpr, NodeId, Step};
 use serde::Deserialize;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use usvg::fontdb;
 
@@ -21,6 +21,7 @@ pub(crate) struct Node {
     pub children: Option<Vec<Node>>,
 
     pub show: StepValue<bool>,
+    pub z_level: StepValue<i32>,
 
     pub x: StepValue<Option<LayoutExpr>>,
     pub y: StepValue<Option<LayoutExpr>>,
@@ -68,6 +69,15 @@ impl Node {
         if let Some(children) = &self.children {
             for child in children {
                 child.collect_font_families(out);
+            }
+        }
+    }
+
+    pub fn collect_z_levels(&self, out: &mut BTreeSet<i32>) {
+        out.extend(self.z_level.values());
+        if let Some(children) = &self.children {
+            for child in children {
+                child.collect_z_levels(out);
             }
         }
     }

@@ -23,7 +23,7 @@
 * Layout
     * ~~Box size~~
     * ~~Direction~~
-    * z-level
+    * ~~z-level~~
     * Min size & Max size
     * Aspect ratio
     * Margin
