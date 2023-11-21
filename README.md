@@ -47,7 +47,7 @@
     * All basic TextStyle properties
     * TextStyle priorities
     * Text align: left, right, center
-    * Detecting invalid fonts
+    * ~~Detecting invalid fonts~~
     * Line box
     * Inline box
     * Syntax highlight

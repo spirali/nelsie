@@ -2,10 +2,12 @@ from dataclasses import dataclass
 
 from nelsie.utils import unpack_dataclass
 from nelsie.colors import check_color
+import platform
 
 
 @dataclass(frozen=True)
 class TextStyle:
+    font_family: str | list[str] | None = None
     color: str | None = None
     size: float | None = None
     line_spacing: float | None = None
@@ -29,4 +31,9 @@ class TextStyle:
 
 
 # DEFAULT_STYLE *has to* have all attribute non-None
-DEFAULT_STYLE = TextStyle(color="black", size=32, line_spacing=1.2)
+DEFAULT_STYLE = TextStyle(
+    font_family="DejaVu Sans" if platform.system() == "Linux" else "Arial",
+    color="black",
+    size=32,
+    line_spacing=1.2,
+)

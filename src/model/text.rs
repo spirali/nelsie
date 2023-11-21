@@ -1,8 +1,27 @@
 use crate::model::{Color, Step, StepValue};
+use itertools::Itertools;
 use serde::Deserialize;
+use std::fmt::{Formatter, Pointer, Write};
+
+#[derive(Debug, Deserialize, Hash, PartialEq, Eq)]
+#[serde(untagged)]
+pub(crate) enum FontFamily {
+    One(String),
+    Many(Vec<String>),
+}
+
+impl std::fmt::Display for FontFamily {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FontFamily::One(v) => f.write_str(v),
+            FontFamily::Many(v) => write!(f, "{}", v.iter().format(",")),
+        }
+    }
+}
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct TextStyle {
+    pub font_family: FontFamily,
     pub color: Color,
     pub size: f32,
     pub line_spacing: f32,

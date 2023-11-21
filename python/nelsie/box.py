@@ -49,10 +49,14 @@ class BoxBuilder(TextStylesProviderMixin):
 
     def _text_box(self, text, style, delimiters, tab_width, box_args):
         text = text.replace("\t", " " * tab_width)
+        default = self.style_manager.get_style("default")
+
+        if style == "default":
+            style = default
         if isinstance(style, str):
-            style = self.style_manager.get_style(style)
+            style = default.update(self.style_manager.get_style(style))
         elif isinstance(style, TextStyle):
-            self.style_manager.get_style("default").update(style)
+            style = default.update(style)
         else:
             raise Exception("Invalid type for text style")
         parsed_text = parse_styled_text(text, delimiters, style, self.style_manager)

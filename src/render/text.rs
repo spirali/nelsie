@@ -1,10 +1,42 @@
-use crate::model::{Span, StyledLine, StyledText, TextStyle};
+use crate::model::FontFamily;
+use crate::model::{SlideDeck, Span, StyledLine, StyledText, TextStyle};
+use crate::NelsieError;
+use std::collections::HashSet;
 use usvg::{fontdb, NonZeroPositiveF32, TreeTextToPath};
 use usvg_tree::{
     AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStretch, FontStyle,
     LengthAdjust, NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow,
     TextRendering, TextSpan, Visibility, WritingMode,
 };
+
+pub(crate) fn check_fonts(font_db: &fontdb::Database, deck: &SlideDeck) -> crate::Result<()> {
+    let mut families = HashSet::new();
+    for slide in &deck.slides {
+        slide.node.collect_font_families(&mut families);
+    }
+    for family in families {
+        let families = match family {
+            FontFamily::One(v) => vec![fontdb::Family::Name(v)],
+            FontFamily::Many(v) => v.iter().map(|n| fontdb::Family::Name(n)).collect(),
+        };
+
+        if font_db
+            .query(&fontdb::Query {
+                families: &families,
+                weight: Default::default(),
+                stretch: Default::default(),
+                style: Default::default(),
+            })
+            .is_none()
+        {
+            return Err(NelsieError::GenericError(format!(
+                "Font '{}' not found.",
+                family
+            )));
+        }
+    }
+    Ok(())
+}
 
 pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f32, f32) {
     let text_node = render_text(text, 0.0, 0.0);
@@ -51,7 +83,10 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span) -> TextSpan {
         ..Default::default()
     };
     let font = Font {
-        families: vec!["Ubuntu".to_string()],
+        families: match &text_style.font_family {
+            FontFamily::One(v) => vec![v.clone()],
+            FontFamily::Many(v) => v.clone(),
+        },
         style: FontStyle::Normal,
         stretch: FontStretch::Normal,
         weight: 400,

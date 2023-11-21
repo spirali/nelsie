@@ -1,6 +1,7 @@
 use clap::Parser;
 use nelsie::{render_slide_deck, OutputConfig, Result};
 use std::path::PathBuf;
+use usvg::fontdb;
 
 #[derive(Parser)]
 struct Cli {

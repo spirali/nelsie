@@ -15,6 +15,12 @@ def test_text_update():
     assert s3.line_spacing == 1.5
 
 
+@check(error=Exception, error_match="Font 'Nonexisting font' not found.")
+def test_text_invalid_font(deck):
+    s1 = TextStyle(font_family="Nonexisting font")
+    deck.new_slide().text("Hello", style=s1)
+
+
 def test_text_style_manager_no_steps():
     manager = TextStyleManager({"default": DEFAULT_STYLE})
     manager.set_style("red", TextStyle(color="red", size=123))
@@ -31,7 +37,7 @@ def test_text_style_manager_no_steps():
     assert manager.get_style("red") == TextStyle(color="blue")
 
     manager2 = manager.copy()
-    manager2.set_style("red", TextStyle("orange"))
+    manager2.set_style("red", TextStyle(color="orange"))
     assert manager.get_style("red") == TextStyle(color="blue")
     assert manager2.get_style("red") == TextStyle(color="orange")
 

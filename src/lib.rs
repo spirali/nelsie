@@ -5,7 +5,7 @@ mod render;
 use crate::common::fileutils::ensure_directory;
 use crate::model::{Slide, SlideDeck};
 use crate::render::{
-    load_image_in_deck, render_slide_step, GlobalResources, PdfBuilder, RenderConfig,
+    check_fonts, load_image_in_deck, render_slide_step, GlobalResources, PdfBuilder, RenderConfig,
 };
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -110,6 +110,7 @@ pub fn render_slide_deck(data: &str, output_cfg: &OutputConfig) -> Result<()> {
     font_db.load_system_fonts();
 
     let loaded_images = load_image_in_deck(&font_db, &mut slide_deck)?;
+    check_fonts(&font_db, &slide_deck)?;
 
     let global_res = GlobalResources::new(font_db, loaded_images);
 

@@ -1,10 +1,11 @@
 use super::{Color, Size, StepValue};
 use crate::model::image::Image;
-use crate::model::text::StyledText;
+use crate::model::text::{FontFamily, StyledText};
 use crate::model::{LayoutExpr, NodeId, Step};
 use serde::Deserialize;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use usvg::fontdb;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -52,6 +53,21 @@ impl Node {
         if let Some(children) = &self.children {
             for child in children {
                 child.collect_image_paths(out);
+            }
+        }
+    }
+
+    pub fn collect_font_families<'a>(&'a self, out: &mut HashSet<&'a FontFamily>) {
+        for content in self.content.values() {
+            if let Some(NodeContent::Text(text)) = content {
+                for style in &text.styles {
+                    out.insert(&style.font_family);
+                }
+            }
+        }
+        if let Some(children) = &self.children {
+            for child in children {
+                child.collect_font_families(out);
             }
         }
     }

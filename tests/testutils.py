@@ -2,6 +2,7 @@ import contextlib
 import os
 from PIL import Image, ImageChops, ImageStat
 from conftest import NELSIE_BIN, CHECKS_DIR
+import pytest
 
 
 @contextlib.contextmanager
@@ -52,7 +53,7 @@ def compare_images(new_dir, old_dir, n_slides, threshold):
             )
 
 
-def check(n_slides: int = 1):
+def check(n_slides: int = 1, error=None, error_match: str | None = None):
     def wrapper(fn):
         name = fn.__name__
         if name.startswith("test_"):
@@ -61,13 +62,17 @@ def check(n_slides: int = 1):
         def helper(tmp_path, deck, *args, **kwargs):
             with change_workdir(tmp_path):
                 fn(deck)
-                deck.render(output_png=name)
-                compare_images(
-                    os.path.join(tmp_path, name),
-                    os.path.join(CHECKS_DIR, name),
-                    n_slides,
-                    threshold=0.001,
-                )
+                if error is not None:
+                    with pytest.raises(error, match=error_match):
+                        deck.render(output_png=name)
+                else:
+                    deck.render(output_png=name)
+                    compare_images(
+                        os.path.join(tmp_path, name),
+                        os.path.join(CHECKS_DIR, name),
+                        n_slides,
+                        threshold=0.001,
+                    )
 
         return helper
 
