@@ -46,7 +46,7 @@ def compare_images(new_dir, old_dir, n_slides, threshold):
         diff = sum(stat.sum)
         if diff > threshold:
             combined = concat_images([new_img, old_img, difference])
-            path = os.path.abspath("combined.png")
+            path = os.path.abspath(f"combined-{name}.png")
             combined.save(path)
             raise Exception(
                 f"Slide {os.path.join(new_dir, name)} difference is {diff} (limit is {threshold})"
@@ -67,6 +67,8 @@ def check(n_slides: int = 1, error=None, error_match: str | None = None):
                         deck.render(output_png=name)
                 else:
                     deck.render(output_png=name)
+                    with open(os.path.join(tmp_path, "check.txt"), "w") as f:
+                        f.write(name)
                     compare_images(
                         os.path.join(tmp_path, name),
                         os.path.join(CHECKS_DIR, name),
