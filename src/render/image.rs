@@ -343,16 +343,13 @@ fn n_steps_from_images(node: &Node, loaded_images: &HashMap<PathBuf, LoadedImage
             }
         }
     }
-    if let Some(children) = &node.children {
-        n_steps = max(
-            n_steps,
-            children
-                .iter()
-                .map(|child| n_steps_from_images(child, loaded_images))
-                .max()
-                .unwrap_or(1),
-        );
-    }
+    n_steps = max(
+        n_steps,
+        node.child_nodes()
+            .map(|child| n_steps_from_images(child, loaded_images))
+            .max()
+            .unwrap_or(1),
+    );
     n_steps
 }
 

@@ -1,35 +1,35 @@
 from dataclasses import dataclass
 
 
-class LayoutBaseExpr:
-    def __add__(self, other: "LayoutBaseExpr"):
+class LayoutExpr:
+    def __add__(self, other: "LayoutExpr"):
         return SumExpr([self, other])
 
 
 @dataclass
-class ConstExpr(LayoutBaseExpr):
+class ConstExpr(LayoutExpr):
     _tag = "const_value"
     value: float
 
 
 @dataclass
-class XExpr(LayoutBaseExpr):
+class XExpr(LayoutExpr):
     _tag = "x"
     node_id: int
 
 
 @dataclass
-class YExpr(LayoutBaseExpr):
+class YExpr(LayoutExpr):
     _tag = "y"
     node_id: int
 
 
 @dataclass
-class SumExpr(LayoutBaseExpr):
+class SumExpr(LayoutExpr):
     _tag = "sum"
-    expressions: list[LayoutBaseExpr]
+    expressions: list[LayoutExpr]
 
-    def __add__(self, other: LayoutBaseExpr):
+    def __add__(self, other: LayoutExpr):
         expressions = self.expressions[:]
         expressions.append(other)
         return SumExpr(expressions)

@@ -74,10 +74,8 @@ impl<'a> RenderContext<'a> {
             }
         }
 
-        if let Some(children) = &node.children {
-            for child in children {
-                self.render_helper(child);
-            }
+        for child in node.child_nodes() {
+            self.render_helper(child);
         }
     }
 

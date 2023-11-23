@@ -1,4 +1,6 @@
 use crate::model::{Step, StepValue};
+use itertools::Itertools;
+use std::collections::BTreeMap;
 
 pub(crate) fn parse_steps_from_label(value: &str) -> Option<(StepValue<bool>, Step)> {
     value.rsplit_once("**").and_then(|(_, b)| parse_steps(b))
@@ -34,14 +36,22 @@ fn parse_steps(value: &str) -> Option<(StepValue<bool>, Step)> {
     }
 
     let n_steps = steps.iter().max().copied().unwrap_or(0);
-    let m_steps = if until_end { n_steps } else { n_steps + 1 };
-    let mut result = vec![false; m_steps as usize];
-    for step in steps {
-        if step > 0 {
-            result[(step - 1) as usize] = true;
+    let mut result = BTreeMap::new();
+    result.insert(1, false);
+    for step in &steps {
+        if steps.contains(&(step - 1)) {
+            result.insert(*step, true);
+        }
+        if steps.contains(&(step + 1)) {
+            result.insert(*step, true);
         }
     }
-    Some((StepValue::from_vec(result), n_steps))
+    if until_end {
+        if let Some(m) = result.iter().next_back().map(|(k, v)| *k) {
+            result.remove(&m);
+        }
+    }
+    Some((StepValue::from_btree(result), n_steps))
 }
 
 #[cfg(test)]

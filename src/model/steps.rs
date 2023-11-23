@@ -1,6 +1,13 @@
-use serde::de::DeserializeOwned;
-use serde::Deserialize;
-use std::fmt::Debug;
+use crate::common::deutils::de_int_key;
+use serde::de::{DeserializeOwned, DeserializeSeed, MapAccess, Visitor};
+use serde::{de, Deserialize, Deserializer};
+use std::collections::BTreeMap;
+use std::collections::Bound::Included;
+use std::fmt::{Debug, Display, Write};
+use std::hash::Hash;
+use std::marker::PhantomData;
+use std::ops::Bound::Unbounded;
+use std::str::FromStr;
 
 pub type Step = u32;
 
@@ -8,17 +15,17 @@ pub type Step = u32;
 #[serde(rename_all = "lowercase")]
 pub(crate) enum StepValue<T: Debug> {
     Const(T),
-    Steps(Vec<T>),
+    #[serde(deserialize_with = "de_int_key")]
+    Steps(BTreeMap<Step, T>),
 }
 
 impl<T: Debug> StepValue<T> {
-    pub fn from_vec(vec: Vec<T>) -> Self {
-        assert!(!vec.is_empty());
-        StepValue::Steps(vec)
+    pub fn from_btree(tree: BTreeMap<Step, T>) -> Self {
+        StepValue::Steps(tree)
     }
 }
 
-impl<T: Debug + DeserializeOwned> StepValue<T> {
+impl<T: Debug + DeserializeOwned + Default> StepValue<T> {
     pub fn new_const(value: T) -> Self {
         StepValue::Const(value)
     }
@@ -28,15 +35,17 @@ impl<T: Debug + DeserializeOwned> StepValue<T> {
         match self {
             StepValue::Const(v) => v,
             StepValue::Steps(steps) => steps
-                .get((step - 1) as usize)
-                .unwrap_or_else(|| steps.last().unwrap()),
+                .range((Unbounded, Included(&step)))
+                .next_back()
+                .map(|(_, v)| v)
+                .unwrap(),
         }
     }
 
     pub fn values(&self) -> impl Iterator<Item = &T> {
         match self {
             StepValue::Const(v) => itertools::Either::Left(std::iter::once(v)),
-            StepValue::Steps(v) => itertools::Either::Right(v.iter()),
+            StepValue::Steps(v) => itertools::Either::Right(v.values()),
         }
     }
 }

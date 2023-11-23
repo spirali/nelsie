@@ -13,4 +13,6 @@ def serialize(obj):
         return result
     if isinstance(obj, list):
         return [serialize(child) for child in obj]
-    raise Exception(f"Canno serialize {obj!r}")
+    if isinstance(obj, dict):
+        return {key: serialize(value) for key, value in obj.items()}
+    raise Exception(f"Cannot serialize {obj!r}")

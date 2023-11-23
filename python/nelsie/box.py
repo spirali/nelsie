@@ -1,5 +1,7 @@
 import os
+from typing import Union
 
+from . import shapes
 from .text.parse import parse_styled_text
 from .text.manager import TextStyleManager, TextStylesProviderMixin
 from .text.textstyle import TextStyle
@@ -11,8 +13,16 @@ from .basictypes import Size, Position
 from .colors import check_color
 
 
+class DrawChild:
+    def __init__(self, paths: list[shapes.Path]):
+        self.paths = paths
+
+
+BoxChild = Union[DrawChild, "Box"]
+
+
 class BoxBuilder(TextStylesProviderMixin):
-    def add_box(self, box: "Box"):
+    def add_child(self, child: BoxChild):
         raise NotImplementedError
 
     def get_slide(self):
@@ -94,7 +104,7 @@ class BoxBuilder(TextStylesProviderMixin):
             reverse=reverse,
             content=content,
         )
-        self.add_box(box)
+        self.add_child(box)
         return box
 
 
@@ -136,7 +146,7 @@ class Box(BoxBuilder, TextStylesProviderMixin):
             reverse=self._export_attr("reverse", reverse, check_type_bool),
             content=export_step_value(content, self.slide),
         )
-        self.children = []
+        self.children: list[BoxChild] = []
 
     @property
     def box_id(self):
@@ -154,10 +164,9 @@ class Box(BoxBuilder, TextStylesProviderMixin):
     def get_box(self):
         return self
 
-    def add_box(self, box: "Box"):
-        self.children.append(box)
+    def add_child(self, child: BoxChild):
+        self.children.append(child)
 
     def export(self) -> ExportNode:
-        if self.children:
-            self.node.children = [child.export() for child in self.children]
+        self.node.children = [child.export() for child in self.children]
         return self.node

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import TypeVar, Generic, Literal
 
-from .layoutexpr import LayoutBaseExpr
+from .layoutexpr import LayoutExpr
 from .text.textstyle import TextStyle
 from .text.texttypes import StyledLine
 
@@ -30,7 +30,7 @@ class ExportConstStepValue(Generic[T]):
 
 @dataclass
 class ExportComplexStepValue(Generic[T]):
-    steps: list[T]
+    steps: dict[int, T]
 
 
 ExportStepValue = ExportConstStepValue[T] | ExportComplexStepValue[T]
@@ -58,10 +58,11 @@ NodeContent = StyledText | Image | None
 
 @dataclass
 class ExportNode:
+    _tag = "node"
     node_id: int
 
-    x: ExportStepValue[None | LayoutBaseExpr]
-    y: ExportStepValue[None | LayoutBaseExpr]
+    x: ExportStepValue[None | LayoutExpr]
+    y: ExportStepValue[None | LayoutExpr]
 
     z_level: ExportStepValue[int]
 

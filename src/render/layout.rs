@@ -88,15 +88,9 @@ impl<'a> LayoutContext<'a> {
         parent: Option<&Node>,
     ) -> tf::Node {
         let tf_children: Vec<_> = node
-            .children
-            .as_ref()
-            .map(|children| {
-                children
-                    .iter()
-                    .map(|child| self.compute_layout_helper(taffy, child, Some(node)))
-                    .collect()
-            })
-            .unwrap_or_default();
+            .child_nodes()
+            .map(|child| self.compute_layout_helper(taffy, child, Some(node)))
+            .collect();
 
         // let w = node.width.get(self.step);
         // let h = node.height.get(self.step);
@@ -184,10 +178,8 @@ impl<'a> LayoutContext<'a> {
                 },
             ),
         );
-        if let Some(children) = &node.children {
-            for (child, tf_child) in children.iter().zip(taffy.children(tf_node).unwrap()) {
-                self.gather_taffy_layout(child, Some(node), taffy, tf_child, out);
-            }
+        for (child, tf_child) in node.child_nodes().zip(taffy.children(tf_node).unwrap()) {
+            self.gather_taffy_layout(child, Some(node), taffy, tf_child, out);
         }
     }
 

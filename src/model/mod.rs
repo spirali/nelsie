@@ -1,5 +1,6 @@
 mod image;
 mod node;
+mod shapes;
 mod slidedeck;
 mod steps;
 mod text;

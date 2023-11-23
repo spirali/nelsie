@@ -4,7 +4,7 @@ from .serialization import serialize
 from .text.textstyle import DEFAULT_STYLE
 from .text.manager import TextStylesProviderMixin, TextStyleManager
 from .export import ExportSlideDeck, ExportSlide
-from .box import Box, BoxBuilder
+from .box import Box, BoxBuilder, BoxChild
 from .render import render_slides
 
 
@@ -49,8 +49,8 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
     def get_box(self):
         return self.root_box
 
-    def add_box(self, box: Box):
-        self.root_box.add_box(box)
+    def add_child(self, child: BoxChild):
+        self.root_box.add_child(child)
 
     def update_min_steps(self, n_steps: int):
         self.n_steps = max(self.n_steps, n_steps)
