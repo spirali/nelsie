@@ -38,7 +38,11 @@ impl<T: Debug + DeserializeOwned + Default> StepValue<T> {
                 .range((Unbounded, Included(&step)))
                 .next_back()
                 .map(|(_, v)| v)
-                .unwrap(),
+                .unwrap_or_else(|| {
+                    dbg!(step);
+                    dbg!(self);
+                    panic!("Step not found")
+                }),
         }
     }
 

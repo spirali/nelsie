@@ -45,16 +45,16 @@ def test_text_style_manager_no_steps():
 def test_text_style_manager_steps():
     manager = TextStyleManager({"default": DEFAULT_STYLE})
     manager.set_style("red", TextStyle(color="red", size=123))
-    manager.update_style("red", InSteps({"1,3": TextStyle(size=15), "2": TextStyle()}))
     manager.update_style(
-        "red", InSteps({"1-3": TextStyle(), "4": TextStyle(color="green")})
+        "red", InSteps({1: TextStyle(size=15), 2: TextStyle(), 3: TextStyle(size=15)})
     )
-    assert manager.get_style("red").values == [
-        TextStyle(color="red", size=15),
-        TextStyle(color="red", size=123),
-        TextStyle(color="red", size=15),
-        TextStyle(color="green", size=15),
-    ]
+    manager.update_style("red", InSteps({1: TextStyle(), 4: TextStyle(color="green")}))
+    assert manager.get_style("red").values == {
+        1: TextStyle(color="red", size=15),
+        2: TextStyle(color="red", size=123),
+        3: TextStyle(color="red", size=15),
+        4: TextStyle(color="green", size=15),
+    }
 
 
 def test_parse_text():
@@ -71,17 +71,17 @@ def test_parse_text():
     style_manager.set_style("l3", TextStyle(size=25, color="orange"))
     l3 = style_manager.get_style("l3")
 
-    st = parse_styled_text("Hello!", "~{}", style, style_manager).values[0]
+    st = parse_styled_text("Hello!", "~{}", style, style_manager).values[1]
     assert st.default_font_size == 10
     assert st.default_line_spacing == 1.2
     assert st.styled_lines == [StyledLine(text="Hello!", spans=[StyledSpan(0, 6, 0)])]
     assert st.styles == [style]
 
-    st = parse_styled_text("~~~~~~", "~{}", style, style_manager).values[0]
+    st = parse_styled_text("~~~~~~", "~{}", style, style_manager).values[1]
     assert st.styled_lines == [StyledLine(text="~~~", spans=[StyledSpan(0, 3, 0)])]
     assert st.styles == [style]
 
-    st = parse_styled_text("a\n\nbb\nccc", "~{}", style, style_manager).values[0]
+    st = parse_styled_text("a\n\nbb\nccc", "~{}", style, style_manager).values[1]
     assert st.styled_lines == [
         StyledLine(text="a", spans=[StyledSpan(0, 1, 0)]),
         StyledLine(text="", spans=[]),
@@ -90,7 +90,7 @@ def test_parse_text():
     ]
     assert st.styles == [style]
 
-    st = parse_styled_text("\na\nb\n", "~{}", style, style_manager).values[0]
+    st = parse_styled_text("\na\nb\n", "~{}", style, style_manager).values[1]
     assert st.styled_lines == [
         StyledLine(text="", spans=[]),
         StyledLine(text="a", spans=[StyledSpan(0, 1, 0)]),
@@ -99,17 +99,17 @@ def test_parse_text():
     ]
     assert st.styles == [style]
 
-    st = parse_styled_text("{Alice}", "~{}", style, style_manager).values[0]
+    st = parse_styled_text("{Alice}", "~{}", style, style_manager).values[1]
     assert st.styled_lines == [StyledLine(text="{Alice}", spans=[StyledSpan(0, 7, 0)])]
     assert st.styles == [style]
 
-    st = parse_styled_text("~name{Alice}", "~{}", style, style_manager).values[0]
+    st = parse_styled_text("~name{Alice}", "~{}", style, style_manager).values[1]
     assert st.styled_lines == [StyledLine(text="Alice", spans=[StyledSpan(0, 5, 0)])]
     assert st.styles == [full_name_style]
 
     st = parse_styled_text(
         "My name is ~name{Alice}\n~name{Bob} is your name.", "~{}", style, style_manager
-    ).values[0]
+    ).values[1]
 
     assert st.styled_lines == [
         StyledLine(
@@ -126,7 +126,7 @@ def test_parse_text():
 
     st = parse_styled_text(
         "L0~l1{L1~l2{L2~l3{L3}}}L0", "~{}", style, style_manager
-    ).values[0]
+    ).values[1]
     assert st.styled_lines == [
         StyledLine(
             text="L0L1L2L3L0",
@@ -150,7 +150,7 @@ def test_parse_text():
 
     st = parse_styled_text(
         "L0~l1{L\n1~l2{\nL2~l3{L3}}}L0", "~{}", style, style_manager
-    ).values[0]
+    ).values[1]
     assert st.styled_lines == [
         StyledLine(text="L0L", spans=[StyledSpan(0, 2, 0), StyledSpan(2, 1, 1)]),
         StyledLine(text="1", spans=[StyledSpan(0, 1, 1)]),

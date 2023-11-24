@@ -73,7 +73,7 @@ def zip_in_steps(in_steps: Sequence[InSteps[T]]) -> InSteps[T]:
     assert in_steps
     keys = set()
     for s in in_steps:
-        keys.update(s)
+        keys.update(s.key_steps())
     values = {step: [s.get(step) for s in in_steps] for step in keys}
     n_steps = max(s.n_steps for s in in_steps)
     return InSteps(values, n_steps=n_steps)

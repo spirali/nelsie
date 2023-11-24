@@ -39,11 +39,11 @@ fn parse_steps(value: &str) -> Option<(StepValue<bool>, Step)> {
     let mut result = BTreeMap::new();
     result.insert(1, false);
     for step in &steps {
-        if steps.contains(&(step - 1)) {
+        if !steps.contains(&(step - 1)) {
             result.insert(*step, true);
         }
-        if steps.contains(&(step + 1)) {
-            result.insert(*step, true);
+        if !steps.contains(&(step + 1)) {
+            result.insert(*step + 1, false);
         }
     }
     if until_end {
