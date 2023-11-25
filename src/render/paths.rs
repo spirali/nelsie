@@ -42,8 +42,8 @@ pub(crate) fn create_path(layout: &ComputedLayout, path: &Path) -> Option<usvg::
         if let Some(stroke) = &path.stroke {
             svg_path.stroke = Some(usvg::Stroke {
                 paint: usvg::Paint::Color((&stroke.color).into()),
-                dasharray: None,
-                dashoffset: 0.0,
+                dasharray: stroke.dash_array.clone(),
+                dashoffset: stroke.dash_offset,
                 miterlimit: Default::default(),
                 opacity: NormalizedF32::ONE,
                 width: NonZeroPositiveF32::new(stroke.width).unwrap(),

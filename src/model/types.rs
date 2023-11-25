@@ -57,4 +57,6 @@ impl From<&Color> for svgtypes::Color {
 pub(crate) struct Stroke {
     pub color: Color,
     pub width: f32,
+    pub dash_array: Option<Vec<f32>>,
+    pub dash_offset: f32,
 }

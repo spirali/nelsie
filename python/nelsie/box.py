@@ -69,7 +69,8 @@ class BoxBuilder(TextStylesProviderMixin):
 
     def draw(self, paths: Path | list[Path] | InSteps[Path | list[Path]]):
         paths = to_steps(paths)
-        paths = paths.map(lambda p: [p] if not isinstance(paths, list) else p)
+        paths = paths.map(lambda p: [p] if not isinstance(p, list) else p)
+        print(paths.values)
         slide = self.get_slide()
         box_id = self.get_box().box_id
         export_paths = export_step_value(

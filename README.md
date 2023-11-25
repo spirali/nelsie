@@ -37,9 +37,10 @@
 * Shapes
     * ~~Box background color~~
     * Box border color
-    * Lines & Arrows
+    * Lines
     * Ellipse & Polygon
-    * Paths
+    * ~~Paths~~
+    * Arrows
     * Rounded box corners
 * Text
     * ~~Style parsing & text rendering~~
