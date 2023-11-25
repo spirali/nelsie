@@ -1,4 +1,4 @@
-use crate::model::{Color, LayoutExpr, Stroke};
+use crate::model::{Color, LayoutExpr, StepValue, Stroke};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -37,5 +37,5 @@ pub(crate) struct Path {
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Drawing {
-    pub paths: Vec<Path>,
+    pub paths: StepValue<Vec<Path>>,
 }

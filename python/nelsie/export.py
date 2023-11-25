@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import TypeVar, Generic, Literal
 
+from .steps.insteps import InSteps
 from .basictypes import Stroke
 from .layoutexpr import LayoutExpr
 from .text.textstyle import TextStyle
@@ -80,7 +81,7 @@ class ExportPath:
 @dataclass
 class ExportDrawing:
     _tag = "draw"
-    paths: list[ExportPath]
+    paths: InSteps[list[ExportPath]]
 
 
 @dataclass

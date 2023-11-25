@@ -1,4 +1,4 @@
-from nelsie import Path, Stroke
+from nelsie import Path, Stroke, InSteps
 from testutils import check
 
 
@@ -15,3 +15,18 @@ def test_render_paths(deck):
         .cubic_to(180, 180, 190, 190, 50, 150)
     )
     slide.box(width="90%", height="90%").draw(path)
+
+
+@check(n_slides=4)
+def test_render_path_steps(deck):
+    slide = deck.new_slide(width=200, height=200)
+
+    path1 = (
+        Path(stroke=Stroke(color="orange", width=10.0))
+        .move_to(0, 0)
+        .line_to(50, 50)
+        .line_to(50, 100)
+    )
+    path2 = Path(stroke=Stroke(color="green", width=5.0)).move_to(0, 0).line_to(75, 150)
+    slide.box(width="90%", height="90%").draw(InSteps({2: path1, 4: path2}))
+    deck.render(output_pdf="/tmp/out.pdf")

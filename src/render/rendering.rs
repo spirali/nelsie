@@ -84,7 +84,7 @@ impl<'a> RenderContext<'a> {
     }
 
     fn draw(&self, drawing: &Drawing) {
-        for path in &drawing.paths {
+        for path in drawing.paths.at_step(self.step) {
             if let Some(usvg_path) = create_path(self.layout, path) {
                 self.svg_node
                     .append(usvg::Node::new(usvg::NodeKind::Path(usvg_path)));
