@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import TypeVar, Generic, Literal
 
+from .basictypes import Stroke
 from .layoutexpr import LayoutExpr
 from .text.textstyle import TextStyle
 from .text.texttypes import StyledLine
@@ -34,6 +35,52 @@ class ExportComplexStepValue(Generic[T]):
 
 
 ExportStepValue = ExportConstStepValue[T] | ExportComplexStepValue[T]
+
+
+@dataclass
+class ExportPathMove:
+    _tag = "move"
+    x: LayoutExpr
+    y: LayoutExpr
+
+
+@dataclass
+class ExportPathLine:
+    _tag = "line"
+    x: LayoutExpr
+    y: LayoutExpr
+
+
+@dataclass
+class ExportPathQuad:
+    _tag = "quad"
+    x1: LayoutExpr
+    y1: LayoutExpr
+    x: LayoutExpr
+    y: LayoutExpr
+
+
+@dataclass
+class ExportPathCubic:
+    _tag = "quad"
+    x1: LayoutExpr
+    y1: LayoutExpr
+    x2: LayoutExpr
+    y2: LayoutExpr
+    x: LayoutExpr
+    y: LayoutExpr
+
+
+@dataclass
+class ExportPath:
+    stroke: Stroke | None
+    parts: list[ExportPathMove | ExportPathLine | ExportPathQuad | ExportPathCubic]
+
+
+@dataclass
+class ExportDrawing:
+    _tag = "draw"
+    paths: list[ExportPath]
 
 
 @dataclass

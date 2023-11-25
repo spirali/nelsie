@@ -1,11 +1,10 @@
-use crate::common::deutils::de_int_key;
+use crate::common::deutils::deserialize_int_key_map;
 use serde::de::{DeserializeOwned, DeserializeSeed, MapAccess, Visitor};
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer};
 use std::collections::BTreeMap;
 use std::collections::Bound::Included;
 use std::fmt::{Debug, Display, Write};
 use std::hash::Hash;
-use std::marker::PhantomData;
 use std::ops::Bound::Unbounded;
 use std::str::FromStr;
 
@@ -15,7 +14,7 @@ pub type Step = u32;
 #[serde(rename_all = "lowercase")]
 pub(crate) enum StepValue<T: Debug> {
     Const(T),
-    #[serde(deserialize_with = "de_int_key")]
+    #[serde(deserialize_with = "deserialize_int_key_map")]
     Steps(BTreeMap<Step, T>),
 }
 

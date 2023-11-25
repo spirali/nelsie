@@ -1,3 +1,4 @@
+use crate::model::{Color, LayoutExpr, Stroke};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -5,35 +6,36 @@ use serde::Deserialize;
 #[serde(tag = "type")]
 pub(crate) enum PathPart {
     Move {
-        x: f32,
-        y: f32,
+        x: LayoutExpr,
+        y: LayoutExpr,
     },
     Line {
-        x: f32,
-        y: f32,
+        x: LayoutExpr,
+        y: LayoutExpr,
     },
     Quad {
-        x1: f32,
-        x2: f32,
-        x: f32,
-        y: f32,
+        x1: LayoutExpr,
+        y1: LayoutExpr,
+        x: LayoutExpr,
+        y: LayoutExpr,
     },
     Cubic {
-        x1: f32,
-        y1: f32,
-        x2: f32,
-        y2: f32,
-        x: f32,
-        y: f32,
+        x1: LayoutExpr,
+        y1: LayoutExpr,
+        x2: LayoutExpr,
+        y2: LayoutExpr,
+        x: LayoutExpr,
+        y: LayoutExpr,
     },
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Path {
-    parts: Vec<PathPart>,
+    pub stroke: Option<Stroke>,
+    pub parts: Vec<PathPart>,
 }
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Drawing {
-    paths: Vec<Path>,
+    pub paths: Vec<Path>,
 }

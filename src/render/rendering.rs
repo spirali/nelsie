@@ -1,5 +1,5 @@
 use super::text::render_text;
-use crate::model::{Color, Node, NodeContent, Step};
+use crate::model::{Color, Drawing, Node, NodeChild, NodeContent, Step};
 use crate::render::core::RenderConfig;
 use crate::render::layout::{ComputedLayout, LayoutContext};
 use std::collections::BTreeSet;
@@ -8,6 +8,7 @@ use resvg::tiny_skia;
 use std::rc::Rc;
 
 use crate::render::image::render_image;
+use crate::render::paths::create_path;
 use crate::render::GlobalResources;
 use usvg::Fill;
 
@@ -74,8 +75,20 @@ impl<'a> RenderContext<'a> {
             }
         }
 
-        for child in node.child_nodes() {
-            self.render_helper(child);
+        for child in &node.children {
+            match child {
+                NodeChild::Node(node) => self.render_helper(node),
+                NodeChild::Draw(draw) => self.draw(draw),
+            }
+        }
+    }
+
+    fn draw(&self, drawing: &Drawing) {
+        for path in &drawing.paths {
+            if let Some(usvg_path) = create_path(self.layout, path) {
+                self.svg_node
+                    .append(usvg::Node::new(usvg::NodeKind::Path(usvg_path)));
+            }
         }
     }
 

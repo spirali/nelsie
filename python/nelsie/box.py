@@ -1,11 +1,11 @@
 import os
 from typing import Union
 
-from . import shapes
+from .shapes import Path
 from .text.parse import parse_styled_text
 from .text.manager import TextStyleManager, TextStylesProviderMixin
 from .text.textstyle import TextStyle
-from .export import ExportNode, ExportStepValue, NodeContent, Image
+from .export import ExportNode, ExportStepValue, NodeContent, Image, ExportDrawing
 from .steps.stepsexport import export_step_value
 from .parsers import parse_size, check_type_bool, parse_position
 from .steps.insteps import InSteps, parse_steps
@@ -14,8 +14,12 @@ from .colors import check_color
 
 
 class DrawChild:
-    def __init__(self, paths: list[shapes.Path]):
+    def __init__(self, parent_id: int, paths: list[Path]):
         self.paths = paths
+        self.parent_id = parent_id
+
+    def export(self):
+        return ExportDrawing([path.export(self.parent_id) for path in self.paths])
 
 
 BoxChild = Union[DrawChild, "Box"]
@@ -56,6 +60,11 @@ class BoxBuilder(TextStylesProviderMixin):
         **box_args,
     ):
         return self._text_box(text, style, delimiters, tab_width, box_args)
+
+    def draw(self, paths: Path | list[Path]):
+        if not isinstance(paths, list):
+            paths = [paths]
+        self.add_child(DrawChild(self.get_box().box_id, paths))
 
     def _text_box(self, text, style, delimiters, tab_width, box_args):
         text = text.replace("\t", " " * tab_width)

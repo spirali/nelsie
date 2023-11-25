@@ -1,6 +1,6 @@
 import re
 
-from .layoutexpr import XExpr, ConstExpr, YExpr
+from .layoutexpr import XExpr, ConstExpr, YExpr, LayoutExpr
 from .basictypes import Size
 from .export import ExportSize, PointsSize, FractionSize
 
@@ -25,6 +25,8 @@ def parse_size(value: Size) -> ExportSize:
 
 
 def parse_position(parent_id, obj, is_x):
+    if isinstance(obj, LayoutExpr):
+        return obj
     if obj is None:
         return None
     if isinstance(obj, (int, float)):
@@ -32,7 +34,7 @@ def parse_position(parent_id, obj, is_x):
             return XExpr(parent_id) + ConstExpr(obj)
         else:
             return YExpr(parent_id) + ConstExpr(obj)
-    raise ValueError("Invalid position")
+    raise ValueError("Invalid position value")
 
 
 def parse_position_y(parent_id, obj):

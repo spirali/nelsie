@@ -53,9 +53,8 @@ impl From<&Color> for svgtypes::Color {
     }
 }
 
-// A conditionally-compiled module
-#[cfg(test)]
-mod test {
-    use crate::model::LayoutExpr::{ConstValue, Sum, X};
-    use crate::model::{LayoutExpr, NodeId};
+#[derive(Debug, Deserialize)]
+pub(crate) struct Stroke {
+    pub color: Color,
+    pub width: f32,
 }

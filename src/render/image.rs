@@ -372,14 +372,14 @@ pub(crate) fn load_image_in_deck(
 
     // Update number of steps per slide
     for slide in &mut slide_deck.slides {
-        let mut paths = HashSet::new();
-        slide.node.collect_image_paths(&mut paths);
-        for path in paths.iter() {
-            slide.n_steps = max(
-                n_steps_from_images(&slide.node, &loaded_images),
-                slide.n_steps,
-            );
-        }
+        // let mut paths = HashSet::new();
+        // slide.node.collect_image_paths(&mut paths);
+        //for path in paths.iter() {
+        slide.n_steps = max(
+            n_steps_from_images(&slide.node, &loaded_images),
+            slide.n_steps,
+        );
+        //}
     }
     Ok(loaded_images)
 }
@@ -387,7 +387,7 @@ pub(crate) fn load_image_in_deck(
 #[cfg(test)]
 mod tests {
     // use usvg::{fontdb, TreeParsing};
-
+    //
     // #[test]
     // fn test_xxx() {
     //     let mut opt = usvg::Options::default();

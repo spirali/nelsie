@@ -2,8 +2,9 @@ mod core;
 mod globals;
 mod image;
 mod layout;
+mod paths;
 mod pdf;
-mod svg;
+mod rendering;
 mod text;
 
 pub(crate) use core::{render_slide_step, RenderConfig};

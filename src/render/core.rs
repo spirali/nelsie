@@ -1,5 +1,5 @@
 use crate::model::{Slide, Step};
-use crate::render::svg::render_to_svg_tree;
+use crate::render::rendering::render_to_svg_tree;
 use crate::render::GlobalResources;
 use crate::NelsieError;
 use crate::Result;

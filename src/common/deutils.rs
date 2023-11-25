@@ -1,16 +1,16 @@
-use serde::de::{DeserializeOwned, DeserializeSeed, MapAccess, Visitor};
+use serde::de::{DeserializeSeed, MapAccess, Visitor};
 use serde::{de, Deserialize, Deserializer};
 use std::collections::BTreeMap;
-use std::collections::Bound::Included;
 use std::fmt::{Debug, Display, Write};
 use std::hash::Hash;
 use std::marker::PhantomData;
-use std::ops::Bound::Unbounded;
 use std::str::FromStr;
 
 pub type Step = u32;
 
-pub(crate) fn de_int_key<'de, D, K, V>(deserializer: D) -> Result<BTreeMap<K, V>, D::Error>
+pub(crate) fn deserialize_int_key_map<'de, D, K, V>(
+    deserializer: D,
+) -> Result<BTreeMap<K, V>, D::Error>
 where
     D: Deserializer<'de>,
     K: Eq + Ord + PartialOrd + FromStr,

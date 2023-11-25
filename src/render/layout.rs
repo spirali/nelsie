@@ -30,7 +30,7 @@ impl ComputedLayout {
             .expect("Node id not found, ordering not correct?")
     }
 
-    fn eval(&self, expr: &LayoutExpr) -> f32 {
+    pub fn eval(&self, expr: &LayoutExpr) -> f32 {
         match expr {
             LayoutExpr::ConstValue { value } => *value,
             LayoutExpr::X { node_id } => self._rect(*node_id).x,
