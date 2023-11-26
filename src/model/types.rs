@@ -32,7 +32,7 @@ pub(crate) enum LayoutExpr {
     Sum { expressions: Vec<LayoutExpr> },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Color(svgtypes::Color);
 
 impl<'de> Deserialize<'de> for Color {

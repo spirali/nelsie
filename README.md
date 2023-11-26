@@ -14,7 +14,7 @@
     * @slide decorator
     * ~~Step values~~
     * Equivalent for "next"/"next+"/"last"/"last+" (not as keywords but as an explicit counter)
-    * Box debugging visualization
+    * ~~Box debugging visualization~~
     * Parallel rendering [if needed]
     * Box rotations
     * Jupyter support

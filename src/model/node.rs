@@ -43,6 +43,9 @@ pub(crate) struct Node {
 
     pub bg_color: StepValue<Option<Color>>,
     pub content: StepValue<Option<NodeContent>>,
+
+    pub name: String,
+    pub debug_layout: Option<Color>,
 }
 
 impl Node {

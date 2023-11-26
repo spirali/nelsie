@@ -108,6 +108,8 @@ NodeContent = StyledText | Image | None
 class ExportNode:
     _tag = "node"
     node_id: int
+    name: str
+    debug_layout: str | None
 
     x: ExportStepValue[None | LayoutExpr]
     y: ExportStepValue[None | LayoutExpr]

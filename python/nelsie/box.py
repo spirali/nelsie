@@ -106,6 +106,8 @@ class BoxBuilder(TextStylesProviderMixin):
         reverse: bool | InSteps[bool] = False,
         bg_color: str | None | InSteps[str | None] = None,
         content: NodeContent | InSteps[NodeContent] = None,
+        name: str = "",
+        debug_layout: bool | None = None,
     ):
         parent_box = self.get_box()
         if z_level is None:
@@ -124,6 +126,8 @@ class BoxBuilder(TextStylesProviderMixin):
             row=row,
             reverse=reverse,
             content=content,
+            name=name,
+            debug_layout=debug_layout,
         )
         self.add_child(box)
         return box
@@ -146,6 +150,8 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         reverse: bool | InSteps[bool],
         bg_color: str | None | InSteps[str | None],
         content: NodeContent | InSteps[NodeContent] = None,
+        name: str,
+        debug_layout: bool | str | None,
     ):
         self.slide = slide
         self.style_manager = style_manager
@@ -154,6 +160,12 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         show_steps = parse_steps(show)
         self.slide.update_min_steps(show_steps.n_steps)
 
+        if debug_layout is None:
+            debug_layout = slide.debug_layout
+        if not debug_layout:
+            debug_layout = None
+        elif debug_layout is True:  # Exactly True!
+            debug_layout = "#FF00FF"
         self.node = ExportNode(
             node_id=slide.new_box_id(),
             show=export_step_value(show_steps, self.slide),
@@ -166,6 +178,8 @@ class Box(BoxBuilder, TextStylesProviderMixin):
             row=self._export_attr("row", row, check_type_bool),
             reverse=self._export_attr("reverse", reverse, check_type_bool),
             content=export_step_value(content, self.slide),
+            debug_layout=debug_layout,
+            name=name,
         )
         self.children: list[BoxChild] = []
 

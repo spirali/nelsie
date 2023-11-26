@@ -16,6 +16,8 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
         height: float,
         bg_color: str,
         image_directory: str | None,
+        debug_layout: bool | str,
+        name: str,
     ):
         self.style_manager = style_manager
         self.width = width
@@ -23,6 +25,7 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
         self.n_steps = 0
         self.box_id_counter = 0
         self.image_directory = image_directory
+        self.debug_layout = debug_layout
         self.root_box = Box(
             slide=self,
             parent_id=None,
@@ -37,6 +40,8 @@ class Slide(BoxBuilder, TextStylesProviderMixin):
             row=False,
             reverse=False,
             bg_color=bg_color,
+            name=name,
+            debug_layout=debug_layout,
         )
 
     def new_box_id(self):
@@ -89,6 +94,8 @@ class SlideDeck(TextStylesProviderMixin):
         height: Optional[float] = None,
         bg_color: Optional[str] = None,
         image_directory: str | None = None,
+        name: str = "",
+        debug_layout    : bool = False,
     ):
         slide = Slide(
             style_manager=self.style_manager.copy(),
@@ -96,6 +103,8 @@ class SlideDeck(TextStylesProviderMixin):
             height=height or self.height,
             bg_color=bg_color or self.bg_color,
             image_directory=image_directory or self.image_directory,
+            name=name,
+            debug_layout=debug_layout,
         )
         self.slides.append(slide)
         return slide
