@@ -11,7 +11,7 @@
 
 * General
     * ~~Rendering PDF, SVG, PNG~~
-    * @slide decorator
+    * ~~@slide decorator~~
     * ~~Step values~~
     * Equivalent for "next"/"next+"/"last"/"last+" (not as keywords but as an explicit counter)
     * ~~Box debugging visualization~~

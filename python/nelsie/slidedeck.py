@@ -95,7 +95,7 @@ class SlideDeck(TextStylesProviderMixin):
         bg_color: Optional[str] = None,
         image_directory: str | None = None,
         name: str = "",
-        debug_layout    : bool = False,
+        debug_layout: bool = False,
     ):
         slide = Slide(
             style_manager=self.style_manager.copy(),
@@ -108,6 +108,23 @@ class SlideDeck(TextStylesProviderMixin):
         )
         self.slides.append(slide)
         return slide
+
+    def slide(
+        self,
+        width: Optional[float] = None,
+        height: Optional[float] = None,
+        bg_color: Optional[str] = None,
+        image_directory: str | None = None,
+        name: str = "",
+        debug_layout: bool = False,
+    ):
+        def helper(fn):
+            slide = self.new_slide(
+                width, height, bg_color, image_directory, name, debug_layout
+            )
+            return fn(slide)
+
+        return helper
 
     def export(self) -> ExportSlideDeck:
         return ExportSlideDeck(slides=[slide.export() for slide in self.slides])

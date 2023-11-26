@@ -34,3 +34,21 @@ def test_render_outputs(tmp_path, deck):
     with open(out_pdf, "rb") as f:
         data = f.read(4)
         assert data == b"%PDF"
+
+
+def test_slide_decorator(deck):
+    assert len(deck.slides) == 0
+
+    @deck.slide()
+    def my_slide(slide):
+        slide.text("Hello world!")
+
+    @deck.slide(width=100, height=120, debug_layout="green")
+    def my_slide2(slide):
+        slide.text("Hello world!")
+
+    assert len(deck.slides) == 2
+    assert deck.slides[1].width == 100
+    assert deck.slides[1].height == 120
+    assert deck.slides[1].debug_layout == "green"
+    assert deck.slides[0].debug_layout is False
