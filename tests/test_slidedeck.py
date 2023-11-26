@@ -1,3 +1,6 @@
+from nelsie import SlideDeck
+
+
 def test_render_outputs(tmp_path, deck):
     out_svg = tmp_path / "svgs"
     out_png = tmp_path / "pngs"
@@ -52,3 +55,10 @@ def test_slide_decorator(deck):
     assert deck.slides[1].height == 120
     assert deck.slides[1].debug_layout == "green"
     assert deck.slides[0].debug_layout is False
+
+
+def test_builder_bin_path():
+    deck = SlideDeck()
+    path = deck.builder_bin_path
+    print(path)
+    assert None

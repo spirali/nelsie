@@ -1,5 +1,5 @@
-from typing import TypeVar, Generic, Sequence
 import re
+from typing import Generic, Sequence, TypeVar
 
 StepDef = int | Sequence[int] | str
 

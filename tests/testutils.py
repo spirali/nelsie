@@ -1,8 +1,9 @@
 import contextlib
 import os
-from PIL import Image, ImageChops, ImageStat
-from conftest import NELSIE_BIN, CHECKS_DIR
+
 import pytest
+from conftest import CHECKS_DIR
+from PIL import Image, ImageChops, ImageStat
 
 
 @contextlib.contextmanager

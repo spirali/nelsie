@@ -1,6 +1,6 @@
-from nelsie.export import PointsSize, FractionSize
-from nelsie.parsers import parse_size
 import pytest
+from nelsie.export import FractionSize, PointsSize
+from nelsie.parsers import parse_size
 
 
 def test_parse_size():

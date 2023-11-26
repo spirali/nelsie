@@ -1,8 +1,8 @@
 from typing import Callable, TypeVar
 
-from nelsie.export import ExportStepValue, ExportConstStepValue, ExportComplexStepValue
-from .insteps import InSteps
+from nelsie.export import ExportComplexStepValue, ExportConstStepValue, ExportStepValue
 
+from .insteps import InSteps
 
 T = TypeVar("T")
 S = TypeVar("S")

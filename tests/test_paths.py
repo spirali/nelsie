@@ -1,5 +1,6 @@
-from nelsie import Path, Stroke, InSteps
 from testutils import check
+
+from nelsie import InSteps, Path, Stroke
 
 
 @check()

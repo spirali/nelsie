@@ -1,8 +1,8 @@
 import re
 
-from .layoutexpr import XExpr, ConstExpr, YExpr, LayoutExpr
 from .basictypes import Size
-from .export import ExportSize, PointsSize, FractionSize
+from .export import ExportSize, FractionSize, PointsSize
+from .layoutexpr import ConstExpr, LayoutExpr, XExpr, YExpr
 
 SIZE_REGEXP = re.compile(r"^(\d+(?:\.\d+)?)(%)?$")
 

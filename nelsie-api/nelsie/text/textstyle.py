@@ -1,8 +1,8 @@
+import platform
 from dataclasses import dataclass
 
-from nelsie.utils import unpack_dataclass
 from nelsie.colors import check_color
-import platform
+from nelsie.utils import unpack_dataclass
 
 
 @dataclass(frozen=True)

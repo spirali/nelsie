@@ -2,13 +2,13 @@ from dataclasses import dataclass
 
 from .basictypes import Stroke
 from .export import (
-    ExportPathMove,
-    ExportPathLine,
     ExportPath,
-    ExportPathQuad,
     ExportPathCubic,
+    ExportPathLine,
+    ExportPathMove,
+    ExportPathQuad,
 )
-from .layoutexpr import LayoutExpr, ConstExpr, XExpr, YExpr
+from .layoutexpr import ConstExpr, LayoutExpr, XExpr, YExpr
 from .steps.insteps import InSteps
 
 PathValue = int | float | LayoutExpr | InSteps[LayoutExpr]

@@ -1,9 +1,8 @@
-from nelsie import InSteps
-from nelsie.steps.insteps import parse_steps
-
 import pytest
-
+from nelsie.steps.insteps import parse_steps
 from testutils import check
+
+from nelsie import InSteps
 
 
 def test_parse_steps():

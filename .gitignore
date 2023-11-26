@@ -1,4 +1,11 @@
+nelsie-api/build
+nelsie-api/dist
+nelsie-api/nelsie/backend/nelsie-builder
+nelsie-builder/target
+*.pdf
 .idea
 .vscode
 /target
 __pycache__
+report_imgs
+report.html

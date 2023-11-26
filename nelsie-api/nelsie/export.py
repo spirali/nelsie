@@ -1,9 +1,9 @@
 from dataclasses import dataclass
-from typing import TypeVar, Generic, Literal
+from typing import Generic, TypeVar
 
-from .steps.insteps import InSteps
 from .basictypes import Stroke
 from .layoutexpr import LayoutExpr
+from .steps.insteps import InSteps
 from .text.textstyle import TextStyle
 from .text.texttypes import StyledLine
 

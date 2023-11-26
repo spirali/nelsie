@@ -1,5 +1,6 @@
 from nelsie.steps.insteps import InSteps, to_steps
-from .textstyle import TextStyle, DEFAULT_STYLE
+
+from .textstyle import DEFAULT_STYLE, TextStyle
 
 SteppedTextStyle = TextStyle | InSteps[TextStyle]
 

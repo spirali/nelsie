@@ -1,9 +1,10 @@
-from testutils import check
-from nelsie import TextStyle, InSteps
-from nelsie.text.textstyle import DEFAULT_STYLE
 from nelsie.text.manager import TextStyleManager
-from nelsie.text.texttypes import StyledSpan, StyledLine
 from nelsie.text.parse import parse_styled_text
+from nelsie.text.textstyle import DEFAULT_STYLE
+from nelsie.text.texttypes import StyledLine, StyledSpan
+from testutils import check
+
+from nelsie import InSteps, TextStyle
 
 
 def test_text_update():

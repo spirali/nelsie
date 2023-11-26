@@ -1,0 +1,4 @@
+Pillow
+black
+isort
+flake8

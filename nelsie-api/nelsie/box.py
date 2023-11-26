@@ -1,23 +1,23 @@
 import os
 from typing import Union
 
-from .shapes import Path
-from .text.parse import parse_styled_text
-from .text.manager import TextStyleManager, TextStylesProviderMixin
-from .text.textstyle import TextStyle
-from .export import (
-    ExportNode,
-    ExportStepValue,
-    NodeContent,
-    Image,
-    ExportDrawing,
-    ExportPath,
-)
-from .steps.stepsexport import export_step_value
-from .parsers import parse_size, check_type_bool, parse_position
-from .steps.insteps import InSteps, parse_steps, to_steps
-from .basictypes import Size, Position
+from .basictypes import Position, Size
 from .colors import check_color
+from .export import (
+    ExportDrawing,
+    ExportNode,
+    ExportPath,
+    ExportStepValue,
+    Image,
+    NodeContent,
+)
+from .parsers import check_type_bool, parse_position, parse_size
+from .shapes import Path
+from .steps.insteps import InSteps, parse_steps, to_steps
+from .steps.stepsexport import export_step_value
+from .text.manager import TextStyleManager, TextStylesProviderMixin
+from .text.parse import parse_styled_text
+from .text.textstyle import TextStyle
 
 
 class DrawChild:

@@ -1,19 +1,20 @@
-from typing import Optional
 import json
 import subprocess
+from typing import Optional
 
 
 def render_slides(
-    nelsie_bin: str,
+    builder_bin_path: str,
     root: dict,
     output_pdf: Optional[str],
     output_svg: Optional[str],
     output_png: Optional[str],
     debug: bool = False,
 ):
-    data = json.dumps(root, indent=2)
-    print(data)
-    args = [nelsie_bin]
+    data = json.dumps(root, indent=2 if debug else None)
+    if debug:
+        print(data)
+    args = [builder_bin_path]
     if debug:
         args.append("--debug")
     if output_pdf:
@@ -26,8 +27,10 @@ def render_slides(
     p = subprocess.Popen(
         args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE
     )
+    print("Building slides ...")
     stdout, _stderr = p.communicate(data.encode())
     print(stdout.decode())
     if p.returncode != 0:
         stdout = stdout.decode()
         raise Exception("Rendering failed:\n" + stdout)
+    print("... done")

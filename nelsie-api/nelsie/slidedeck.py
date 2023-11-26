@@ -1,11 +1,13 @@
+import os
+from importlib import resources
 from typing import Optional
 
-from .serialization import serialize
-from .text.textstyle import DEFAULT_STYLE
-from .text.manager import TextStylesProviderMixin, TextStyleManager
-from .export import ExportSlideDeck, ExportSlide
 from .box import Box, BoxBuilder, BoxChild
+from .export import ExportSlide, ExportSlideDeck
 from .render import render_slides
+from .serialization import serialize
+from .text.manager import TextStyleManager, TextStylesProviderMixin
+from .text.textstyle import DEFAULT_STYLE
 
 
 class Slide(BoxBuilder, TextStylesProviderMixin):
@@ -73,13 +75,18 @@ class SlideDeck(TextStylesProviderMixin):
     def __init__(
         self,
         *,
-        nelsie_bin: str,
+        builder_bin_path: str | None = None,
         width: float = 1024,
         height: float = 768,
         bg_color: str = "white",
         image_directory: str | None = None
     ):
-        self.nelsie_bin = nelsie_bin
+        if builder_bin_path is None:
+            from . import backend
+            with resources.path(backend, ".") as path:
+                builder_bin_path = os.path.join(path, "nelsie-builder")
+
+        self.builder_bin_path = builder_bin_path
         self.width = width
         self.height = height
         self.bg_color = bg_color
@@ -140,7 +147,7 @@ class SlideDeck(TextStylesProviderMixin):
         if output_pdf is None and output_png is None and output_svg is None:
             raise Exception("No output file is defined")
         render_slides(
-            self.nelsie_bin,
+            self.builder_bin_path,
             serialize(self.export()),
             output_pdf,
             output_svg,

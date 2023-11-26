@@ -1,10 +1,11 @@
 from typing import Sequence
 
-from nelsie.export import ExportStepValue, StyledText
-from nelsie.steps.insteps import to_steps, zip_in_steps, InSteps
-from .texttypes import StyledSpan, StyledLine, SteppedStyledText
-from .textstyle import TextStyle
+from nelsie.export import StyledText
+from nelsie.steps.insteps import InSteps, to_steps, zip_in_steps
+
 from .manager import TextStyleManager, update_stepped_text_style
+from .textstyle import TextStyle
+from .texttypes import StyledLine, StyledSpan
 
 
 def _find_first(string, start, c1, c2) -> int:
