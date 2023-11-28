@@ -194,3 +194,12 @@ def test_render_text_steps(deck):
     )
     #    slide.box(bg_color="#f88").text("Say ~my_style{hello}!")
     slide.box().text("Say ~my_style{hello}!")
+
+
+@check()
+def test_render_text_unicode(deck):
+    deck.set_style("x", TextStyle(color="yellow"))
+    slide = deck.new_slide()
+    slide.box(bg_color="#f88").text(
+        "Příliš žluťoučký ~x{kůň} úpěl ďábelské ódy\n>>>y̆<<<"
+    )

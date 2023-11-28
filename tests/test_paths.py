@@ -48,4 +48,4 @@ def test_render_path_dash(deck):
         .line_to(75, 150)
     )
     slide.box(width="90%", height="90%").draw([path1, path2])
-    deck.render(output_pdf="/tmp/out.pdf")
+    # deck.render(output_pdf="/tmp/out.pdf")

@@ -1,5 +1,7 @@
-from nelsie import SlideDeck
+import os.path
 
+from nelsie import SlideDeck
+from conftest import ROOT_DIR
 
 def test_render_outputs(tmp_path, deck):
     out_svg = tmp_path / "svgs"
@@ -60,5 +62,4 @@ def test_slide_decorator(deck):
 def test_builder_bin_path():
     deck = SlideDeck()
     path = deck.builder_bin_path
-    print(path)
-    assert None
+    assert path == os.path.join(ROOT_DIR, "nelsie-api", "nelsie", "backend", "nelsie-builder")

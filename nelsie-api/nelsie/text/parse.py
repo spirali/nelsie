@@ -17,6 +17,9 @@ def _find_first(string, start, c1, c2) -> int:
         return p1
     return min(p1, p2)
 
+def len_in_bytes(string):
+    return len(string.encode("utf-8"))
+
 
 def parse_styled_text(
     text: str,
@@ -48,7 +51,7 @@ def parse_styled_text(
                         style, style_manager.get_style(name)
                     )
                 styles.append(style)
-            spans.append(StyledSpan(len(raw_line), len(added_text), style_idx))
+            spans.append(StyledSpan(len_in_bytes(raw_line), len_in_bytes(added_text), style_idx))
         return added_text
 
     for line_idx, line in enumerate(text.split("\n")):
