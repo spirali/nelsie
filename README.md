@@ -26,8 +26,8 @@
     * ~~z-level~~
     * Min size & Max size
     * Aspect ratio
-    * Margin
-    * Padding
+    * ~~Margin~~
+    * ~~Padding~~
     * Align & Justify items
     * Gap
     * Flex grow & shrink

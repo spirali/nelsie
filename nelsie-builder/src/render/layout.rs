@@ -1,4 +1,4 @@
-use crate::model::{LayoutExpr, Node, NodeContent, NodeId, Size, Slide, Step};
+use crate::model::{LayoutExpr, Length, LengthOrAuto, Node, NodeContent, NodeId, Slide, Step};
 use crate::render::image::get_image_size;
 use crate::render::text::get_text_size;
 use crate::render::GlobalResources;
@@ -60,11 +60,30 @@ fn is_layout_managed(node: &Node, parent: Option<&Node>, step: Step) -> bool {
         .unwrap_or(true)
 }
 
-impl From<&Size> for tf::Dimension {
-    fn from(value: &Size) -> Self {
+impl From<&Length> for tf::Dimension {
+    fn from(value: &Length) -> Self {
         match value {
-            Size::Points { value } => tf::Dimension::Points(*value),
-            Size::Fraction { value } => tf::Dimension::Percent(*value),
+            Length::Points { value } => tf::Dimension::Points(*value),
+            Length::Fraction { value } => tf::Dimension::Percent(*value),
+        }
+    }
+}
+
+impl From<&Length> for tf::LengthPercentage {
+    fn from(value: &Length) -> Self {
+        match value {
+            Length::Points { value } => tf::LengthPercentage::Points(*value),
+            Length::Fraction { value } => tf::LengthPercentage::Percent(*value),
+        }
+    }
+}
+
+impl From<&LengthOrAuto> for tf::LengthPercentageAuto {
+    fn from(value: &LengthOrAuto) -> Self {
+        match value {
+            LengthOrAuto::Points { value } => tf::LengthPercentageAuto::Points(*value),
+            LengthOrAuto::Fraction { value } => tf::LengthPercentageAuto::Percent(*value),
+            LengthOrAuto::Auto => tf::LengthPercentageAuto::Auto,
         }
     }
 }
@@ -144,6 +163,20 @@ impl<'a> LayoutContext<'a> {
             tf::Position::Absolute
         };
 
+        let padding = tf::Rect {
+            left: node.p_left.at_step(self.step).into(),
+            right: node.p_right.at_step(self.step).into(),
+            top: node.p_top.at_step(self.step).into(),
+            bottom: node.p_bottom.at_step(self.step).into(),
+        };
+
+        let margin = tf::Rect {
+            left: node.m_left.at_step(self.step).into(),
+            right: node.m_right.at_step(self.step).into(),
+            top: node.m_top.at_step(self.step).into(),
+            bottom: node.m_bottom.at_step(self.step).into(),
+        };
+
         let style = tf::Style {
             position,
             size: tf::Size { width, height },
@@ -151,6 +184,8 @@ impl<'a> LayoutContext<'a> {
             aspect_ratio: content_aspect_ratio,
             justify_content: Some(tf::JustifyContent::Center),
             align_items: Some(tf::AlignItems::Center),
+            padding,
+            margin,
             ..Default::default()
         };
         taffy.new_with_children(style, &tf_children).unwrap()

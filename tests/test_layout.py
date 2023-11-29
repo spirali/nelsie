@@ -70,3 +70,29 @@ def test_z_level(deck):
     slide = deck.new_slide(width=100, height=100)
     slide.box(x=0, y=0, width=75, height=75, z_level=1, bg_color="red")
     slide.box(x=25, y=25, width=75, height=75, bg_color="green")
+
+
+@check()
+def test_layout_padding(deck):
+    slide = deck.new_slide(width=150, height=150)
+    b = slide.box(bg_color="gray", p_left=20)
+    b.box(width=15, height=15, bg_color="red")
+    b = slide.box(bg_color="gray", p_right=20)
+    b.box(width=15, height=15, bg_color="blue")
+    b = slide.box(bg_color="gray", p_top=20)
+    b.box(width=15, height=15, bg_color="red")
+    b = slide.box(bg_color="gray", p_bottom=20)
+    b.box(width=15, height=15, bg_color="blue")
+
+
+@check()
+def test_layout_margin(deck):
+    slide = deck.new_slide(width=150, height=150)
+    b = slide.box(bg_color="gray", m_left=20)
+    b.box(width=15, height=15, bg_color="red")
+    b = slide.box(bg_color="gray", m_right=20)
+    b.box(width=15, height=15, bg_color="blue")
+    b = slide.box(bg_color="gray", m_top=20)
+    b.box(width=15, height=15, bg_color="red")
+    b = slide.box(bg_color="gray", m_bottom=20)
+    b.box(width=15, height=15, bg_color="blue")

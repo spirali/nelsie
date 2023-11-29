@@ -1,7 +1,8 @@
-use super::{Color, Size, StepValue};
+use super::{Color, Length, StepValue};
 use crate::model::image::Image;
 use crate::model::shapes::Drawing;
 use crate::model::text::{FontFamily, StyledText};
+use crate::model::types::LengthOrAuto;
 use crate::model::{LayoutExpr, NodeId, Step};
 use serde::Deserialize;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -35,11 +36,21 @@ pub(crate) struct Node {
     pub x: StepValue<Option<LayoutExpr>>,
     pub y: StepValue<Option<LayoutExpr>>,
 
-    pub width: StepValue<Option<Size>>,
-    pub height: StepValue<Option<Size>>,
+    pub width: StepValue<Option<Length>>,
+    pub height: StepValue<Option<Length>>,
 
     pub row: StepValue<bool>,
     pub reverse: StepValue<bool>,
+
+    pub p_top: StepValue<Length>,
+    pub p_bottom: StepValue<Length>,
+    pub p_left: StepValue<Length>,
+    pub p_right: StepValue<Length>,
+
+    pub m_top: StepValue<LengthOrAuto>,
+    pub m_bottom: StepValue<LengthOrAuto>,
+    pub m_left: StepValue<LengthOrAuto>,
+    pub m_right: StepValue<LengthOrAuto>,
 
     pub bg_color: StepValue<Option<Color>>,
     pub content: StepValue<Option<NodeContent>>,

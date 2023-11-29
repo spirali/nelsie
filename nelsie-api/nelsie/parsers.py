@@ -1,15 +1,13 @@
 import re
 
 from .basictypes import Size
-from .export import ExportSize, FractionSize, PointsSize
+from .export import ExportSize, FractionSize, PointsSize, ExportLength, AUTO_LENGTH
 from .layoutexpr import ConstExpr, LayoutExpr, XExpr, YExpr
 
 SIZE_REGEXP = re.compile(r"^(\d+(?:\.\d+)?)(%)?$")
 
 
-def parse_size(value: Size) -> ExportSize:
-    if value is None:
-        return None
+def parse_length(value: Size) -> ExportLength:
     if isinstance(value, (int, float)):
         return PointsSize(float(value))
     if isinstance(value, str):
@@ -21,7 +19,19 @@ def parse_size(value: Size) -> ExportSize:
                 if percent
                 else PointsSize(float(number))
             )
-    raise ValueError(f"Invalid size definition: {value!r}")
+    raise ValueError(f"Invalid length definition: {value!r}")
+
+
+def parse_size(value: Size) -> ExportSize:
+    if value is None:
+        return None
+    return parse_length(value)
+
+
+def parse_length_auto(value: Size) -> ExportSize:
+    if value == "auto":
+        return AUTO_LENGTH
+    return parse_length(value)
 
 
 def parse_position(parent_id, obj, is_x):

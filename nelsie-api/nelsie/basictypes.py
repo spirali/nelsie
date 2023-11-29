@@ -1,7 +1,12 @@
 from dataclasses import dataclass, field
+from typing import Literal
 
-Size = int | float | str
-Position = int | float | str | None
+from .layoutexpr import LayoutExpr
+
+Length = int | float | str
+LengthAuto = Length | Literal["auto"]
+Size = Length | None
+Position = Length | None | LayoutExpr
 
 
 @dataclass

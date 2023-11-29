@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Literal
 
 from .basictypes import Stroke
 from .layoutexpr import LayoutExpr
@@ -21,8 +21,17 @@ class FractionSize:
     _tag = "fraction"
     value: float
 
+@dataclass
+class AutoLength:
+    _tag = "auto"
 
-ExportSize = FractionSize | PointsSize | None
+
+AUTO_LENGTH = AutoLength
+
+
+ExportLength = FractionSize | PointsSize
+ExportSize = ExportLength | None
+ExportLengthAuto = ExportLength | AutoLength
 
 
 @dataclass
@@ -118,6 +127,16 @@ class ExportNode:
 
     width: ExportStepValue[ExportSize]
     height: ExportStepValue[ExportSize]
+
+    p_left: ExportStepValue[ExportLength]
+    p_right: ExportStepValue[ExportLength]
+    p_top: ExportStepValue[ExportLength]
+    p_bottom: ExportStepValue[ExportLength]
+
+    m_left: ExportStepValue[ExportLengthAuto]
+    m_right: ExportStepValue[ExportLengthAuto]
+    m_top: ExportStepValue[ExportLengthAuto]
+    m_bottom: ExportStepValue[ExportLengthAuto]
 
     show: ExportStepValue[bool]
     row: ExportStepValue[bool]

@@ -15,9 +15,9 @@ def test_parse_size():
 
     assert parse_size(None) is None
 
-    with pytest.raises(ValueError, match="Invalid size definition"):
+    with pytest.raises(ValueError, match="Invalid length definition"):
         parse_size("xxx")
-    with pytest.raises(ValueError, match="Invalid size definition"):
+    with pytest.raises(ValueError, match="Invalid length definition"):
         parse_size("12%%")
-    with pytest.raises(ValueError, match="Invalid size definition"):
+    with pytest.raises(ValueError, match="Invalid length definition"):
         parse_size([10])

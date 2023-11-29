@@ -15,9 +15,18 @@ impl NodeId {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
-pub(crate) enum Size {
+pub(crate) enum Length {
     Points { value: f32 },
     Fraction { value: f32 },
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(tag = "type")]
+pub(crate) enum LengthOrAuto {
+    Points { value: f32 },
+    Fraction { value: f32 },
+    Auto,
 }
 
 #[derive(Debug, Deserialize, Clone)]

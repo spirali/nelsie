@@ -1,7 +1,7 @@
 import os
 from typing import Union
 
-from .basictypes import Position, Size
+from .basictypes import Position, Size, Length, LengthAuto
 from .colors import check_color
 from .export import (
     ExportDrawing,
@@ -11,7 +11,7 @@ from .export import (
     Image,
     NodeContent,
 )
-from .parsers import check_type_bool, parse_position, parse_size
+from .parsers import check_type_bool, parse_position, parse_size, parse_length, parse_length_auto
 from .shapes import Path
 from .steps.insteps import InSteps, parse_steps, to_steps
 from .steps.stepsexport import export_step_value
@@ -102,6 +102,14 @@ class BoxBuilder(TextStylesProviderMixin):
         y: Position | InSteps[Position] = None,
         width: Size | InSteps[Size] = None,
         height: Size | InSteps[Size] = None,
+        p_left: Length | InSteps[Length] = 0,
+        p_right: Length | InSteps[Length] = 0,
+        p_top: Length | InSteps[Length] = 0,
+        p_bottom: Length | InSteps[Length] = 0,
+        m_left: LengthAuto | InSteps[LengthAuto] = 0,
+        m_right: LengthAuto | InSteps[LengthAuto] = 0,
+        m_top: LengthAuto | InSteps[LengthAuto] = 0,
+        m_bottom: LengthAuto | InSteps[LengthAuto] = 0,
         row: bool | InSteps[bool] = False,
         reverse: bool | InSteps[bool] = False,
         bg_color: str | None | InSteps[str | None] = None,
@@ -123,6 +131,14 @@ class BoxBuilder(TextStylesProviderMixin):
             width=width,
             height=height,
             bg_color=bg_color,
+            p_left=p_left,
+            p_right=p_right,
+            p_bottom=p_bottom,
+            p_top=p_top,
+            m_left=m_left,
+            m_right=m_right,
+            m_top=m_top,
+            m_bottom=m_bottom,
             row=row,
             reverse=reverse,
             content=content,
@@ -146,6 +162,14 @@ class Box(BoxBuilder, TextStylesProviderMixin):
         y: Position | InSteps[Position],
         width: Size | InSteps[Size],
         height: Size | InSteps[Size],
+        p_left: Length | InSteps[Length],
+        p_right: Length | InSteps[Length],
+        p_top: Length | InSteps[Length],
+        p_bottom: Length | InSteps[Length],
+        m_left: LengthAuto | InSteps[LengthAuto],
+        m_right: LengthAuto | InSteps[LengthAuto],
+        m_top: LengthAuto | InSteps[LengthAuto],
+        m_bottom: LengthAuto | InSteps[LengthAuto],
         row: bool | InSteps[bool],
         reverse: bool | InSteps[bool],
         bg_color: str | None | InSteps[str | None],
@@ -174,6 +198,14 @@ class Box(BoxBuilder, TextStylesProviderMixin):
             y=self._export_attr("y", y, lambda v: parse_position(parent_id, v, False)),
             width=self._export_attr("width", width, parse_size),
             height=self._export_attr("height", height, parse_size),
+            p_left=self._export_attr("p_left", p_left, parse_length),
+            p_right=self._export_attr("p_right", p_right, parse_length),
+            p_top=self._export_attr("p_top", p_top, parse_length),
+            p_bottom=self._export_attr("p_bottom", p_bottom, parse_length),
+            m_left=self._export_attr("m_left", m_left, parse_length_auto),
+            m_right=self._export_attr("m_right", m_right, parse_length_auto),
+            m_top=self._export_attr("m_top", m_top, parse_length_auto),
+            m_bottom=self._export_attr("m_bottom", m_bottom, parse_length_auto),
             bg_color=self._export_attr("bg_color", bg_color, check_color),
             row=self._export_attr("row", row, check_type_bool),
             reverse=self._export_attr("reverse", reverse, check_type_bool),

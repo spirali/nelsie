@@ -60,7 +60,7 @@ def check(n_slides: int = 1, error=None, error_match: str | None = None):
         if name.startswith("test_"):
             name = name[5:]
 
-        def helper(tmp_path, deck, *args, **kwargs):
+        def helper(tmp_path, deck):
             with change_workdir(tmp_path):
                 fn(deck)
                 if error is not None:

@@ -24,7 +24,7 @@ impl<T: Debug> StepValue<T> {
     }
 }
 
-impl<T: Debug + DeserializeOwned + Default> StepValue<T> {
+impl<T: Debug + DeserializeOwned> StepValue<T> {
     pub fn new_const(value: T) -> Self {
         StepValue::Const(value)
     }
