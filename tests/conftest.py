@@ -17,4 +17,4 @@ from nelsie import SlideDeck  # noqa
 
 @pytest.fixture()
 def deck():
-    return SlideDeck(builder_bin_path=NELSIE_BIN, image_directory=ASSETS_DIR)
+    return SlideDeck(image_directory=ASSETS_DIR)

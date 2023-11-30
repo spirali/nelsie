@@ -1,6 +1,3 @@
-use crate::common::deutils::deserialize_int_key_map;
-use serde::de::{DeserializeOwned, DeserializeSeed, MapAccess, Visitor};
-use serde::{Deserialize, Deserializer};
 use std::collections::BTreeMap;
 use std::collections::Bound::Included;
 use std::fmt::{Debug, Display, Write};
@@ -8,15 +5,12 @@ use std::hash::Hash;
 use std::ops::Bound::Unbounded;
 use std::str::FromStr;
 use crate::model::Length;
-use crate::model::types::DefaultInstance;
 
 pub type Step = u32;
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[derive(Debug)]
 pub(crate) enum StepValue<T: Debug> {
     Const(T),
-    #[serde(deserialize_with = "deserialize_int_key_map")]
     Steps(BTreeMap<Step, T>),
 }
 
@@ -26,7 +20,7 @@ impl<T: Debug> StepValue<T> {
     }
 }
 
-impl<T: Debug + DeserializeOwned + DefaultInstance + 'static> StepValue<T> {
+impl<T: Debug> StepValue<T> {
     pub fn new_const(value: T) -> Self {
         StepValue::Const(value)
     }
@@ -40,7 +34,7 @@ impl<T: Debug + DeserializeOwned + DefaultInstance + 'static> StepValue<T> {
                 .next_back()
                 .map(|(_, v)| v)
                 .unwrap_or_else(|| {
-                    T::default_instance_ref()
+                    panic!("Invalid step")
                 }),
         }
     }

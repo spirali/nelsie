@@ -20,6 +20,7 @@ pub(crate) enum Length {
     Fraction { value: f32 },
 }
 
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
@@ -68,4 +69,41 @@ pub(crate) struct Stroke {
     pub width: f32,
     pub dash_array: Option<Vec<f32>>,
     pub dash_offset: f32,
+}
+
+
+pub(crate) trait DefaultInstance {
+    const DEFAULT: Self;
+
+    fn default_instance_ref() -> &'static Self {
+        &Self::DEFAULT
+    }
+}
+
+impl DefaultInstance for f32 {
+    const DEFAULT: Self = 0.0;
+}
+
+impl DefaultInstance for i32 {
+    const DEFAULT: Self = 0;
+}
+
+impl DefaultInstance for bool {
+    const DEFAULT: Self = false;
+}
+
+impl DefaultInstance for Length {
+    const DEFAULT: Self = Length::Points { value: 0.0 };
+}
+
+impl DefaultInstance for LengthOrAuto {
+    const DEFAULT: Self = LengthOrAuto::Points { value: 0.0 };
+}
+
+impl<T> DefaultInstance for Option<T> {
+    const DEFAULT: Self = None;
+}
+
+impl<T> DefaultInstance for Vec<T> {
+    const DEFAULT: Self = Vec::new();
 }

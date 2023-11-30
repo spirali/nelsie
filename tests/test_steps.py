@@ -8,7 +8,7 @@ from nelsie import InSteps
 def test_parse_steps():
     def p(obj):
         in_steps = parse_steps(obj)
-        return in_steps.values, in_steps.n_steps
+        return in_steps.in_step_values, in_steps.n_steps
 
     assert p(3) == ({1: False, 3: True, 4: False}, 3)
     assert p([1, 3, 5]) == (
@@ -42,7 +42,7 @@ def test_parse_steps():
 
 def test_step_values():
     def check(in_steps, values, n_steps):
-        assert in_steps.values == values
+        assert in_steps.in_step_values == values
         assert in_steps.n_steps == n_steps
 
     check(InSteps(["red", "red", "blue"]), {1: "red", 3: "blue"}, 3)
