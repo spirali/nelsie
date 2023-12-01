@@ -1,6 +1,7 @@
 import typing
 from typing import Optional
 from . import nelsie as nelsie_rs
+from .basictypes import parse_debug_layout
 from .box import Box, BoxBuilder
 from .insteps import InSteps
 
@@ -12,8 +13,7 @@ class Slide(BoxBuilder):
         self._slide_id = slide_id
         self.name = name
         self.image_directory = image_directory
-        self.debug_layout = debug_layout
-        self.root_box = Box(deck, slide_id, [], 0, name, 0)
+        self.root_box = Box(deck, self, [], 0, name, 0)
 
     def get_box(self):
         return self.root_box
@@ -51,11 +51,7 @@ class SlideDeck:
             bg_color = self.bg_color
         if image_directory is None:
             image_directory = self.image_directory
-        if debug_layout is True:
-            debug_layout = "#ff0ff"
-        elif not debug_layout:
-            debug_layout = None
-        debug_layout = typing.cast(None | str, debug_layout)
+        debug_layout = parse_debug_layout(debug_layout)
         slide_id = self._deck.new_slide(width, height, bg_color, name)
         return Slide(self._deck, slide_id, name, image_directory, debug_layout)
 

@@ -1,7 +1,3 @@
-from nelsie.text.manager import TextStyleManager
-from nelsie.text.parse import parse_styled_text
-from nelsie.text.textstyle import DEFAULT_STYLE
-from nelsie.text.texttypes import StyledLine, StyledSpan
 from testutils import check
 
 from nelsie import InSteps, TextStyle
@@ -20,42 +16,6 @@ def test_text_update():
 def test_text_invalid_font(deck):
     s1 = TextStyle(font_family="Nonexisting font")
     deck.new_slide().text("Hello", style=s1)
-
-
-def test_text_style_manager_no_steps():
-    manager = TextStyleManager({"default": DEFAULT_STYLE})
-    manager.set_style("red", TextStyle(color="red", size=123))
-
-    assert manager.get_style("red") == TextStyle(color="red", size=123)
-    assert manager.get_final_style("red") == DEFAULT_STYLE.update(
-        TextStyle(color="red", size=123)
-    )
-
-    manager.update_style("red", TextStyle(color="green"))
-    assert manager.get_style("red") == TextStyle(color="green", size=123)
-
-    manager.set_style("red", TextStyle(color="blue"))
-    assert manager.get_style("red") == TextStyle(color="blue")
-
-    manager2 = manager.copy()
-    manager2.set_style("red", TextStyle(color="orange"))
-    assert manager.get_style("red") == TextStyle(color="blue")
-    assert manager2.get_style("red") == TextStyle(color="orange")
-
-
-def test_text_style_manager_steps():
-    manager = TextStyleManager({"default": DEFAULT_STYLE})
-    manager.set_style("red", TextStyle(color="red", size=123))
-    manager.update_style(
-        "red", InSteps({1: TextStyle(size=15), 2: TextStyle(), 3: TextStyle(size=15)})
-    )
-    manager.update_style("red", InSteps({1: TextStyle(), 4: TextStyle(color="green")}))
-    assert manager.get_style("red").in_step_values == {
-        1: TextStyle(color="red", size=15),
-        2: TextStyle(color="red", size=123),
-        3: TextStyle(color="red", size=15),
-        4: TextStyle(color="green", size=15),
-    }
 
 
 def test_parse_text():

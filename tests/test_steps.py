@@ -1,43 +1,7 @@
 import pytest
-from nelsie.steps.insteps import parse_steps
 from testutils import check
 
 from nelsie import InSteps
-
-
-def test_parse_steps():
-    def p(obj):
-        in_steps = parse_steps(obj)
-        return in_steps.in_step_values, in_steps.n_steps
-
-    assert p(3) == ({1: False, 3: True, 4: False}, 3)
-    assert p([1, 3, 5]) == (
-        {1: True, 2: False, 3: True, 4: False, 5: True, 6: False},
-        5,
-    )
-    assert p([1, 2]) == ({1: True, 3: False}, 2)
-
-    with pytest.raises(ValueError, match="Step cannot be a zero or negative integer"):
-        p(0)
-    with pytest.raises(ValueError, match="Step cannot be a zero or negative integer"):
-        p([0])
-
-    assert p("10") == ({1: False, 10: True, 11: False}, 10)
-    assert p("1,2,4") == ({1: True, 3: False, 4: True, 5: False}, 4)
-    assert p("2-4,7") == (
-        {
-            1: False,
-            2: True,
-            5: False,
-            7: True,
-            8: False,
-        },
-        7,
-    )
-
-    assert p("2-4,7+") == ({1: False, 2: True, 5: False, 7: True}, 7)
-    assert p("3+") == ({1: False, 3: True}, 3)
-    assert p("3,2 , 1") == ({1: True, 4: False}, 3)
 
 
 def test_step_values():

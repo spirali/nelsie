@@ -1,7 +1,7 @@
 from typing import Union
 from dataclasses import dataclass
 
-from .basictypes import Position, Size, Length, LengthAuto
+from .basictypes import Position, Size, Length, LengthAuto, parse_debug_layout
 from .insteps import InSteps
 
 
@@ -123,6 +123,7 @@ class BoxBuilder:
             debug_layout: bool | None = None,
     ):
         parent_box = self.get_box()
+        debug_layout = parse_debug_layout(debug_layout)
         if z_level is None:
             z_level = parent_box.z_level
         config = BoxConfig(
@@ -146,8 +147,8 @@ class BoxBuilder:
             name=name,
             debug_layout=debug_layout
         )
-        box_id, node_id = parent_box._deck.new_box(parent_box._slide_id, parent_box._box_id, config)
-        box = Box(parent_box._deck, parent_box._slide_id, box_id, node_id, name, z_level)
+        box_id, node_id = parent_box._deck.new_box(parent_box.slide._slide_id, parent_box._box_id, config)
+        box = Box(parent_box._deck, parent_box.slide, box_id, node_id, name, z_level)
         return box
 
 
@@ -155,14 +156,14 @@ class Box(BoxBuilder):
     def __init__(
             self,
             deck,
-            slide_id,
+            slide,
             box_id,
             node_id,
             name: str,
             z_level: int,
     ):
         self._deck = deck
-        self._slide_id = slide_id
+        self.slide = slide
         self._box_id = box_id
         self.node_id = node_id
         self.name = name

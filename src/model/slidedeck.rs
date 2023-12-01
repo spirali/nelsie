@@ -24,7 +24,7 @@ impl Slide {
                 x: StepValue::Const(None),
                 y: StepValue::Const(None),
                 width: StepValue::Const(Some(Length::Points { value: width })),
-                height: StepValue::Const(Some(Length::Points { value: height})),
+                height: StepValue::Const(Some(Length::Points { value: height })),
                 row: StepValue::Const(false),
                 reverse: StepValue::Const(false),
                 p_top: StepValue::Const(Length::ZERO),

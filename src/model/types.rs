@@ -27,9 +27,8 @@ pub(crate) enum Length {
 }
 
 impl Length {
-    pub(crate) const ZERO: Length = Length::Points {value: 0.0 };
+    pub(crate) const ZERO: Length = Length::Points { value: 0.0 };
 }
-
 
 #[derive(Debug, Clone)]
 pub(crate) enum LengthOrAuto {
@@ -39,7 +38,7 @@ pub(crate) enum LengthOrAuto {
 }
 
 impl LengthOrAuto {
-    pub(crate) const ZERO : LengthOrAuto = LengthOrAuto::Points { value: 0.0 };
+    pub(crate) const ZERO: LengthOrAuto = LengthOrAuto::Points { value: 0.0 };
 }
 
 #[derive(Debug, Clone)]

@@ -7,17 +7,16 @@ mod pdf;
 mod rendering;
 mod text;
 
-use std::path::Path;
-use usvg::fontdb;
+use crate::common::error::NelsieError;
+use crate::common::fileutils::ensure_directory;
+use crate::model::{Slide, SlideDeck};
 pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use globals::GlobalResources;
 pub(crate) use image::load_image_in_deck;
 pub(crate) use pdf::PdfBuilder;
+use std::path::Path;
 pub(crate) use text::check_fonts;
-use crate::common::error::NelsieError;
-use crate::common::fileutils::ensure_directory;
-use crate::model::{Slide, SlideDeck};
-
+use usvg::fontdb;
 
 pub(crate) struct OutputConfig<'a> {
     pub output_pdf: Option<&'a Path>,
@@ -53,7 +52,10 @@ fn render_slide(
         .collect()
 }
 
-pub(crate) fn render_slide_deck(slide_deck: &SlideDeck, output_cfg: &OutputConfig) -> crate::Result<()> {
+pub(crate) fn render_slide_deck(
+    slide_deck: &SlideDeck,
+    output_cfg: &OutputConfig,
+) -> crate::Result<()> {
     if let Some(dir) = output_cfg.output_svg {
         log::debug!("Ensuring SVG output directory: {}", dir.display());
         ensure_directory(dir).map_err(|e| {

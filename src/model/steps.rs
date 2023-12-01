@@ -1,10 +1,10 @@
+use crate::model::Length;
 use std::collections::BTreeMap;
 use std::collections::Bound::Included;
 use std::fmt::{Debug, Display, Write};
 use std::hash::Hash;
 use std::ops::Bound::Unbounded;
 use std::str::FromStr;
-use crate::model::Length;
 
 pub type Step = u32;
 
@@ -25,6 +25,10 @@ impl<T: Debug> StepValue<T> {
         StepValue::Const(value)
     }
 
+    pub fn new_map(value: BTreeMap<Step, T>) -> Self {
+        StepValue::Steps(value)
+    }
+
     pub fn at_step(&self, step: Step) -> &T {
         assert!(step > 0);
         match self {
@@ -33,9 +37,7 @@ impl<T: Debug> StepValue<T> {
                 .range((Unbounded, Included(&step)))
                 .next_back()
                 .map(|(_, v)| v)
-                .unwrap_or_else(|| {
-                    panic!("Invalid step")
-                }),
+                .unwrap_or_else(|| panic!("Invalid step")),
         }
     }
 

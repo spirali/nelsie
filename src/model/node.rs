@@ -71,10 +71,12 @@ impl Node {
     }
 
     pub fn child_node_mut(&mut self, node_idx: usize) -> Option<&mut Node> {
-        self.children.get_mut(node_idx).and_then(|child| match child {
-            NodeChild::Node(node) => Some(node),
-            NodeChild::Draw(_) => None
-        })
+        self.children
+            .get_mut(node_idx)
+            .and_then(|child| match child {
+                NodeChild::Node(node) => Some(node),
+                NodeChild::Draw(_) => None,
+            })
     }
 
     pub fn collect_image_paths<'a>(&'a self, out: &mut HashSet<&'a Path>) {

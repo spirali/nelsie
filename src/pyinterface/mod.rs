@@ -1,18 +1,17 @@
+mod r#box;
 mod deck;
 mod insteps;
-mod r#box;
 
+use crate::pyinterface::insteps::ValueOrInSteps;
+use deck::Deck;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use deck::Deck;
-use crate::pyinterface::insteps::ValueOrInSteps;
 
 impl From<crate::NelsieError> for PyErr {
     fn from(err: crate::NelsieError) -> PyErr {
         PyException::new_err(err.to_string())
     }
 }
-
 
 // #[derive(Debug, FromPyObject)]
 // enum StringOrInt {
