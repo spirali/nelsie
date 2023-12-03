@@ -18,10 +18,10 @@ pub(crate) enum ValueOrInSteps<T> {
 }
 
 impl<T: Debug> ValueOrInSteps<T> {
-    pub fn parse<S, F: Fn(T) -> crate::Result<S>>(
+    pub fn parse<S, F: FnMut(T) -> crate::Result<S>>(
         self,
         n_steps: &mut Step,
-        parser: F,
+        mut parser: F,
     ) -> PyResult<StepValue<S>>
     where
         S: Debug,
@@ -30,7 +30,9 @@ impl<T: Debug> ValueOrInSteps<T> {
             ValueOrInSteps::Value(v) => Ok(StepValue::new_const(
                 parser(v).map_err(|e| PyValueError::new_err(e.to_string()))?,
             )),
-            ValueOrInSteps::InSteps(_) => todo!(),
+            ValueOrInSteps::InSteps(in_steps) => Ok(StepValue::Steps(
+                in_steps.in_step_values.into_iter().map(|(k, v)| parser(v).map(|v| (k, v))).collect::<crate::Result<BTreeMap<Step, S>>>().map_err(|e| PyValueError::new_err(e.to_string()))?
+            )),
         }
     }
 

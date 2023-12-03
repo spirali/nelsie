@@ -111,7 +111,7 @@ impl<'a> RenderContext<'a> {
                         self.svg_node.append(render_text(&text, rect.x, rect.y));
                     }
                     NodeContent::Image(image) => {
-                        render_image(self.global_res, self.step, image, rect, &self.svg_node)
+                        render_image(self.step, image, rect, &self.svg_node, self.global_res.font_db())
                     }
                 }
             }

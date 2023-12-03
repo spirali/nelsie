@@ -1,7 +1,7 @@
 use crate::common::fileutils::ensure_directory;
 use crate::model::{Slide, SlideDeck};
 use crate::render::{
-    check_fonts, load_image_in_deck, render_slide_step, GlobalResources, PdfBuilder, RenderConfig,
+    check_fonts, render_slide_step, GlobalResources, PdfBuilder, RenderConfig,
 };
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};

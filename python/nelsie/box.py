@@ -1,9 +1,9 @@
-from typing import Union
+import os
+
 from dataclasses import dataclass
 
 from .basictypes import Position, Size, Length, LengthAuto, parse_debug_layout
 from .insteps import InSteps
-
 
 # class DrawChild:
 #     def __init__(self, paths: InSteps[list[ExportPath]]):
@@ -14,6 +14,16 @@ from .insteps import InSteps
 
 
 # BoxChild = Union[DrawChild, "Box"]
+
+@dataclass
+class ImageContent:
+    path: str
+    enable_steps: bool
+    shift_steps: int
+
+
+NodeContent = ImageContent | None
+
 
 @dataclass
 class BoxConfig:
@@ -34,9 +44,9 @@ class BoxConfig:
     row: bool | InSteps[bool]
     reverse: bool | InSteps[bool]
     bg_color: str | None | InSteps[str | None]
-    #content: NodeContent | InSteps[NodeContent] = None,
     name: str
     debug_layout: bool | None
+    content: NodeContent | InSteps[NodeContent] = None,
 
 
 class BoxBuilder:
@@ -44,20 +54,20 @@ class BoxBuilder:
     def get_box(self):
         raise NotImplementedError
 
-    def image(self, filename: str, enable_steps=True, shift_steps=0, **box_args):
+    def image(self, path: str, enable_steps=True, shift_steps=0, **box_args):
         """
         Load image; supported formats: svg, png, jpeg, gif, ora
         """
         assert shift_steps >= 0
-        slide = self.get_slide()
+        slide = self.get_box().slide
         if slide.image_directory is not None:
-            filename = os.path.join(slide.image_directory, filename)
-        image = Image(
-            filename=os.path.abspath(filename),
+            path = os.path.join(slide.image_directory, path)
+        image = ImageContent(
+            path=os.path.abspath(path),
             enable_steps=enable_steps,
             shift_steps=shift_steps,
         )
-        return self.box(content=image, **box_args)
+        return self.box(_content=image, **box_args)
 
     """
     def text(
@@ -118,9 +128,9 @@ class BoxBuilder:
             row: bool | InSteps[bool] = False,
             reverse: bool | InSteps[bool] = False,
             bg_color: str | None | InSteps[str | None] = None,
-            # content: NodeContent | InSteps[NodeContent] = None,
             name: str = "",
             debug_layout: bool | None = None,
+            _content: NodeContent | InSteps[NodeContent] = None,
     ):
         parent_box = self.get_box()
         debug_layout = parse_debug_layout(debug_layout)
@@ -145,7 +155,8 @@ class BoxBuilder:
             reverse=reverse,
             bg_color=bg_color,
             name=name,
-            debug_layout=debug_layout
+            debug_layout=debug_layout,
+            content=_content
         )
         box_id, node_id = parent_box._deck.new_box(parent_box.slide._slide_id, parent_box._box_id, config)
         box = Box(parent_box._deck, parent_box.slide, box_id, node_id, name, z_level)

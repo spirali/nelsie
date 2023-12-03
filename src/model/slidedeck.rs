@@ -1,5 +1,5 @@
 use super::node::Node;
-use crate::model::{Color, Length, LengthOrAuto, NodeId, Step, StepValue};
+use crate::model::{Color, ImageManager, Length, LengthOrAuto, NodeId, Step, StepValue};
 
 #[derive(Debug)]
 pub(crate) struct Slide {
@@ -53,4 +53,5 @@ impl Slide {
 #[derive(Debug, Default)]
 pub(crate) struct SlideDeck {
     pub(crate) slides: Vec<Slide>,
+    pub(crate) image_manager: ImageManager,
 }

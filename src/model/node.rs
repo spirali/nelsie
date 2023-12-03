@@ -1,5 +1,4 @@
-use super::{Color, Length, StepValue};
-use crate::model::image::Image;
+use super::{Color, Length, NodeContentImage, StepValue};
 use crate::model::shapes::Drawing;
 use crate::model::text::{FontFamily, StyledText};
 use crate::model::types::LengthOrAuto;
@@ -11,7 +10,7 @@ use usvg::fontdb;
 #[derive(Debug)]
 pub(crate) enum NodeContent {
     Text(StyledText),
-    Image(Image),
+    Image(NodeContentImage),
 }
 
 #[derive(Debug)]
@@ -77,17 +76,6 @@ impl Node {
                 NodeChild::Node(node) => Some(node),
                 NodeChild::Draw(_) => None,
             })
-    }
-
-    pub fn collect_image_paths<'a>(&'a self, out: &mut HashSet<&'a Path>) {
-        for content in self.content.values() {
-            if let Some(NodeContent::Image(image)) = content {
-                out.insert(image.filename.as_path());
-            }
-        }
-        for child in self.child_nodes() {
-            child.collect_image_paths(out);
-        }
     }
 
     pub fn collect_font_families<'a>(&'a self, out: &mut HashSet<&'a FontFamily>) {

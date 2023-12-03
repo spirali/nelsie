@@ -54,7 +54,7 @@ impl Deck {
         if let Some(slide) = self.deck.slides.get_mut(slide_id as usize) {
             let node_id = slide.new_node_id();
             if let Some(parent_node) = resolve_box_id(&mut slide.node, &box_id) {
-                let (node, n_steps) = config.make_node(node_id, parent_node.node_id)?;
+                let (node, n_steps) = config.make_node(node_id, parent_node.node_id, &mut self.deck.image_manager)?;
                 slide.n_steps = slide.n_steps.max(n_steps);
                 let new_id = parent_node.children.len() as u32;
                 let node_id = node.node_id;

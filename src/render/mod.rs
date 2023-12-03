@@ -12,7 +12,6 @@ use crate::common::fileutils::ensure_directory;
 use crate::model::{Slide, SlideDeck};
 pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use globals::GlobalResources;
-pub(crate) use image::load_image_in_deck;
 pub(crate) use pdf::PdfBuilder;
 use std::path::Path;
 pub(crate) use text::check_fonts;
@@ -82,10 +81,9 @@ pub(crate) fn render_slide_deck(
     font_db.load_system_fonts();
 
     //let loaded_images = load_image_in_deck(&font_db, &mut slide_deck)?;
-    let loaded_images = Default::default();
     check_fonts(&font_db, &slide_deck)?;
 
-    let global_res = GlobalResources::new(font_db, loaded_images);
+    let global_res = GlobalResources::new(font_db);
 
     let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));

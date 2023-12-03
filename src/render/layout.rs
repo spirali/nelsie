@@ -1,5 +1,4 @@
 use crate::model::{LayoutExpr, Length, LengthOrAuto, Node, NodeContent, NodeId, Slide, Step};
-use crate::render::image::get_image_size;
 use crate::render::text::get_text_size;
 use crate::render::GlobalResources;
 use std::collections::{BTreeMap, HashMap};
@@ -91,7 +90,7 @@ impl From<&LengthOrAuto> for tf::LengthPercentageAuto {
 fn compute_content_default_size(global_res: &GlobalResources, content: &NodeContent) -> (f32, f32) {
     match content {
         NodeContent::Text(text) => get_text_size(global_res.font_db(), &text),
-        NodeContent::Image(image) => get_image_size(global_res, image),
+        NodeContent::Image(image) => (image.loaded_image.width, image.loaded_image.height)
     }
 }
 

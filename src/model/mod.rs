@@ -6,7 +6,7 @@ mod steps;
 mod text;
 mod types;
 
-pub(crate) use self::image::Image;
+pub(crate) use self::image::{NodeContentImage, ImageManager, LoadedImage, LoadedImageData, OraImageData, OraLayer, SvgImageData};
 pub(crate) use self::node::{Node, NodeChild, NodeContent};
 pub(crate) use self::shapes::{Drawing, Path, PathPart};
 pub(crate) use self::slidedeck::{Slide, SlideDeck};
