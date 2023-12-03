@@ -38,7 +38,6 @@ pub(crate) fn parse_length_auto(value: StringOrFloat) -> crate::Result<LengthOrA
     }
 }
 
-
 pub(crate) fn parse_position(
     parent_id: NodeId,
     value: StringOrFloat,

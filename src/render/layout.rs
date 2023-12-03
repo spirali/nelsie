@@ -1,12 +1,13 @@
-use crate::model::{LayoutExpr, Length, LengthOrAuto, Node, NodeContent, NodeId, Slide, Step};
+use crate::model::{
+    LayoutExpr, Length, LengthOrAuto, Node, NodeContent, NodeId, Resources, Slide, Step,
+};
 use crate::render::text::get_text_size;
-use crate::render::GlobalResources;
 use std::collections::{BTreeMap, HashMap};
 use taffy::prelude as tf;
 use taffy::style::{AvailableSpace, Dimension};
 
 pub(crate) struct LayoutContext<'a> {
-    global_res: &'a GlobalResources,
+    resources: &'a Resources,
     step: Step,
 }
 
@@ -87,16 +88,22 @@ impl From<&LengthOrAuto> for tf::LengthPercentageAuto {
     }
 }
 
-fn compute_content_default_size(global_res: &GlobalResources, content: &NodeContent) -> (f32, f32) {
+fn compute_content_default_size(
+    resources: &Resources,
+    content: &NodeContent,
+    step: Step,
+) -> (f32, f32) {
     match content {
-        NodeContent::Text(text) => get_text_size(global_res.font_db(), &text),
-        NodeContent::Image(image) => (image.loaded_image.width, image.loaded_image.height)
+        NodeContent::Text(text) => {
+            get_text_size(&resources.font_db, &text.text_style_at_step(step))
+        }
+        NodeContent::Image(image) => (image.loaded_image.width, image.loaded_image.height),
     }
 }
 
 impl<'a> LayoutContext<'a> {
-    pub fn new(global_res: &'a GlobalResources, step: Step) -> Self {
-        LayoutContext { global_res, step }
+    pub fn new(resources: &'a Resources, step: Step) -> Self {
+        LayoutContext { resources, step }
     }
 
     fn compute_layout_helper(
@@ -122,7 +129,7 @@ impl<'a> LayoutContext<'a> {
                 .as_ref()
                 .map(|content| {
                     let (content_w, content_h) =
-                        compute_content_default_size(self.global_res, content);
+                        compute_content_default_size(self.resources, content, self.step);
                     if w.is_none() && h.is_none() {
                         (
                             Some(Dimension::Points(content_w)),

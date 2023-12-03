@@ -1,6 +1,5 @@
-use crate::model::{Slide, Step};
+use crate::model::{Resources, Slide, Step};
 use crate::render::rendering::render_to_svg_tree;
-use crate::render::GlobalResources;
 use crate::NelsieError;
 use crate::Result;
 use resvg::tiny_skia;
@@ -8,7 +7,7 @@ use std::path::Path;
 use usvg::{TreeTextToPath, TreeWriting, XmlOptions};
 
 pub(crate) struct RenderConfig<'a> {
-    pub global_res: &'a GlobalResources,
+    pub resources: &'a Resources,
     pub slide: &'a Slide,
     pub step: Step,
 
@@ -19,7 +18,7 @@ pub(crate) struct RenderConfig<'a> {
 pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<usvg::Tree> {
     log::debug!("Rendering step {}", render_cfg.step);
     let mut tree = render_to_svg_tree(render_cfg);
-    tree.convert_text(render_cfg.global_res.font_db());
+    tree.convert_text(&render_cfg.resources.font_db);
 
     // Write SVG
     if let Some(output) = render_cfg.output_svg {

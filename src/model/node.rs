@@ -1,15 +1,16 @@
-use super::{Color, Length, NodeContentImage, StepValue};
+use super::{Color, Length, NodeContentImage, StepValue, StyleMap};
 use crate::model::shapes::Drawing;
-use crate::model::text::{FontFamily, StyledText};
+use crate::model::text::{NodeContentText, StyledText};
 use crate::model::types::LengthOrAuto;
 use crate::model::{LayoutExpr, NodeId, Step};
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use usvg::fontdb;
 
 #[derive(Debug)]
 pub(crate) enum NodeContent {
-    Text(StyledText),
+    Text(NodeContentText),
     Image(NodeContentImage),
 }
 
@@ -49,6 +50,8 @@ pub(crate) struct Node {
     pub bg_color: StepValue<Option<Color>>,
     pub content: StepValue<Option<NodeContent>>,
 
+    pub styles: Arc<StyleMap>,
+
     pub name: String,
     pub debug_layout: Option<Color>,
 }
@@ -78,7 +81,7 @@ impl Node {
             })
     }
 
-    pub fn collect_font_families<'a>(&'a self, out: &mut HashSet<&'a FontFamily>) {
+    /*pub fn collect_font_families<'a>(&'a self, out: &mut HashSet<&'a FontFamily>) {
         for content in self.content.values() {
             if let Some(NodeContent::Text(text)) = content {
                 for style in &text.styles {
@@ -89,7 +92,7 @@ impl Node {
         for child in self.child_nodes() {
             child.collect_font_families(out);
         }
-    }
+    }*/
 
     pub fn collect_z_levels(&self, out: &mut BTreeSet<i32>) {
         out.extend(self.z_level.values());

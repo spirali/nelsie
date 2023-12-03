@@ -1,7 +1,9 @@
 from testutils import check
+from dataclasses import asdict
 
 from nelsie import InSteps, TextStyle
 
+import pytest
 
 def test_text_update():
     s1 = TextStyle(color="green", size=123)
@@ -12,115 +14,10 @@ def test_text_update():
     assert s3.line_spacing == 1.5
 
 
-@check(error=Exception, error_match="Font 'Nonexisting font' not found.")
 def test_text_invalid_font(deck):
     s1 = TextStyle(font_family="Nonexisting font")
-    deck.new_slide().text("Hello", style=s1)
-
-
-def test_parse_text():
-    style = DEFAULT_STYLE.update(TextStyle(size=10, line_spacing=1.2))
-    style_manager = TextStyleManager({"default": DEFAULT_STYLE})
-    name_style = TextStyle(color="red")
-    style_manager.set_style("name", name_style)
-    full_name_style = style.update(name_style)
-
-    style_manager.set_style("l1", TextStyle(color="green"))
-    l1 = style_manager.get_style("l1")
-    style_manager.set_style("l2", TextStyle(size=20, line_spacing=1.3))
-    l2 = style_manager.get_style("l2")
-    style_manager.set_style("l3", TextStyle(size=25, color="orange"))
-    l3 = style_manager.get_style("l3")
-
-    st = parse_styled_text("Hello!", "~{}", style, style_manager).in_step_values[1]
-    assert st.default_font_size == 10
-    assert st.default_line_spacing == 1.2
-    assert st.styled_lines == [StyledLine(text="Hello!", spans=[StyledSpan(0, 6, 0)])]
-    assert st.styles == [style]
-
-    st = parse_styled_text("~~~~~~", "~{}", style, style_manager).in_step_values[1]
-    assert st.styled_lines == [StyledLine(text="~~~", spans=[StyledSpan(0, 3, 0)])]
-    assert st.styles == [style]
-
-    st = parse_styled_text("a\n\nbb\nccc", "~{}", style, style_manager).in_step_values[1]
-    assert st.styled_lines == [
-        StyledLine(text="a", spans=[StyledSpan(0, 1, 0)]),
-        StyledLine(text="", spans=[]),
-        StyledLine(text="bb", spans=[StyledSpan(0, 2, 0)]),
-        StyledLine(text="ccc", spans=[StyledSpan(0, 3, 0)]),
-    ]
-    assert st.styles == [style]
-
-    st = parse_styled_text("\na\nb\n", "~{}", style, style_manager).in_step_values[1]
-    assert st.styled_lines == [
-        StyledLine(text="", spans=[]),
-        StyledLine(text="a", spans=[StyledSpan(0, 1, 0)]),
-        StyledLine(text="b", spans=[StyledSpan(0, 1, 0)]),
-        StyledLine(text="", spans=[]),
-    ]
-    assert st.styles == [style]
-
-    st = parse_styled_text("{Alice}", "~{}", style, style_manager).in_step_values[1]
-    assert st.styled_lines == [StyledLine(text="{Alice}", spans=[StyledSpan(0, 7, 0)])]
-    assert st.styles == [style]
-
-    st = parse_styled_text("~name{Alice}", "~{}", style, style_manager).in_step_values[1]
-    assert st.styled_lines == [StyledLine(text="Alice", spans=[StyledSpan(0, 5, 0)])]
-    assert st.styles == [full_name_style]
-
-    st = parse_styled_text(
-        "My name is ~name{Alice}\n~name{Bob} is your name.", "~{}", style, style_manager
-    ).in_step_values[1]
-
-    assert st.styled_lines == [
-        StyledLine(
-            #     0123456789012345
-            text="My name is Alice",
-            spans=[StyledSpan(0, 11, 0), StyledSpan(11, 5, 1)],
-        ),
-        StyledLine(
-            text="Bob is your name.",
-            spans=[StyledSpan(0, 3, 1), StyledSpan(3, 14, 0)],
-        ),
-    ]
-    assert st.styles == [style, full_name_style]
-
-    st = parse_styled_text(
-        "L0~l1{L1~l2{L2~l3{L3}}}L0", "~{}", style, style_manager
-    ).in_step_values[1]
-    assert st.styled_lines == [
-        StyledLine(
-            text="L0L1L2L3L0",
-            spans=[
-                StyledSpan(0, 2, 0),
-                StyledSpan(2, 2, 1),
-                StyledSpan(4, 2, 2),
-                StyledSpan(6, 2, 3),
-                StyledSpan(8, 2, 0),
-            ],
-        ),
-    ]
-
-    l_styles = [
-        style,
-        style.update(l1),
-        style.update(l1).update(l2),
-        style.update(l1).update(l2).update(l3),
-    ]
-    assert st.styles == l_styles
-
-    st = parse_styled_text(
-        "L0~l1{L\n1~l2{\nL2~l3{L3}}}L0", "~{}", style, style_manager
-    ).in_step_values[1]
-    assert st.styled_lines == [
-        StyledLine(text="L0L", spans=[StyledSpan(0, 2, 0), StyledSpan(2, 1, 1)]),
-        StyledLine(text="1", spans=[StyledSpan(0, 1, 1)]),
-        StyledLine(
-            text="L2L3L0",
-            spans=[StyledSpan(0, 2, 2), StyledSpan(2, 2, 3), StyledSpan(4, 2, 0)],
-        ),
-    ]
-    assert st.styles == l_styles
+    with pytest.raises(Exception, match="Font 'Nonexisting font' not found"):
+        deck.new_slide().text("Hello", style=s1)
 
 
 @check(n_slides=4)
@@ -135,7 +32,7 @@ def test_render_text_basic(deck):
     slide.box(bg_color="#f88").text("A\n\nBB")
 
     slide = deck.new_slide()
-    slide.box(bg_color="#f88").text("\nLines up & below\n\n")
+    slide.box(bg_color="#f88").text("\nLines up & below\n\n\n")
 
     slide = deck.new_slide()
     slide.set_style("big", TextStyle(size=64))
@@ -163,3 +60,61 @@ def test_render_text_unicode(deck):
     slide.box(bg_color="#f88").text(
         "Příliš žluťoučký ~x{kůň} úpěl ďábelské ódy\n>>>y̆<<<"
     )
+
+
+def test_set_invalid_font(deck):
+    with pytest.raises(Exception, match="Font 'NON-existent-fnt' not found."):
+        deck.set_style("my_style", TextStyle(font_family="NON-existent-fnt"))
+
+
+def test_set_get_styles_deck(deck):
+    s = deck.get_style("default")
+    for key, value in asdict(s).items():
+        assert value is not None
+
+    assert s.font_family in ("DejaVu Sans", "Arial")
+    assert s.color == "#000000"
+    assert s.size == pytest.approx(32.0)
+    assert s.line_spacing == pytest.approx(1.2)
+
+    with pytest.raises(Exception, match="Style 'big' not found"):
+        deck.get_style("big")
+
+    deck.set_style("big", TextStyle(size=120.0))
+    s = deck.get_style("big")
+    for key, value in asdict(s).items():
+        if key != "size":
+            assert value is None
+    assert s.size == pytest.approx(120.0)
+
+
+def test_set_get_styles_box(deck):
+    slide = deck.new_slide()
+    slide.set_style("one", TextStyle(color="red"))
+    slide.set_style("two", TextStyle(color="green"))
+    b = slide.box()
+    b2 = b.box()
+    b2.set_style("one", TextStyle(color="blue"))
+    b2.set_style("three", TextStyle(size=321))
+    b2.set_style("four", InSteps({1: TextStyle(size=100), 4: TextStyle(size=40)}))
+    b3 = b2.box()
+    b3.set_style("default", TextStyle(line_spacing=1.0))
+
+    with pytest.raises(Exception, match="Style 'three' not found"):
+        deck.get_style("three")
+    with pytest.raises(Exception, match="Style 'three' not found"):
+        b.get_style("three")
+
+    s = b.get_style("one")
+    assert s == TextStyle(color="#ff0000")
+
+    s = b3.get_style("one")
+    assert s == TextStyle(color="#0000ff")
+
+    s = b3.get_style("three")
+    assert s.size == pytest.approx(321.0)
+
+    s = b3.get_style("default")
+    assert s.line_spacing == 1.0
+    assert s.color == "#000000"
+

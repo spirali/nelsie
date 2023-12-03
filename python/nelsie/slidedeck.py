@@ -1,15 +1,18 @@
 import typing
 from typing import Optional
 from . import nelsie as nelsie_rs
+from .textstyle import TextStyle
 from .basictypes import parse_debug_layout
 from .box import Box, BoxBuilder
 from .insteps import InSteps
 
+Resources = nelsie_rs.Resources
+
 
 class Slide(BoxBuilder):
 
-    def __init__(self, deck, slide_id: int, name: str, image_directory: str, debug_layout:  str | None):
-        self._deck = deck
+    def __init__(self, deck: "SlideDeck", slide_id: int, name: str, image_directory: str, debug_layout:  str | None):
+        self.deck = deck
         self._slide_id = slide_id
         self.name = name
         self.image_directory = image_directory
@@ -26,13 +29,25 @@ class SlideDeck:
         width: float = 1024,
         height: float = 768,
         bg_color: str = "white",
-        image_directory: str | None = None
+        image_directory: str | None = None,
+        resources: Resources | None = None,
+        default_font: str | None = None,
     ):
+        if resources is None:
+            resources = Resources()
+
         self.width = width
         self.height = height
         self.bg_color = bg_color
         self.image_directory = image_directory
-        self._deck = nelsie_rs.Deck()
+        self.resources = resources
+        self._deck = nelsie_rs.Deck(resources, default_font)
+
+    def set_style(self, name: str, style: TextStyle):
+        self._deck.set_style(self.resources, name, style, None, None)
+
+    def get_style(self, name: str, step: int = 1) -> TextStyle:
+        return TextStyle(**self._deck.get_style(name, step, None, None))
 
     def new_slide(
         self,
@@ -53,7 +68,7 @@ class SlideDeck:
             image_directory = self.image_directory
         debug_layout = parse_debug_layout(debug_layout)
         slide_id = self._deck.new_slide(width, height, bg_color, name)
-        return Slide(self._deck, slide_id, name, image_directory, debug_layout)
+        return Slide(self, slide_id, name, image_directory, debug_layout)
 
     def slide(
         self,
@@ -80,4 +95,4 @@ class SlideDeck:
         output_png: Optional[str] = None,
         debug: bool = False
     ):
-        self._deck.render(output_pdf, output_svg, output_png)
+        self._deck.render(self.resources, output_pdf, output_svg, output_png)

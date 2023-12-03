@@ -1,4 +1,6 @@
+use crate::common::error::NelsieError;
 use crate::model::LayoutExpr::ConstValue;
+use std::fmt::Display;
 use std::str::FromStr;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
@@ -51,7 +53,7 @@ pub(crate) enum LayoutExpr {
     Sum { expressions: Vec<LayoutExpr> },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Color(svgtypes::Color);
 
 impl Color {
@@ -63,6 +65,22 @@ impl Color {
 impl From<&Color> for svgtypes::Color {
     fn from(value: &Color) -> Self {
         value.0
+    }
+}
+
+impl FromStr for Color {
+    type Err = crate::NelsieError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Color::new(svgtypes::Color::from_str(s).map_err(|_| {
+            NelsieError::ParsingError("Invalid color".to_string())
+        })?))
+    }
+}
+
+impl ToString for Color {
+    fn to_string(&self) -> String {
+        format!("#{:02x}{:02x}{:02x}", self.0.red, self.0.green, self.0.blue)
     }
 }
 

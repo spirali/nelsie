@@ -9,9 +9,8 @@ mod text;
 
 use crate::common::error::NelsieError;
 use crate::common::fileutils::ensure_directory;
-use crate::model::{Slide, SlideDeck};
+use crate::model::{Resources, Slide, SlideDeck};
 pub(crate) use core::{render_slide_step, RenderConfig};
-pub(crate) use globals::GlobalResources;
 pub(crate) use pdf::PdfBuilder;
 use std::path::Path;
 pub(crate) use text::check_fonts;
@@ -24,7 +23,7 @@ pub(crate) struct OutputConfig<'a> {
 }
 
 fn render_slide(
-    global_res: &GlobalResources,
+    resources: &Resources,
     output_cfg: &OutputConfig,
     slide_idx: usize,
     slide: &Slide,
@@ -40,7 +39,7 @@ fn render_slide(
                 .map(|p| p.join(format!("{}-{}.png", slide_idx, step)));
 
             let render_cfg = RenderConfig {
-                global_res,
+                resources,
                 output_svg: output_svg.as_deref(),
                 output_png: output_png.as_deref(),
                 slide,
@@ -53,6 +52,7 @@ fn render_slide(
 
 pub(crate) fn render_slide_deck(
     slide_deck: &SlideDeck,
+    resources: &Resources,
     output_cfg: &OutputConfig,
 ) -> crate::Result<()> {
     if let Some(dir) = output_cfg.output_svg {
@@ -77,19 +77,17 @@ pub(crate) fn render_slide_deck(
         })?;
     }
 
-    let mut font_db = fontdb::Database::new();
-    font_db.load_system_fonts();
+    // let mut font_db = fontdb::Database::new();
+    // font_db.load_system_fonts();
 
     //let loaded_images = load_image_in_deck(&font_db, &mut slide_deck)?;
-    check_fonts(&font_db, &slide_deck)?;
-
-    let global_res = GlobalResources::new(font_db);
+    //check_fonts(&font_db, &slide_deck)?;
 
     let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));
 
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {
-        for tree in render_slide(&global_res, output_cfg, slide_idx, slide)? {
+        for tree in render_slide(&resources, output_cfg, slide_idx, slide)? {
             if let Some(builder) = &mut pdf_builder {
                 builder.add_page_from_svg(tree);
             }

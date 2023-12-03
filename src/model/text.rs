@@ -1,38 +1,20 @@
-use crate::model::{Color, Step, StepValue};
+use crate::model::{Color, Step, StepValue, TextStyle};
 use itertools::Itertools;
+use std::borrow::Cow;
+use std::collections::HashMap;
 use std::fmt::{Formatter, Pointer, Write};
-
-#[derive(Debug, Hash, PartialEq, Eq)]
-pub(crate) enum FontFamily {
-    One(String),
-    Many(Vec<String>),
-}
-
-impl std::fmt::Display for FontFamily {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FontFamily::One(v) => f.write_str(v),
-            FontFamily::Many(v) => write!(f, "{}", v.iter().format(",")),
-        }
-    }
-}
+use std::sync::Arc;
+use usvg_tree::Text;
 
 #[derive(Debug)]
-pub(crate) struct TextStyle {
-    pub font_family: FontFamily,
-    pub color: Color,
-    pub size: f32,
-    pub line_spacing: f32,
-}
-
-#[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct Span {
-    pub start: u32,
     pub length: u32,
     pub style_idx: u32,
 }
 
 #[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct StyledLine {
     pub spans: Vec<Span>,
     pub text: String,
@@ -60,14 +42,14 @@ impl StyledLine {
 }
 
 #[derive(Debug)]
-pub(crate) struct StyledText {
-    pub styled_lines: Vec<StyledLine>,
+pub(crate) struct StyledText<'a> {
+    pub styled_lines: &'a [StyledLine],
     pub styles: Vec<TextStyle>,
     pub default_font_size: f32,
     pub default_line_spacing: f32,
 }
 
-impl StyledText {
+impl<'a> StyledText<'a> {
     pub fn height(&self) -> f32 {
         self.styled_lines
             .iter()
@@ -94,5 +76,28 @@ impl StyledText {
             .get(line_idx)
             .and_then(|line| line.line_height(&self.styles))
             .unwrap_or_else(|| self.default_line_height())
+    }
+}
+
+#[derive(Debug)]
+pub(crate) struct NodeContentText {
+    pub styled_lines: Vec<StyledLine>,
+    pub styles: Vec<StepValue<TextStyle>>,
+    pub default_font_size: StepValue<f32>,
+    pub default_line_spacing: StepValue<f32>,
+}
+
+impl NodeContentText {
+    pub fn text_style_at_step(&self, step: Step) -> StyledText {
+        StyledText {
+            styled_lines: &self.styled_lines,
+            styles: self
+                .styles
+                .iter()
+                .map(|s| s.at_step(step).clone())
+                .collect_vec(),
+            default_font_size: *self.default_font_size.at_step(step),
+            default_line_spacing: *self.default_line_spacing.at_step(step),
+        }
     }
 }

@@ -12,9 +12,12 @@ ASSETS_DIR = os.path.join(PYTEST_DIR, "assets")
 sys.path.insert(0, os.path.join(ROOT_DIR, "nelsie-api"))
 
 
-from nelsie import SlideDeck  # noqa
+from nelsie import SlideDeck, Resources  # noqa
+
+# To speedup tests, load resources just once
+resources = Resources()
 
 
 @pytest.fixture()
 def deck():
-    return SlideDeck(image_directory=ASSETS_DIR)
+    return SlideDeck(image_directory=ASSETS_DIR, resources=resources)

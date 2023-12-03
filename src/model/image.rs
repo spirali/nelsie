@@ -1,6 +1,5 @@
-use crate::parsers::step_parser::parse_steps_from_label;
 use crate::model::{Node, NodeContent, SlideDeck, Step, StepValue};
-use crate::render::GlobalResources;
+use crate::parsers::step_parser::parse_steps_from_label;
 use imagesize::blob_size;
 use std::cmp::{max, min};
 use std::collections::{HashMap, HashSet};
@@ -17,12 +16,12 @@ use crate::NelsieError;
 #[derive(Debug)]
 pub(crate) struct SvgImageData {
     /*
-        Ideally we would preload SVG tree here, but it cannot be done because usvg:Tree internally
-        use Rc so it is not Send, that makes it is problem for Python binding and potential paralelization
-        of rendering.
-        On the other hand, it not as bad as it seems at first sight, since we would have to clone
-        usvg::Tree for each step because of tree stripping, so recreating from data is not as bad.
-     */
+       Ideally we would preload SVG tree here, but it cannot be done because usvg:Tree internally
+       use Rc so it is not Send, that makes it is problem for Python binding and potential paralelization
+       of rendering.
+       On the other hand, it not as bad as it seems at first sight, since we would have to clone
+       usvg::Tree for each step because of tree stripping, so recreating from data is not as bad.
+    */
     pub data: Vec<u8>,
     pub id_visibility: Vec<(String, StepValue<bool>)>,
     pub n_steps: Step,
@@ -72,7 +71,7 @@ impl LoadedImage {
 
 #[derive(Debug, Default)]
 pub(crate) struct ImageManager {
-    loaded_images: HashMap<PathBuf, Arc<LoadedImage>>
+    loaded_images: HashMap<PathBuf, Arc<LoadedImage>>,
 }
 
 impl ImageManager {

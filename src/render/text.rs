@@ -1,4 +1,3 @@
-use crate::model::FontFamily;
 use crate::model::{SlideDeck, Span, StyledLine, StyledText, TextStyle};
 use crate::NelsieError;
 use std::collections::HashSet;
@@ -10,7 +9,8 @@ use usvg_tree::{
 };
 
 pub(crate) fn check_fonts(font_db: &fontdb::Database, deck: &SlideDeck) -> crate::Result<()> {
-    let mut families = HashSet::new();
+    todo!()
+    /*let mut families = HashSet::new();
     for slide in &deck.slides {
         slide.node.collect_font_families(&mut families);
     }
@@ -35,7 +35,7 @@ pub(crate) fn check_fonts(font_db: &fontdb::Database, deck: &SlideDeck) -> crate
             )));
         }
     }
-    Ok(())
+    Ok(())*/
 }
 
 pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f32, f32) {
@@ -55,7 +55,7 @@ pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f
     let mut width: f32 = 0.0;
     if let Some(child) = tree.root.first_child() {
         let mut children = child.children();
-        for line in &text.styled_lines {
+        for line in text.styled_lines {
             width = width.max(
                 (0..line.spans.len())
                     .map(|_| {
@@ -76,17 +76,14 @@ pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f
     (width, text.height())
 }
 
-fn create_svg_span(text_styles: &[TextStyle], chunk: &Span) -> TextSpan {
+fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (TextSpan, usize) {
     let text_style = &text_styles[chunk.style_idx as usize];
     let fill = Fill {
         paint: usvg::Paint::Color((&text_style.color).into()),
         ..Default::default()
     };
     let font = Font {
-        families: match &text_style.font_family {
-            FontFamily::One(v) => vec![v.clone()],
-            FontFamily::Many(v) => v.clone(),
-        },
+        families: vec![text_style.font_family.clone()],
         style: FontStyle::Normal,
         stretch: FontStretch::Normal,
         weight: 400,
@@ -96,29 +93,34 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span) -> TextSpan {
         overline: None,
         line_through: None,
     };
-    TextSpan {
-        start: chunk.start as usize,
-        end: chunk.start as usize + chunk.length as usize,
-        fill: Some(fill),
-        stroke: None,
-        paint_order: PaintOrder::FillAndStroke,
-        font,
-        font_size: NonZeroPositiveF32::new(text_style.size).unwrap(),
-        small_caps: false,
-        apply_kerning: false,
-        decoration,
-        dominant_baseline: DominantBaseline::Auto,
-        alignment_baseline: AlignmentBaseline::Auto,
-        baseline_shift: vec![],
-        visibility: Visibility::Visible,
-        letter_spacing: 0.0,
-        word_spacing: 0.0,
-        text_length: None,
-        length_adjust: LengthAdjust::default(),
-    }
+    let end = start + chunk.length as usize;
+    (
+        TextSpan {
+            start,
+            end,
+            fill: Some(fill),
+            stroke: None,
+            paint_order: PaintOrder::FillAndStroke,
+            font,
+            font_size: NonZeroPositiveF32::new(text_style.size).unwrap(),
+            small_caps: false,
+            apply_kerning: false,
+            decoration,
+            dominant_baseline: DominantBaseline::Auto,
+            alignment_baseline: AlignmentBaseline::Auto,
+            baseline_shift: vec![],
+            visibility: Visibility::Visible,
+            letter_spacing: 0.0,
+            word_spacing: 0.0,
+            text_length: None,
+            length_adjust: LengthAdjust::default(),
+        },
+        end,
+    )
 }
 
 fn render_line(text_styles: &[TextStyle], styled_line: &StyledLine, x: f32, y: f32) -> TextChunk {
+    let mut pos = 0;
     TextChunk {
         x: Some(x),
         y: Some(y),
@@ -126,7 +128,11 @@ fn render_line(text_styles: &[TextStyle], styled_line: &StyledLine, x: f32, y: f
         spans: styled_line
             .spans
             .iter()
-            .map(|span| create_svg_span(text_styles, span))
+            .map(|span| {
+                let (span, new_pos) = create_svg_span(text_styles, span, pos);
+                pos = new_pos;
+                span
+            })
             .collect(),
         text_flow: TextFlow::Linear,
         text: styled_line.text.clone(),

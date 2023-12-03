@@ -1,7 +1,10 @@
+use crate::model::{
+    LoadedImageData, Node, NodeContent, NodeContentImage, OraImageData, SlideDeck, Step, StepValue,
+    SvgImageData,
+};
 use crate::parsers::step_parser::parse_steps_from_label;
-use crate::model::{NodeContentImage, Node, NodeContent, SlideDeck, Step, StepValue, SvgImageData, OraImageData, LoadedImageData};
 use crate::render::layout::Rectangle;
-use crate::render::GlobalResources;
+use crate::render::Resources;
 use imagesize::blob_size;
 use std::cmp::{max, min};
 use std::collections::{HashMap, HashSet};
@@ -15,13 +18,18 @@ use usvg_tree::{ImageKind, ImageRendering, NodeExt, NodeKind, ViewBox, Visibilit
 
 use crate::NelsieError;
 
-
-fn prepare_svg_tree_for_step(step: Step, image: &NodeContentImage, svg_data: &SvgImageData, font_db: &fontdb::Database) -> usvg::Tree {
-    let mut tree = usvg::Tree::from_data(&svg_data.data, &usvg::Options::default()).expect("SVG Tree build failed");
+fn prepare_svg_tree_for_step(
+    step: Step,
+    image: &NodeContentImage,
+    svg_data: &SvgImageData,
+    font_db: &fontdb::Database,
+) -> usvg::Tree {
+    let mut tree = usvg::Tree::from_data(&svg_data.data, &usvg::Options::default())
+        .expect("SVG Tree build failed");
 
     if !image.enable_steps || svg_data.id_visibility.is_empty() || step <= image.shift_steps {
         tree.convert_text(font_db);
-        return tree
+        return tree;
     }
     for (id, visibility) in &svg_data.id_visibility {
         if !visibility.at_step(step - image.shift_steps) {
@@ -114,8 +122,14 @@ pub(crate) fn render_image(
             rect,
             ImageKind::SVG(prepare_svg_tree_for_step(step, image, data, font_db)),
         ),
-        LoadedImageData::Ora(data) => {
-            render_ora(step, image, data, svg_node, rect, image.loaded_image.width, image.loaded_image.height)
-        }
+        LoadedImageData::Ora(data) => render_ora(
+            step,
+            image,
+            data,
+            svg_node,
+            rect,
+            image.loaded_image.width,
+            image.loaded_image.height,
+        ),
     }
 }

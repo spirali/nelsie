@@ -1,10 +1,10 @@
 use super::text::render_text;
 use crate::model::{
-    Color, Drawing, FontFamily, Node, NodeChild, NodeContent, Span, Step, StyledLine, StyledText,
-    TextStyle,
+    Color, Drawing, Node, NodeChild, NodeContent, Span, Step, StyledLine, StyledText, TextStyle,
 };
 use crate::render::core::RenderConfig;
 use crate::render::layout::{ComputedLayout, LayoutContext, Rectangle};
+use std::borrow::Cow;
 use std::cmp::max;
 use std::collections::BTreeSet;
 
@@ -13,12 +13,12 @@ use std::rc::Rc;
 
 use crate::render::image::render_image;
 use crate::render::paths::create_path;
-use crate::render::GlobalResources;
+use crate::render::Resources;
 use usvg::{fontdb, Fill};
 use usvg_tree::Stroke;
 
 pub(crate) struct RenderContext<'a> {
-    global_res: &'a GlobalResources,
+    resources: &'a Resources,
     step: Step,
     z_level: i32,
     layout: &'a ComputedLayout,
@@ -49,16 +49,15 @@ fn draw_debug_frame(rect: &Rectangle, name: &str, color: &Color, svg_node: &usvg
         format!("{} [{}x{}]", name, rect.width, rect.height)
     };
     let styled_text = StyledText {
-        styled_lines: vec![StyledLine {
+        styled_lines: &[StyledLine {
             spans: vec![Span {
-                start: 0,
                 length: text.len() as u32,
                 style_idx: 0,
             }],
             text,
         }],
         styles: vec![TextStyle {
-            font_family: FontFamily::Many(vec!["DejaVu Sans".to_string()]),
+            font_family: "DejaVu Sans".to_string(),
             color: color.clone(),
             size: 8.0,
             line_spacing: 0.0,
@@ -71,14 +70,14 @@ fn draw_debug_frame(rect: &Rectangle, name: &str, color: &Color, svg_node: &usvg
 
 impl<'a> RenderContext<'a> {
     pub fn new(
-        global_res: &'a GlobalResources,
+        global_res: &'a Resources,
         step: Step,
         z_level: i32,
         layout: &'a ComputedLayout,
         svg_node: usvg::Node,
     ) -> Self {
         RenderContext {
-            global_res,
+            resources: global_res,
             step,
             z_level,
             layout,
@@ -107,12 +106,18 @@ impl<'a> RenderContext<'a> {
             if let Some(content) = &node.content.at_step(self.step) {
                 let rect = self.layout.rect(node.node_id).unwrap();
                 match content {
-                    NodeContent::Text(text) => {
-                        self.svg_node.append(render_text(&text, rect.x, rect.y));
-                    }
-                    NodeContent::Image(image) => {
-                        render_image(self.step, image, rect, &self.svg_node, self.global_res.font_db())
-                    }
+                    NodeContent::Text(text) => self.svg_node.append(render_text(
+                        &text.text_style_at_step(self.step),
+                        rect.x,
+                        rect.y,
+                    )),
+                    NodeContent::Image(image) => render_image(
+                        self.step,
+                        image,
+                        rect,
+                        &self.svg_node,
+                        &self.resources.font_db,
+                    ),
                 }
             }
 
@@ -146,7 +151,7 @@ impl<'a> RenderContext<'a> {
 
 pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     log::debug!("Creating layout");
-    let layout_builder = LayoutContext::new(render_cfg.global_res, render_cfg.step);
+    let layout_builder = LayoutContext::new(render_cfg.resources, render_cfg.step);
     let layout = layout_builder.compute_layout(render_cfg.slide);
 
     log::debug!("Layout {:?}", layout);
@@ -158,7 +163,7 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     let root_svg_node = usvg::Node::new(usvg::NodeKind::Group(usvg::Group::default()));
     for z_level in z_levels {
         let render_ctx = RenderContext::new(
-            render_cfg.global_res,
+            render_cfg.resources,
             render_cfg.step,
             z_level,
             &layout,

@@ -1,5 +1,11 @@
 use super::node::Node;
-use crate::model::{Color, ImageManager, Length, LengthOrAuto, NodeId, Step, StepValue};
+use crate::common::error::NelsieError;
+use crate::model::{
+    Color, ImageManager, Length, LengthOrAuto, NodeId, PartialTextStyle, Resources, Step,
+    StepValue, StyleMap, TextStyle,
+};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub(crate) struct Slide {
@@ -12,11 +18,18 @@ pub(crate) struct Slide {
 }
 
 impl Slide {
-    pub fn new(width: f32, height: f32, name: String, bg_color: Color) -> Self {
+    pub fn new(
+        width: f32,
+        height: f32,
+        name: String,
+        bg_color: Color,
+        styles: Arc<StyleMap>,
+    ) -> Self {
         Slide {
             width,
             height,
             node: Node {
+                styles,
                 node_id: NodeId::new(0),
                 children: vec![],
                 show: StepValue::new_const(true),
@@ -50,8 +63,38 @@ impl Slide {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub(crate) struct SlideDeck {
     pub(crate) slides: Vec<Slide>,
-    pub(crate) image_manager: ImageManager,
+    pub(crate) global_styles: Arc<StyleMap>,
+}
+
+impl SlideDeck {
+    pub fn new(resources: &Resources, default_font: Option<&str>) -> crate::Result<Self> {
+        let default_font_family = if let Some(font) = default_font {
+            resources.check_font(font)?
+        } else {
+            &["DejaVu Sans", "Arial"]
+                .iter()
+                .find_map(|n| resources.check_font(n).ok())
+                .ok_or_else(|| {
+                    NelsieError::GenericError(
+                        "No default font detected. Specify parameter 'default_font' in SlideDeck"
+                            .to_string(),
+                    )
+                })?
+        };
+        let default_style = PartialTextStyle {
+            font_family: Some(default_font_family.to_string()),
+            color: Some(Color::new(svgtypes::Color::black())),
+            size: Some(32.0),
+            line_spacing: Some(1.2),
+        };
+        let mut styles = HashMap::new();
+        styles.insert("default".to_string(), StepValue::new_const(default_style));
+        Ok(Self {
+            slides: Vec::new(),
+            global_styles: Arc::new(StyleMap::new(styles)),
+        })
+    }
 }
