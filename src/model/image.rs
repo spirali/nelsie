@@ -1,4 +1,4 @@
-use crate::common::step_parser::parse_steps_from_label;
+use crate::parsers::step_parser::parse_steps_from_label;
 use crate::model::{Node, NodeContent, SlideDeck, Step, StepValue};
 use crate::render::GlobalResources;
 use imagesize::blob_size;

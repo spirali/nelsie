@@ -56,7 +56,7 @@ fn parse_steps(value: &str) -> Option<(StepValue<bool>, Step)> {
 
 #[cfg(test)]
 mod test {
-    use crate::common::step_parser::parse_steps;
+    use crate::parsers::step_parser::parse_steps;
 
     #[test]
     pub fn test_parse() {

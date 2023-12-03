@@ -1,4 +1,4 @@
-use crate::common::step_parser::parse_steps_from_label;
+use crate::parsers::step_parser::parse_steps_from_label;
 use crate::model::{NodeContentImage, Node, NodeContent, SlideDeck, Step, StepValue, SvgImageData, OraImageData, LoadedImageData};
 use crate::render::layout::Rectangle;
 use crate::render::GlobalResources;
