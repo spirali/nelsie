@@ -14,7 +14,7 @@ Position = Length | None | LayoutExpr
 class Stroke:
     color: str
     width: float = 1.0
-    dash_array: list[float] = field(default_factory=list)
+    dash_array: list[float] | None = None
     dash_offset: float = 0.0
 
 

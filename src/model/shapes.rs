@@ -1,4 +1,4 @@
-use crate::model::{Color, LayoutExpr, StepValue, Stroke};
+use crate::model::{LayoutExpr, StepValue, Stroke};
 
 #[derive(Debug)]
 pub(crate) enum PathPart {
@@ -30,6 +30,15 @@ pub(crate) enum PathPart {
 pub(crate) struct Path {
     pub stroke: Option<Stroke>,
     pub parts: Vec<PathPart>,
+}
+
+impl Path {
+    pub fn new(stroke: Option<Stroke>) -> Self {
+        Path {
+            stroke,
+            parts: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug)]

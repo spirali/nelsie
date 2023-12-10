@@ -13,9 +13,21 @@ def test_render_paths(deck):
         .line_to(50, 50)
         .line_to(50, 100)
         .quad_to(150, 100, 150, 150)
-        .cubic_to(180, 180, 190, 190, 50, 150)
+        .cubic_to(180, 190, 150, 190, 50, 150)
     )
     slide.box(width="90%", height="90%").draw(path)
+
+
+@check()
+def test_render_cubic(deck):
+    slide = deck.new_slide(width=200, height=200)
+
+    path = (
+        Path(stroke=Stroke(color="red", width=5.0))
+        .move_to(10, 10)
+        .cubic_to(10, 190, 190, 190, 190, 10)
+    )
+    slide.box(width="100%", height="100%").draw(path)
 
 
 @check(n_slides=4)

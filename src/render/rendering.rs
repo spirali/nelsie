@@ -1,6 +1,7 @@
 use super::text::render_text;
 use crate::model::{
-    Color, Drawing, Node, NodeChild, NodeContent, Span, Step, StyledLine, StyledText, TextStyle,
+    Color, Drawing, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText,
+    TextStyle,
 };
 use crate::render::core::RenderConfig;
 use crate::render::layout::{ComputedLayout, LayoutContext, Rectangle};
@@ -146,14 +147,14 @@ impl<'a> RenderContext<'a> {
         for child in &node.children {
             match child {
                 NodeChild::Node(node) => self.render_helper(node),
-                NodeChild::Draw(draw) => self.draw(draw),
+                NodeChild::Draw(draw) => self.draw(node.node_id, draw),
             }
         }
     }
 
-    fn draw(&self, drawing: &Drawing) {
+    fn draw(&self, parent_id: NodeId, drawing: &Drawing) {
         for path in drawing.paths.at_step(self.step) {
-            if let Some(usvg_path) = create_path(self.layout, path) {
+            if let Some(usvg_path) = create_path(self.layout, parent_id, path) {
                 self.svg_node
                     .append(usvg::Node::new(usvg::NodeKind::Path(usvg_path)));
             }

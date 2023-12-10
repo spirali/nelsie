@@ -24,17 +24,20 @@ impl PyTextStyle {
     }
 }
 
+impl<'py> FromPyObject<'py> for Color {
+    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+        Color::from_str(ob.extract()?).map_err(|_| PyValueError::new_err("Invalid color"))
+    }
+}
+
 impl<'py> FromPyObject<'py> for PyTextStyle {
     fn extract(ob: &'py PyAny) -> PyResult<Self> {
-        let color: Option<&str> = ob.getattr("color")?.extract()?;
         Ok(PyTextStyle(PartialTextStyle {
             font_family: ob
                 .getattr("font_family")?
                 .extract::<Option<String>>()?
                 .map(Arc::new),
-            color: color
-                .map(|c| Color::from_str(c).map_err(|_| PyValueError::new_err("Invalid color")))
-                .transpose()?,
+            color: ob.getattr("color")?.extract()?,
             size: ob.getattr("size")?.extract()?,
             line_spacing: ob.getattr("line_spacing")?.extract()?,
         }))

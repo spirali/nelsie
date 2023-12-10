@@ -1,15 +1,20 @@
+mod basictypes;
 mod r#box;
 mod deck;
 mod error;
 mod insteps;
+mod path;
 mod resources;
 mod textstyle;
 
+use self::basictypes::PyStringOrFloat;
 use crate::pyinterface::insteps::ValueOrInSteps;
+use crate::pyinterface::path::PyPath;
 use crate::pyinterface::resources::Resources;
 use deck::Deck;
 use pyo3::exceptions::PyException;
-use pyo3::prelude::*;
+use pyo3::types::PyModule;
+use pyo3::{pymodule, PyErr, PyResult, Python};
 
 impl From<crate::NelsieError> for PyErr {
     fn from(err: crate::NelsieError) -> PyErr {

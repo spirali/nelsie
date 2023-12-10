@@ -1,11 +1,15 @@
 use crate::common::Step;
-use crate::model::{Node, NodeChild, NodeId, PartialTextStyle, Slide, SlideDeck};
+use crate::model::{
+    Drawing, Node, NodeChild, NodeId, PartialTextStyle, Path, Slide, SlideDeck, StepValue,
+};
 use crate::parsers::parse_color;
 use crate::pyinterface::insteps::ValueOrInSteps;
+use crate::pyinterface::path::PyPath;
 use crate::pyinterface::r#box::{BoxConfig, NodeCreationEnv};
 use crate::pyinterface::resources::Resources;
 use crate::pyinterface::textstyle::PyTextStyle;
 use crate::render::{render_slide_deck, OutputConfig};
+use itertools::Itertools;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python, ToPyObject};
 use std::collections::HashMap;
@@ -20,11 +24,12 @@ pub(crate) struct Deck {
 type SlideId = u32;
 type BoxId = Vec<u32>;
 
-fn resolve_box_id<'a>(node: &'a mut Node, box_id: &[u32]) -> Option<&'a mut Node> {
+fn resolve_box_id<'a>(node: &'a mut Node, box_id: &[u32]) -> PyResult<&'a mut Node> {
     if box_id.is_empty() {
-        return Some(node);
+        return Ok(node);
     }
     node.child_node_mut(box_id[0] as usize)
+        .ok_or_else(|| PyException::new_err("Invalid box id"))
         .and_then(|child| resolve_box_id(child, &box_id[1..]))
 }
 
@@ -45,6 +50,12 @@ fn resolve_box_id<'a>(node: &'a mut Node, box_id: &[u32]) -> Option<&'a mut Node
 //     }
 //     return Some((node, predecessors_ids));
 // }
+
+fn resolve_slide_id(deck: &mut SlideDeck, slide_id: SlideId) -> PyResult<&mut Slide> {
+    deck.slides
+        .get_mut(slide_id as usize)
+        .ok_or_else(|| PyException::new_err("Invalid slide id"))
+}
 
 #[pymethods]
 impl Deck {
@@ -73,6 +84,21 @@ impl Deck {
         Ok(slide_id)
     }
 
+    fn draw(
+        &mut self,
+        slide_id: SlideId,
+        box_id: BoxId,
+        paths: ValueOrInSteps<Vec<PyPath>>,
+    ) -> PyResult<()> {
+        let slide = resolve_slide_id(&mut self.deck, slide_id)?;
+        let node = resolve_box_id(&mut slide.node, &box_id)?;
+        let paths: StepValue<Vec<Path>> = paths.parse(&mut slide.n_steps, |paths| {
+            paths.into_iter().map(|p| p.into_path()).try_collect()
+        })?;
+        node.children.push(NodeChild::Draw(Drawing { paths }));
+        Ok(())
+    }
+
     fn new_box(
         &mut self,
         resources: &mut Resources,
@@ -80,24 +106,14 @@ impl Deck {
         box_id: BoxId,
         config: BoxConfig,
     ) -> PyResult<(BoxId, u32)> {
-        let slide = self
-            .deck
-            .slides
-            .get_mut(slide_id as usize)
-            .ok_or_else(|| PyException::new_err("Invalid slide id"))?;
+        let slide = resolve_slide_id(&mut self.deck, slide_id)?;
         let node_id = slide.new_node_id();
-        let parent_node = resolve_box_id(&mut slide.node, &box_id)
-            .ok_or_else(|| PyException::new_err("Invalid box id"))?;
+        let parent_node = resolve_box_id(&mut slide.node, &box_id)?;
 
         let mut nce = NodeCreationEnv {
             resources: &mut resources.resources,
         };
-        let (node, n_steps) = config.make_node(
-            node_id,
-            parent_node.node_id,
-            &mut nce,
-            parent_node.styles.clone(),
-        )?;
+        let (node, n_steps) = config.make_node(node_id, &mut nce, parent_node.styles.clone())?;
         slide.n_steps = slide.n_steps.max(n_steps);
 
         let new_id = parent_node.children.len() as u32;
@@ -118,14 +134,9 @@ impl Deck {
         box_id: Option<BoxId>,
     ) -> PyResult<()> {
         if let Some(slide_id) = slide_id {
-            let slide = self
-                .deck
-                .slides
-                .get_mut(slide_id as usize)
-                .ok_or_else(|| PyException::new_err("Invalid slide id"))?;
+            let slide = resolve_slide_id(&mut self.deck, slide_id)?;
             if let Some(box_id) = box_id {
-                let node = resolve_box_id(&mut slide.node, &box_id)
-                    .ok_or_else(|| PyException::new_err("Invalid node id"))?;
+                let node = resolve_box_id(&mut slide.node, &box_id)?;
                 let text_style = text_style.parse(&mut slide.n_steps, |s| {
                     s.to_partial_style(&resources.resources)
                 })?;
@@ -148,14 +159,9 @@ impl Deck {
         box_id: Option<BoxId>,
     ) -> PyResult<PyObject> {
         Ok((if let Some(slide_id) = slide_id {
-            let slide = self
-                .deck
-                .slides
-                .get_mut(slide_id as usize)
-                .ok_or_else(|| PyException::new_err("Invalid slide id"))?;
+            let slide = resolve_slide_id(&mut self.deck, slide_id)?;
             if let Some(box_id) = box_id {
-                let node = resolve_box_id(&mut slide.node, &box_id)
-                    .ok_or_else(|| PyException::new_err("Invalid node id"))?;
+                let node = resolve_box_id(&mut slide.node, &box_id)?;
                 node.styles
                     .get_style(name)
                     .map(|style| PyTextStyle::new(style.at_step(step).clone()))?

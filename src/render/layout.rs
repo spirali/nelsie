@@ -30,14 +30,20 @@ impl ComputedLayout {
             .expect("Node id not found, ordering not correct?")
     }
 
-    pub fn eval(&self, expr: &LayoutExpr) -> f32 {
+    pub fn eval(&self, expr: &LayoutExpr, parent_node: NodeId) -> f32 {
         match expr {
             LayoutExpr::ConstValue { value } => *value,
             LayoutExpr::X { node_id } => self._rect(*node_id).x,
             LayoutExpr::Y { node_id } => self._rect(*node_id).y,
             LayoutExpr::Width { node_id, fraction } => self._rect(*node_id).width * fraction,
             LayoutExpr::Height { node_id, fraction } => self._rect(*node_id).height * fraction,
-            LayoutExpr::Sum { expressions } => expressions.iter().map(|e| self.eval(e)).sum(),
+            LayoutExpr::Sum { expressions } => {
+                expressions.iter().map(|e| self.eval(e, parent_node)).sum()
+            }
+            LayoutExpr::ParentX { shift } => self._rect(parent_node).x + shift,
+            LayoutExpr::ParentY { shift } => self._rect(parent_node).y + shift,
+            LayoutExpr::ParentWidth { fraction } => self._rect(parent_node).width * fraction,
+            LayoutExpr::ParentHeight { fraction } => self._rect(parent_node).height * fraction,
         }
     }
 
@@ -249,13 +255,13 @@ impl<'a> LayoutContext<'a> {
                         .x
                         .at_step(self.step)
                         .as_ref()
-                        .map(|x| result.eval(x))
+                        .map(|x| result.eval(x, parent_id.unwrap_or(NodeId::new(0))))
                         .unwrap_or_else(|| parent_x + rect.x),
                     y: node
                         .y
                         .at_step(self.step)
                         .as_ref()
-                        .map(|y| result.eval(y))
+                        .map(|y| result.eval(y, parent_id.unwrap_or(NodeId::new(0))))
                         .unwrap_or_else(|| parent_y + rect.y),
                     width: rect.width,
                     height: rect.height,

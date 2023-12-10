@@ -9,6 +9,14 @@ pub(crate) enum StringOrFloat {
     String(String),
 }
 
+#[derive(Debug)]
+pub(crate) enum StringOrFloatOrExpr {
+    Float(f32),
+    String(String),
+    //Expr(LayoutExpr),
+}
+
+use crate::model::LayoutExpr;
 pub(crate) use color::parse_color;
 pub(crate) use size::{parse_length, parse_length_auto, parse_position};
 pub(crate) use text::{parse_styled_text, ParsedStyledText};

@@ -8,6 +8,7 @@ use crate::model::{
 use crate::parsers::{
     parse_color, parse_length, parse_length_auto, parse_position, parse_styled_text, StringOrFloat,
 };
+use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use crate::pyinterface::textstyle::PyTextStyleOrName;
 use clap::builder::styling::Style;
@@ -18,21 +19,6 @@ use pyo3::{FromPyObject, PyResult};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
-
-#[derive(Debug, FromPyObject)]
-enum PyStringOrFloat {
-    Float(f32),
-    String(String),
-}
-
-impl From<PyStringOrFloat> for StringOrFloat {
-    fn from(value: PyStringOrFloat) -> Self {
-        match value {
-            PyStringOrFloat::Float(v) => StringOrFloat::Float(v),
-            PyStringOrFloat::String(v) => StringOrFloat::String(v),
-        }
-    }
-}
 
 #[derive(Debug, FromPyObject)]
 struct ImageContent {
@@ -57,8 +43,8 @@ enum Content {
 #[derive(Debug, FromPyObject)]
 pub(crate) struct BoxConfig {
     pub bg_color: ValueOrInSteps<Option<String>>,
-    pub x: ValueOrInSteps<Option<PyStringOrFloat>>,
-    pub y: ValueOrInSteps<Option<PyStringOrFloat>>,
+    pub x: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+    pub y: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
     pub width: ValueOrInSteps<Option<PyStringOrFloat>>,
     pub height: ValueOrInSteps<Option<PyStringOrFloat>>,
     pub row: ValueOrInSteps<bool>,
@@ -164,7 +150,6 @@ impl BoxConfig {
     pub fn make_node(
         self,
         new_node_id: NodeId,
-        parent_id: NodeId,
         nc_env: &mut NodeCreationEnv,
         styles: Arc<StyleMap>,
     ) -> PyResult<(Node, Step)> {
@@ -180,12 +165,10 @@ impl BoxConfig {
             .bg_color
             .parse(&mut n_steps, |v| v.as_deref().map(parse_color).transpose())?;
         let x = self.x.parse(&mut n_steps, |v| {
-            v.map(|v| parse_position(parent_id, v.into(), true))
-                .transpose()
+            v.map(|v| parse_position(&v.into(), true)).transpose()
         })?;
         let y = self.y.parse(&mut n_steps, |v| {
-            v.map(|v| parse_position(parent_id, v.into(), false))
-                .transpose()
+            v.map(|v| parse_position(&v.into(), false)).transpose()
         })?;
         let width = self.width.parse(&mut n_steps, pyparse_opt_length)?;
         let height = self.height.parse(&mut n_steps, pyparse_opt_length)?;

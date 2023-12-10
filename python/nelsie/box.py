@@ -2,6 +2,7 @@ import os
 
 from dataclasses import dataclass
 
+from .shapes import Path
 from .textstyle import TextStyle
 from .basictypes import Position, Size, Length, LengthAuto, parse_debug_layout
 from .insteps import InSteps
@@ -101,18 +102,13 @@ class BoxBuilder:
     ):
         return self._text_box(text, style, delimiters, tab_width, box_args)
 
-    """
     def draw(self, paths: Path | list[Path] | InSteps[Path | list[Path]]):
-        paths = to_steps(paths)
-        paths = paths.map(lambda p: [p] if not isinstance(p, list) else p)
-        print(paths.in_step_values)
-        slide = self.get_slide()
-        box_id = self.get_box().box_id
-        export_paths = export_step_value(
-            paths, slide, lambda p: [path.export(box_id) for path in p], default=[]
-        )
-        self.add_child(DrawChild(export_paths))
-    """
+        if isinstance(paths, Path):
+            paths = [paths]
+        elif isinstance(paths, InSteps):
+            paths = paths.map(lambda p: [p] if isinstance(p, Path) else p)
+        box = self.get_box()
+        box.deck._deck.draw(box.slide._slide_id, box._box_id, paths)
 
     def _text_box(self, text, style, delimiters, tab_width, box_args):
         text = text.replace("\t", " " * tab_width)
@@ -175,8 +171,7 @@ class BoxBuilder:
         box_id, node_id = deck._deck.new_box(
             deck.resources, parent_box.slide._slide_id, parent_box._box_id, config
         )
-        box = Box(deck, parent_box.slide, box_id, node_id, name, z_level)
-        return box
+        return Box(deck, parent_box.slide, box_id, node_id, name, z_level)
 
 
 class Box(BoxBuilder):

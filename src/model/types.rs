@@ -46,6 +46,10 @@ impl LengthOrAuto {
 #[derive(Debug, Clone)]
 pub(crate) enum LayoutExpr {
     ConstValue { value: f32 },
+    ParentX { shift: f32 },
+    ParentY { shift: f32 },
+    ParentWidth { fraction: f32 },
+    ParentHeight { fraction: f32 },
     X { node_id: NodeId },
     Y { node_id: NodeId },
     Width { node_id: NodeId, fraction: f32 },

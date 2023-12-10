@@ -1,24 +1,28 @@
-use crate::model::{Path, PathPart};
+use crate::model::{NodeId, Path, PathPart};
 use crate::render::layout::ComputedLayout;
 use resvg::tiny_skia::PathBuilder;
 use std::rc::Rc;
 use usvg::{NonZeroPositiveF32, NormalizedF32};
 
-pub(crate) fn create_path(layout: &ComputedLayout, path: &Path) -> Option<usvg::Path> {
+pub(crate) fn create_path(
+    layout: &ComputedLayout,
+    parent_id: NodeId,
+    path: &Path,
+) -> Option<usvg::Path> {
     let mut builder = PathBuilder::new();
     for part in &path.parts {
         match part {
             PathPart::Move { x, y } => {
-                builder.move_to(layout.eval(x), layout.eval(y));
+                builder.move_to(layout.eval(x, parent_id), layout.eval(y, parent_id));
             }
             PathPart::Line { x, y } => {
-                builder.line_to(layout.eval(x), layout.eval(y));
+                builder.line_to(layout.eval(x, parent_id), layout.eval(y, parent_id));
             }
             PathPart::Quad { x1, y1, x, y } => builder.quad_to(
-                layout.eval(x1),
-                layout.eval(y1),
-                layout.eval(x),
-                layout.eval(y),
+                layout.eval(x1, parent_id),
+                layout.eval(y1, parent_id),
+                layout.eval(x, parent_id),
+                layout.eval(y, parent_id),
             ),
             PathPart::Cubic {
                 x1,
@@ -28,12 +32,12 @@ pub(crate) fn create_path(layout: &ComputedLayout, path: &Path) -> Option<usvg::
                 x,
                 y,
             } => builder.cubic_to(
-                layout.eval(x1),
-                layout.eval(y1),
-                layout.eval(x2),
-                layout.eval(y2),
-                layout.eval(x),
-                layout.eval(y),
+                layout.eval(x1, parent_id),
+                layout.eval(y1, parent_id),
+                layout.eval(x2, parent_id),
+                layout.eval(y2, parent_id),
+                layout.eval(x, parent_id),
+                layout.eval(y, parent_id),
             ),
         }
     }

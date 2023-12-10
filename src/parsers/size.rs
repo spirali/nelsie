@@ -1,5 +1,5 @@
 use crate::model::{LayoutExpr, Length, LengthOrAuto, NodeId};
-use crate::parsers::StringOrFloat;
+use crate::parsers::{StringOrFloat, StringOrFloatOrExpr};
 use std::str::FromStr;
 
 fn parse<T: FromStr>(s: &str, value: &str) -> crate::Result<T> {
@@ -38,23 +38,17 @@ pub(crate) fn parse_length_auto(value: StringOrFloat) -> crate::Result<LengthOrA
     }
 }
 
-pub(crate) fn parse_position(
-    parent_id: NodeId,
-    value: StringOrFloat,
-    is_x: bool,
-) -> crate::Result<LayoutExpr> {
+pub(crate) fn parse_position(value: &StringOrFloatOrExpr, is_x: bool) -> crate::Result<LayoutExpr> {
     Ok(match value {
-        StringOrFloat::Float(v) => LayoutExpr::Sum {
-            expressions: vec![
-                if is_x {
-                    LayoutExpr::X { node_id: parent_id }
-                } else {
-                    LayoutExpr::Y { node_id: parent_id }
-                },
-                LayoutExpr::ConstValue { value: v },
-            ],
-        },
-        StringOrFloat::String(v) => todo!(),
+        StringOrFloatOrExpr::Float(v) => {
+            if is_x {
+                LayoutExpr::ParentX { shift: *v }
+            } else {
+                LayoutExpr::ParentY { shift: *v }
+            }
+        }
+        StringOrFloatOrExpr::String(v) => todo!(),
+        //StringOrFloatOrExpr::Expr(expr) => expr,
     })
 }
 
