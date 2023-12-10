@@ -1,3 +1,7 @@
+<p align="center">
+<img src='docs/imgs/nelsie-logo.jpg' width='400'>
+</p>
+
 # Nelsie
 
 * New Elsie: New generation of [Elsie](https://github.com/spirali/elsie)
