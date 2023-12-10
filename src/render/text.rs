@@ -83,7 +83,7 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (Te
         ..Default::default()
     };
     let font = Font {
-        families: vec![text_style.font_family.clone()],
+        families: vec![text_style.font_family.as_ref().clone()],
         style: FontStyle::Normal,
         stretch: FontStretch::Normal,
         weight: 400,

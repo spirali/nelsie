@@ -8,7 +8,7 @@ use usvg_tree::Text;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(crate) struct PartialTextStyle {
-    pub font_family: Option<String>,
+    pub font_family: Option<Arc<String>>,
     pub color: Option<Color>,
     pub size: Option<f32>,
     pub line_spacing: Option<f32>,
@@ -70,7 +70,7 @@ impl PartialTextStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct TextStyle {
-    pub font_family: String,
+    pub font_family: Arc<String>,
     pub color: Color,
     pub size: f32,
     pub line_spacing: f32,

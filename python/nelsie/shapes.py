@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from . import Stroke
+from .basictypes import Stroke
 from .insteps import InSteps
 from .layoutexpr import LayoutExpr
 

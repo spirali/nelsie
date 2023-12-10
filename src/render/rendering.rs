@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 
 use resvg::tiny_skia;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::render::image::render_image;
 use crate::render::paths::create_path;
@@ -57,7 +58,7 @@ fn draw_debug_frame(rect: &Rectangle, name: &str, color: &Color, svg_node: &usvg
             text,
         }],
         styles: vec![TextStyle {
-            font_family: "DejaVu Sans".to_string(),
+            font_family: Arc::new("DejaVu Sans".to_string()),
             color: color.clone(),
             size: 8.0,
             line_spacing: 0.0,
