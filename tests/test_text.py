@@ -5,6 +5,7 @@ from nelsie import InSteps, TextStyle
 
 import pytest
 
+
 def test_text_update():
     s1 = TextStyle(color="green", size=123)
     s2 = TextStyle(size=321, line_spacing=1.5)
@@ -117,4 +118,3 @@ def test_set_get_styles_box(deck):
     s = b3.get_style("default")
     assert s.line_spacing == 1.0
     assert s.color == "#000000"
-

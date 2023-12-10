@@ -10,8 +10,14 @@ Resources = nelsie_rs.Resources
 
 
 class Slide(BoxBuilder):
-
-    def __init__(self, deck: "SlideDeck", slide_id: int, name: str, image_directory: str, debug_layout:  str | None):
+    def __init__(
+        self,
+        deck: "SlideDeck",
+        slide_id: int,
+        name: str,
+        image_directory: str,
+        debug_layout: str | None,
+    ):
         self.deck = deck
         self._slide_id = slide_id
         self.name = name
@@ -93,6 +99,6 @@ class SlideDeck:
         output_pdf: Optional[str] = None,
         output_svg: Optional[str] = None,
         output_png: Optional[str] = None,
-        debug: bool = False
+        debug: bool = False,
     ):
         self._deck.render(self.resources, output_pdf, output_svg, output_png)

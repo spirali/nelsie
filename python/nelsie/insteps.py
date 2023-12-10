@@ -6,9 +6,9 @@ S = TypeVar("S")
 
 class InSteps(Generic[T]):
     def __init__(
-            self,
-            values: Sequence[T] | dict[int, T],
-            n_steps: int | None = None,
+        self,
+        values: Sequence[T] | dict[int, T],
+        n_steps: int | None = None,
     ):
         if isinstance(values, Sequence):
             tmp = {}
@@ -34,7 +34,8 @@ class InSteps(Generic[T]):
 
     def map(self, fn):
         return InSteps(
-            {step: fn(v) for step, v in self.in_step_values.items()}, n_steps=self.n_steps
+            {step: fn(v) for step, v in self.in_step_values.items()},
+            n_steps=self.n_steps,
         )
 
     def key_steps(self):
