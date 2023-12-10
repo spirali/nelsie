@@ -13,6 +13,7 @@ use crate::model::{Resources, Slide, SlideDeck};
 pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use pdf::PdfBuilder;
 use std::path::Path;
+use std::sync::Arc;
 pub(crate) use text::check_fonts;
 use usvg::fontdb;
 
@@ -27,6 +28,7 @@ fn render_slide(
     output_cfg: &OutputConfig,
     slide_idx: usize,
     slide: &Slide,
+    default_font_name: &Arc<String>,
 ) -> crate::Result<Vec<usvg::Tree>> {
     log::debug!("Rendering slide {}", slide_idx);
     (1..=slide.n_steps)
@@ -44,6 +46,7 @@ fn render_slide(
                 output_png: output_png.as_deref(),
                 slide,
                 step,
+                default_font_name,
             };
             render_slide_step(&render_cfg)
         })
@@ -87,7 +90,13 @@ pub(crate) fn render_slide_deck(
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));
 
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {
-        for tree in render_slide(&resources, output_cfg, slide_idx, slide)? {
+        for tree in render_slide(
+            &resources,
+            output_cfg,
+            slide_idx,
+            slide,
+            &slide_deck.default_font_family,
+        )? {
             if let Some(builder) = &mut pdf_builder {
                 builder.add_page_from_svg(tree);
             }

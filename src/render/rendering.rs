@@ -24,6 +24,7 @@ pub(crate) struct RenderContext<'a> {
     z_level: i32,
     layout: &'a ComputedLayout,
     svg_node: usvg::Node,
+    default_font_name: &'a Arc<String>,
 }
 
 impl From<&Color> for usvg::Color {
@@ -33,7 +34,13 @@ impl From<&Color> for usvg::Color {
     }
 }
 
-fn draw_debug_frame(rect: &Rectangle, name: &str, color: &Color, svg_node: &usvg::Node) {
+fn draw_debug_frame(
+    rect: &Rectangle,
+    name: &str,
+    font_name: &Arc<String>,
+    color: &Color,
+    svg_node: &usvg::Node,
+) {
     let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
         tiny_skia::Rect::from_xywh(rect.x, rect.y, rect.width.max(1.0), rect.height.max(1.0))
             .unwrap(),
@@ -58,7 +65,7 @@ fn draw_debug_frame(rect: &Rectangle, name: &str, color: &Color, svg_node: &usvg
             text,
         }],
         styles: vec![TextStyle {
-            font_family: Arc::new("DejaVu Sans".to_string()),
+            font_family: font_name.clone(),
             color: color.clone(),
             size: 8.0,
             line_spacing: 0.0,
@@ -76,6 +83,7 @@ impl<'a> RenderContext<'a> {
         z_level: i32,
         layout: &'a ComputedLayout,
         svg_node: usvg::Node,
+        default_font_name: &'a Arc<String>,
     ) -> Self {
         RenderContext {
             resources: global_res,
@@ -83,6 +91,7 @@ impl<'a> RenderContext<'a> {
             z_level,
             layout,
             svg_node,
+            default_font_name,
         }
     }
 
@@ -124,7 +133,13 @@ impl<'a> RenderContext<'a> {
 
             if let Some(color) = &node.debug_layout {
                 let rect = self.layout.rect(node.node_id).unwrap();
-                draw_debug_frame(rect, &node.name, color, &self.svg_node);
+                draw_debug_frame(
+                    rect,
+                    &node.name,
+                    self.default_font_name,
+                    color,
+                    &self.svg_node,
+                );
             }
         }
 
@@ -169,6 +184,7 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
             z_level,
             &layout,
             root_svg_node.clone(),
+            render_cfg.default_font_name,
         );
         render_ctx.render_to_svg(&render_cfg.slide.node);
     }

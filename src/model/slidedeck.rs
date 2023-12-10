@@ -67,25 +67,29 @@ impl Slide {
 pub(crate) struct SlideDeck {
     pub(crate) slides: Vec<Slide>,
     pub(crate) global_styles: Arc<StyleMap>,
+    pub(crate) default_font_family: Arc<String>,
 }
 
 impl SlideDeck {
     pub fn new(resources: &Resources, default_font: Option<&str>) -> crate::Result<Self> {
-        let default_font_family = if let Some(font) = default_font {
-            resources.check_font(font)?
-        } else {
-            &["DejaVu Sans", "Arial"]
-                .iter()
-                .find_map(|n| resources.check_font(n).ok())
-                .ok_or_else(|| {
-                    NelsieError::GenericError(
+        let default_font_family = Arc::new(
+            if let Some(font) = default_font {
+                resources.check_font(font)?
+            } else {
+                &["DejaVu Sans", "Arial"]
+                    .iter()
+                    .find_map(|n| resources.check_font(n).ok())
+                    .ok_or_else(|| {
+                        NelsieError::GenericError(
                         "No default font detected. Specify parameter 'default_font' in SlideDeck"
                             .to_string(),
                     )
-                })?
-        };
+                    })?
+            }
+            .to_string(),
+        );
         let default_style = PartialTextStyle {
-            font_family: Some(Arc::new(default_font_family.to_string())),
+            font_family: Some(default_font_family.clone()),
             color: Some(Color::new(svgtypes::Color::black())),
             size: Some(32.0),
             line_spacing: Some(1.2),
@@ -95,6 +99,7 @@ impl SlideDeck {
         Ok(Self {
             slides: Vec::new(),
             global_styles: Arc::new(StyleMap::new(styles)),
+            default_font_family,
         })
     }
 }

@@ -4,12 +4,14 @@ use crate::NelsieError;
 use crate::Result;
 use resvg::tiny_skia;
 use std::path::Path;
+use std::sync::Arc;
 use usvg::{TreeTextToPath, TreeWriting, XmlOptions};
 
 pub(crate) struct RenderConfig<'a> {
     pub resources: &'a Resources,
     pub slide: &'a Slide,
     pub step: Step,
+    pub default_font_name: &'a Arc<String>,
 
     pub output_svg: Option<&'a Path>,
     pub output_png: Option<&'a Path>,

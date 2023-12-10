@@ -10,6 +10,7 @@ use std::collections::BTreeSet;
 
 use resvg::tiny_skia;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::render::image::render_image;
 use crate::render::paths::create_path;
