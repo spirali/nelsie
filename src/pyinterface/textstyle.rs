@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct PyTextStyle(PartialTextStyle);
 
 impl PyTextStyle {

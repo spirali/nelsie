@@ -21,13 +21,18 @@ impl<T: Debug> StepValue<T> {
     }
 }
 
+impl<T: Debug + Default> StepValue<T> {
+    pub fn new_map(mut value: BTreeMap<Step, T>) -> Self {
+        if !value.contains_key(&1) {
+            value.insert(1, T::default());
+        }
+        StepValue::Steps(value)
+    }
+}
+
 impl<T: Debug> StepValue<T> {
     pub fn new_const(value: T) -> Self {
         StepValue::Const(value)
-    }
-
-    pub fn new_map(value: BTreeMap<Step, T>) -> Self {
-        StepValue::Steps(value)
     }
 
     pub fn at_step(&self, step: Step) -> &T {

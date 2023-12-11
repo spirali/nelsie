@@ -24,13 +24,13 @@ impl<T: Debug> ValueOrInSteps<T> {
         mut parser: F,
     ) -> Result<StepValue<S>, E>
     where
-        S: Debug,
+        S: Debug + Default,
     {
         match self {
             ValueOrInSteps::Value(v) => Ok(StepValue::new_const(parser(v)?)),
             ValueOrInSteps::InSteps(in_steps) => {
                 *n_steps = (*n_steps).max(in_steps.n_steps);
-                Ok(StepValue::Steps(
+                Ok(StepValue::new_map(
                     in_steps
                         .in_step_values
                         .into_iter()
@@ -41,7 +41,7 @@ impl<T: Debug> ValueOrInSteps<T> {
         }
     }
 
-    pub fn parse_ignore_n_steps<S: Debug, E, F: FnMut(T) -> Result<S, E>>(
+    pub fn parse_ignore_n_steps<S: Debug + Default, E, F: FnMut(T) -> Result<S, E>>(
         self,
         mut parser: F,
     ) -> Result<StepValue<S>, E> {
@@ -49,7 +49,10 @@ impl<T: Debug> ValueOrInSteps<T> {
         self.parse(&mut discard, parser)
     }
 
-    pub fn to_step_value(self, n_steps: &mut Step) -> StepValue<T> {
+    pub fn to_step_value(self, n_steps: &mut Step) -> StepValue<T>
+    where
+        T: Default,
+    {
         match self {
             ValueOrInSteps::Value(v) => StepValue::new_const(v),
             ValueOrInSteps::InSteps(v) => {

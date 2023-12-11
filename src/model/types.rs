@@ -28,6 +28,12 @@ pub(crate) enum Length {
     Fraction { value: f32 },
 }
 
+impl Default for Length {
+    fn default() -> Self {
+        Length::Points { value: 0.0f32 }
+    }
+}
+
 impl Length {
     pub(crate) const ZERO: Length = Length::Points { value: 0.0 };
 }
@@ -37,6 +43,12 @@ pub(crate) enum LengthOrAuto {
     Points { value: f32 },
     Fraction { value: f32 },
     Auto,
+}
+
+impl Default for LengthOrAuto {
+    fn default() -> Self {
+        LengthOrAuto::Points { value: 0.0f32 }
+    }
 }
 
 impl LengthOrAuto {
