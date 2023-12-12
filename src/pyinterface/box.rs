@@ -5,11 +5,12 @@ use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Path, Resources, Step,
     StepValue,
 };
+use crate::parsers::step_parser::{parse_steps, parse_steps_from_label};
 use crate::parsers::{
     parse_color, parse_length, parse_length_auto, parse_position, parse_styled_text, StringOrFloat,
 };
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
-use crate::pyinterface::insteps::ValueOrInSteps;
+use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
 use clap::builder::styling::Style;
 use itertools::Itertools;
@@ -19,6 +20,13 @@ use pyo3::{FromPyObject, PyResult};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
+
+#[derive(Debug, FromPyObject)]
+enum Show {
+    Bool(bool),
+    StringDef(String),
+    InSteps(InSteps<bool>),
+}
 
 #[derive(Debug, FromPyObject)]
 struct ImageContent {
@@ -42,6 +50,7 @@ enum Content {
 
 #[derive(Debug, FromPyObject)]
 pub(crate) struct BoxConfig {
+    pub show: Show,
     pub bg_color: ValueOrInSteps<Option<String>>,
     pub x: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
     pub y: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
@@ -170,12 +179,23 @@ impl BoxConfig {
         let y = self.y.parse(&mut n_steps, |v| {
             v.map(|v| parse_position(&v.into(), false)).transpose()
         })?;
+        let show = match self.show {
+            Show::Bool(value) => StepValue::new_const(value),
+            Show::StringDef(s) => {
+                let (steps, n) = parse_steps(&s).ok_or_else(|| {
+                    PyValueError::new_err(format!("Invalid show definition: {s}"))
+                })?;
+                n_steps = n_steps.max(n);
+                steps
+            }
+            Show::InSteps(in_steps) => in_steps.to_step_value(&mut n_steps),
+        };
         let width = self.width.parse(&mut n_steps, pyparse_opt_length)?;
         let height = self.height.parse(&mut n_steps, pyparse_opt_length)?;
         let node = Node {
             node_id: new_node_id,
             name: self.name,
-            show: StepValue::new_const(true),
+            show,
             z_level: self.z_level.to_step_value(&mut n_steps),
             x,
             y,

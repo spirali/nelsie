@@ -2,7 +2,7 @@ import os.path
 
 from nelsie import SlideDeck
 from conftest import ROOT_DIR
-
+from testutils import check
 
 def test_render_outputs(tmp_path, deck):
     out_svg = tmp_path / "svgs"
@@ -42,19 +42,13 @@ def test_render_outputs(tmp_path, deck):
         assert data == b"%PDF"
 
 
+@check(n_slides=2)
 def test_slide_decorator(deck):
-    assert len(deck.slides) == 0
-
     @deck.slide()
     def my_slide(slide):
-        slide.text("Hello world!")
+        slide.box(width=400, height=200, bg_color="blue")
+        slide.box(width=200, height=400, bg_color="red")
 
-    @deck.slide(width=100, height=120, debug_layout="green")
+    @deck.slide(width=300, height=120, debug_layout="green")
     def my_slide2(slide):
         slide.text("Hello world!")
-
-    assert len(deck.slides) == 2
-    assert deck.slides[1].width == 100
-    assert deck.slides[1].height == 120
-    assert deck.slides[1].debug_layout == "green"
-    assert deck.slides[0].debug_layout is False

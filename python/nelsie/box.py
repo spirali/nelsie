@@ -37,7 +37,7 @@ NodeContent = ImageContent | TextContent | None
 
 @dataclass
 class BoxConfig:
-    show: bool | str
+    show: bool | str | InSteps[bool]
     z_level: int | InSteps[int] | None
     x: Position | InSteps[Position]
     y: Position | InSteps[Position]

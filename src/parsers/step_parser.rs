@@ -6,7 +6,7 @@ pub(crate) fn parse_steps_from_label(value: &str) -> Option<(StepValue<bool>, St
     value.rsplit_once("**").and_then(|(_, b)| parse_steps(b))
 }
 
-fn parse_steps(value: &str) -> Option<(StepValue<bool>, Step)> {
+pub(crate) fn parse_steps(value: &str) -> Option<(StepValue<bool>, Step)> {
     let mut value = value.trim_end();
 
     let mut until_end = false;
