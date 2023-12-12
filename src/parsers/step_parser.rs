@@ -1,5 +1,4 @@
 use crate::model::{Step, StepValue};
-use itertools::Itertools;
 use std::collections::BTreeMap;
 
 pub(crate) fn parse_steps_from_label(value: &str) -> Option<(StepValue<bool>, Step)> {
@@ -10,13 +9,13 @@ pub(crate) fn parse_steps(value: &str) -> Option<(StepValue<bool>, Step)> {
     let mut value = value.trim_end();
 
     let mut until_end = false;
-    if value.ends_with("+") {
+    if value.ends_with('+') {
         value = &value[0..value.len() - 1];
         until_end = true;
     }
     let mut steps = Vec::new();
-    for part in value.split(",") {
-        if let Some((part1, part2)) = part.split_once("-") {
+    for part in value.split(',') {
+        if let Some((part1, part2)) = part.split_once('-') {
             if let (Ok(step1), Ok(step2)) =
                 (part1.trim().parse::<Step>(), part2.trim().parse::<Step>())
             {
@@ -26,12 +25,10 @@ pub(crate) fn parse_steps(value: &str) -> Option<(StepValue<bool>, Step)> {
             } else {
                 return None;
             }
+        } else if let Ok(step) = part.trim().parse::<Step>() {
+            steps.push(step);
         } else {
-            if let Ok(step) = part.trim().parse::<Step>() {
-                steps.push(step);
-            } else {
-                return None;
-            }
+            return None;
         }
     }
 
@@ -47,7 +44,7 @@ pub(crate) fn parse_steps(value: &str) -> Option<(StepValue<bool>, Step)> {
         }
     }
     if until_end {
-        if let Some(m) = result.iter().next_back().map(|(k, v)| *k) {
+        if let Some(m) = result.iter().next_back().map(|(k, _v)| *k) {
             result.remove(&m);
         }
     }

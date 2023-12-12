@@ -1,11 +1,8 @@
-use crate::model::Length;
-use pyo3::PyResult;
+use std::collections::BTreeMap;
 use std::collections::Bound::Included;
-use std::collections::{BTreeMap, BTreeSet};
-use std::fmt::{Debug, Display, Write};
-use std::hash::Hash;
+use std::fmt::Debug;
+
 use std::ops::Bound::Unbounded;
-use std::str::FromStr;
 
 pub type Step = u32;
 
@@ -23,9 +20,7 @@ impl<T: Debug> StepValue<T> {
 
 impl<T: Debug + Default> StepValue<T> {
     pub fn new_map(mut value: BTreeMap<Step, T>) -> Self {
-        if !value.contains_key(&1) {
-            value.insert(1, T::default());
-        }
+        value.entry(1).or_insert_with(|| T::default());
         StepValue::Steps(value)
     }
 }
@@ -44,13 +39,6 @@ impl<T: Debug> StepValue<T> {
                 .next_back()
                 .map(|(_, v)| v)
                 .unwrap_or_else(|| panic!("Invalid step")),
-        }
-    }
-
-    pub fn into_value(self) -> T {
-        match self {
-            StepValue::Const(v) => v,
-            StepValue::Steps(_) => panic!("Not a const value"),
         }
     }
 
@@ -79,7 +67,7 @@ impl<T: Debug> StepValue<T> {
 
     pub fn map_ref<S: Debug, F: FnMut(&T) -> S>(&self, mut f: F) -> StepValue<S> {
         match self {
-            StepValue::Const(v) => StepValue::Const(f(&v)),
+            StepValue::Const(v) => StepValue::Const(f(v)),
             StepValue::Steps(v) => StepValue::Steps(v.iter().map(|(k, v)| (*k, f(v))).collect()),
         }
     }
@@ -97,7 +85,7 @@ impl<T: Debug> StepValue<T> {
             (StepValue::Const(v1), StepValue::Steps(v2)) => {
                 StepValue::Steps(v2.iter().map(|(k, v)| (*k, f(v1, v))).collect())
             }
-            (StepValue::Steps(v1), StepValue::Steps(v2)) => {
+            (StepValue::Steps(_v1), StepValue::Steps(_v2)) => {
                 todo!()
             }
         }

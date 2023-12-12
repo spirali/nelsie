@@ -1,8 +1,8 @@
 use crate::common::Step;
-use crate::model::{Slide, StepValue};
-use pyo3::exceptions::PyValueError;
-use pyo3::{FromPyObject, PyResult};
-use std::collections::{BTreeMap, HashMap};
+use crate::model::StepValue;
+
+use pyo3::FromPyObject;
+use std::collections::BTreeMap;
 use std::fmt::Debug;
 
 #[derive(Debug, FromPyObject)]

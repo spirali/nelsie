@@ -5,8 +5,7 @@ use crate::model::{
 };
 use crate::render::core::RenderConfig;
 use crate::render::layout::{ComputedLayout, LayoutContext, Rectangle};
-use std::borrow::Cow;
-use std::cmp::max;
+
 use std::collections::BTreeSet;
 
 use resvg::tiny_skia;
@@ -16,7 +15,7 @@ use std::sync::Arc;
 use crate::render::image::render_image;
 use crate::render::paths::create_path;
 use crate::render::Resources;
-use usvg::{fontdb, Fill};
+use usvg::Fill;
 use usvg_tree::Stroke;
 
 pub(crate) struct RenderContext<'a> {

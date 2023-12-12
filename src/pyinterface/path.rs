@@ -1,15 +1,12 @@
 use crate::common::error::NelsieError;
 use crate::model::PathPart::{Cubic, Line, Move, Quad};
-use crate::model::{Path, PathPart, SlideDeck, Stroke};
+use crate::model::{Path, PathPart, Stroke};
 use crate::parsers::{parse_position, StringOrFloatOrExpr};
 use crate::pyinterface::basictypes::PyStringOrFloatOrExpr;
-use crate::pyinterface::deck::Deck;
-use crate::pyinterface::resources::Resources;
+
 use itertools::Itertools;
-use pyo3::exceptions::PyException;
-use pyo3::types::PyString;
-use pyo3::{pyclass, pymethods, FromPyObject, PyAny, PyResult};
-use taffy::prelude::points;
+
+use pyo3::{FromPyObject, PyAny, PyResult};
 
 #[derive(Debug, FromPyObject)]
 pub(crate) struct PyPath {

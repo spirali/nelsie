@@ -32,15 +32,6 @@ pub(crate) struct Path {
     pub parts: Vec<PathPart>,
 }
 
-impl Path {
-    pub fn new(stroke: Option<Stroke>) -> Self {
-        Path {
-            stroke,
-            parts: Vec::new(),
-        }
-    }
-}
-
 #[derive(Debug)]
 pub(crate) struct Drawing {
     pub paths: StepValue<Vec<Path>>,

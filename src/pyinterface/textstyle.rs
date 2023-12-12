@@ -1,7 +1,5 @@
-use crate::common::error::NelsieError;
-use crate::model::NodeContent::Text;
 use crate::model::{Color, PartialTextStyle, Resources};
-use crate::parsers::parse_color;
+
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
 use pyo3::{FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};

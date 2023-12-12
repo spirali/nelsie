@@ -1,10 +1,5 @@
-use crate::model::{Color, Step, StepValue, TextStyle};
+use crate::model::{Step, StepValue, TextStyle};
 use itertools::Itertools;
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::fmt::{Formatter, Pointer, Write};
-use std::sync::Arc;
-use usvg_tree::Text;
 
 #[derive(Debug)]
 #[cfg_attr(test, derive(PartialEq))]

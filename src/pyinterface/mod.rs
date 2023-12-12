@@ -7,9 +7,6 @@ mod path;
 mod resources;
 mod textstyle;
 
-use self::basictypes::PyStringOrFloat;
-use crate::pyinterface::insteps::ValueOrInSteps;
-use crate::pyinterface::path::PyPath;
 use crate::pyinterface::resources::Resources;
 use deck::Deck;
 use pyo3::exceptions::PyException;

@@ -1,5 +1,4 @@
 mod core;
-mod globals;
 mod image;
 mod layout;
 mod paths;
@@ -14,8 +13,6 @@ pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use pdf::PdfBuilder;
 use std::path::Path;
 use std::sync::Arc;
-pub(crate) use text::check_fonts;
-use usvg::fontdb;
 
 pub(crate) struct OutputConfig<'a> {
     pub output_pdf: Option<&'a Path>,
@@ -80,18 +77,12 @@ pub(crate) fn render_slide_deck(
         })?;
     }
 
-    // let mut font_db = fontdb::Database::new();
-    // font_db.load_system_fonts();
-
-    //let loaded_images = load_image_in_deck(&font_db, &mut slide_deck)?;
-    //check_fonts(&font_db, &slide_deck)?;
-
     let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));
 
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {
         for tree in render_slide(
-            &resources,
+            resources,
             output_cfg,
             slide_idx,
             slide,

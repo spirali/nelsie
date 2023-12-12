@@ -1,10 +1,8 @@
 use crate::common::error::NelsieError;
 use crate::model::{Color, StepValue};
-use pyo3::ffi::PyAsyncGen_Type;
-use std::cell::RefCell;
+
 use std::collections::HashMap;
 use std::sync::Arc;
-use usvg_tree::Text;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(crate) struct PartialTextStyle {
@@ -55,15 +53,6 @@ impl PartialTextStyle {
             color: other.color.as_ref().or(self.color.as_ref()).cloned(),
             size: other.size.or(self.size),
             line_spacing: other.line_spacing.or(self.line_spacing),
-        }
-    }
-
-    pub fn from_text_style(text_style: &TextStyle) -> Self {
-        Self {
-            font_family: Some(text_style.font_family.clone()),
-            color: Some(text_style.color.clone()),
-            size: Some(text_style.size),
-            line_spacing: Some(text_style.line_spacing),
         }
     }
 }

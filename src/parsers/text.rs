@@ -1,7 +1,5 @@
 use crate::common::error::NelsieError;
-use crate::model::{
-    PartialTextStyle, Span, StepValue, StyleMap, StyledLine, StyledText, TextStyle,
-};
+use crate::model::{Span, StyledLine};
 
 #[derive(Debug)]
 pub(crate) struct ParsedStyledText<'a> {

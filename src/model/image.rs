@@ -1,15 +1,13 @@
-use crate::model::{Node, NodeContent, SlideDeck, Step, StepValue};
+use crate::model::{Step, StepValue};
 use crate::parsers::step_parser::parse_steps_from_label;
 use imagesize::blob_size;
-use std::cmp::{max, min};
-use std::collections::{HashMap, HashSet};
+use std::cmp::max;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use usvg::TreeParsing;
-use usvg::{fontdb, NonZeroRect, TreeTextToPath};
-use usvg_tree::{ImageKind, ImageRendering, NodeExt, NodeKind, ViewBox, Visibility};
 
 use crate::NelsieError;
 
@@ -105,8 +103,8 @@ fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
 
 fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
     let str_data = std::str::from_utf8(&raw_data)
-        .map_err(|e| NelsieError::GenericError("Invalid utf-8 data".to_string()))?;
-    let xml_tree = roxmltree::Document::parse(&str_data)?;
+        .map_err(|_e| NelsieError::GenericError("Invalid utf-8 data".to_string()))?;
+    let xml_tree = roxmltree::Document::parse(str_data)?;
 
     // Parse label step definitions
     let mut n_steps = 1;
@@ -115,7 +113,7 @@ fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
         if let Some(label) =
             node.attribute(("http://www.inkscape.org/namespaces/inkscape", "label"))
         {
-            let (steps, n) = if let Some(v) = parse_steps_from_label(&label) {
+            let (steps, n) = if let Some(v) = parse_steps_from_label(label) {
                 v
             } else {
                 continue;
@@ -130,7 +128,7 @@ fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
         }
     }
     // TODO: We need to load tree only for width and hight, so we probably do not need to load whole tree
-    let mut tree = usvg::Tree::from_xmltree(&xml_tree, &usvg::Options::default())?;
+    let tree = usvg::Tree::from_xmltree(&xml_tree, &usvg::Options::default())?;
     //tree.convert_text(font_db);
     Ok(LoadedImage {
         width: tree.size.width(),
@@ -197,7 +195,7 @@ fn load_ora_stack<R: std::io::Seek + std::io::Read>(
 }
 
 fn load_ora_image(path: &Path) -> crate::Result<LoadedImage> {
-    let file = File::open(&path)?;
+    let file = File::open(path)?;
     let mut archive = zip::ZipArchive::new(file)?;
     if read_archive_file_as_string(&mut archive, "mimetype")? != "image/openraster" {
         return Err(NelsieError::GenericError("Not an ORA format".to_string()));

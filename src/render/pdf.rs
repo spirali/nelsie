@@ -8,22 +8,7 @@ pub(crate) struct PdfBuilder {
     page_idx: usize,
     alloc_ref: Ref,
     page_tree_id: Ref,
-    catalog_id: Ref,
 }
-//
-// #[derive(Default)]
-// struct RefAllocator(Ref);
-//
-// impl RefAllocator {
-//     pub fn new() -> Self {
-//         RefAllocator(Ref::new(1))
-//     }
-//
-//     pub fn next(&mut self) -> Ref {
-//         self.0 += 1;
-//         Ref::new(self.0)
-//     }
-// }
 
 impl PdfBuilder {
     pub fn new(n_pages: u32) -> Self {
@@ -47,7 +32,6 @@ impl PdfBuilder {
             page_idx: 0,
             alloc_ref,
             page_tree_id,
-            catalog_id,
         }
     }
 

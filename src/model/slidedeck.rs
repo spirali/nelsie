@@ -1,8 +1,7 @@
 use super::node::Node;
 use crate::common::error::NelsieError;
 use crate::model::{
-    Color, ImageManager, Length, LengthOrAuto, NodeId, PartialTextStyle, Resources, Step,
-    StepValue, StyleMap, TextStyle,
+    Color, Length, LengthOrAuto, NodeId, PartialTextStyle, Resources, Step, StepValue, StyleMap,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -13,7 +12,6 @@ pub(crate) struct Slide {
     pub(crate) height: f32,
     pub(crate) node: Node,
     pub(crate) n_steps: Step,
-    pub(crate) name: String,
     node_id_counter: NodeId,
 }
 
@@ -30,6 +28,7 @@ impl Slide {
             height,
             node: Node {
                 styles,
+                name,
                 node_id: NodeId::new(0),
                 children: vec![],
                 show: StepValue::new_const(true),
@@ -50,11 +49,9 @@ impl Slide {
                 m_right: StepValue::Const(LengthOrAuto::ZERO),
                 bg_color: StepValue::Const(Some(bg_color)),
                 content: StepValue::Const(None),
-                name: name.clone(),
                 debug_layout: None,
             },
             n_steps: 1,
-            name,
             node_id_counter: NodeId::new(0),
         }
     }
@@ -76,7 +73,7 @@ impl SlideDeck {
             if let Some(font) = default_font {
                 resources.check_font(font)?
             } else {
-                &["DejaVu Sans", "Arial"]
+                ["DejaVu Sans", "Arial"]
                     .iter()
                     .find_map(|n| resources.check_font(n).ok())
                     .ok_or_else(|| {

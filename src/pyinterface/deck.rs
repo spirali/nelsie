@@ -1,7 +1,5 @@
 use crate::common::Step;
-use crate::model::{
-    Drawing, Node, NodeChild, NodeId, PartialTextStyle, Path, Slide, SlideDeck, StepValue,
-};
+use crate::model::{Drawing, Node, NodeChild, Path, Slide, SlideDeck, StepValue};
 use crate::parsers::parse_color;
 use crate::pyinterface::insteps::ValueOrInSteps;
 use crate::pyinterface::path::PyPath;
@@ -10,10 +8,9 @@ use crate::pyinterface::resources::Resources;
 use crate::pyinterface::textstyle::PyTextStyle;
 use crate::render::{render_slide_deck, OutputConfig};
 use itertools::Itertools;
-use pyo3::exceptions::{PyException, PyValueError};
+use pyo3::exceptions::PyException;
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python, ToPyObject};
-use std::collections::HashMap;
-use std::ops::Deref;
+
 use std::sync::Arc;
 
 #[pyclass]
@@ -188,9 +185,9 @@ impl Deck {
             &self.deck,
             &resources.resources,
             &OutputConfig {
-                output_pdf: output_pdf.map(|p| std::path::Path::new(p)),
-                output_png: output_png.map(|p| std::path::Path::new(p)),
-                output_svg: output_svg.map(|p| std::path::Path::new(p)),
+                output_pdf: output_pdf.map(std::path::Path::new),
+                output_png: output_png.map(std::path::Path::new),
+                output_svg: output_svg.map(std::path::Path::new),
             },
         )?)
     }

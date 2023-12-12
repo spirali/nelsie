@@ -1,10 +1,4 @@
-use crate::common::fileutils::ensure_directory;
-use crate::model::{Slide, SlideDeck};
-use crate::render::{check_fonts, render_slide_step, PdfBuilder, RenderConfig};
-use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
 use thiserror::Error;
-use usvg::fontdb;
 
 #[derive(Debug, Error)]
 pub enum NelsieError {

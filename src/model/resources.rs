@@ -1,8 +1,8 @@
 use crate::common::error::NelsieError;
 use crate::model::ImageManager;
-use std::collections::HashSet;
+
 use usvg::fontdb;
-use usvg::fontdb::Family;
+
 use usvg::fontdb::Family::Name;
 
 pub(crate) struct Resources {

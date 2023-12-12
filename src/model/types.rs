@@ -1,6 +1,5 @@
 use crate::common::error::NelsieError;
-use crate::model::LayoutExpr::ConstValue;
-use std::fmt::Display;
+
 use std::str::FromStr;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]

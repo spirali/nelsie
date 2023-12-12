@@ -1,12 +1,11 @@
 use super::{Color, Length, NodeContentImage, StepValue, StyleMap};
 use crate::model::shapes::Drawing;
-use crate::model::text::{NodeContentText, StyledText};
+use crate::model::text::NodeContentText;
 use crate::model::types::LengthOrAuto;
-use crate::model::{LayoutExpr, NodeId, Step};
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use crate::model::{LayoutExpr, NodeId};
+use std::collections::BTreeSet;
+
 use std::sync::Arc;
-use usvg::fontdb;
 
 #[derive(Debug)]
 pub(crate) enum NodeContent {

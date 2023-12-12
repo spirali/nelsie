@@ -1,4 +1,4 @@
-use crate::model::{LayoutExpr, Length, LengthOrAuto, NodeId};
+use crate::model::{LayoutExpr, Length, LengthOrAuto};
 use crate::parsers::{StringOrFloat, StringOrFloatOrExpr};
 use std::str::FromStr;
 
@@ -10,7 +10,7 @@ fn parse<T: FromStr>(s: &str, value: &str) -> crate::Result<T> {
 pub(crate) fn parse_length(value: StringOrFloat) -> crate::Result<Length> {
     match value {
         StringOrFloat::Float(value) => Ok(Length::Points { value }),
-        StringOrFloat::String(str) => Ok(if let Some(s) = str.trim().strip_suffix("%") {
+        StringOrFloat::String(str) => Ok(if let Some(s) = str.trim().strip_suffix('%') {
             Length::Fraction {
                 value: parse::<f32>(s, &str)? / 100.0,
             }
@@ -26,7 +26,7 @@ pub(crate) fn parse_length_auto(value: StringOrFloat) -> crate::Result<LengthOrA
     match value {
         StringOrFloat::Float(value) => Ok(LengthOrAuto::Points { value }),
         StringOrFloat::String(str) if str.trim() == "auto" => Ok(LengthOrAuto::Auto),
-        StringOrFloat::String(str) => Ok(if let Some(s) = str.trim().strip_suffix("%") {
+        StringOrFloat::String(str) => Ok(if let Some(s) = str.trim().strip_suffix('%') {
             LengthOrAuto::Fraction {
                 value: parse::<f32>(s, &str)? / 100.0,
             }
@@ -47,7 +47,7 @@ pub(crate) fn parse_position(value: &StringOrFloatOrExpr, is_x: bool) -> crate::
                 LayoutExpr::ParentY { shift: *v }
             }
         }
-        StringOrFloatOrExpr::String(v) => todo!(),
+        StringOrFloatOrExpr::String(_v) => todo!(),
         //StringOrFloatOrExpr::Expr(expr) => expr,
     })
 }

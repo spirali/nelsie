@@ -1,22 +1,10 @@
-use crate::model::{
-    LoadedImageData, Node, NodeContent, NodeContentImage, OraImageData, SlideDeck, Step, StepValue,
-    SvgImageData,
-};
-use crate::parsers::step_parser::parse_steps_from_label;
-use crate::render::layout::Rectangle;
-use crate::render::Resources;
-use imagesize::blob_size;
-use std::cmp::{max, min};
-use std::collections::{HashMap, HashSet};
-use std::fs::File;
-use std::io::Read;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use usvg::TreeParsing;
-use usvg::{fontdb, NonZeroRect, TreeTextToPath};
-use usvg_tree::{ImageKind, ImageRendering, NodeExt, NodeKind, ViewBox, Visibility};
+use crate::model::{LoadedImageData, NodeContentImage, OraImageData, Step, SvgImageData};
 
-use crate::NelsieError;
+use crate::render::layout::Rectangle;
+
+use usvg::TreeParsing;
+use usvg::{fontdb, TreeTextToPath};
+use usvg_tree::{ImageKind, ImageRendering, NodeKind, ViewBox, Visibility};
 
 fn prepare_svg_tree_for_step(
     step: Step,
@@ -33,7 +21,7 @@ fn prepare_svg_tree_for_step(
     }
     for (id, visibility) in &svg_data.id_visibility {
         if !visibility.at_step(step - image.shift_steps) {
-            if let Some(node) = tree.node_by_id(&id) {
+            if let Some(node) = tree.node_by_id(id) {
                 node.detach();
             }
         }

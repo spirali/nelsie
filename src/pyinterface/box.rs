@@ -1,49 +1,44 @@
+use crate::model::{merge_stepped_styles, NodeContentText, StyleMap};
 use crate::model::{
-    merge_stepped_styles, ImageManager, NodeContentText, PartialTextStyle, StyleMap, TextStyle,
+    Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, Step, StepValue,
 };
-use crate::model::{
-    Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Path, Resources, Step,
-    StepValue,
-};
-use crate::parsers::step_parser::{parse_steps, parse_steps_from_label};
+use crate::parsers::step_parser::parse_steps;
 use crate::parsers::{
-    parse_color, parse_length, parse_length_auto, parse_position, parse_styled_text, StringOrFloat,
+    parse_color, parse_length, parse_length_auto, parse_position, parse_styled_text,
 };
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
-use clap::builder::styling::Style;
-use itertools::Itertools;
-use log::__private_api::enabled;
+
 use pyo3::exceptions::PyValueError;
 use pyo3::{FromPyObject, PyResult};
-use std::collections::HashMap;
+
 use std::path::PathBuf;
 use std::sync::Arc;
 
 #[derive(Debug, FromPyObject)]
-enum Show {
+pub(crate) enum Show {
     Bool(bool),
     StringDef(String),
     InSteps(InSteps<bool>),
 }
 
 #[derive(Debug, FromPyObject)]
-struct ImageContent {
+pub(crate) struct ImageContent {
     path: PathBuf,
     enable_steps: bool,
     shift_steps: Step,
 }
 
 #[derive(Debug, FromPyObject)]
-struct TextContent {
+pub(crate) struct TextContent {
     text: String,
     style: PyTextStyleOrName,
     formatting_delimiters: String,
 }
 
 #[derive(Debug, FromPyObject)]
-enum Content {
+pub(crate) enum Content {
     Text(TextContent),
     Image(ImageContent),
 }
@@ -118,7 +113,7 @@ fn process_content(
                 }
                 PyTextStyleOrName::Style(style) => merge_stepped_styles(
                     default,
-                    &style.parse(n_steps, |s| s.to_partial_style(&nc_env.resources))?,
+                    &style.parse(n_steps, |s| s.to_partial_style(nc_env.resources))?,
                 ),
             };
             let styles = parsed
