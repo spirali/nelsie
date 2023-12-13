@@ -1,10 +1,11 @@
 use crate::model::{Span, StyledLine, StyledText, TextStyle};
 
-use usvg::{fontdb, NonZeroPositiveF32, TreeTextToPath};
+use usvg::AId::Opacity;
+use usvg::{fontdb, NonZeroPositiveF32, NormalizedF32, TreeTextToPath};
 use usvg_tree::{
     AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStretch, FontStyle,
-    LengthAdjust, NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow,
-    TextRendering, TextSpan, Visibility, WritingMode,
+    LengthAdjust, NodeKind, NonZeroF32, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration,
+    TextFlow, TextRendering, TextSpan, Visibility, WritingMode,
 };
 
 pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f32, f32) {
@@ -49,7 +50,8 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (Te
     let text_style = &text_styles[chunk.style_idx as usize];
     let fill = Fill {
         paint: usvg::Paint::Color((&text_style.color).into()),
-        ..Default::default()
+        opacity: text_style.color.opacity(),
+        rule: Default::default(),
     };
     let font = Font {
         families: vec![text_style.font_family.as_ref().clone()],

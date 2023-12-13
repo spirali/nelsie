@@ -1,6 +1,7 @@
 use crate::common::error::NelsieError;
 
 use std::str::FromStr;
+use usvg::NormalizedF32;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub(crate) struct NodeId(u32);
@@ -75,6 +76,10 @@ impl Color {
     pub fn new(color: svgtypes::Color) -> Self {
         Color(color)
     }
+
+    pub fn opacity(&self) -> NormalizedF32 {
+        NormalizedF32::new_u8(self.0.alpha)
+    }
 }
 
 impl From<&Color> for svgtypes::Color {
@@ -95,7 +100,14 @@ impl FromStr for Color {
 
 impl ToString for Color {
     fn to_string(&self) -> String {
-        format!("#{:02x}{:02x}{:02x}", self.0.red, self.0.green, self.0.blue)
+        if self.0.alpha == 255 {
+            format!("#{:02x}{:02x}{:02x}", self.0.red, self.0.green, self.0.blue)
+        } else {
+            format!(
+                "#{:02x}{:02x}{:02x}{:02x}",
+                self.0.red, self.0.green, self.0.blue, self.0.alpha
+            )
+        }
     }
 }
 

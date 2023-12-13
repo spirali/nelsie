@@ -118,3 +118,12 @@ def test_set_get_styles_box(deck):
     s = b3.get_style("default")
     assert s.line_spacing == 1.0
     assert s.color == "#000000"
+
+@check()
+def test_text_color_opacity(deck):
+    slide = deck.new_slide(width=220, height=50)
+    slide.set_style("one", TextStyle(color="#ff00ff50"))
+    slide.box(x=0, y=0, width=60, height="100%", bg_color="green")
+    slide.box(x=60, y=0, width="30%", height="100%", bg_color="blue")
+    slide.text("Opacity test", style="one")
+    assert slide.get_style("one").color == "#ff00ff50"
