@@ -60,3 +60,10 @@ def test_render_path_dash(deck):
         .line_to(75, 150)
     )
     slide.box(width="90%", height="90%").draw([path1, path2])
+
+
+@check()
+def test_bg_color_opacity(deck):
+    slide = deck.new_slide(width=100, height=100)
+    slide.box(x=0, y=0, width=75, height=75, z_level=1, bg_color="#ff000060")
+    slide.box(x=25, y=25, width=75, height=75, bg_color="#00ff0060")

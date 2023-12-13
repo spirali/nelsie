@@ -107,7 +107,8 @@ impl<'a> RenderContext<'a> {
                 )));
                 path.fill = Some(Fill {
                     paint: usvg::Paint::Color(color.into()),
-                    ..Default::default()
+                    opacity: color.opacity(),
+                    rule: Default::default(),
                 });
                 self.svg_node
                     .append(usvg::Node::new(usvg::NodeKind::Path(path)));
