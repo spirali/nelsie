@@ -49,7 +49,7 @@ pub(crate) fn create_path(
                 dasharray: stroke.dash_array.clone(),
                 dashoffset: stroke.dash_offset,
                 miterlimit: Default::default(),
-                opacity: NormalizedF32::ONE,
+                opacity: stroke.color.opacity(),
                 width: NonZeroPositiveF32::new(stroke.width).unwrap(),
                 linecap: Default::default(),
                 linejoin: Default::default(),

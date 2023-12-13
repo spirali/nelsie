@@ -46,6 +46,7 @@
     * ~~Paths~~
     * Arrows
     * Rounded box corners
+    * ~~Opacity~~
 * Text
     * ~~Style parsing & text rendering~~
     * ~~Steps in styles~~
@@ -58,6 +59,7 @@
     * Syntax highlight
     * Merging own styles & syntax highlight
     * Fit-in-box rendering
+    * ~~Opacity~~
 * Images
     * ~~loading SVG image + fragments~~
     * ~~loading raster images~~

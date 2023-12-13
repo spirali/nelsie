@@ -119,6 +119,7 @@ def test_set_get_styles_box(deck):
     assert s.line_spacing == 1.0
     assert s.color == "#000000"
 
+
 @check()
 def test_text_color_opacity(deck):
     slide = deck.new_slide(width=220, height=50)

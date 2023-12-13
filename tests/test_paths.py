@@ -67,3 +67,18 @@ def test_bg_color_opacity(deck):
     slide = deck.new_slide(width=100, height=100)
     slide.box(x=0, y=0, width=75, height=75, z_level=1, bg_color="#ff000060")
     slide.box(x=25, y=25, width=75, height=75, bg_color="#00ff0060")
+
+
+@check()
+def test_path_opacity(deck):
+    slide = deck.new_slide(width=100, height=100)
+    slide.draw(
+        [
+            Path(stroke=Stroke(color="#ff000060", width=30))
+            .move_to(50, 0)
+            .line_to(50, 100),
+            Path(stroke=Stroke(color="#0000ff60", width=20))
+            .move_to(0, 50)
+            .line_to(100, 50),
+        ]
+    )

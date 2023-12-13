@@ -4,6 +4,7 @@ from nelsie import SlideDeck
 from conftest import ROOT_DIR
 from testutils import check
 
+
 def test_render_outputs(tmp_path, deck):
     out_svg = tmp_path / "svgs"
     out_png = tmp_path / "pngs"
