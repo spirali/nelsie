@@ -1,16 +1,15 @@
 use crate::model::{Span, StyledLine, StyledText, TextStyle};
 
-use usvg::AId::Opacity;
-use usvg::{fontdb, NonZeroPositiveF32, NormalizedF32, TreeTextToPath};
+use usvg::{fontdb, NonZeroPositiveF32, TreeTextToPath};
 use usvg_tree::{
     AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStretch, FontStyle,
-    LengthAdjust, NodeKind, NonZeroF32, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration,
-    TextFlow, TextRendering, TextSpan, Visibility, WritingMode,
+    LengthAdjust, NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow,
+    TextRendering, TextSpan, Visibility, WritingMode,
 };
 
 pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f32, f32) {
     let text_node = render_text(text, 0.0, 0.0);
-    let root_node = usvg::Node::new(usvg::NodeKind::Group(usvg::Group::default()));
+    let root_node = usvg::Node::new(NodeKind::Group(usvg::Group::default()));
     root_node.append(text_node);
     let size = usvg::Size::from_wh(800.0, 600.0).unwrap();
     let mut tree = usvg_tree::Tree {
@@ -55,9 +54,13 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (Te
     };
     let font = Font {
         families: vec![text_style.font_family.as_ref().clone()],
-        style: FontStyle::Normal,
-        stretch: FontStretch::Normal,
-        weight: 400,
+        style: if text_style.italic {
+            FontStyle::Italic
+        } else {
+            FontStyle::Normal
+        },
+        stretch: text_style.stretch,
+        weight: text_style.weight,
     };
     let decoration = TextDecoration {
         underline: None,

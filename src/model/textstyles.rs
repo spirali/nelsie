@@ -3,6 +3,7 @@ use crate::model::{Color, StepValue};
 
 use std::collections::HashMap;
 use std::sync::Arc;
+use usvg_tree::FontStretch;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(crate) struct PartialTextStyle {
@@ -10,6 +11,9 @@ pub(crate) struct PartialTextStyle {
     pub color: Option<Color>,
     pub size: Option<f32>,
     pub line_spacing: Option<f32>,
+    pub italic: Option<bool>,
+    pub stretch: Option<FontStretch>,
+    pub weight: Option<u16>,
 }
 
 impl PartialTextStyle {
@@ -19,6 +23,9 @@ impl PartialTextStyle {
             color: self.color?,
             size: self.size?,
             line_spacing: self.line_spacing?,
+            italic: self.italic?,
+            stretch: self.stretch?,
+            weight: self.weight?,
         })
     }
 
@@ -28,6 +35,9 @@ impl PartialTextStyle {
             color,
             size,
             line_spacing,
+            italic,
+            stretch,
+            weight,
         } = other;
         if font_family.is_some() {
             self.font_family = font_family.clone();
@@ -41,6 +51,15 @@ impl PartialTextStyle {
         if line_spacing.is_some() {
             self.line_spacing = *line_spacing;
         }
+        if italic.is_some() {
+            self.italic = *italic;
+        }
+        if stretch.is_some() {
+            self.stretch = *stretch;
+        }
+        if weight.is_some() {
+            self.weight = *weight;
+        }
     }
 
     pub fn merge(&self, other: &PartialTextStyle) -> PartialTextStyle {
@@ -53,6 +72,9 @@ impl PartialTextStyle {
             color: other.color.as_ref().or(self.color.as_ref()).cloned(),
             size: other.size.or(self.size),
             line_spacing: other.line_spacing.or(self.line_spacing),
+            italic: other.italic.or(self.italic),
+            stretch: other.stretch.or(self.stretch),
+            weight: other.weight.or(self.weight),
         }
     }
 }
@@ -63,31 +85,9 @@ pub(crate) struct TextStyle {
     pub color: Color,
     pub size: f32,
     pub line_spacing: f32,
-}
-
-impl TextStyle {
-    /*
-    pub fn update(&mut self, other: &PartialTextStyle) {
-        let PartialTextStyle {
-            font_family,
-            color,
-            size,
-            line_spacing,
-        } = other;
-        if let Some(value) = font_family {
-            self.font_family = value.clone();
-        }
-        TextStyle {
-            font_family: partial_style
-                .font_family
-                .as_ref()
-                .unwrap_or(&self.font_family)
-                .clone(),
-            color: partial_style.color.as_ref().unwrap_or(&self.color).clone(),
-            size: partial_style.size.unwrap_or(self.size),
-            line_spacing: partial_style.line_spacing.unwrap_or(self.line_spacing),
-        }
-    }*/
+    pub italic: bool,
+    pub stretch: FontStretch,
+    pub weight: u16,
 }
 
 pub(crate) fn merge_stepped_styles(

@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass
 
 from .shapes import Path
-from .textstyle import TextStyle
+from .textstyle import TextStyle, _data_to_text_style
 from .basictypes import Position, Size, Length, LengthAuto, parse_debug_layout
 from .insteps import InSteps
 
@@ -72,9 +72,7 @@ class BoxBuilder:
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
         box = self.get_box()
-        return TextStyle(
-            **box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id)
-        )
+        return _data_to_text_style(box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id))
 
     def image(self, path: str, enable_steps=True, shift_steps=0, **box_args):
         """
@@ -94,8 +92,8 @@ class BoxBuilder:
     def text(
         self,
         text: str,
-        *,
         style: str | TextStyle | InSteps[TextStyle] = "default",
+        *,
         delimiters: str | None = "~{}",
         tab_width: int = 4,
         **box_args,

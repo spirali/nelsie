@@ -5,6 +5,7 @@ use crate::model::{
 };
 use std::collections::HashMap;
 use std::sync::Arc;
+use usvg_tree::FontStretch;
 
 #[derive(Debug)]
 pub(crate) struct Slide {
@@ -90,6 +91,9 @@ impl SlideDeck {
             color: Some(Color::new(svgtypes::Color::black())),
             size: Some(32.0),
             line_spacing: Some(1.2),
+            italic: Some(false),
+            stretch: Some(FontStretch::Normal),
+            weight: Some(400),
         };
         let mut styles = HashMap::new();
         styles.insert("default".to_string(), StepValue::new_const(default_style));

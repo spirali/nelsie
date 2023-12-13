@@ -2,7 +2,7 @@ import typing
 import pathlib
 from typing import Optional
 from . import nelsie as nelsie_rs
-from .textstyle import TextStyle
+from .textstyle import TextStyle, _data_to_text_style
 from .basictypes import parse_debug_layout
 from .box import Box, BoxBuilder
 from .insteps import InSteps
@@ -54,7 +54,7 @@ class SlideDeck:
         self._deck.set_style(self.resources, name, style, None, None)
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
-        return TextStyle(**self._deck.get_style(name, step, None, None))
+        return _data_to_text_style(self._deck.get_style(name, step, None, None))
 
     def new_slide(
         self,

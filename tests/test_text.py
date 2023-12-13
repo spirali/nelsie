@@ -1,7 +1,8 @@
+import nelsie
 from testutils import check
 from dataclasses import asdict
 
-from nelsie import InSteps, TextStyle
+from nelsie import InSteps, TextStyle, FontStretch
 
 import pytest
 
@@ -128,3 +129,20 @@ def test_text_color_opacity(deck):
     slide.box(x=60, y=0, width="30%", height="100%", bg_color="blue")
     slide.text("Opacity test", style="one")
     assert slide.get_style("one").color == "#ff00ff50"
+
+
+@check()
+def test_text_styling(deck):
+    slide = deck.new_slide(width=220, height=150)
+    slide.text("Italic", style=TextStyle(italic=True))
+    slide.text("Bold", TextStyle(weight=700))
+    slide.text("Hi are you?", TextStyle(stretch=FontStretch.UltraCondensed, size=10))
+    slide.text("Hi are you?", TextStyle(stretch=FontStretch.UltraExpanded, size=10))
+
+
+def test_text_style_get_stretch(deck):
+    slide = deck.new_slide(width=220, height=150)
+    slide.set_style("test", TextStyle(stretch=FontStretch.Expanded))
+    assert isinstance(slide.get_style("test").stretch, nelsie.FontStretch)
+    assert slide.get_style("default").stretch == FontStretch.Normal
+    assert slide.get_style("test").stretch == FontStretch.Expanded

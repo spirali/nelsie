@@ -2,7 +2,7 @@ use crate::model::{NodeId, Path, PathPart};
 use crate::render::layout::ComputedLayout;
 use resvg::tiny_skia::PathBuilder;
 use std::rc::Rc;
-use usvg::{NonZeroPositiveF32, NormalizedF32};
+use usvg::NonZeroPositiveF32;
 
 pub(crate) fn create_path(
     layout: &ComputedLayout,
