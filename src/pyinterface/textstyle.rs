@@ -2,7 +2,7 @@ use crate::model::{Color, PartialTextStyle, Resources, Stroke};
 
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
-use pyo3::{FromPyObject, PyAny, PyErr, PyObject, PyResult, Python, ToPyObject};
+use pyo3::{FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;

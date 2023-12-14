@@ -12,10 +12,10 @@ class FontStretch(IntEnum):
     Condensed = 3
     SemiCondensed = 4
     Normal = 5
-    SemiExpanded = 6,
-    Expanded = 7,
-    ExtraExpanded = 8,
-    UltraExpanded = 9,
+    SemiExpanded = 6
+    Expanded = 7
+    ExtraExpanded = 8
+    UltraExpanded = 9
 
 
 @dataclass(frozen=True)
@@ -56,6 +56,4 @@ def _data_to_text_style(data):
     stroke = data.get("stroke")
     if isinstance(stroke, dict):
         data["stroke"] = Stroke(**stroke)
-    return TextStyle(
-        **data
-    )
+    return TextStyle(**data)

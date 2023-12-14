@@ -72,7 +72,9 @@ class BoxBuilder:
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
         box = self.get_box()
-        return _data_to_text_style(box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id))
+        return _data_to_text_style(
+            box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id)
+        )
 
     def image(self, path: str, enable_steps=True, shift_steps=0, **box_args):
         """
