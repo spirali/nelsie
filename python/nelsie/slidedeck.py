@@ -50,7 +50,10 @@ class SlideDeck:
         self._deck = nelsie_rs.Deck(resources, default_font)
 
     def set_style(self, name: str, style: TextStyle):
-        self._deck.set_style(self.resources, name, style, None, None)
+        self._deck.set_style(self.resources, name, style, False, None, None)
+
+    def update_style(self, name: str, style: TextStyle):
+        self._deck.set_style(self.resources, name, style, True, None, None)
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
         return _data_to_text_style(self._deck.get_style(name, step, None, None))

@@ -76,10 +76,21 @@ impl StyleMap {
         StyleMap(map)
     }
 
-    pub fn set_style(&mut self, name: String, mut style: StepValue<PartialTextStyle>) {
+    pub fn set_style(&mut self, name: String, style: StepValue<PartialTextStyle>) {
         if name == "default" {
-            style = self.0.get(&name).unwrap().merge(&style, |s, t| s.merge(t))
+            // This prevents to get empty "holes" into default style
+            self.update_style(name, style)
+        } else {
+            self.0.insert(name, style);
         }
+    }
+
+    pub fn update_style(&mut self, name: String, mut style: StepValue<PartialTextStyle>) {
+        style = self
+            .0
+            .get(&name)
+            .map(|s| s.merge(&style, |s, t| s.merge(t)))
+            .unwrap_or(style);
         self.0.insert(name, style);
     }
 

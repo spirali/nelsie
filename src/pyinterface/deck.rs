@@ -127,23 +127,33 @@ impl Deck {
         resources: &Resources,
         name: &str,
         text_style: ValueOrInSteps<PyTextStyle>,
+        update: bool,
         slide_id: Option<SlideId>,
         box_id: Option<BoxId>,
     ) -> PyResult<()> {
-        if let Some(slide_id) = slide_id {
+        let (styles, text_style) = if let Some(slide_id) = slide_id {
             let slide = resolve_slide_id(&mut self.deck, slide_id)?;
             if let Some(box_id) = box_id {
                 let node = resolve_box_id(&mut slide.node, &box_id)?;
                 let text_style = text_style.parse(&mut slide.n_steps, |s| {
                     s.into_partial_style(&resources.resources)
                 })?;
-                Arc::make_mut(&mut node.styles).set_style(name.to_string(), text_style);
+                (&mut node.styles, text_style)
+            } else {
+                return Ok(());
             }
         } else {
             let text_style =
                 text_style.parse_ignore_n_steps(|s| s.into_partial_style(&resources.resources))?;
-            Arc::make_mut(&mut self.deck.global_styles).set_style(name.to_string(), text_style);
+            (&mut self.deck.global_styles, text_style)
+        };
+        let styles = Arc::make_mut(styles);
+        if update {
+            styles.update_style(name.to_string(), text_style);
+        } else {
+            styles.set_style(name.to_string(), text_style);
         }
+
         Ok(())
     }
 

@@ -66,7 +66,14 @@ class BoxBuilder:
         box = self.get_box()
         deck = box.deck
         deck._deck.set_style(
-            deck.resources, name, style, box.slide._slide_id, box._box_id
+            deck.resources, name, style, False, box.slide._slide_id, box._box_id
+        )
+
+    def update_style(self, name: str, style: TextStyle):
+        box = self.get_box()
+        deck = box.deck
+        deck._deck.set_style(
+            deck.resources, name, style, True, box.slide._slide_id, box._box_id
         )
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
