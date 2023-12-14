@@ -10,7 +10,7 @@ from nelsie import FontStretch, InSteps, Stroke, TextStyle
 def test_text_update():
     s1 = TextStyle(color="green", size=123)
     s2 = TextStyle(size=321, line_spacing=1.5)
-    s3 = s1.update(s2)
+    s3 = s1.merge(s2)
     assert s3.color == "green"
     assert s3.size == 321
     assert s3.line_spacing == 1.5
@@ -170,3 +170,10 @@ def test_text_style_get_stroke(deck):
     assert slide.get_style("test").stroke == Stroke(
         "#008000", dash_array=[5, 2], width=10, dash_offset=2
     )
+
+
+@check()
+def test_text_monospace(deck):
+    slide = deck.new_slide(width=150, height=100)
+    slide.text("Text W1", "monospace")
+    deck.render(output_pdf="/tmp/out.pdf")

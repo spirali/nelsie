@@ -39,7 +39,7 @@ class TextStyle:
         if self.weight is not None:
             assert 1 <= self.weight <= 1000
 
-    def update(self, other: "TextStyle") -> "TextStyle":
+    def merge(self, other: "TextStyle") -> "TextStyle":
         assert isinstance(other, TextStyle)
         return TextStyle(
             *[

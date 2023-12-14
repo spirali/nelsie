@@ -57,9 +57,13 @@ fn resolve_slide_id(deck: &mut SlideDeck, slide_id: SlideId) -> PyResult<&mut Sl
 #[pymethods]
 impl Deck {
     #[new]
-    fn new(resources: &Resources, default_font: Option<&str>) -> PyResult<Self> {
+    fn new(
+        resources: &Resources,
+        default_font: Option<&str>,
+        default_monospace_font: Option<&str>,
+    ) -> PyResult<Self> {
         Ok(Deck {
-            deck: SlideDeck::new(&resources.resources, default_font)?,
+            deck: SlideDeck::new(&resources.resources, default_font, default_monospace_font)?,
         })
     }
 

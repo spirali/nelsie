@@ -68,24 +68,43 @@ pub(crate) struct SlideDeck {
     pub(crate) default_font_family: Arc<String>,
 }
 
+fn detect_font(
+    resources: &Resources,
+    forced_name: Option<&str>,
+    options: &[&'static str],
+    err: &str,
+) -> crate::Result<String> {
+    Ok(if let Some(font) = forced_name {
+        resources.check_font(font)?
+    } else {
+        options
+            .iter()
+            .find_map(|n| resources.check_font(n).ok())
+            .ok_or_else(|| NelsieError::generic_err(err))?
+    }
+    .to_string())
+}
+
 impl SlideDeck {
-    pub fn new(resources: &Resources, default_font: Option<&str>) -> crate::Result<Self> {
-        let default_font_family = Arc::new(
-            if let Some(font) = default_font {
-                resources.check_font(font)?
-            } else {
-                ["DejaVu Sans", "Arial"]
-                    .iter()
-                    .find_map(|n| resources.check_font(n).ok())
-                    .ok_or_else(|| {
-                        NelsieError::Generic(
-                        "No default font detected. Specify parameter 'default_font' in SlideDeck"
-                            .to_string(),
-                    )
-                    })?
-            }
-            .to_string(),
-        );
+    pub fn new(
+        resources: &Resources,
+        default_font: Option<&str>,
+        default_monospace_font: Option<&str>,
+    ) -> crate::Result<Self> {
+        let default_font_family = Arc::new(detect_font(
+            resources,
+            default_font,
+            &["DejaVu Sans", "Arial"],
+            "No default font detected. Specify parameter 'default_font' in SlideDeck",
+        )?);
+        let default_monospace_font_family =
+            Arc::new(detect_font(
+                resources,
+                default_monospace_font,
+                &["DejaVu Sans Mono", "Courier New", "Courier"],
+                "No default monospace font detected. Specify parameter 'default_monospace_font' in SlideDeck",
+            )?);
+
         let default_style = PartialTextStyle {
             font_family: Some(default_font_family.clone()),
             stroke: Some(None),
@@ -96,8 +115,16 @@ impl SlideDeck {
             stretch: Some(FontStretch::Normal),
             weight: Some(400),
         };
+        let monospace_style = PartialTextStyle {
+            font_family: Some(default_monospace_font_family),
+            ..Default::default()
+        };
         let mut styles = HashMap::new();
         styles.insert("default".to_string(), StepValue::new_const(default_style));
+        styles.insert(
+            "monospace".to_string(),
+            StepValue::new_const(monospace_style),
+        );
         Ok(Self {
             slides: Vec::new(),
             global_styles: Arc::new(StyleMap::new(styles)),
