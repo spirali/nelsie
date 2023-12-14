@@ -88,7 +88,8 @@ impl SlideDeck {
         );
         let default_style = PartialTextStyle {
             font_family: Some(default_font_family.clone()),
-            color: Some(Color::new(svgtypes::Color::black())),
+            stroke: Some(None),
+            color: Some(Some(Color::new(svgtypes::Color::black()))),
             size: Some(32.0),
             line_spacing: Some(1.2),
             italic: Some(false),

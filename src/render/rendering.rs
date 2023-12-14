@@ -66,7 +66,8 @@ fn draw_debug_frame(
         }],
         styles: vec![TextStyle {
             font_family: font_name.clone(),
-            color: color.clone(),
+            stroke: None,
+            color: Some(color.clone()),
             size: 8.0,
             line_spacing: 0.0,
             italic: false,

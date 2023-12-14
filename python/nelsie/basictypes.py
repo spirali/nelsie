@@ -1,5 +1,5 @@
 import typing
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 from .layoutexpr import LayoutExpr

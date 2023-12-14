@@ -1,5 +1,5 @@
 use crate::common::error::NelsieError;
-use crate::model::{Color, StepValue};
+use crate::model::{Color, StepValue, Stroke};
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -8,7 +8,8 @@ use usvg_tree::FontStretch;
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(crate) struct PartialTextStyle {
     pub font_family: Option<Arc<String>>,
-    pub color: Option<Color>,
+    pub stroke: Option<Option<Arc<Stroke>>>,
+    pub color: Option<Option<Color>>,
     pub size: Option<f32>,
     pub line_spacing: Option<f32>,
     pub italic: Option<bool>,
@@ -20,6 +21,7 @@ impl PartialTextStyle {
     pub fn into_text_style(self) -> Option<TextStyle> {
         Some(TextStyle {
             font_family: self.font_family?,
+            stroke: self.stroke?,
             color: self.color?,
             size: self.size?,
             line_spacing: self.line_spacing?,
@@ -29,39 +31,6 @@ impl PartialTextStyle {
         })
     }
 
-    pub fn update(&mut self, other: &PartialTextStyle) {
-        let PartialTextStyle {
-            font_family,
-            color,
-            size,
-            line_spacing,
-            italic,
-            stretch,
-            weight,
-        } = other;
-        if font_family.is_some() {
-            self.font_family = font_family.clone();
-        }
-        if color.is_some() {
-            self.color = color.clone();
-        }
-        if size.is_some() {
-            self.size = *size;
-        }
-        if line_spacing.is_some() {
-            self.line_spacing = *line_spacing;
-        }
-        if italic.is_some() {
-            self.italic = *italic;
-        }
-        if stretch.is_some() {
-            self.stretch = *stretch;
-        }
-        if weight.is_some() {
-            self.weight = *weight;
-        }
-    }
-
     pub fn merge(&self, other: &PartialTextStyle) -> PartialTextStyle {
         PartialTextStyle {
             font_family: other
@@ -69,6 +38,7 @@ impl PartialTextStyle {
                 .as_ref()
                 .or(self.font_family.as_ref())
                 .cloned(),
+            stroke: other.stroke.as_ref().or(self.stroke.as_ref()).cloned(),
             color: other.color.as_ref().or(self.color.as_ref()).cloned(),
             size: other.size.or(self.size),
             line_spacing: other.line_spacing.or(self.line_spacing),
@@ -82,7 +52,8 @@ impl PartialTextStyle {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct TextStyle {
     pub font_family: Arc<String>,
-    pub color: Color,
+    pub stroke: Option<Arc<Stroke>>,
+    pub color: Option<Color>,
     pub size: f32,
     pub line_spacing: f32,
     pub italic: bool,
@@ -107,11 +78,7 @@ impl StyleMap {
 
     pub fn set_style(&mut self, name: String, mut style: StepValue<PartialTextStyle>) {
         if name == "default" {
-            style = self.0.get(&name).unwrap().merge(&style, |s, t| {
-                let mut s = s.clone();
-                s.update(t);
-                s
-            })
+            style = self.0.get(&name).unwrap().merge(&style, |s, t| s.merge(t))
         }
         self.0.insert(name, style);
     }

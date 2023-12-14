@@ -2,7 +2,7 @@ import nelsie
 from testutils import check
 from dataclasses import asdict
 
-from nelsie import InSteps, TextStyle, FontStretch
+from nelsie import InSteps, TextStyle, FontStretch, Stroke
 
 import pytest
 
@@ -146,3 +146,17 @@ def test_text_style_get_stretch(deck):
     assert isinstance(slide.get_style("test").stretch, nelsie.FontStretch)
     assert slide.get_style("default").stretch == FontStretch.Normal
     assert slide.get_style("test").stretch == FontStretch.Expanded
+
+
+@check()
+def test_text_stroke(deck):
+    slide = deck.new_slide(width=150, height=100, bg_color="orange")
+    slide.text("Text 1", style=TextStyle(stroke=Stroke("green"), color="#909090"))
+    slide.text("Text 2", style=TextStyle(stroke=Stroke("blue", dash_array=[5, 2], width=0.2), color="empty"))
+
+
+def test_text_style_get_stroke(deck):
+    slide = deck.new_slide(width=220, height=150)
+    slide.set_style("test", TextStyle(stroke=Stroke("green", dash_array=[5, 2], width=10, dash_offset=2)))
+    assert slide.get_style("default").stroke == "empty"
+    assert slide.get_style("test").stroke == Stroke("#008000", dash_array=[5, 2], width=10, dash_offset=2)

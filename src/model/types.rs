@@ -2,6 +2,7 @@ use crate::common::error::NelsieError;
 
 use std::str::FromStr;
 use usvg::NormalizedF32;
+use usvg_tree::Fill;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub(crate) struct NodeId(u32);
@@ -111,7 +112,7 @@ impl ToString for Color {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct Stroke {
     pub color: Color,
     pub width: f32,

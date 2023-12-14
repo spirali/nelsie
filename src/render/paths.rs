@@ -1,8 +1,21 @@
-use crate::model::{NodeId, Path, PathPart};
+use crate::model::{NodeId, Path, PathPart, Stroke};
 use crate::render::layout::ComputedLayout;
 use resvg::tiny_skia::PathBuilder;
 use std::rc::Rc;
 use usvg::NonZeroPositiveF32;
+
+pub(crate) fn stroke_to_usvg_stroke(stroke: &Stroke) -> usvg::Stroke {
+    usvg::Stroke {
+        paint: usvg::Paint::Color((&stroke.color).into()),
+        dasharray: stroke.dash_array.clone(),
+        dashoffset: stroke.dash_offset,
+        miterlimit: Default::default(),
+        opacity: stroke.color.opacity(),
+        width: NonZeroPositiveF32::new(stroke.width).unwrap(),
+        linecap: Default::default(),
+        linejoin: Default::default(),
+    }
+}
 
 pub(crate) fn create_path(
     layout: &ComputedLayout,
@@ -44,16 +57,7 @@ pub(crate) fn create_path(
     builder.finish().map(|p| {
         let mut svg_path = usvg::Path::new(Rc::new(p));
         if let Some(stroke) = &path.stroke {
-            svg_path.stroke = Some(usvg::Stroke {
-                paint: usvg::Paint::Color((&stroke.color).into()),
-                dasharray: stroke.dash_array.clone(),
-                dashoffset: stroke.dash_offset,
-                miterlimit: Default::default(),
-                opacity: stroke.color.opacity(),
-                width: NonZeroPositiveF32::new(stroke.width).unwrap(),
-                linecap: Default::default(),
-                linejoin: Default::default(),
-            });
+            svg_path.stroke = Some(stroke_to_usvg_stroke(stroke));
         }
         svg_path
     })

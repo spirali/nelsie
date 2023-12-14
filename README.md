@@ -50,7 +50,7 @@
 * Text
     * ~~Style parsing & text rendering~~
     * ~~Steps in styles~~
-    * All basic TextStyle properties
+    * ~~All basic TextStyle properties~~
     * TextStyle priorities
     * Text align: left, right, center
     * ~~Detecting invalid fonts~~
