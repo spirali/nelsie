@@ -113,7 +113,7 @@ fn process_content(
                 }
                 PyTextStyleOrName::Style(style) => merge_stepped_styles(
                     default,
-                    &style.parse(n_steps, |s| s.to_partial_style(nc_env.resources))?,
+                    &style.parse(n_steps, |s| s.into_partial_style(nc_env.resources))?,
                 ),
             };
             let styles = parsed
@@ -183,7 +183,7 @@ impl BoxConfig {
                 n_steps = n_steps.max(n);
                 steps
             }
-            Show::InSteps(in_steps) => in_steps.to_step_value(&mut n_steps),
+            Show::InSteps(in_steps) => in_steps.into_step_value(&mut n_steps),
         };
         let width = self.width.parse(&mut n_steps, pyparse_opt_length)?;
         let height = self.height.parse(&mut n_steps, pyparse_opt_length)?;
@@ -191,13 +191,13 @@ impl BoxConfig {
             node_id: new_node_id,
             name: self.name,
             show,
-            z_level: self.z_level.to_step_value(&mut n_steps),
+            z_level: self.z_level.into_step_value(&mut n_steps),
             x,
             y,
             width,
             height,
-            row: self.row.to_step_value(&mut n_steps),
-            reverse: self.reverse.to_step_value(&mut n_steps),
+            row: self.row.into_step_value(&mut n_steps),
+            reverse: self.reverse.into_step_value(&mut n_steps),
             p_top: self.p_top.parse(&mut n_steps, parse_len)?,
             p_bottom: self.p_bottom.parse(&mut n_steps, parse_len)?,
             p_left: self.p_left.parse(&mut n_steps, parse_len)?,

@@ -3,9 +3,9 @@ use crate::model::{Span, StyledLine, StyledText, TextStyle};
 use crate::render::paths::stroke_to_usvg_stroke;
 use usvg::{fontdb, NonZeroPositiveF32, TreeTextToPath};
 use usvg_tree::{
-    AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStyle,
-    LengthAdjust, NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow,
-    TextRendering, TextSpan, Visibility, WritingMode,
+    AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStyle, LengthAdjust,
+    NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow, TextRendering,
+    TextSpan, Visibility, WritingMode,
 };
 
 pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f32, f32) {
@@ -68,10 +68,7 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (Te
         overline: None,
         line_through: None,
     };
-    let stroke = text_style
-        .stroke
-        .as_ref()
-        .map(|s| stroke_to_usvg_stroke(s));
+    let stroke = text_style.stroke.as_ref().map(|s| stroke_to_usvg_stroke(s));
     let end = start + chunk.length as usize;
     (
         TextSpan {

@@ -1,11 +1,10 @@
 import os
-
 from dataclasses import dataclass
 
+from .basictypes import Length, LengthAuto, Position, Size, parse_debug_layout
+from .insteps import InSteps
 from .shapes import Path
 from .textstyle import TextStyle, _data_to_text_style
-from .basictypes import Position, Size, Length, LengthAuto, parse_debug_layout
-from .insteps import InSteps
 
 # class DrawChild:
 #     def __init__(self, paths: InSteps[list[ExportPath]]):

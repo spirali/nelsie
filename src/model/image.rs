@@ -103,7 +103,7 @@ fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
 
 fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
     let str_data = std::str::from_utf8(&raw_data)
-        .map_err(|_e| NelsieError::GenericError("Invalid utf-8 data".to_string()))?;
+        .map_err(|_e| NelsieError::Generic("Invalid utf-8 data".to_string()))?;
     let xml_tree = roxmltree::Document::parse(str_data)?;
 
     // Parse label step definitions
@@ -149,7 +149,7 @@ fn read_archive_file_as_string<R: std::io::Seek + std::io::Read>(
 }
 
 fn option_unpack<T>(value: Option<T>) -> crate::Result<T> {
-    value.ok_or_else(|| NelsieError::GenericError("Invalid format".to_string()))
+    value.ok_or_else(|| NelsieError::Generic("Invalid format".to_string()))
 }
 
 fn load_ora_stack<R: std::io::Seek + std::io::Read>(
@@ -198,7 +198,7 @@ fn load_ora_image(path: &Path) -> crate::Result<LoadedImage> {
     let file = File::open(path)?;
     let mut archive = zip::ZipArchive::new(file)?;
     if read_archive_file_as_string(&mut archive, "mimetype")? != "image/openraster" {
-        return Err(NelsieError::GenericError("Not an ORA format".to_string()));
+        return Err(NelsieError::Generic("Not an ORA format".to_string()));
     }
     let stack_data = read_archive_file_as_string(&mut archive, "stack.xml")?;
     let stack_doc = roxmltree::Document::parse(&stack_data)?;
@@ -232,16 +232,16 @@ fn load_image(path: &Path) -> crate::Result<LoadedImage> {
     if extension == "svg" {
         let raw_data = std::fs::read(path)?;
         load_svg_image(raw_data).map_err(|e| {
-            NelsieError::GenericError(format!("Image '{}' load error: {}", path.display(), e))
+            NelsieError::Generic(format!("Image '{}' load error: {}", path.display(), e))
         })
     } else if extension == "ora" {
         load_ora_image(path).map_err(|e| {
-            NelsieError::GenericError(format!("Image '{}' load error: {}", path.display(), e))
+            NelsieError::Generic(format!("Image '{}' load error: {}", path.display(), e))
         })
     } else {
         let raw_data = std::fs::read(path)?;
         load_raster_image(raw_data).ok_or_else(|| {
-            NelsieError::GenericError(format!("Image '{}' has unknown format", path.display()))
+            NelsieError::Generic(format!("Image '{}' has unknown format", path.display()))
         })
     }
 }

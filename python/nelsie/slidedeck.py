@@ -1,11 +1,10 @@
-import typing
 import pathlib
 from typing import Optional
+
 from . import nelsie as nelsie_rs
-from .textstyle import TextStyle, _data_to_text_style
 from .basictypes import parse_debug_layout
 from .box import Box, BoxBuilder
-from .insteps import InSteps
+from .textstyle import TextStyle, _data_to_text_style
 
 Resources = nelsie_rs.Resources
 

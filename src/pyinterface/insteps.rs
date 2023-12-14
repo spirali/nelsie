@@ -29,7 +29,7 @@ impl<T: Debug> InSteps<T> {
         ))
     }
 
-    pub fn to_step_value(self, n_steps: &mut Step) -> StepValue<T>
+    pub fn into_step_value(self, n_steps: &mut Step) -> StepValue<T>
     where
         T: Default,
     {
@@ -67,13 +67,13 @@ impl<T: Debug> ValueOrInSteps<T> {
         self.parse(&mut discard, parser)
     }
 
-    pub fn to_step_value(self, n_steps: &mut Step) -> StepValue<T>
+    pub fn into_step_value(self, n_steps: &mut Step) -> StepValue<T>
     where
         T: Default,
     {
         match self {
             ValueOrInSteps::Value(v) => StepValue::new_const(v),
-            ValueOrInSteps::InSteps(v) => v.to_step_value(n_steps),
+            ValueOrInSteps::InSteps(v) => v.into_step_value(n_steps),
         }
     }
 }

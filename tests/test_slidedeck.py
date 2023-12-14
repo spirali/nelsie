@@ -1,7 +1,3 @@
-import os.path
-
-from nelsie import SlideDeck
-from conftest import ROOT_DIR
 from testutils import check
 
 

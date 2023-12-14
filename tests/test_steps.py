@@ -1,4 +1,3 @@
-import pytest
 from testutils import check
 
 from nelsie import InSteps

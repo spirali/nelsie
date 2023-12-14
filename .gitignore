@@ -9,3 +9,4 @@ nelsie-builder/target
 __pycache__
 report_imgs
 report.html
+*.so

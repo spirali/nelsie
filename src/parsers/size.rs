@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 fn parse<T: FromStr>(s: &str, value: &str) -> crate::Result<T> {
     s.parse()
-        .map_err(|_| crate::NelsieError::ParsingError(format!("Invalid value: {value}")))
+        .map_err(|_| crate::NelsieError::Parsing(format!("Invalid value: {value}")))
 }
 
 pub(crate) fn parse_length(value: StringOrFloat) -> crate::Result<Length> {

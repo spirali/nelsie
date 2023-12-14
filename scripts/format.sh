@@ -2,7 +2,7 @@
 
 # Formats and lints files in-place, or just checks them for formatting
 
-DIRS="tests nelsie-api"
+DIRS="tests python"
 
 set -e
 

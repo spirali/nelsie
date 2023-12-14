@@ -78,7 +78,7 @@ impl SlideDeck {
                     .iter()
                     .find_map(|n| resources.check_font(n).ok())
                     .ok_or_else(|| {
-                        NelsieError::GenericError(
+                        NelsieError::Generic(
                         "No default font detected. Specify parameter 'default_font' in SlideDeck"
                             .to_string(),
                     )

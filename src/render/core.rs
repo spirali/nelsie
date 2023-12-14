@@ -26,7 +26,7 @@ pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<usvg::Tree>
     if let Some(output) = render_cfg.output_svg {
         let svg = tree.to_string(&XmlOptions::default());
         std::fs::write(output, svg).map_err(|e| {
-            NelsieError::GenericError(format!(
+            NelsieError::Generic(format!(
                 "Cannot write target SVG file: {}: {}",
                 output.display(),
                 e
@@ -43,7 +43,7 @@ pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<usvg::Tree>
         let render_ts = tiny_skia::Transform::from_scale(zoom, zoom);
         rtree.render(render_ts, &mut pixmap.as_mut());
         pixmap.save_png(output).map_err(|e| {
-            NelsieError::GenericError(format!(
+            NelsieError::Generic(format!(
                 "Cannot write target PNG file: {}: {}",
                 output.display(),
                 e

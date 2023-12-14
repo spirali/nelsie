@@ -1,5 +1,6 @@
-from nelsie.layoutexpr import ConstExpr, SumExpr
 from testutils import check
+
+from nelsie.layoutexpr import ConstExpr, SumExpr
 
 
 @check()

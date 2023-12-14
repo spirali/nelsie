@@ -15,7 +15,7 @@ impl PyTextStyle {
     pub fn new(style: PartialTextStyle) -> Self {
         PyTextStyle(style)
     }
-    pub fn to_partial_style(self, resources: &Resources) -> crate::Result<PartialTextStyle> {
+    pub fn into_partial_style(self, resources: &Resources) -> crate::Result<PartialTextStyle> {
         if let Some(font) = &self.0.font_family {
             resources.check_font(font)?;
         }

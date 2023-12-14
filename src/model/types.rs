@@ -3,7 +3,6 @@ use crate::common::error::NelsieError;
 use std::str::FromStr;
 use usvg::NormalizedF32;
 
-
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub(crate) struct NodeId(u32);
 
@@ -94,7 +93,7 @@ impl FromStr for Color {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Color::new(svgtypes::Color::from_str(s).map_err(|_| {
-            NelsieError::ParsingError("Invalid color".to_string())
+            NelsieError::Parsing("Invalid color".to_string())
         })?))
     }
 }

@@ -58,7 +58,7 @@ pub(crate) fn render_slide_deck(
     if let Some(dir) = output_cfg.output_svg {
         log::debug!("Ensuring SVG output directory: {}", dir.display());
         ensure_directory(dir).map_err(|e| {
-            NelsieError::GenericError(format!(
+            NelsieError::Generic(format!(
                 "Cannot create directory for SVG files: {}: {}",
                 dir.display(),
                 e
@@ -69,7 +69,7 @@ pub(crate) fn render_slide_deck(
     if let Some(dir) = output_cfg.output_png {
         log::debug!("Ensuring PNG output directory: {}", dir.display());
         ensure_directory(dir).map_err(|e| {
-            NelsieError::GenericError(format!(
+            NelsieError::Generic(format!(
                 "Cannot create directory for PNG files: {}: {}",
                 dir.display(),
                 e
@@ -96,7 +96,7 @@ pub(crate) fn render_slide_deck(
     if let Some(builder) = pdf_builder {
         let path = output_cfg.output_pdf.unwrap();
         builder.write(path).map_err(|e| {
-            NelsieError::GenericError(format!("Writing PDF file {}: {}", path.display(), e))
+            NelsieError::Generic(format!("Writing PDF file {}: {}", path.display(), e))
         })?;
     }
 

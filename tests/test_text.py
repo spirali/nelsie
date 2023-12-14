@@ -1,10 +1,10 @@
-import nelsie
-from testutils import check
 from dataclasses import asdict
 
-from nelsie import InSteps, TextStyle, FontStretch, Stroke
-
 import pytest
+from testutils import check
+
+import nelsie
+from nelsie import FontStretch, InSteps, Stroke, TextStyle
 
 
 def test_text_update():

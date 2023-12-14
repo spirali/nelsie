@@ -3,25 +3,25 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum NelsieError {
     #[error(transparent)]
-    IoError(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
     #[error(transparent)]
-    XmlError(#[from] roxmltree::Error),
+    Xml(#[from] roxmltree::Error),
     #[error(transparent)]
-    SvgError(#[from] usvg::Error),
+    Svg(#[from] usvg::Error),
     #[error(transparent)]
-    ZipError(#[from] zip::result::ZipError),
+    Zip(#[from] zip::result::ZipError),
     #[error("{0}")]
-    ParsingError(String),
+    Parsing(String),
     #[error("{0}")]
-    GenericError(String),
+    Generic(String),
 }
 
 impl NelsieError {
     pub fn generic_err(message: impl Into<String>) -> Self {
-        NelsieError::GenericError(message.into())
+        NelsieError::Generic(message.into())
     }
     pub fn parsing_err(message: impl Into<String>) -> Self {
-        NelsieError::ParsingError(message.into())
+        NelsieError::Parsing(message.into())
     }
 }
 

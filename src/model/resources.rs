@@ -33,7 +33,7 @@ impl Resources {
 
     pub fn check_font<'a>(&self, family_name: &'a str) -> crate::Result<&'a str> {
         if !self.has_font(family_name) {
-            return Err(NelsieError::GenericError(format!(
+            return Err(NelsieError::Generic(format!(
                 "Font '{}' not found.",
                 family_name
             )));

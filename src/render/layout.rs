@@ -107,6 +107,32 @@ fn compute_content_default_size(
     }
 }
 
+fn gather_taffy_layout<'b>(
+    node: &'b Node,
+    parent: Option<&Node>,
+    taffy: &tf::Taffy,
+    tf_node: tf::Node,
+    out: &mut BTreeMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>,
+) {
+    let layout_rect = taffy.layout(tf_node).unwrap();
+    out.insert(
+        node.node_id,
+        (
+            parent.map(|p| p.node_id),
+            &node,
+            Rectangle {
+                x: layout_rect.location.x,
+                y: layout_rect.location.y,
+                width: layout_rect.size.width,
+                height: layout_rect.size.height,
+            },
+        ),
+    );
+    for (child, tf_child) in node.child_nodes().zip(taffy.children(tf_node).unwrap()) {
+        gather_taffy_layout(child, Some(node), taffy, tf_child, out);
+    }
+}
+
 impl<'a> LayoutContext<'a> {
     pub fn new(resources: &'a Resources, step: Step) -> Self {
         LayoutContext { resources, step }
@@ -203,33 +229,6 @@ impl<'a> LayoutContext<'a> {
         taffy.new_with_children(style, &tf_children).unwrap()
     }
 
-    fn gather_taffy_layout<'b>(
-        &self,
-        node: &'b Node,
-        parent: Option<&Node>,
-        taffy: &tf::Taffy,
-        tf_node: tf::Node,
-        out: &mut BTreeMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>,
-    ) {
-        let layout_rect = taffy.layout(tf_node).unwrap();
-        out.insert(
-            node.node_id,
-            (
-                parent.map(|p| p.node_id),
-                &node,
-                Rectangle {
-                    x: layout_rect.location.x,
-                    y: layout_rect.location.y,
-                    width: layout_rect.size.width,
-                    height: layout_rect.size.height,
-                },
-            ),
-        );
-        for (child, tf_child) in node.child_nodes().zip(taffy.children(tf_node).unwrap()) {
-            self.gather_taffy_layout(child, Some(node), taffy, tf_child, out);
-        }
-    }
-
     pub fn compute_layout(&self, slide: &Slide) -> ComputedLayout {
         let mut taffy = tf::Taffy::new();
         let tf_node = self.compute_layout_helper(&mut taffy, &slide.node, None);
@@ -239,7 +238,7 @@ impl<'a> LayoutContext<'a> {
         };
         taffy.compute_layout(tf_node, size).unwrap();
         let mut node_entries = BTreeMap::new();
-        self.gather_taffy_layout(&slide.node, None, &taffy, tf_node, &mut node_entries);
+        gather_taffy_layout(&slide.node, None, &taffy, tf_node, &mut node_entries);
         let mut result = ComputedLayout::default();
         for (parent_id, node, rect) in node_entries.values() {
             let (parent_x, parent_y) = parent_id

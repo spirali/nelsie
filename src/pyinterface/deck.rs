@@ -135,13 +135,13 @@ impl Deck {
             if let Some(box_id) = box_id {
                 let node = resolve_box_id(&mut slide.node, &box_id)?;
                 let text_style = text_style.parse(&mut slide.n_steps, |s| {
-                    s.to_partial_style(&resources.resources)
+                    s.into_partial_style(&resources.resources)
                 })?;
                 Arc::make_mut(&mut node.styles).set_style(name.to_string(), text_style);
             }
         } else {
             let text_style =
-                text_style.parse_ignore_n_steps(|s| s.to_partial_style(&resources.resources))?;
+                text_style.parse_ignore_n_steps(|s| s.into_partial_style(&resources.resources))?;
             Arc::make_mut(&mut self.deck.global_styles).set_style(name.to_string(), text_style);
         }
         Ok(())

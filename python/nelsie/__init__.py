@@ -1,8 +1,8 @@
-from .slidedeck import SlideDeck, Resources
+from .basictypes import Stroke
 from .insteps import InSteps
 from .shapes import Path
-from .basictypes import Stroke
-from .textstyle import TextStyle, FontStretch
+from .slidedeck import Resources, SlideDeck
+from .textstyle import FontStretch, TextStyle
 
 __all__ = [
     "SlideDeck",
