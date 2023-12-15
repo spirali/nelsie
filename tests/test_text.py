@@ -4,7 +4,7 @@ import pytest
 from testutils import check
 
 import nelsie
-from nelsie import FontStretch, InSteps, Stroke, TextStyle
+from nelsie import FontStretch, InSteps, Stroke, TextStyle, TextAlign
 
 
 def test_text_update():
@@ -176,3 +176,12 @@ def test_text_style_get_stroke(deck):
 def test_text_monospace(deck):
     slide = deck.new_slide(width=150, height=100)
     slide.text("Text W1", "monospace")
+
+
+@check()
+def test_text_align(deck):
+    slide = deck.new_slide(width=150, height=150)
+    slide.set_style("default", TextStyle(size=12))
+    slide.text("Hello world\nNow!\nand there", align=TextAlign.Start, bg_color="red")
+    slide.text("Hello world\nNow!\nand there", style=TextStyle(color="green"), align=TextAlign.Center, bg_color="gray")
+    slide.text("Hello world\nNow!\nand there", style=TextStyle(color="blue"), align=TextAlign.End, bg_color="#990099")

@@ -246,28 +246,6 @@ fn load_image(path: &Path) -> crate::Result<LoadedImage> {
     }
 }
 
-// fn n_steps_from_images(node: &Node, loaded_images: &HashMap<PathBuf, LoadedImage>) -> Step {
-//     let mut n_steps = 1;
-//     for content in node.content.values() {
-//         if let Some(NodeContent::Image(image)) = content {
-//             if !image.enable_steps {
-//                 continue;
-//             }
-//             if let Some(loaded_img) = loaded_images.get(&image.filename) {
-//                 n_steps = max(n_steps, image.shift_steps + loaded_img.n_steps());
-//             }
-//         }
-//     }
-//     n_steps = max(
-//         n_steps,
-//         node.child_nodes()
-//             .map(|child| n_steps_from_images(child, loaded_images))
-//             .max()
-//             .unwrap_or(1),
-//     );
-//     n_steps
-// }
-
 #[derive(Debug)]
 pub(crate) struct NodeContentImage {
     pub loaded_image: Arc<LoadedImage>,

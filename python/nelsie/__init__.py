@@ -1,4 +1,4 @@
-from .basictypes import Stroke
+from .basictypes import Stroke, TextAlign
 from .insteps import InSteps
 from .shapes import Path
 from .slidedeck import Resources, SlideDeck
@@ -12,4 +12,5 @@ __all__ = [
     "TextStyle",
     "Resources",
     "FontStretch",
+    "TextAlign",
 ]

@@ -1,4 +1,4 @@
-use crate::model::{Span, StyledLine, StyledText, TextStyle};
+use crate::model::{Span, StyledLine, StyledText, TextAlign, TextStyle};
 
 use crate::render::paths::stroke_to_usvg_stroke;
 use usvg::{fontdb, NonZeroPositiveF32, TreeTextToPath};
@@ -8,8 +8,12 @@ use usvg_tree::{
     TextSpan, Visibility, WritingMode,
 };
 
-pub(crate) fn get_text_size(font_db: &fontdb::Database, text: &StyledText) -> (f32, f32) {
-    let text_node = render_text(text, 0.0, 0.0);
+pub(crate) fn get_text_size(
+    font_db: &fontdb::Database,
+    text: &StyledText,
+    align: TextAlign,
+) -> (f32, f32) {
+    let text_node = render_text(text, 0.0, 0.0, align);
     let root_node = usvg::Node::new(NodeKind::Group(usvg::Group::default()));
     root_node.append(text_node);
     let size = usvg::Size::from_wh(800.0, 600.0).unwrap();
@@ -95,12 +99,18 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (Te
     )
 }
 
-fn render_line(text_styles: &[TextStyle], styled_line: &StyledLine, x: f32, y: f32) -> TextChunk {
+fn render_line(
+    text_styles: &[TextStyle],
+    styled_line: &StyledLine,
+    x: f32,
+    y: f32,
+    anchor: TextAnchor,
+) -> TextChunk {
     let mut pos = 0;
     TextChunk {
         x: Some(x),
         y: Some(y),
-        anchor: TextAnchor::Start,
+        anchor,
         spans: styled_line
             .spans
             .iter()
@@ -115,7 +125,17 @@ fn render_line(text_styles: &[TextStyle], styled_line: &StyledLine, x: f32, y: f
     }
 }
 
-pub(crate) fn render_text(styled_text: &StyledText, x: f32, y: f32) -> usvg::Node {
+pub(crate) fn render_text(
+    styled_text: &StyledText,
+    x: f32,
+    y: f32,
+    align: TextAlign,
+) -> usvg::Node {
+    let anchor = match align {
+        TextAlign::Start => TextAnchor::Start,
+        TextAlign::Center => TextAnchor::Middle,
+        TextAlign::End => TextAnchor::End,
+    };
     let n_chars = styled_text
         .styled_lines
         .iter()
@@ -145,7 +165,13 @@ pub(crate) fn render_text(styled_text: &StyledText, x: f32, y: f32) -> usvg::Nod
                 .unwrap_or(styled_text.default_font_size);
             current_y += line_height;
             let half_space = (line_height - font_size) / 2.0;
-            render_line(&styled_text.styles, styled_line, x, current_y - half_space)
+            render_line(
+                &styled_text.styles,
+                styled_line,
+                x,
+                current_y - half_space,
+                anchor,
+            )
         })
         .collect();
     let text = Text {

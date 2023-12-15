@@ -1,4 +1,4 @@
-use crate::model::{merge_stepped_styles, Color, NodeContentText, StyleMap};
+use crate::model::{merge_stepped_styles, Color, NodeContentText, StyleMap, TextAlign};
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, Step, StepValue,
 };
@@ -11,7 +11,6 @@ use crate::pyinterface::textstyle::PyTextStyleOrName;
 use pyo3::exceptions::PyValueError;
 use pyo3::{FromPyObject, PyAny, PyResult};
 
-use crate::model::StepValue::Const;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -35,6 +34,7 @@ pub(crate) struct TextContent {
     text: String,
     style: PyTextStyleOrName,
     formatting_delimiters: String,
+    text_align: u32,
 }
 
 #[derive(Debug)]
@@ -105,6 +105,12 @@ fn process_content(
 ) -> PyResult<NodeContent> {
     Ok(match content {
         Content::Text(text) => {
+            let text_align = match text.text_align {
+                0 => TextAlign::Start,
+                1 => TextAlign::Center,
+                2 => TextAlign::End,
+                _ => return Err(PyValueError::new_err("Invalid text align")),
+            };
             if text.formatting_delimiters.chars().count() != 3 {
                 return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
             }
@@ -141,6 +147,7 @@ fn process_content(
             NodeContent::Text(NodeContentText {
                 styled_lines: parsed.styled_lines,
                 styles,
+                text_align,
                 default_font_size: main_style.map_ref(|s| s.size.unwrap()),
                 default_line_spacing: main_style.map_ref(|s| s.line_spacing.unwrap()),
             })

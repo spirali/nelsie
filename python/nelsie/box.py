@@ -1,7 +1,7 @@
 import os
 from dataclasses import dataclass
 
-from .basictypes import Length, LengthAuto, Position, Size, parse_debug_layout
+from .basictypes import Length, LengthAuto, Position, Size, parse_debug_layout, TextAlign
 from .insteps import InSteps
 from .shapes import Path
 from .textstyle import TextStyle, _data_to_text_style
@@ -22,6 +22,7 @@ class TextContent:
     text: str
     style: TextStyle | str
     formatting_delimiters: str
+    text_align: TextAlign
 
 
 @dataclass
@@ -103,9 +104,10 @@ class BoxBuilder:
         *,
         delimiters: str | None = "~{}",
         tab_width: int = 4,
+        align: TextAlign = TextAlign.Start,
         **box_args,
     ):
-        return self._text_box(text, style, delimiters, tab_width, box_args)
+        return self._text_box(text, style, delimiters, tab_width, box_args, align)
 
     def draw(self, paths: Path | list[Path] | InSteps[Path | list[Path]]):
         if isinstance(paths, Path):
@@ -115,10 +117,10 @@ class BoxBuilder:
         box = self.get_box()
         box.deck._deck.draw(box.slide._slide_id, box._box_id, paths)
 
-    def _text_box(self, text, style, delimiters, tab_width, box_args):
+    def _text_box(self, text, style, delimiters, tab_width, box_args, align):
         text = text.replace("\t", " " * tab_width)
         text_content = TextContent(
-            text=text, style=style, formatting_delimiters=delimiters
+            text=text, style=style, formatting_delimiters=delimiters, text_align=align
         )
         return self.box(_content=text_content, **box_args)
 

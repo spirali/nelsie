@@ -1,7 +1,7 @@
 use super::text::render_text;
 use crate::model::{
     Color, Drawing, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText,
-    TextStyle,
+    TextAlign, TextStyle,
 };
 use crate::render::core::RenderConfig;
 use crate::render::layout::{ComputedLayout, LayoutContext, Rectangle};
@@ -77,7 +77,12 @@ fn draw_debug_frame(
         default_font_size: 8.0,
         default_line_spacing: 0.0,
     };
-    svg_node.append(render_text(&styled_text, rect.x + 2.0, rect.y + 3.0));
+    svg_node.append(render_text(
+        &styled_text,
+        rect.x + 2.0,
+        rect.y + 3.0,
+        TextAlign::Start,
+    ));
 }
 
 impl<'a> RenderContext<'a> {
@@ -123,8 +128,13 @@ impl<'a> RenderContext<'a> {
                 match content {
                     NodeContent::Text(text) => self.svg_node.append(render_text(
                         &text.text_style_at_step(self.step),
-                        rect.x,
+                        match text.text_align {
+                            TextAlign::Start => rect.x,
+                            TextAlign::Center => rect.x + rect.width / 2.0,
+                            TextAlign::End => rect.x + rect.width,
+                        },
                         rect.y,
+                        text.text_align,
                     )),
                     NodeContent::Image(image) => render_image(
                         self.step,

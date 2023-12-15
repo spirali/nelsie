@@ -74,10 +74,18 @@ impl<'a> StyledText<'a> {
     }
 }
 
+#[derive(Debug, Copy, Clone)]
+pub(crate) enum TextAlign {
+    Start,
+    Center,
+    End,
+}
+
 #[derive(Debug)]
 pub(crate) struct NodeContentText {
     pub styled_lines: Vec<StyledLine>,
     pub styles: Vec<StepValue<TextStyle>>,
+    pub text_align: TextAlign,
     pub default_font_size: StepValue<f32>,
     pub default_line_spacing: StepValue<f32>,
 }
