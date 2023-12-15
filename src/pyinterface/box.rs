@@ -1,19 +1,19 @@
-use crate::model::{merge_stepped_styles, NodeContentText, StyleMap};
+use crate::model::{merge_stepped_styles, Color, NodeContentText, StyleMap};
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, Step, StepValue,
 };
 use crate::parsers::step_parser::parse_steps;
-use crate::parsers::{
-    parse_color, parse_length, parse_length_auto, parse_position, parse_styled_text,
-};
+use crate::parsers::{parse_length, parse_length_auto, parse_position, parse_styled_text};
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
 
 use pyo3::exceptions::PyValueError;
-use pyo3::{FromPyObject, PyResult};
+use pyo3::{FromPyObject, PyAny, PyResult};
 
+use crate::model::StepValue::Const;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::Arc;
 
 #[derive(Debug, FromPyObject)]
@@ -37,10 +37,20 @@ pub(crate) struct TextContent {
     formatting_delimiters: String,
 }
 
-#[derive(Debug, FromPyObject)]
+#[derive(Debug)]
 pub(crate) enum Content {
     Text(TextContent),
     Image(ImageContent),
+}
+
+impl<'py> FromPyObject<'py> for Content {
+    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+        Ok(if ob.hasattr("text")? {
+            Content::Text(ob.extract()?)
+        } else {
+            Content::Image(ob.extract()?)
+        })
+    }
 }
 
 #[derive(Debug, FromPyObject)]
@@ -64,7 +74,6 @@ pub(crate) struct BoxConfig {
     pub z_level: ValueOrInSteps<i32>,
     pub name: String,
     pub debug_layout: Option<String>,
-    pub content: ValueOrInSteps<Option<Content>>,
 }
 
 fn pyparse_opt_length(obj: Option<PyStringOrFloat>) -> crate::Result<Option<Length>> {
@@ -156,18 +165,18 @@ impl BoxConfig {
         new_node_id: NodeId,
         nc_env: &mut NodeCreationEnv,
         styles: Arc<StyleMap>,
+        content: Option<Content>,
     ) -> PyResult<(Node, Step)> {
         let mut n_steps = 1;
         let mut n_steps2 = 1;
-        let content = self.content.parse(&mut n_steps, |c| {
-            c.map(|c| process_content(c, nc_env, &styles, &mut n_steps2))
-                .transpose()
-        })?;
+        let content = content
+            .map(|c| process_content(c, nc_env, &styles, &mut n_steps2))
+            .transpose()?;
         n_steps = n_steps.max(n_steps2);
 
-        let bg_color = self
-            .bg_color
-            .parse(&mut n_steps, |v| v.as_deref().map(parse_color).transpose())?;
+        let bg_color = self.bg_color.parse(&mut n_steps, |v| {
+            v.as_deref().map(Color::from_str).transpose()
+        })?;
         let x = self.x.parse(&mut n_steps, |v| {
             v.map(|v| parse_position(&v.into(), true)).transpose()
         })?;
@@ -207,8 +216,12 @@ impl BoxConfig {
             m_left: self.m_left.parse(&mut n_steps, parse_len_auto)?,
             m_right: self.m_right.parse(&mut n_steps, parse_len_auto)?,
             bg_color,
-            content,
-            debug_layout: self.debug_layout.as_deref().map(parse_color).transpose()?,
+            content: StepValue::new_const(content),
+            debug_layout: self
+                .debug_layout
+                .as_deref()
+                .map(Color::from_str)
+                .transpose()?,
             children: Vec::new(),
             styles,
         };

@@ -1,4 +1,3 @@
-mod color;
 mod size;
 pub(crate) mod step_parser;
 mod text;
@@ -16,6 +15,5 @@ pub(crate) enum StringOrFloatOrExpr {
     //Expr(LayoutExpr),
 }
 
-pub(crate) use color::parse_color;
 pub(crate) use size::{parse_length, parse_length_auto, parse_position};
 pub(crate) use text::parse_styled_text;

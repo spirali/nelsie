@@ -89,11 +89,11 @@ impl From<&Color> for svgtypes::Color {
 }
 
 impl FromStr for Color {
-    type Err = crate::NelsieError;
+    type Err = NelsieError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Color::new(svgtypes::Color::from_str(s).map_err(|_| {
-            NelsieError::Parsing("Invalid color".to_string())
+            NelsieError::Parsing(format!("Invalid color: '{s}'"))
         })?))
     }
 }

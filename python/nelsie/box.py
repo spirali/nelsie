@@ -55,7 +55,6 @@ class BoxConfig:
     bg_color: str | None | InSteps[str | None]
     name: str
     debug_layout: bool | None
-    content: NodeContent | InSteps[NodeContent] = None
 
 
 class BoxBuilder:
@@ -171,11 +170,14 @@ class BoxBuilder:
             bg_color=bg_color,
             name=name,
             debug_layout=debug_layout,
-            content=_content,
         )
         deck = parent_box.deck
         box_id, node_id = deck._deck.new_box(
-            deck.resources, parent_box.slide._slide_id, parent_box._box_id, config
+            deck.resources,
+            parent_box.slide._slide_id,
+            parent_box._box_id,
+            config,
+            _content,
         )
         return Box(deck, parent_box.slide, box_id, node_id, name, z_level)
 

@@ -1,15 +1,15 @@
 use crate::common::Step;
-use crate::model::{Drawing, Node, NodeChild, Path, Slide, SlideDeck, StepValue};
-use crate::parsers::parse_color;
+use crate::model::{Color, Drawing, Node, NodeChild, Path, Slide, SlideDeck, StepValue};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use crate::pyinterface::path::PyPath;
-use crate::pyinterface::r#box::{BoxConfig, NodeCreationEnv};
+use crate::pyinterface::r#box::{BoxConfig, Content, NodeCreationEnv};
 use crate::pyinterface::resources::Resources;
 use crate::pyinterface::textstyle::PyTextStyle;
 use crate::render::{render_slide_deck, OutputConfig};
 use itertools::Itertools;
 use pyo3::exceptions::PyException;
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python, ToPyObject};
+use std::str::FromStr;
 
 use std::sync::Arc;
 
@@ -79,7 +79,7 @@ impl Deck {
             width,
             height,
             name,
-            parse_color(bg_color)?,
+            Color::from_str(bg_color)?,
             self.deck.global_styles.clone(),
         ));
         Ok(slide_id)
@@ -106,6 +106,7 @@ impl Deck {
         slide_id: SlideId,
         box_id: BoxId,
         config: BoxConfig,
+        content: Option<Content>,
     ) -> PyResult<(BoxId, u32)> {
         let slide = resolve_slide_id(&mut self.deck, slide_id)?;
         let node_id = slide.new_node_id();
@@ -114,7 +115,8 @@ impl Deck {
         let mut nce = NodeCreationEnv {
             resources: &mut resources.resources,
         };
-        let (node, n_steps) = config.make_node(node_id, &mut nce, parent_node.styles.clone())?;
+        let (node, n_steps) =
+            config.make_node(node_id, &mut nce, parent_node.styles.clone(), content)?;
         slide.n_steps = slide.n_steps.max(n_steps);
 
         let new_id = parent_node.children.len() as u32;

@@ -1,14 +1,23 @@
 use crate::common::Step;
 use crate::model::StepValue;
 
-use pyo3::FromPyObject;
+use pyo3::{FromPyObject, PyAny, PyResult};
 use std::collections::BTreeMap;
 use std::fmt::Debug;
 
-#[derive(Debug, FromPyObject)]
+#[derive(Debug)]
 pub(crate) struct InSteps<T> {
     pub in_step_values: BTreeMap<u32, T>,
     pub n_steps: u32,
+}
+
+impl<'py, T: FromPyObject<'py>> FromPyObject<'py> for InSteps<T> {
+    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+        Ok(InSteps {
+            in_step_values: ob.getattr("in_step_values")?.extract()?,
+            n_steps: ob.getattr("n_steps")?.extract()?,
+        })
+    }
 }
 
 impl<T: Debug> InSteps<T> {
@@ -38,10 +47,20 @@ impl<T: Debug> InSteps<T> {
     }
 }
 
-#[derive(Debug, FromPyObject)]
+#[derive(Debug)]
 pub(crate) enum ValueOrInSteps<T> {
     Value(T),
     InSteps(InSteps<T>),
+}
+
+impl<'py, T: FromPyObject<'py>> FromPyObject<'py> for ValueOrInSteps<T> {
+    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+        Ok(if ob.hasattr("in_step_values")? {
+            ValueOrInSteps::InSteps(ob.extract()?)
+        } else {
+            ValueOrInSteps::Value(ob.extract()?)
+        })
+    }
 }
 
 impl<T: Debug> ValueOrInSteps<T> {

@@ -176,4 +176,3 @@ def test_text_style_get_stroke(deck):
 def test_text_monospace(deck):
     slide = deck.new_slide(width=150, height=100)
     slide.text("Text W1", "monospace")
-    deck.render(output_pdf="/tmp/out.pdf")
