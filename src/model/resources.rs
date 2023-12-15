@@ -20,6 +20,10 @@ impl Resources {
         }
     }
 
+    pub fn load_fonts_dir<P: AsRef<std::path::Path>>(&mut self, path: P) {
+        self.font_db.load_fonts_dir(path)
+    }
+
     pub fn has_font(&self, family_name: &str) -> bool {
         self.font_db
             .query(&fontdb::Query {

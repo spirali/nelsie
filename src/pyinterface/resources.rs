@@ -13,4 +13,9 @@ impl Resources {
             resources: crate::model::Resources::new(),
         })
     }
+
+    fn load_fonts_dir(&mut self, path: &str) -> PyResult<()> {
+        self.resources.load_fonts_dir(path);
+        Ok(())
+    }
 }
