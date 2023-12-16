@@ -1,9 +1,14 @@
-use crate::model::{merge_stepped_styles, Color, NodeContentText, StyleMap, TextAlign};
+use crate::model::{
+    merge_stepped_styles, Color, NodeContentText, PartialTextStyle, StyleMap, TextAlign, TextStyle,
+};
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, Step, StepValue,
 };
 use crate::parsers::step_parser::parse_steps;
-use crate::parsers::{parse_length, parse_length_auto, parse_position, parse_styled_text};
+use crate::parsers::{
+    parse_length, parse_length_auto, parse_position, parse_styled_text,
+    parse_styled_text_from_plain_text, run_syntax_highlighting,
+};
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
@@ -32,9 +37,12 @@ pub(crate) struct ImageContent {
 #[derive(Debug, FromPyObject)]
 pub(crate) struct TextContent {
     text: String,
-    style: PyTextStyleOrName,
-    formatting_delimiters: String,
+    style1: Option<PyTextStyleOrName>,
+    style2: Option<PyTextStyleOrName>,
+    formatting_delimiters: Option<String>,
     text_align: u32,
+    syntax_language: Option<String>,
+    syntax_theme: Option<String>,
 }
 
 #[derive(Debug)]
@@ -97,6 +105,22 @@ pub(crate) struct NodeCreationEnv<'a> {
     pub resources: &'a mut Resources,
 }
 
+fn resolve_style(
+    resources: &Resources,
+    original: &StepValue<PartialTextStyle>,
+    style_or_name: PyTextStyleOrName,
+    styles: &StyleMap,
+    n_steps: &mut Step,
+) -> crate::Result<StepValue<PartialTextStyle>> {
+    Ok(match style_or_name {
+        PyTextStyleOrName::Name(name) => merge_stepped_styles(original, styles.get_style(&name)?),
+        PyTextStyleOrName::Style(style) => merge_stepped_styles(
+            original,
+            &style.parse(n_steps, |s| s.into_partial_style(resources))?,
+        ),
+    })
+}
+
 fn process_content(
     content: Content,
     nc_env: &mut NodeCreationEnv,
@@ -111,26 +135,28 @@ fn process_content(
                 2 => TextAlign::End,
                 _ => return Err(PyValueError::new_err("Invalid text align")),
             };
-            if text.formatting_delimiters.chars().count() != 3 {
-                return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
-            }
-            let mut f = text.formatting_delimiters.chars();
-            let esc_char = f.next().unwrap();
-            let start_block = f.next().unwrap();
-            let end_block = f.next().unwrap();
-
-            let parsed = parse_styled_text(&text.text, esc_char, start_block, end_block)?;
-            let default = styles.get_style("default")?;
-            let main_style = match text.style {
-                PyTextStyleOrName::Name(name) if name == "default" => default.clone(),
-                PyTextStyleOrName::Name(name) => {
-                    merge_stepped_styles(default, styles.get_style(&name)?)
+            let parsed = if let Some(delimiters) = text.formatting_delimiters {
+                if delimiters.chars().count() != 3 {
+                    return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
                 }
-                PyTextStyleOrName::Style(style) => merge_stepped_styles(
-                    default,
-                    &style.parse(n_steps, |s| s.into_partial_style(nc_env.resources))?,
-                ),
+                let mut f = delimiters.chars();
+                let esc_char = f.next().unwrap();
+                let start_block = f.next().unwrap();
+                let end_block = f.next().unwrap();
+                parse_styled_text(&text.text, esc_char, start_block, end_block)?
+            } else {
+                parse_styled_text_from_plain_text(&text.text)
             };
+            let default = styles.get_style("default")?;
+            let mut main_style = if let Some(style) = text.style1 {
+                resolve_style(nc_env.resources, default, style, styles, n_steps)?
+            } else {
+                default.clone()
+            };
+            if let Some(style) = text.style2 {
+                main_style = resolve_style(nc_env.resources, &main_style, style, styles, n_steps)?
+            };
+
             let styles = parsed
                 .styles
                 .into_iter()
@@ -144,13 +170,21 @@ fn process_content(
                 })
                 .collect::<crate::Result<Vec<_>>>()?;
 
-            NodeContent::Text(NodeContentText {
+            let mut node_content = NodeContentText {
                 styled_lines: parsed.styled_lines,
                 styles,
                 text_align,
                 default_font_size: main_style.map_ref(|s| s.size.unwrap()),
                 default_line_spacing: main_style.map_ref(|s| s.line_spacing.unwrap()),
-            })
+            };
+
+            if let Some(language) = text.syntax_language {
+                let theme = text
+                    .syntax_theme
+                    .ok_or_else(|| PyValueError::new_err("Invalid theme"))?;
+                run_syntax_highlighting(&nc_env.resources, &mut node_content, &language, &theme)?;
+            }
+            NodeContent::Text(node_content)
         }
         Content::Image(image) => {
             let loaded_image = nc_env.resources.image_manager.load_image(&image.path)?;

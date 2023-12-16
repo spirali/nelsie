@@ -101,7 +101,7 @@ fn compute_content_default_size(
 ) -> (f32, f32) {
     match content {
         NodeContent::Text(text) => {
-            get_text_size(&resources, &text.text_style_at_step(step), text.text_align)
+            get_text_size(resources, &text.text_style_at_step(step), text.text_align)
         }
         NodeContent::Image(image) => (image.loaded_image.width, image.loaded_image.height),
     }

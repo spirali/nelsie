@@ -1,5 +1,6 @@
 mod size;
 pub(crate) mod step_parser;
+mod syntaxhighlight;
 mod text;
 
 #[derive(Debug)]
@@ -16,4 +17,5 @@ pub(crate) enum StringOrFloatOrExpr {
 }
 
 pub(crate) use size::{parse_length, parse_length_auto, parse_position};
-pub(crate) use text::parse_styled_text;
+pub(crate) use syntaxhighlight::run_syntax_highlighting;
+pub(crate) use text::{parse_styled_text, parse_styled_text_from_plain_text};

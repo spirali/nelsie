@@ -25,7 +25,7 @@ impl PyTextStyle {
     //     PyTextStyle({
     //                 }
     // }
-    pub fn into_partial_style(self, resources: &mut Resources) -> crate::Result<PartialTextStyle> {
+    pub fn into_partial_style(self, resources: &Resources) -> crate::Result<PartialTextStyle> {
         let font = self
             .font_family
             .map(|name| resources.check_font(&name).map(Arc::new))

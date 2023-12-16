@@ -1,6 +1,5 @@
 use crate::common::error::NelsieError;
 use crate::model::{Span, StyledLine};
-
 #[derive(Debug)]
 pub(crate) struct ParsedStyledText<'a> {
     pub styled_lines: Vec<StyledLine>,
@@ -14,6 +13,22 @@ fn find_first(text: &str, c1: char, c2: Option<char>) -> Option<(usize, char)> {
         }
     }
     None
+}
+
+pub(crate) fn parse_styled_text_from_plain_text(text: &str) -> ParsedStyledText {
+    ParsedStyledText {
+        styled_lines: text
+            .lines()
+            .map(|line| StyledLine {
+                spans: vec![Span {
+                    length: line.len() as u32,
+                    style_idx: 0,
+                }],
+                text: line.to_string(),
+            })
+            .collect(),
+        styles: vec![vec![]],
+    }
 }
 
 pub(crate) fn parse_styled_text<'a>(

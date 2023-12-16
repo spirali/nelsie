@@ -52,11 +52,11 @@
     * ~~Steps in styles~~
     * ~~All basic TextStyle properties~~
     * TextStyle priorities
-    * Text align: left, right, center
+    * ~~Text align: left, right, center~~
     * ~~Detecting invalid fonts~~
     * Line box
     * Inline box
-    * Syntax highlight
+    * ~~Syntax highlight~~
     * Merging own styles & syntax highlight
     * Fit-in-box rendering
     * ~~Opacity~~

@@ -35,7 +35,6 @@ impl From<&Color> for usvg::Color {
 }
 
 fn draw_debug_frame(
-    resources: &Resources,
     rect: &Rectangle,
     name: &str,
     font: &Arc<FontData>,
@@ -79,7 +78,6 @@ fn draw_debug_frame(
         default_line_spacing: 0.0,
     };
     svg_node.append(render_text(
-        resources,
         &styled_text,
         rect.x + 2.0,
         rect.y + 3.0,
@@ -129,7 +127,6 @@ impl<'a> RenderContext<'a> {
                 let rect = self.layout.rect(node.node_id).unwrap();
                 match content {
                     NodeContent::Text(text) => self.svg_node.append(render_text(
-                        &self.resources,
                         &text.text_style_at_step(self.step),
                         match text.text_align {
                             TextAlign::Start => rect.x,
@@ -151,14 +148,7 @@ impl<'a> RenderContext<'a> {
 
             if let Some(color) = &node.debug_layout {
                 let rect = self.layout.rect(node.node_id).unwrap();
-                draw_debug_frame(
-                    self.resources,
-                    rect,
-                    &node.name,
-                    self.default_font,
-                    color,
-                    &self.svg_node,
-                );
+                draw_debug_frame(rect, &node.name, self.default_font, color, &self.svg_node);
             }
         }
 

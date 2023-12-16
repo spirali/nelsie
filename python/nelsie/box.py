@@ -27,9 +27,12 @@ from .textstyle import TextStyle, _data_to_text_style
 @dataclass
 class TextContent:
     text: str
-    style: TextStyle | str
+    style1: TextStyle | str | None
+    style2: TextStyle | str | None
     formatting_delimiters: str
     text_align: TextAlign
+    syntax_language: str | None
+    syntax_theme: str | None
 
 
 @dataclass
@@ -107,14 +110,58 @@ class BoxBuilder:
     def text(
         self,
         text: str,
-        style: str | TextStyle | InSteps[TextStyle] = "default",
+        style: str | TextStyle | InSteps[TextStyle] | None = None,
         *,
         delimiters: str | None = "~{}",
         tab_width: int = 4,
         align: TextAlign = TextAlign.Start,
         **box_args,
     ):
-        return self._text_box(text, style, delimiters, tab_width, box_args, align)
+        return self._text_box(
+            text, style, None, delimiters, tab_width, box_args, align, None, None
+        )
+
+    def code(
+        self,
+        text: str,
+        language: str,
+        style: str | TextStyle | InSteps[TextStyle] | None = None,
+        *,
+        theme: str | None = None,
+        delimiters: str | None = "~{}",
+        tab_width: int = 4,
+        align: TextAlign = TextAlign.Start,
+        **box_args,
+    ):
+        if theme is None:
+            theme = self.get_box().deck.default_theme
+        return self._text_box(
+            text, "code", style, None, tab_width, box_args, align, language, theme
+        )
+
+    def _text_box(
+        self,
+        text,
+        style1,
+        style2,
+        delimiters,
+        tab_width,
+        box_args,
+        align,
+        language,
+        theme,
+    ):
+        text = text.replace("\t", " " * tab_width)
+        text_content = TextContent(
+            text=text,
+            style1=style1,
+            style2=style2,
+            formatting_delimiters=delimiters,
+            text_align=align,
+            syntax_language=language,
+            syntax_theme=theme,
+        )
+        return self.box(_content=text_content, **box_args)
 
     def draw(self, paths: Path | list[Path] | InSteps[Path | list[Path]]):
         if isinstance(paths, Path):
@@ -123,13 +170,6 @@ class BoxBuilder:
             paths = paths.map(lambda p: [p] if isinstance(p, Path) else p)
         box = self.get_box()
         box.deck._deck.draw(box.slide._slide_id, box._box_id, paths)
-
-    def _text_box(self, text, style, delimiters, tab_width, box_args, align):
-        text = text.replace("\t", " " * tab_width)
-        text_content = TextContent(
-            text=text, style=style, formatting_delimiters=delimiters, text_align=align
-        )
-        return self.box(_content=text_content, **box_args)
 
     def box(
         self,

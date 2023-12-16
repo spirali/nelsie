@@ -1,10 +1,5 @@
 use crate::common::error::NelsieError;
 use crate::model::ImageManager;
-use std::borrow::Cow;
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::Read;
-use std::ops::Deref;
 
 use usvg::fontdb;
 
@@ -12,18 +7,28 @@ use crate::model::textstyles::FontData;
 use usvg::fontdb::Family::Name;
 use usvg::fontdb::Source;
 
+use syntect::highlighting::ThemeSet;
+use syntect::parsing::SyntaxSet;
+
 pub(crate) struct Resources {
     pub font_db: fontdb::Database,
     pub image_manager: ImageManager,
+    pub syntax_set: SyntaxSet,
+    pub theme_set: ThemeSet,
 }
 
 impl Resources {
     pub fn new() -> Resources {
         let mut font_db = fontdb::Database::new();
         font_db.load_system_fonts();
+        let syntax_set = SyntaxSet::load_defaults_nonewlines();
+        let theme_set = ThemeSet::load_defaults();
+
         Resources {
             font_db,
             image_manager: ImageManager::default(),
+            syntax_set,
+            theme_set,
         }
     }
 
@@ -31,7 +36,7 @@ impl Resources {
         self.font_db.load_fonts_dir(path)
     }
 
-    pub fn check_font<'a>(&mut self, family_name: &'a str) -> crate::Result<FontData> {
+    pub fn check_font(&self, family_name: &str) -> crate::Result<FontData> {
         if let Some(font_id) = self.font_db.query(&fontdb::Query {
             families: &[Name(family_name)],
             weight: Default::default(),

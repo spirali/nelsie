@@ -38,7 +38,18 @@ class SlideDeck:
         image_directory: str | None = None,
         resources: Resources | None = None,
         default_font: str | None = None,
+        default_theme: str = "InspiredGitHub",
     ):
+        """
+            Available syntax highlight themes:
+              * "base16-ocean.dark",
+              * "base16-eighties.dark"
+              * "base16-mocha.dark"
+              * "base16-ocean.light"
+              * "InspiredGitHub"
+              * "Solarized (dark)"
+              * "Solarized (light)"
+        """
         if resources is None:
             resources = Resources()
 
@@ -47,6 +58,7 @@ class SlideDeck:
         self.bg_color = bg_color
         self.image_directory = image_directory
         self.resources = resources
+        self.default_theme = default_theme
         self._deck = nelsie_rs.Deck(resources, default_font)
 
     def set_style(self, name: str, style: TextStyle):

@@ -195,7 +195,6 @@ def test_text_align(deck):
         align=TextAlign.End,
         bg_color="#990099",
     )
-    deck.render(output_pdf="/tmp/out.pdf")
 
 
 @check()
@@ -216,12 +215,9 @@ def test_text_descent_ascent1(deck):
     slide.set_style("b", TextStyle(line_spacing=1.5))
     slide.text("Wg\nWg\n~b{Wg\n~a{Wg\nWg}}\nWg", bg_color="gray")
 
-    deck.render(output_pdf="/tmp/out.pdf")
-
 
 @check()
 def test_text_descent_ascent2(deck):
     slide = deck.new_slide(width=20, height=380)
     slide.set_style("default", TextStyle(size=12, line_spacing=1.5))
     slide.text("g\n" * 20, bg_color="red")
-    deck.render(output_pdf="/tmp/out.pdf")

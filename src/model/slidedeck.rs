@@ -124,8 +124,9 @@ impl SlideDeck {
         styles.insert("default".to_string(), StepValue::new_const(default_style));
         styles.insert(
             "monospace".to_string(),
-            StepValue::new_const(monospace_style),
+            StepValue::new_const(monospace_style.clone()),
         );
+        styles.insert("code".to_string(), StepValue::new_const(monospace_style));
         Ok(Self {
             slides: Vec::new(),
             global_styles: Arc::new(StyleMap::new(styles)),

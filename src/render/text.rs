@@ -1,7 +1,7 @@
 use crate::model::{Resources, Span, StyledLine, StyledText, TextAlign, TextStyle};
 
 use crate::render::paths::stroke_to_usvg_stroke;
-use usvg::{fontdb, NonZeroPositiveF32, TreeTextToPath};
+use usvg::{NonZeroPositiveF32, TreeTextToPath};
 use usvg_tree::{
     AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStyle, LengthAdjust,
     NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow, TextRendering,
@@ -13,10 +13,10 @@ pub(crate) fn get_text_size(
     text: &StyledText,
     align: TextAlign,
 ) -> (f32, f32) {
-    let text_node = render_text(resources, text, 0.0, 0.0, align);
+    let text_node = render_text(text, 0.0, 0.0, align);
     let root_node = usvg::Node::new(NodeKind::Group(usvg::Group::default()));
     root_node.append(text_node);
-    let size = usvg::Size::from_wh(800.0, 600.0).unwrap();
+    let size = usvg::Size::from_wh(8000.0, 6000.0).unwrap();
     let mut tree = usvg_tree::Tree {
         size,
         view_box: usvg::ViewBox {
@@ -26,26 +26,24 @@ pub(crate) fn get_text_size(
         root: root_node,
     };
     tree.convert_text(&resources.font_db);
-    let mut width: f32 = 0.0;
-    if let Some(child) = tree.root.first_child() {
-        let mut children = child.children();
-        for line in text.styled_lines {
-            width = width.max(
-                (0..line.spans.len())
-                    .map(|_| {
-                        let child = children.next().unwrap();
-                        let borrowed = child.borrow();
-                        match *borrowed {
-                            NodeKind::Path(ref path) => {
-                                let bbox = path.text_bbox.unwrap();
-                                bbox.width()
-                            }
-                            _ => unreachable!(),
-                        }
-                    })
-                    .sum(),
-            );
+    let mut x1 = f32::MAX;
+    let mut x2 = f32::MIN;
+    if let Some(main) = tree.root.first_child() {
+        for child in main.children() {
+            let borrowed = child.borrow();
+            match *borrowed {
+                NodeKind::Path(ref path) => {
+                    let bbox = path.text_bbox.unwrap();
+                    x1 = x1.min(bbox.left());
+                    x2 = x2.max(bbox.right());
+                }
+                _ => unreachable!(),
+            }
         }
+    }
+    let mut width = x2 - x1;
+    if !f32::is_finite(width) || width < 0.0 {
+        width = 0.0;
     }
     (width, text.height())
 }
@@ -126,7 +124,6 @@ fn render_line(
 }
 
 pub(crate) fn render_text(
-    resources: &Resources,
     styled_text: &StyledText,
     x: f32,
     y: f32,
