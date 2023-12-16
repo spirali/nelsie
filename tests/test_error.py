@@ -1,5 +1,6 @@
-from nelsie import TextStyle, InSteps
 import pytest
+
+from nelsie import InSteps, TextStyle
 
 
 def test_set_style_error(deck):

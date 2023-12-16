@@ -1,4 +1,4 @@
-use crate::model::{Resources, Slide, Step};
+use crate::model::{FontData, Resources, Slide, Step};
 use crate::render::rendering::render_to_svg_tree;
 use crate::NelsieError;
 use crate::Result;
@@ -11,7 +11,7 @@ pub(crate) struct RenderConfig<'a> {
     pub resources: &'a Resources,
     pub slide: &'a Slide,
     pub step: Step,
-    pub default_font_name: &'a Arc<String>,
+    pub default_font: &'a Arc<FontData>,
 
     pub output_svg: Option<&'a Path>,
     pub output_png: Option<&'a Path>,

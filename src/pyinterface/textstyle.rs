@@ -9,17 +9,37 @@ use std::sync::Arc;
 use usvg_tree::FontStretch;
 
 #[derive(Debug, Default)]
-pub(crate) struct PyTextStyle(PartialTextStyle);
+pub(crate) struct PyTextStyle {
+    pub font_family: Option<String>,
+    pub stroke: Option<Option<Stroke>>,
+    pub color: Option<Option<Color>>,
+    pub size: Option<f32>,
+    pub line_spacing: Option<f32>,
+    pub italic: Option<bool>,
+    pub stretch: Option<FontStretch>,
+    pub weight: Option<u16>,
+}
 
 impl PyTextStyle {
-    pub fn new(style: PartialTextStyle) -> Self {
-        PyTextStyle(style)
-    }
-    pub fn into_partial_style(self, resources: &Resources) -> crate::Result<PartialTextStyle> {
-        if let Some(font) = &self.0.font_family {
-            resources.check_font(font)?;
-        }
-        Ok(self.0)
+    // pub fn new(style: PartialTextStyle) -> Self {
+    //     PyTextStyle({
+    //                 }
+    // }
+    pub fn into_partial_style(self, resources: &mut Resources) -> crate::Result<PartialTextStyle> {
+        let font = self
+            .font_family
+            .map(|name| resources.check_font(&name).map(Arc::new))
+            .transpose()?;
+        Ok(PartialTextStyle {
+            font,
+            stroke: self.stroke.map(|s| s.map(Arc::new)),
+            color: self.color,
+            size: self.size,
+            line_spacing: self.line_spacing,
+            italic: self.italic,
+            stretch: self.stretch,
+            weight: self.weight,
+        })
     }
 }
 
@@ -65,15 +85,10 @@ impl<'py> FromPyObject<'py> for PyTextStyle {
                 return Err(PyValueError::new_err("Invalid stroke value"));
             }
         } else {
-            stroke_attr
-                .extract::<Option<Stroke>>()?
-                .map(|x| Some(Arc::new(x)))
+            stroke_attr.extract::<Option<Stroke>>()?.map(Some)
         };
-        Ok(PyTextStyle(PartialTextStyle {
-            font_family: ob
-                .getattr("font_family")?
-                .extract::<Option<String>>()?
-                .map(Arc::new),
+        Ok(PyTextStyle {
+            font_family: ob.getattr("font_family")?.extract::<Option<String>>()?,
             stroke,
             color,
             size: ob.getattr("size")?.extract()?,
@@ -81,7 +96,7 @@ impl<'py> FromPyObject<'py> for PyTextStyle {
             italic: ob.getattr("italic")?.extract()?,
             stretch,
             weight: ob.getattr("weight")?.extract()?,
-        }))
+        })
     }
 }
 
@@ -94,55 +109,57 @@ fn stroke_to_py_map(stroke: &Stroke, py: Python<'_>) -> PyObject {
     map.to_object(py)
 }
 
-impl ToPyObject for PyTextStyle {
-    fn to_object(&self, py: Python<'_>) -> PyObject {
-        let stretch_idx = self.0.stretch.map(|s| match s {
-            FontStretch::UltraCondensed => 1,
-            FontStretch::ExtraCondensed => 2,
-            FontStretch::Condensed => 3,
-            FontStretch::SemiCondensed => 4,
-            FontStretch::Normal => 5,
-            FontStretch::SemiExpanded => 6,
-            FontStretch::Expanded => 7,
-            FontStretch::ExtraExpanded => 8,
-            FontStretch::UltraExpanded => 9,
-        });
-        let mut map: HashMap<String, PyObject> = HashMap::new();
-        map.insert(
-            "font_family".into(),
-            self.0.font_family.as_deref().to_object(py),
-        );
-        map.insert(
-            "color".into(),
-            self.0
-                .color
-                .as_ref()
-                .map(|v| {
-                    v.as_ref()
-                        .map(|c| c.to_string())
-                        .unwrap_or_else(|| "empty".to_string())
-                })
-                .to_object(py),
-        );
-        map.insert(
-            "stroke".into(),
-            self.0
-                .stroke
-                .as_ref()
-                .map(|v| {
-                    v.as_ref()
-                        .map(|s| stroke_to_py_map(s, py))
-                        .unwrap_or_else(|| "empty".to_object(py))
-                })
-                .to_object(py),
-        );
-        map.insert("size".into(), self.0.size.to_object(py));
-        map.insert("line_spacing".into(), self.0.line_spacing.to_object(py));
-        map.insert("italic".into(), self.0.italic.to_object(py));
-        map.insert("stretch".into(), stretch_idx.to_object(py));
-        map.insert("weight".into(), self.0.weight.to_object(py));
-        map.to_object(py)
-    }
+pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Python<'_>) -> PyObject {
+    let stretch_idx = style.stretch.map(|s| match s {
+        FontStretch::UltraCondensed => 1,
+        FontStretch::ExtraCondensed => 2,
+        FontStretch::Condensed => 3,
+        FontStretch::SemiCondensed => 4,
+        FontStretch::Normal => 5,
+        FontStretch::SemiExpanded => 6,
+        FontStretch::Expanded => 7,
+        FontStretch::ExtraExpanded => 8,
+        FontStretch::UltraExpanded => 9,
+    });
+    let mut map: HashMap<String, PyObject> = HashMap::new();
+    map.insert(
+        "font_family".into(),
+        style
+            .font
+            .as_ref()
+            .map(|f| f.family_name.as_str())
+            .to_object(py),
+    );
+    map.insert(
+        "color".into(),
+        style
+            .color
+            .as_ref()
+            .map(|v| {
+                v.as_ref()
+                    .map(|c| c.to_string())
+                    .unwrap_or_else(|| "empty".to_string())
+            })
+            .to_object(py),
+    );
+    map.insert(
+        "stroke".into(),
+        style
+            .stroke
+            .as_ref()
+            .map(|v| {
+                v.as_ref()
+                    .map(|s| stroke_to_py_map(s, py))
+                    .unwrap_or_else(|| "empty".to_object(py))
+            })
+            .to_object(py),
+    );
+    map.insert("size".into(), style.size.to_object(py));
+    map.insert("line_spacing".into(), style.line_spacing.to_object(py));
+    map.insert("italic".into(), style.italic.to_object(py));
+    map.insert("stretch".into(), stretch_idx.to_object(py));
+    map.insert("weight".into(), style.weight.to_object(py));
+    map.to_object(py)
 }
 
 #[derive(Debug, FromPyObject)]

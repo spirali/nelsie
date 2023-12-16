@@ -1,7 +1,7 @@
 use super::text::render_text;
 use crate::model::{
-    Color, Drawing, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText,
-    TextAlign, TextStyle,
+    Color, Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine,
+    StyledText, TextAlign, TextStyle,
 };
 use crate::render::core::RenderConfig;
 use crate::render::layout::{ComputedLayout, LayoutContext, Rectangle};
@@ -24,7 +24,7 @@ pub(crate) struct RenderContext<'a> {
     z_level: i32,
     layout: &'a ComputedLayout,
     svg_node: usvg::Node,
-    default_font_name: &'a Arc<String>,
+    default_font: &'a Arc<FontData>,
 }
 
 impl From<&Color> for usvg::Color {
@@ -35,9 +35,10 @@ impl From<&Color> for usvg::Color {
 }
 
 fn draw_debug_frame(
+    resources: &Resources,
     rect: &Rectangle,
     name: &str,
-    font_name: &Arc<String>,
+    font: &Arc<FontData>,
     color: &Color,
     svg_node: &usvg::Node,
 ) {
@@ -65,7 +66,7 @@ fn draw_debug_frame(
             text,
         }],
         styles: vec![TextStyle {
-            font_family: font_name.clone(),
+            font: font.clone(),
             stroke: None,
             color: Some(color.clone()),
             size: 8.0,
@@ -78,6 +79,7 @@ fn draw_debug_frame(
         default_line_spacing: 0.0,
     };
     svg_node.append(render_text(
+        resources,
         &styled_text,
         rect.x + 2.0,
         rect.y + 3.0,
@@ -92,7 +94,7 @@ impl<'a> RenderContext<'a> {
         z_level: i32,
         layout: &'a ComputedLayout,
         svg_node: usvg::Node,
-        default_font_name: &'a Arc<String>,
+        default_font: &'a Arc<FontData>,
     ) -> Self {
         RenderContext {
             resources: global_res,
@@ -100,7 +102,7 @@ impl<'a> RenderContext<'a> {
             z_level,
             layout,
             svg_node,
-            default_font_name,
+            default_font,
         }
     }
 
@@ -127,6 +129,7 @@ impl<'a> RenderContext<'a> {
                 let rect = self.layout.rect(node.node_id).unwrap();
                 match content {
                     NodeContent::Text(text) => self.svg_node.append(render_text(
+                        &self.resources,
                         &text.text_style_at_step(self.step),
                         match text.text_align {
                             TextAlign::Start => rect.x,
@@ -149,9 +152,10 @@ impl<'a> RenderContext<'a> {
             if let Some(color) = &node.debug_layout {
                 let rect = self.layout.rect(node.node_id).unwrap();
                 draw_debug_frame(
+                    self.resources,
                     rect,
                     &node.name,
-                    self.default_font_name,
+                    self.default_font,
                     color,
                     &self.svg_node,
                 );
@@ -199,7 +203,7 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
             z_level,
             &layout,
             root_svg_node.clone(),
-            render_cfg.default_font_name,
+            render_cfg.default_font,
         );
         render_ctx.render_to_svg(&render_cfg.slide.node);
     }

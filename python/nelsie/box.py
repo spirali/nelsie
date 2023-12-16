@@ -1,7 +1,14 @@
 import os
 from dataclasses import dataclass
 
-from .basictypes import Length, LengthAuto, Position, Size, parse_debug_layout, TextAlign
+from .basictypes import (
+    Length,
+    LengthAuto,
+    Position,
+    Size,
+    TextAlign,
+    parse_debug_layout,
+)
 from .insteps import InSteps
 from .shapes import Path
 from .textstyle import TextStyle, _data_to_text_style

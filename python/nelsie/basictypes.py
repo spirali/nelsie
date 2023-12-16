@@ -1,5 +1,5 @@
-import typing
 import enum
+import typing
 from dataclasses import dataclass
 from typing import Literal
 

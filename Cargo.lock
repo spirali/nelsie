@@ -454,6 +454,7 @@ dependencies = [
  "svgtypes",
  "taffy",
  "thiserror",
+ "ttf-parser",
  "usvg",
  "usvg-tree",
  "zip",

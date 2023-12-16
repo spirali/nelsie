@@ -1,4 +1,4 @@
-use crate::model::{Span, StyledLine, StyledText, TextAlign, TextStyle};
+use crate::model::{Resources, Span, StyledLine, StyledText, TextAlign, TextStyle};
 
 use crate::render::paths::stroke_to_usvg_stroke;
 use usvg::{fontdb, NonZeroPositiveF32, TreeTextToPath};
@@ -9,11 +9,11 @@ use usvg_tree::{
 };
 
 pub(crate) fn get_text_size(
-    font_db: &fontdb::Database,
+    resources: &Resources,
     text: &StyledText,
     align: TextAlign,
 ) -> (f32, f32) {
-    let text_node = render_text(text, 0.0, 0.0, align);
+    let text_node = render_text(resources, text, 0.0, 0.0, align);
     let root_node = usvg::Node::new(NodeKind::Group(usvg::Group::default()));
     root_node.append(text_node);
     let size = usvg::Size::from_wh(800.0, 600.0).unwrap();
@@ -25,7 +25,7 @@ pub(crate) fn get_text_size(
         },
         root: root_node,
     };
-    tree.convert_text(font_db);
+    tree.convert_text(&resources.font_db);
     let mut width: f32 = 0.0;
     if let Some(child) = tree.root.first_child() {
         let mut children = child.children();
@@ -58,7 +58,7 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (Te
         rule: Default::default(),
     });
     let font = Font {
-        families: vec![text_style.font_family.as_ref().clone()],
+        families: vec![text_style.font.family_name.clone()],
         style: if text_style.italic {
             FontStyle::Italic
         } else {
@@ -126,6 +126,7 @@ fn render_line(
 }
 
 pub(crate) fn render_text(
+    resources: &Resources,
     styled_text: &StyledText,
     x: f32,
     y: f32,
@@ -153,23 +154,30 @@ pub(crate) fn render_text(
     let rot_list = vec![0.0; n_chars];
 
     let mut current_y = y;
+    // let last = styled_text.stlen() - 1;
     let chunks: Vec<TextChunk> = styled_text
         .styled_lines
         .iter()
-        .map(|styled_line| {
-            let line_height = styled_line
-                .line_height(&styled_text.styles)
-                .unwrap_or_else(|| styled_text.default_line_height());
-            let font_size = styled_line
+        .enumerate()
+        .map(|(idx, styled_line)| {
+            let size = styled_line
                 .font_size(&styled_text.styles)
                 .unwrap_or(styled_text.default_font_size);
-            current_y += line_height;
-            let half_space = (line_height - font_size) / 2.0;
+
+            let height = if idx != 0 {
+                size * styled_text.default_line_spacing
+            } else {
+                size
+            };
+            let descender = styled_line
+                .line_descender(&styled_text.styles)
+                .unwrap_or(0.0);
+            current_y += height;
             render_line(
                 &styled_text.styles,
                 styled_line,
                 x,
-                current_y - half_space,
+                current_y + descender,
                 anchor,
             )
         })

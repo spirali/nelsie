@@ -43,7 +43,8 @@ def collect_failed_tests() -> list[FailedTest]:
         check_dir = os.path.join(CHECKS, name)
         files = set()
         files.update(os.listdir(test_dir))
-        files.update(os.listdir(check_dir))
+        if os.path.exists(check_dir):
+            files.update(os.listdir(check_dir))
         files = sorted(files)
         diffs = []
         for file in files:
@@ -101,7 +102,7 @@ def report(failed_tests):
 def update(failed_tests):
     for failed_test in failed_tests:
         print(f"Updating {failed_test.name}")
-        shutil.rmtree(failed_test.check_dir)
+        shutil.rmtree(failed_test.check_dir, ignore_errors=True)
         shutil.copytree(
             os.path.join(failed_test.test_dir),
             os.path.join(failed_test.check_dir),

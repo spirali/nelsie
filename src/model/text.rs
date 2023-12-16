@@ -25,6 +25,17 @@ impl StyledLine {
             })
             .max_by(|x, y| x.partial_cmp(y).unwrap())
     }
+
+    pub fn line_descender(&self, text_styles: &[TextStyle]) -> Option<f32> {
+        self.spans
+            .iter()
+            .map(|span| {
+                let style = &text_styles[span.style_idx as usize];
+                style.size * style.font.descender
+            })
+            .min_by(|x, y| x.partial_cmp(y).unwrap())
+    }
+
     pub fn font_size(&self, text_styles: &[TextStyle]) -> Option<f32> {
         self.spans
             .iter()
@@ -46,11 +57,21 @@ pub(crate) struct StyledText<'a> {
 
 impl<'a> StyledText<'a> {
     pub fn height(&self) -> f32 {
+        if self.styled_lines.is_empty() {
+            return 0.0;
+        }
         self.styled_lines
             .iter()
-            .map(|line| {
-                line.line_height(&self.styles)
-                    .unwrap_or_else(|| self.default_line_height())
+            .enumerate()
+            .map(|(idx, line)| {
+                let size = line
+                    .font_size(&self.styles)
+                    .unwrap_or(self.default_font_size);
+                if idx == 0 {
+                    size
+                } else {
+                    size * self.default_line_spacing
+                }
             })
             .sum()
     }

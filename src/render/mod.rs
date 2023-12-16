@@ -8,7 +8,7 @@ mod text;
 
 use crate::common::error::NelsieError;
 use crate::common::fileutils::ensure_directory;
-use crate::model::{Resources, Slide, SlideDeck};
+use crate::model::{FontData, Resources, Slide, SlideDeck};
 pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use pdf::PdfBuilder;
 use std::path::Path;
@@ -25,7 +25,7 @@ fn render_slide(
     output_cfg: &OutputConfig,
     slide_idx: usize,
     slide: &Slide,
-    default_font_name: &Arc<String>,
+    default_font: &Arc<FontData>,
 ) -> crate::Result<Vec<usvg::Tree>> {
     log::debug!("Rendering slide {}", slide_idx);
     (1..=slide.n_steps)
@@ -43,7 +43,7 @@ fn render_slide(
                 output_png: output_png.as_deref(),
                 slide,
                 step,
-                default_font_name,
+                default_font,
             };
             render_slide_step(&render_cfg)
         })
@@ -86,7 +86,7 @@ pub(crate) fn render_slide_deck(
             output_cfg,
             slide_idx,
             slide,
-            &slide_deck.default_font_family,
+            &slide_deck.default_font,
         )? {
             if let Some(builder) = &mut pdf_builder {
                 builder.add_page_from_svg(tree);

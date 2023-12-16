@@ -3,11 +3,17 @@ use crate::model::{Color, StepValue, Stroke};
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use usvg_tree::FontStretch;
+use usvg_tree::{Font, FontStretch};
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct FontData {
+    pub family_name: String,
+    pub descender: f32,
+}
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(crate) struct PartialTextStyle {
-    pub font_family: Option<Arc<String>>,
+    pub font: Option<Arc<FontData>>,
     pub stroke: Option<Option<Arc<Stroke>>>,
     pub color: Option<Option<Color>>,
     pub size: Option<f32>,
@@ -20,7 +26,7 @@ pub(crate) struct PartialTextStyle {
 impl PartialTextStyle {
     pub fn into_text_style(self) -> Option<TextStyle> {
         Some(TextStyle {
-            font_family: self.font_family?,
+            font: self.font?,
             stroke: self.stroke?,
             color: self.color?,
             size: self.size?,
@@ -33,11 +39,7 @@ impl PartialTextStyle {
 
     pub fn merge(&self, other: &PartialTextStyle) -> PartialTextStyle {
         PartialTextStyle {
-            font_family: other
-                .font_family
-                .as_ref()
-                .or(self.font_family.as_ref())
-                .cloned(),
+            font: other.font.as_ref().or(self.font.as_ref()).cloned(),
             stroke: other.stroke.as_ref().or(self.stroke.as_ref()).cloned(),
             color: other.color.as_ref().or(self.color.as_ref()).cloned(),
             size: other.size.or(self.size),
@@ -51,7 +53,7 @@ impl PartialTextStyle {
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct TextStyle {
-    pub font_family: Arc<String>,
+    pub font: Arc<FontData>,
     pub stroke: Option<Arc<Stroke>>,
     pub color: Option<Color>,
     pub size: f32,
