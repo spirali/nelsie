@@ -115,10 +115,11 @@ class BoxBuilder:
         delimiters: str | None = "~{}",
         tab_width: int = 4,
         align: TextAlign = TextAlign.Start,
+        strip=True,
         **box_args,
     ):
         return self._text_box(
-            text, style, None, delimiters, tab_width, box_args, align, None, None
+            text, style, None, delimiters, tab_width, box_args, align, None, None, strip
         )
 
     def code(
@@ -131,12 +132,13 @@ class BoxBuilder:
         delimiters: str | None = "~{}",
         tab_width: int = 4,
         align: TextAlign = TextAlign.Start,
+        strip=True,
         **box_args,
     ):
         if theme is None:
             theme = self.get_box().deck.default_theme
         return self._text_box(
-            text, "code", style, None, tab_width, box_args, align, language, theme
+            text, "code", style, None, tab_width, box_args, align, language, theme, strip
         )
 
     def _text_box(
@@ -150,7 +152,10 @@ class BoxBuilder:
         align,
         language,
         theme,
+        strip,
     ):
+        if strip:
+            text = text.strip()
         text = text.replace("\t", " " * tab_width)
         text_content = TextContent(
             text=text,

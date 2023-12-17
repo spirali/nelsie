@@ -34,7 +34,7 @@ def test_render_text_basic(deck):
     slide.box(bg_color="#f88").text("A\n\nBB")
 
     slide = deck.new_slide()
-    slide.box(bg_color="#f88").text("\nLines up & below\n\n\n")
+    slide.box(bg_color="#f88").text("\nLines up & below\n\n\n", strip=False)
 
     slide = deck.new_slide()
     slide.set_style("big", TextStyle(size=64))
