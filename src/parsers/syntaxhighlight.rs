@@ -55,20 +55,26 @@ pub fn run_syntax_highlighting(
             .map_err(|e| {
                 NelsieError::generic_err(format!("Syntax highlight error: {}", e.to_string()))
             })?;
-        let spans: Vec<_> = highlighted_line
-            .into_iter()
-            .map(|(style, word)| {
-                let style_idx = styles.iter().position(|s| s == &style).unwrap_or_else(|| {
-                    let idx = styles.len();
-                    styles.push(style);
-                    idx
-                }) as u32;
-                Span {
+        let mut spans: Vec<Span> = Vec::with_capacity(highlighted_line.len());
+        for (style, word) in highlighted_line {
+            let style_idx = styles.iter().position(|s| s == &style).unwrap_or_else(|| {
+                let idx = styles.len();
+                styles.push(style);
+                idx
+            }) as u32;
+            if spans
+                .last()
+                .map(|span| span.style_idx == style_idx)
+                .unwrap_or(false)
+            {
+                spans.last_mut().unwrap().length += word.len() as u32;
+            } else {
+                spans.push(Span {
                     length: word.len() as u32,
                     style_idx,
-                }
-            })
-            .collect();
+                });
+            }
+        }
         line.spans = spans;
     }
     let style = &text.styles[0];
