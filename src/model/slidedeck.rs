@@ -6,6 +6,7 @@ use crate::model::{
 };
 use std::collections::HashMap;
 use std::sync::Arc;
+use taffy::style::FlexWrap;
 use usvg_tree::FontStretch;
 
 #[derive(Debug)]
@@ -41,6 +42,9 @@ impl Slide {
                 height: StepValue::Const(Some(Length::Points { value: height })),
                 row: StepValue::Const(false),
                 reverse: StepValue::Const(false),
+                flex_wrap: StepValue::Const(FlexWrap::NoWrap),
+                flex_grow: StepValue::Const(0.0),
+                flex_shrink: StepValue::Const(1.0),
                 p_top: StepValue::Const(Length::ZERO),
                 p_bottom: StepValue::Const(Length::ZERO),
                 p_left: StepValue::Const(Length::ZERO),

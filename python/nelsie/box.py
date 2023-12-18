@@ -1,4 +1,5 @@
 import os
+import enum
 from dataclasses import dataclass
 
 from .basictypes import (
@@ -42,6 +43,12 @@ class ImageContent:
     shift_steps: int
 
 
+class FlexWrap(enum.IntEnum):
+    NoWrap = 0
+    Wrap = 1
+    WrapReverse = 2
+
+
 NodeContent = ImageContent | TextContent | None
 
 
@@ -63,6 +70,9 @@ class BoxConfig:
     m_bottom: LengthAuto | InSteps[LengthAuto]
     row: bool | InSteps[bool]
     reverse: bool | InSteps[bool]
+    flex_wrap: FlexWrap | InSteps[FlexWrap]
+    flex_grow: float | InSteps[float]
+    flex_shrink: float | InSteps[float]
     bg_color: str | None | InSteps[str | None]
     name: str
     debug_layout: bool | None
@@ -195,6 +205,9 @@ class BoxBuilder:
         m_bottom: LengthAuto | InSteps[LengthAuto] = 0,
         row: bool | InSteps[bool] = False,
         reverse: bool | InSteps[bool] = False,
+        flex_wrap: FlexWrap | InSteps[FlexWrap] = FlexWrap.NoWrap,
+        flex_grow: float | InSteps[float] = 0.0,
+        flex_shrink: float | InSteps[float] = 1.0,
         bg_color: str | None | InSteps[str | None] = None,
         name: str = "",
         debug_layout: bool | None = None,
@@ -221,6 +234,9 @@ class BoxBuilder:
             m_bottom=m_bottom,
             row=row,
             reverse=reverse,
+            flex_wrap=flex_wrap,
+            flex_grow=flex_grow,
+            flex_shrink=flex_shrink,
             bg_color=bg_color,
             name=name,
             debug_layout=debug_layout,

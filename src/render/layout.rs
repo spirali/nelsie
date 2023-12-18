@@ -224,6 +224,9 @@ impl<'a> LayoutContext<'a> {
             align_items: Some(tf::AlignItems::Center),
             padding,
             margin,
+            flex_wrap: *node.flex_wrap.at_step(self.step),
+            flex_grow: *node.flex_grow.at_step(self.step),
+            flex_shrink: *node.flex_shrink.at_step(self.step),
             ..Default::default()
         };
         taffy.new_with_children(style, &tf_children).unwrap()

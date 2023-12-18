@@ -19,6 +19,7 @@ use pyo3::{FromPyObject, PyAny, PyResult};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
+use taffy::style::FlexWrap;
 
 #[derive(Debug, FromPyObject)]
 pub(crate) enum Show {
@@ -71,6 +72,9 @@ pub(crate) struct BoxConfig {
     pub height: ValueOrInSteps<Option<PyStringOrFloat>>,
     pub row: ValueOrInSteps<bool>,
     pub reverse: ValueOrInSteps<bool>,
+    pub flex_wrap: ValueOrInSteps<u32>,
+    pub flex_grow: ValueOrInSteps<f32>,
+    pub flex_shrink: ValueOrInSteps<f32>,
     pub p_left: ValueOrInSteps<PyStringOrFloat>,
     pub p_right: ValueOrInSteps<PyStringOrFloat>,
     pub p_top: ValueOrInSteps<PyStringOrFloat>,
@@ -214,7 +218,12 @@ impl BoxConfig {
             .map(|c| process_content(c, nc_env, &styles, &mut n_steps2))
             .transpose()?;
         n_steps = n_steps.max(n_steps2);
-
+        let flex_wrap = self.flex_wrap.parse(&mut n_steps, |f| match f {
+            0 => Ok(FlexWrap::NoWrap),
+            1 => Ok(FlexWrap::Wrap),
+            2 => Ok(FlexWrap::WrapReverse),
+            _ => Err(PyValueError::new_err("Invalid wrap value")),
+        })?;
         let bg_color = self.bg_color.parse(&mut n_steps, |v| {
             v.as_deref().map(Color::from_str).transpose()
         })?;
@@ -248,6 +257,9 @@ impl BoxConfig {
             height,
             row: self.row.into_step_value(&mut n_steps),
             reverse: self.reverse.into_step_value(&mut n_steps),
+            flex_wrap,
+            flex_grow: self.flex_grow.into_step_value(&mut n_steps),
+            flex_shrink: self.flex_shrink.into_step_value(&mut n_steps),
             p_top: self.p_top.parse(&mut n_steps, parse_len)?,
             p_bottom: self.p_bottom.parse(&mut n_steps, parse_len)?,
             p_left: self.p_left.parse(&mut n_steps, parse_len)?,

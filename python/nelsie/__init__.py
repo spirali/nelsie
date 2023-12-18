@@ -3,6 +3,7 @@ from .insteps import InSteps
 from .shapes import Path
 from .slidedeck import Resources, SlideDeck
 from .textstyle import FontStretch, TextStyle
+from .box import FlexWrap
 
 __all__ = [
     "SlideDeck",
@@ -13,4 +14,5 @@ __all__ = [
     "Resources",
     "FontStretch",
     "TextAlign",
+    "FlexWrap",
 ]

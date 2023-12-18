@@ -6,6 +6,7 @@ use crate::model::{LayoutExpr, NodeId};
 use std::collections::BTreeSet;
 
 use std::sync::Arc;
+use taffy::style::FlexWrap;
 
 #[derive(Debug)]
 pub(crate) enum NodeContent {
@@ -35,6 +36,10 @@ pub(crate) struct Node {
 
     pub row: StepValue<bool>,
     pub reverse: StepValue<bool>,
+
+    pub flex_wrap: StepValue<FlexWrap>,
+    pub flex_grow: StepValue<f32>,
+    pub flex_shrink: StepValue<f32>,
 
     pub p_top: StepValue<Length>,
     pub p_bottom: StepValue<Length>,

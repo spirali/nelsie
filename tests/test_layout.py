@@ -1,3 +1,4 @@
+from nelsie import FlexWrap
 from testutils import check
 
 from nelsie.layoutexpr import ConstExpr, SumExpr
@@ -97,3 +98,25 @@ def test_layout_margin(deck):
     b.box(width=15, height=15, bg_color="red")
     b = slide.box(bg_color="gray", m_bottom=20)
     b.box(width=15, height=15, bg_color="blue")
+
+
+@check()
+def test_layout_flex_grow(deck):
+    slide = deck.new_slide(width=150, height=150)
+    b = slide.box(height="100%", bg_color="gray")
+    b.box(width=30, height=15, bg_color="orange")
+    b.box(width=30, flex_grow=1, bg_color="red")
+    b.box(width=30, flex_grow=2, bg_color="blue")
+    b.box(width=30, height=5, bg_color="#ff00ff")
+
+
+@check()
+def test_layout_flex_wrap(deck):
+    slide = deck.new_slide(width=150, height=150)
+    b = slide.box(row=True, height="100%", width="100%", bg_color="gray", flex_wrap=FlexWrap.Wrap)
+    b.box(width=40, height=30, bg_color="orange")
+    b.box(width=40, height=30, bg_color="blue")
+    b.box(width=40, height=30, bg_color="orange")
+    b.box(width=40, height=30, bg_color="blue")
+    b.box(width=40, height=30, bg_color="orange")
+    b.box(width=40, height=30, bg_color="blue")

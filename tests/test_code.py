@@ -32,4 +32,3 @@ fn main() {
         language="rs",
         theme="Solarized (light)"
     )
-    deck.render(output_pdf="/tmp/out.pdf")

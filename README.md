@@ -34,7 +34,7 @@
     * ~~Padding~~
     * Align & Justify items
     * Gap
-    * Flex grow & shrink
+    * ~~Flex grow & shrink~~
     * ~~Absolute positioning~~
     * Flex basis
     * Positions derived from other boxes
