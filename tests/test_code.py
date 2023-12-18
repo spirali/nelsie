@@ -30,5 +30,5 @@ fn main() {
 }    
 """,
         language="rs",
-        theme="Solarized (light)"
+        theme="Solarized (light)",
     )

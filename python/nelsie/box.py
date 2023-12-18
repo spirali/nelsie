@@ -43,13 +43,40 @@ class ImageContent:
     shift_steps: int
 
 
+@enum.unique
 class FlexWrap(enum.IntEnum):
     NoWrap = 0
     Wrap = 1
     WrapReverse = 2
 
 
+@enum.unique
+class AlignItems(enum.IntEnum):
+    Start = 0
+    End = 1
+    FlexStart = 2
+    FlexEnd = 3
+    Center = 4
+    Baseline = 5
+    Stretch = 6
+
+
+@enum.unique
+class AlignContent(enum.IntEnum):
+    Start = 0
+    End = 1
+    FlexStart = 2
+    FlexEnd = 3
+    Center = 4
+    Stretch = 5
+    SpaceBetween = 6
+    SpaceEvenly = 7
+    SpaceAround = 8
+
+
 NodeContent = ImageContent | TextContent | None
+AlignItemsSteps = AlignItems | None | InSteps[AlignItems | None]
+AlignContentSteps = AlignContent | None | InSteps[AlignContent | None]
 
 
 @dataclass
@@ -73,6 +100,12 @@ class BoxConfig:
     flex_wrap: FlexWrap | InSteps[FlexWrap]
     flex_grow: float | InSteps[float]
     flex_shrink: float | InSteps[float]
+    align_items: AlignItemsSteps
+    align_self: AlignItemsSteps
+    justify_self: AlignItemsSteps
+    align_content: AlignContentSteps
+    justify_content: AlignContentSteps
+    gap: tuple[Length, Length] | InSteps[tuple[Length, Length]]
     bg_color: str | None | InSteps[str | None]
     name: str
     debug_layout: bool | None
@@ -148,7 +181,16 @@ class BoxBuilder:
         if theme is None:
             theme = self.get_box().deck.default_theme
         return self._text_box(
-            text, "code", style, None, tab_width, box_args, align, language, theme, strip
+            text,
+            "code",
+            style,
+            None,
+            tab_width,
+            box_args,
+            align,
+            language,
+            theme,
+            strip,
         )
 
     def _text_box(
@@ -208,6 +250,12 @@ class BoxBuilder:
         flex_wrap: FlexWrap | InSteps[FlexWrap] = FlexWrap.NoWrap,
         flex_grow: float | InSteps[float] = 0.0,
         flex_shrink: float | InSteps[float] = 1.0,
+        align_items: AlignItemsSteps = AlignItems.Center,
+        align_self: AlignItemsSteps = None,
+        justify_self: AlignItemsSteps = None,
+        align_content: AlignContentSteps = None,
+        justify_content: AlignContentSteps = AlignContent.Center,
+        gap: tuple[Length, Length] | InSteps[tuple[Length, Length]] = (0.0, 0.0),
         bg_color: str | None | InSteps[str | None] = None,
         name: str = "",
         debug_layout: bool | None = None,
@@ -237,6 +285,12 @@ class BoxBuilder:
             flex_wrap=flex_wrap,
             flex_grow=flex_grow,
             flex_shrink=flex_shrink,
+            align_items=align_items,
+            align_self=align_self,
+            justify_self=justify_self,
+            align_content=align_content,
+            justify_content=justify_content,
+            gap=gap,
             bg_color=bg_color,
             name=name,
             debug_layout=debug_layout,

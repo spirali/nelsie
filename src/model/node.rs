@@ -6,6 +6,10 @@ use crate::model::{LayoutExpr, NodeId};
 use std::collections::BTreeSet;
 
 use std::sync::Arc;
+use taffy::geometry::Size;
+use taffy::prelude::{
+    AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, LengthPercentage,
+};
 use taffy::style::FlexWrap;
 
 #[derive(Debug)]
@@ -40,6 +44,13 @@ pub(crate) struct Node {
     pub flex_wrap: StepValue<FlexWrap>,
     pub flex_grow: StepValue<f32>,
     pub flex_shrink: StepValue<f32>,
+
+    pub align_items: StepValue<Option<AlignItems>>,
+    pub align_self: StepValue<Option<AlignItems>>,
+    pub justify_self: StepValue<Option<AlignItems>>,
+    pub align_content: StepValue<Option<AlignContent>>,
+    pub justify_content: StepValue<Option<AlignContent>>,
+    pub gap: StepValue<(Length, Length)>,
 
     pub p_top: StepValue<Length>,
     pub p_bottom: StepValue<Length>,

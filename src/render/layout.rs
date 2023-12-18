@@ -3,7 +3,9 @@ use crate::model::{
 };
 use crate::render::text::get_text_size;
 use std::collections::{BTreeMap, HashMap};
+use taffy::geometry::Size;
 use taffy::prelude as tf;
+use taffy::prelude::JustifyContent;
 use taffy::style::{AvailableSpace, Dimension};
 
 pub(crate) struct LayoutContext<'a> {
@@ -215,18 +217,34 @@ impl<'a> LayoutContext<'a> {
             bottom: node.m_bottom.at_step(self.step).into(),
         };
 
+        let (gap_w, gap_h) = node.gap.at_step(self.step);
+
+        /*dbg!(*node.align_items.at_step(self.step));
+        dbg!(*node.align_self.at_step(self.step));
+        dbg!(*node.justify_self.at_step(self.step));
+        dbg!(node.align_content.at_step(self.step));
+        dbg!(node.justify_content.at_step(self.step));*/
+
         let style = tf::Style {
             position,
             size: tf::Size { width, height },
             flex_direction,
             aspect_ratio: content_aspect_ratio,
-            justify_content: Some(tf::JustifyContent::Center),
-            align_items: Some(tf::AlignItems::Center),
             padding,
             margin,
             flex_wrap: *node.flex_wrap.at_step(self.step),
             flex_grow: *node.flex_grow.at_step(self.step),
             flex_shrink: *node.flex_shrink.at_step(self.step),
+
+            align_items: *node.align_items.at_step(self.step),
+            align_self: *node.align_self.at_step(self.step),
+            justify_self: *node.justify_self.at_step(self.step),
+            align_content: *node.align_content.at_step(self.step),
+            justify_content: *node.justify_content.at_step(self.step),
+            gap: Size {
+                width: gap_w.into(),
+                height: gap_h.into(),
+            },
             ..Default::default()
         };
         taffy.new_with_children(style, &tf_children).unwrap()

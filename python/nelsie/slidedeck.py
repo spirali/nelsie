@@ -41,14 +41,14 @@ class SlideDeck:
         default_theme: str = "InspiredGitHub",
     ):
         """
-            Available syntax highlight themes:
-              * "base16-ocean.dark",
-              * "base16-eighties.dark"
-              * "base16-mocha.dark"
-              * "base16-ocean.light"
-              * "InspiredGitHub"
-              * "Solarized (dark)"
-              * "Solarized (light)"
+        Available syntax highlight themes:
+          * "base16-ocean.dark",
+          * "base16-eighties.dark"
+          * "base16-mocha.dark"
+          * "base16-ocean.light"
+          * "InspiredGitHub"
+          * "Solarized (dark)"
+          * "Solarized (light)"
         """
         if resources is None:
             resources = Resources()

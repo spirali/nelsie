@@ -6,6 +6,7 @@ use crate::model::{
 };
 use std::collections::HashMap;
 use std::sync::Arc;
+use taffy::prelude as tf;
 use taffy::style::FlexWrap;
 use usvg_tree::FontStretch;
 
@@ -45,6 +46,12 @@ impl Slide {
                 flex_wrap: StepValue::Const(FlexWrap::NoWrap),
                 flex_grow: StepValue::Const(0.0),
                 flex_shrink: StepValue::Const(1.0),
+                justify_content: StepValue::Const(Some(tf::JustifyContent::Center)),
+                align_items: StepValue::Const(Some(tf::AlignItems::Center)),
+                align_self: StepValue::Const(None),
+                justify_self: StepValue::Const(None),
+                align_content: StepValue::Const(None),
+                gap: StepValue::Const((Length::ZERO, Length::ZERO)),
                 p_top: StepValue::Const(Length::ZERO),
                 p_bottom: StepValue::Const(Length::ZERO),
                 p_left: StepValue::Const(Length::ZERO),

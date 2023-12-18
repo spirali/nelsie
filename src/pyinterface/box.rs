@@ -16,9 +16,11 @@ use crate::pyinterface::textstyle::PyTextStyleOrName;
 use pyo3::exceptions::PyValueError;
 use pyo3::{FromPyObject, PyAny, PyResult};
 
+use crate::common::error::NelsieError;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
+use taffy::prelude::{AlignContent, AlignItems, JustifyContent};
 use taffy::style::FlexWrap;
 
 #[derive(Debug, FromPyObject)]
@@ -75,6 +77,14 @@ pub(crate) struct BoxConfig {
     pub flex_wrap: ValueOrInSteps<u32>,
     pub flex_grow: ValueOrInSteps<f32>,
     pub flex_shrink: ValueOrInSteps<f32>,
+
+    pub align_items: ValueOrInSteps<Option<u32>>,
+    pub align_self: ValueOrInSteps<Option<u32>>,
+    pub justify_self: ValueOrInSteps<Option<u32>>,
+    pub align_content: ValueOrInSteps<Option<u32>>,
+    pub justify_content: ValueOrInSteps<Option<u32>>,
+    pub gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
+
     pub p_left: ValueOrInSteps<PyStringOrFloat>,
     pub p_right: ValueOrInSteps<PyStringOrFloat>,
     pub p_top: ValueOrInSteps<PyStringOrFloat>,
@@ -204,6 +214,38 @@ fn process_content(
     })
 }
 
+fn parse_align_items(value: Option<u32>) -> crate::Result<Option<AlignItems>> {
+    value
+        .map(|v| match v {
+            0 => Ok(AlignItems::Start),
+            1 => Ok(AlignItems::End),
+            2 => Ok(AlignItems::FlexStart),
+            3 => Ok(AlignItems::FlexEnd),
+            4 => Ok(AlignItems::Center),
+            5 => Ok(AlignItems::Baseline),
+            6 => Ok(AlignItems::Stretch),
+            _ => Err(NelsieError::parsing_err("Invalid AlignItems")),
+        })
+        .transpose()
+}
+
+fn parse_align_content(value: Option<u32>) -> crate::Result<Option<AlignContent>> {
+    value
+        .map(|v| match v {
+            0 => Ok(AlignContent::Start),
+            1 => Ok(AlignContent::End),
+            2 => Ok(AlignContent::FlexStart),
+            3 => Ok(AlignContent::FlexEnd),
+            4 => Ok(AlignContent::Center),
+            5 => Ok(AlignContent::Stretch),
+            6 => Ok(AlignContent::SpaceBetween),
+            7 => Ok(AlignContent::SpaceEvenly),
+            8 => Ok(AlignContent::SpaceAround),
+            _ => Err(NelsieError::parsing_err("Invalid AlignContent")),
+        })
+        .transpose()
+}
+
 impl BoxConfig {
     pub fn make_node(
         self,
@@ -260,6 +302,18 @@ impl BoxConfig {
             flex_wrap,
             flex_grow: self.flex_grow.into_step_value(&mut n_steps),
             flex_shrink: self.flex_shrink.into_step_value(&mut n_steps),
+            align_items: self.align_items.parse(&mut n_steps, parse_align_items)?,
+            align_self: self.align_self.parse(&mut n_steps, parse_align_items)?,
+            justify_self: self.justify_self.parse(&mut n_steps, parse_align_items)?,
+            align_content: self
+                .align_content
+                .parse(&mut n_steps, parse_align_content)?,
+            justify_content: self
+                .justify_content
+                .parse(&mut n_steps, parse_align_content)?,
+            gap: self.gap.parse(&mut n_steps, |(w, h)| {
+                crate::Result::Ok((parse_len(w)?, parse_len(h)?))
+            })?,
             p_top: self.p_top.parse(&mut n_steps, parse_len)?,
             p_bottom: self.p_bottom.parse(&mut n_steps, parse_len)?,
             p_left: self.p_left.parse(&mut n_steps, parse_len)?,

@@ -1,4 +1,4 @@
-from nelsie import FlexWrap
+from nelsie import FlexWrap, AlignItems, AlignContent
 from testutils import check
 
 from nelsie.layoutexpr import ConstExpr, SumExpr
@@ -113,10 +113,95 @@ def test_layout_flex_grow(deck):
 @check()
 def test_layout_flex_wrap(deck):
     slide = deck.new_slide(width=150, height=150)
-    b = slide.box(row=True, height="100%", width="100%", bg_color="gray", flex_wrap=FlexWrap.Wrap)
+    b = slide.box(
+        row=True, height="100%", width="100%", bg_color="gray", flex_wrap=FlexWrap.Wrap
+    )
     b.box(width=40, height=30, bg_color="orange")
     b.box(width=40, height=30, bg_color="blue")
     b.box(width=40, height=30, bg_color="orange")
     b.box(width=40, height=30, bg_color="blue")
     b.box(width=40, height=30, bg_color="orange")
     b.box(width=40, height=30, bg_color="blue")
+
+
+@check(n_slides=4)
+def test_layout_justify_content(deck):
+    slide = deck.new_slide(width=50, height=150)
+    b = slide.box(
+        height="100%", width="100%", bg_color="gray", justify_content=AlignContent.Start
+    )
+    b.box(width=20, height=30, bg_color="red")
+    b.box(width=20, height=30, bg_color="green")
+    b.box(width=20, height=30, bg_color="blue")
+
+    slide = deck.new_slide(width=50, height=150)
+    b = slide.box(
+        height="100%", width="100%", bg_color="gray", justify_content=AlignContent.End
+    )
+    b.box(width=20, height=30, bg_color="red")
+    b.box(width=20, height=30, bg_color="green")
+    b.box(width=20, height=30, bg_color="blue")
+
+    slide = deck.new_slide(width=50, height=150)
+    b = slide.box(
+        height="100%",
+        width="100%",
+        bg_color="gray",
+        justify_content=AlignContent.SpaceEvenly,
+    )
+    b.box(width=20, height=30, bg_color="red")
+    b.box(width=20, height=30, bg_color="green")
+    b.box(width=20, height=30, bg_color="blue")
+
+    slide = deck.new_slide(width=50, height=150)
+    b = slide.box(
+        height="100%",
+        width="100%",
+        bg_color="gray",
+        justify_content=AlignContent.SpaceAround,
+    )
+    b.box(width=20, height=30, bg_color="red")
+    b.box(width=20, height=30, bg_color="green")
+    b.box(width=20, height=30, bg_color="blue")
+
+
+@check(n_slides=3)
+def test_layout_gap(deck):
+    slide = deck.new_slide(width=50, height=150)
+    b = slide.box(
+        height="100%",
+        width="100%",
+        bg_color="gray",
+        justify_content=AlignContent.Start,
+        gap=(0, 10),
+    )
+    b.box(width=20, height=30, bg_color="red")
+    b.box(width=20, height=30, bg_color="green")
+    b.box(width=20, height=30, bg_color="blue")
+    deck.render(output_pdf="/tmp/out.pdf")
+
+    slide = deck.new_slide(width=50, height=150)
+    b = slide.box(
+        height="100%",
+        width="100%",
+        bg_color="gray",
+        justify_content=AlignContent.Start,
+        gap=(0, "15%"),
+    )
+    b.box(width=20, height=30, bg_color="red")
+    b.box(width=20, height=30, bg_color="green")
+    b.box(width=20, height=30, bg_color="blue")
+    deck.render(output_pdf="/tmp/out.pdf")
+
+    slide = deck.new_slide(width=150, height=50)
+    b = slide.box(
+        row=True,
+        height="100%",
+        width="100%",
+        bg_color="gray",
+        justify_content=AlignContent.Start,
+        gap=(30, 20),
+    )
+    b.box(width=20, height=30, bg_color="red")
+    b.box(width=20, height=30, bg_color="green")
+    b.box(width=20, height=30, bg_color="blue")
