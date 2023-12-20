@@ -222,8 +222,11 @@ fn parse_align_items(value: Option<u32>) -> crate::Result<Option<AlignItems>> {
             2 => Ok(AlignItems::FlexStart),
             3 => Ok(AlignItems::FlexEnd),
             4 => Ok(AlignItems::Center),
-            5 => Ok(AlignItems::Baseline),
-            6 => Ok(AlignItems::Stretch),
+            5 => Ok(AlignItems::Stretch),
+            10 => Ok(AlignItems::Baseline),
+            20 | 21 | 22 => Err(NelsieError::parsing_err(
+                "SpaceBetween, SpaceEvenly, SpaceAround values cannot be used in this context",
+            )),
             _ => Err(NelsieError::parsing_err("Invalid AlignItems")),
         })
         .transpose()
@@ -238,9 +241,12 @@ fn parse_align_content(value: Option<u32>) -> crate::Result<Option<AlignContent>
             3 => Ok(AlignContent::FlexEnd),
             4 => Ok(AlignContent::Center),
             5 => Ok(AlignContent::Stretch),
-            6 => Ok(AlignContent::SpaceBetween),
-            7 => Ok(AlignContent::SpaceEvenly),
-            8 => Ok(AlignContent::SpaceAround),
+            10 => Err(NelsieError::parsing_err(
+                "Baseline value cannot be used in this context",
+            )),
+            20 => Ok(AlignContent::SpaceBetween),
+            21 => Ok(AlignContent::SpaceEvenly),
+            22 => Ok(AlignContent::SpaceAround),
             _ => Err(NelsieError::parsing_err("Invalid AlignContent")),
         })
         .transpose()
