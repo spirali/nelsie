@@ -67,3 +67,4 @@
     * ~~ignore fragments~~
     * ~~shift_first_step~~
     * select steps
+    * detect invalid font in SVG image
