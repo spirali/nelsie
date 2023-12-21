@@ -3,6 +3,8 @@ pub(crate) mod step_parser;
 mod syntaxhighlight;
 mod text;
 
+use crate::model::LayoutExpr;
+
 #[derive(Debug)]
 pub(crate) enum StringOrFloat {
     Float(f32),
@@ -13,7 +15,7 @@ pub(crate) enum StringOrFloat {
 pub(crate) enum StringOrFloatOrExpr {
     Float(f32),
     String(String),
-    //Expr(LayoutExpr),
+    Expr(LayoutExpr),
 }
 
 pub(crate) use size::{parse_length, parse_length_auto, parse_position};

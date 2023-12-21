@@ -276,10 +276,10 @@ impl BoxConfig {
             v.as_deref().map(Color::from_str).transpose()
         })?;
         let x = self.x.parse(&mut n_steps, |v| {
-            v.map(|v| parse_position(&v.into(), true)).transpose()
+            v.map(|v| parse_position(v.into(), true)).transpose()
         })?;
         let y = self.y.parse(&mut n_steps, |v| {
-            v.map(|v| parse_position(&v.into(), false)).transpose()
+            v.map(|v| parse_position(v.into(), false)).transpose()
         })?;
         let show = match self.show {
             Show::Bool(value) => StepValue::new_const(value),

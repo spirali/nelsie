@@ -38,17 +38,17 @@ pub(crate) fn parse_length_auto(value: StringOrFloat) -> crate::Result<LengthOrA
     }
 }
 
-pub(crate) fn parse_position(value: &StringOrFloatOrExpr, is_x: bool) -> crate::Result<LayoutExpr> {
+pub(crate) fn parse_position(value: StringOrFloatOrExpr, is_x: bool) -> crate::Result<LayoutExpr> {
     Ok(match value {
         StringOrFloatOrExpr::Float(v) => {
             if is_x {
-                LayoutExpr::ParentX { shift: *v }
+                LayoutExpr::ParentX { shift: v }
             } else {
-                LayoutExpr::ParentY { shift: *v }
+                LayoutExpr::ParentY { shift: v }
             }
         }
         StringOrFloatOrExpr::String(_v) => todo!(),
-        //StringOrFloatOrExpr::Expr(expr) => expr,
+        StringOrFloatOrExpr::Expr(expr) => expr,
     })
 }
 

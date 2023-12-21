@@ -76,20 +76,20 @@ def fragments(slide):
 @deck.slide()
 def in_steps(slide):
     slide.text("Simple mechanism for complex slide changes", m_bottom=40)
-#     box = slide.box(p_left=20, p_right=20, p_top=20, p_bottom=20, bg_color="#eee")
-#     box.code(
-#         """
-# semaphore = slide.box(width=100, height=300, bg_color="gray")
-# semaphore.box(
-#     y=InSteps({1: 10, 2: 110, 3: 210}),
-#     width=80,
-#     height=80,
-#     bg_color=InSteps({1: "red", 2: "orange", 3: "green"}),
-# )
-# """,
-#         language="py",
-#         style=TextStyle(size=20)
-#     )
+    #     box = slide.box(p_left=20, p_right=20, p_top=20, p_bottom=20, bg_color="#eee")
+    #     box.code(
+    #         """
+    # semaphore = slide.box(width=100, height=300, bg_color="gray")
+    # semaphore.box(
+    #     y=InSteps({1: 10, 2: 110, 3: 210}),
+    #     width=80,
+    #     height=80,
+    #     bg_color=InSteps({1: "red", 2: "orange", 3: "green"}),
+    # )
+    # """,
+    #         language="py",
+    #         style=TextStyle(size=20)
+    #     )
 
     semaphore = slide.box(width=100, height=300, bg_color="gray")
     semaphore.box(

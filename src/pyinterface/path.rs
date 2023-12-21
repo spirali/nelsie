@@ -27,26 +27,26 @@ fn command_to_part(
     };
     match command {
         "move" => Ok(Move {
-            x: parse_position(&next()?, true)?,
-            y: parse_position(&next()?, false)?,
+            x: parse_position(next()?, true)?,
+            y: parse_position(next()?, false)?,
         }),
         "line" => Ok(Line {
-            x: parse_position(&next()?, true)?,
-            y: parse_position(&next()?, false)?,
+            x: parse_position(next()?, true)?,
+            y: parse_position(next()?, false)?,
         }),
         "quad" => Ok(Quad {
-            x1: parse_position(&next()?, true)?,
-            y1: parse_position(&next()?, false)?,
-            x: parse_position(&next()?, true)?,
-            y: parse_position(&next()?, false)?,
+            x1: parse_position(next()?, true)?,
+            y1: parse_position(next()?, false)?,
+            x: parse_position(next()?, true)?,
+            y: parse_position(next()?, false)?,
         }),
         "cubic" => Ok(Cubic {
-            x1: parse_position(&next()?, true)?,
-            y1: parse_position(&next()?, false)?,
-            x2: parse_position(&next()?, true)?,
-            y2: parse_position(&next()?, false)?,
-            x: parse_position(&next()?, true)?,
-            y: parse_position(&next()?, false)?,
+            x1: parse_position(next()?, true)?,
+            y1: parse_position(next()?, false)?,
+            x2: parse_position(next()?, true)?,
+            y2: parse_position(next()?, false)?,
+            x: parse_position(next()?, true)?,
+            y: parse_position(next()?, false)?,
         }),
         _ => Err(NelsieError::generic_err("Invalid path command")),
     }

@@ -7,9 +7,12 @@ from .basictypes import (
     Position,
     Size,
     TextAlign,
-    parse_debug_layout, Align, FlexWrap,
+    parse_debug_layout,
+    Align,
+    FlexWrap,
 )
 from .insteps import InSteps
+from .layoutexpr import LayoutExpr
 from .shapes import Path
 from .textstyle import TextStyle, _data_to_text_style
 
@@ -261,6 +264,20 @@ class BoxBuilder:
             _content,
         )
         return Box(deck, parent_box.slide, box_id, node_id, name, z_level)
+
+    def x(self, width_fraction: float | int | None = None):
+        node_id = self.get_box().node_id
+        expr = LayoutExpr.x(node_id)
+        if width_fraction is None:
+            return expr
+        return expr + LayoutExpr.width(node_id, width_fraction)
+
+    def y(self, height_fraction: float | int | None = None):
+        node_id = self.get_box().node_id
+        expr = LayoutExpr.y(node_id)
+        if height_fraction is None:
+            return expr
+        return expr + LayoutExpr.height(node_id, height_fraction)
 
 
 class Box(BoxBuilder):

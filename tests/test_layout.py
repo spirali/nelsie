@@ -1,7 +1,7 @@
 from nelsie import FlexWrap, Align
 from testutils import check
 
-from nelsie.layoutexpr import ConstExpr, SumExpr
+from nelsie.layoutexpr import LayoutExpr
 
 
 @check()
@@ -57,14 +57,6 @@ def test_layout_position(deck):
 
     # Slide 4 - only y defined (row)
     make_test_slide(y=130, row=True)
-
-
-def test_layout_expr():
-    a = ConstExpr(10.0)
-    b = ConstExpr(20.0)
-    c = ConstExpr(35.0)
-    assert a + b == SumExpr([a, b])
-    assert a + b + c == SumExpr([a, b, c])
 
 
 @check()
@@ -205,3 +197,10 @@ def test_layout_gap(deck):
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
     b.box(width=20, height=30, bg_color="blue")
+
+
+def test_layout_expr():
+    e = LayoutExpr.x(123) + 10
+    assert e._expr == ("sum", ("x", 123), 10)
+    e2 = e - 20.0
+    assert e2._expr == ("sum", ("x", 123), 10, -20.0)

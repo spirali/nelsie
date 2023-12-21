@@ -82,3 +82,21 @@ def test_path_opacity(deck):
             .line_to(100, 50),
         ]
     )
+
+
+@check()
+def test_path_box_positions(deck):
+    slide = deck.new_slide(width=150, height=150)
+    b1 = slide.box(width=20, height=30, bg_color="green")
+    slide.box(width=30, height=40)
+    b2 = slide.box(width=30, height=30, bg_color="green")
+
+    slide.draw(
+        [
+            Path(stroke=Stroke(color="black", width=3))
+            .move_to(b2.x(), b2.y() + 10)
+            .line_to(b2.x() - 30, b2.y() + 10)
+            .line_to(b2.x() - 30, b1.y(0.0))
+            .line_to(b1.x(1.0), b1.y(0.5))
+        ]
+    )

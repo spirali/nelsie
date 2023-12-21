@@ -1,4 +1,5 @@
 use crate::parsers::{StringOrFloat, StringOrFloatOrExpr};
+use crate::pyinterface::layoutexpr::PyLayoutExpr;
 use pyo3::FromPyObject;
 
 #[derive(Debug, FromPyObject)]
@@ -20,7 +21,7 @@ impl From<PyStringOrFloat> for StringOrFloat {
 pub(crate) enum PyStringOrFloatOrExpr {
     Float(f32),
     String(String),
-    //Expr(LayoutExpr),
+    Expr(PyLayoutExpr),
 }
 
 impl From<PyStringOrFloatOrExpr> for StringOrFloatOrExpr {
@@ -28,6 +29,7 @@ impl From<PyStringOrFloatOrExpr> for StringOrFloatOrExpr {
         match value {
             PyStringOrFloatOrExpr::Float(v) => StringOrFloatOrExpr::Float(v),
             PyStringOrFloatOrExpr::String(v) => StringOrFloatOrExpr::String(v),
+            PyStringOrFloatOrExpr::Expr(v) => StringOrFloatOrExpr::Expr(v.into()),
         }
     }
 }

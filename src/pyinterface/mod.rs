@@ -3,6 +3,7 @@ mod r#box;
 mod deck;
 mod error;
 mod insteps;
+mod layoutexpr;
 mod path;
 mod resources;
 mod textstyle;
