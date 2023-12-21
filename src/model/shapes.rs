@@ -1,4 +1,13 @@
-use crate::model::{LayoutExpr, StepValue, Stroke};
+use crate::model::{Color, LayoutExpr, StepValue, Stroke};
+
+#[derive(Debug)]
+pub(crate) struct Arrow {
+    pub size: f32,
+    pub angle: f32,
+    pub color: Option<Color>,
+    pub stroke_width: Option<f32>,
+    pub inner_point: Option<f32>,
+}
 
 #[derive(Debug)]
 pub(crate) enum PathPart {
@@ -26,10 +35,23 @@ pub(crate) enum PathPart {
     },
 }
 
+impl PathPart {
+    pub fn main_point(&self) -> (&LayoutExpr, &LayoutExpr) {
+        match self {
+            PathPart::Move { x, y }
+            | PathPart::Line { x, y }
+            | PathPart::Quad { x, y, .. }
+            | PathPart::Cubic { x, y, .. } => (x, y),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct Path {
     pub stroke: Option<Stroke>,
     pub parts: Vec<PathPart>,
+    pub arrow_start: Option<Arrow>,
+    pub arrow_end: Option<Arrow>,
 }
 
 #[derive(Debug)]

@@ -1,6 +1,6 @@
 use crate::common::error::NelsieError;
 use crate::model::PathPart::{Cubic, Line, Move, Quad};
-use crate::model::{Path, PathPart, Stroke};
+use crate::model::{Arrow, Path, PathPart, Stroke};
 use crate::parsers::{parse_position, StringOrFloatOrExpr};
 use crate::pyinterface::basictypes::PyStringOrFloatOrExpr;
 
@@ -8,11 +8,34 @@ use itertools::Itertools;
 
 use pyo3::{FromPyObject, PyAny, PyResult};
 
+#[derive(Debug)]
+pub(crate) struct PyArrow(Arrow);
+
+impl<'py> FromPyObject<'py> for PyArrow {
+    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+        Ok(PyArrow(Arrow {
+            size: ob.getattr("size")?.extract()?,
+            angle: ob.getattr("angle")?.extract()?,
+            color: ob.getattr("color")?.extract()?,
+            stroke_width: ob.getattr("stroke_width")?.extract()?,
+            inner_point: ob.getattr("inner_point")?.extract()?,
+        }))
+    }
+}
+
+impl From<PyArrow> for Arrow {
+    fn from(value: PyArrow) -> Self {
+        value.0
+    }
+}
+
 #[derive(Debug, FromPyObject)]
 pub(crate) struct PyPath {
     stroke: Option<Stroke>,
     commands: Vec<String>,
     points: Vec<PyStringOrFloatOrExpr>,
+    arrow_start: Option<PyArrow>,
+    arrow_end: Option<PyArrow>,
 }
 
 fn command_to_part(
@@ -62,6 +85,8 @@ impl PyPath {
                 .into_iter()
                 .map(|cmd| command_to_part(cmd.as_str(), &mut points_iter))
                 .try_collect()?,
+            arrow_start: self.arrow_start.map(|x| x.into()),
+            arrow_end: self.arrow_end.map(|x| x.into()),
         })
     }
 }

@@ -1,6 +1,6 @@
 from testutils import check
 
-from nelsie import InSteps, Path, Stroke
+from nelsie import InSteps, Path, Stroke, Arrow
 
 
 @check()
@@ -98,5 +98,62 @@ def test_path_box_positions(deck):
             .line_to(b2.x() - 30, b2.y() + 10)
             .line_to(b2.x() - 30, b1.y(0.0))
             .line_to(b1.x(1.0), b1.y(0.5))
+        ]
+    )
+
+
+@check(n_slides=2)
+def test_path_arrows(deck):
+    arrow1 = Arrow(size=30, angle=40)
+    arrow2 = Arrow(size=20, angle=10, color="red")
+    arrow3 = Arrow(size=30, angle=20, stroke_width=2)
+    arrow4 = Arrow(size=30, angle=45, stroke_width=2, color="blue")
+    arrow5 = Arrow(size=24, angle=45, inner_point=2)
+    arrow6 = Arrow(size=24, angle=45, inner_point=0.5)
+
+    slide = deck.new_slide(width=150, height=280)
+    slide.draw(
+        [
+            Path(stroke=Stroke(color="green", width=3), arrow_end=arrow1)
+            .move_to(20, 20)
+            .line_to(100, 50),
+            Path(stroke=Stroke(color="black", width=3), arrow_end=arrow2)
+            .move_to(20, 60)
+            .line_to(100, 90),
+            Path(stroke=Stroke(color="black", width=3), arrow_end=arrow3)
+            .move_to(20, 100)
+            .line_to(100, 130),
+            Path(stroke=Stroke(color="black", width=3), arrow_end=arrow4)
+            .move_to(20, 140)
+            .line_to(100, 170),
+            Path(stroke=Stroke(color="black", width=3), arrow_end=arrow5)
+            .move_to(20, 170)
+            .line_to(100, 210),
+            Path(stroke=Stroke(color="black", width=3), arrow_end=arrow6)
+            .move_to(20, 210)
+            .line_to(100, 250),
+        ]
+    )
+    slide = deck.new_slide(width=150, height=280)
+    slide.draw(
+        [
+            Path(stroke=Stroke(color="green", width=3), arrow_start=arrow1)
+            .move_to(20, 20)
+            .line_to(100, 50),
+            Path(stroke=Stroke(color="black", width=3), arrow_start=arrow2)
+            .move_to(20, 60)
+            .line_to(100, 90),
+            Path(stroke=Stroke(color="black", width=3), arrow_start=arrow3)
+            .move_to(20, 100)
+            .line_to(100, 130),
+            Path(stroke=Stroke(color="black", width=3), arrow_start=arrow4)
+            .move_to(20, 140)
+            .line_to(100, 170),
+            Path(stroke=Stroke(color="black", width=3), arrow_start=arrow5)
+            .move_to(20, 170)
+            .line_to(100, 210),
+            Path(stroke=Stroke(color="black", width=3), arrow_start=arrow6)
+            .move_to(20, 210)
+            .line_to(100, 250),
         ]
     )

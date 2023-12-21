@@ -13,7 +13,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::render::image::render_image;
-use crate::render::paths::create_path;
+use crate::render::paths::{create_arrow, create_path};
 use crate::render::Resources;
 use usvg::Fill;
 use usvg_tree::Stroke;
@@ -163,6 +163,14 @@ impl<'a> RenderContext<'a> {
     fn draw(&self, parent_id: NodeId, drawing: &Drawing) {
         for path in drawing.paths.at_step(self.step) {
             if let Some(usvg_path) = create_path(self.layout, parent_id, path) {
+                self.svg_node
+                    .append(usvg::Node::new(usvg::NodeKind::Path(usvg_path)));
+            }
+            if let Some(usvg_path) = create_arrow(self.layout, parent_id, path, true) {
+                self.svg_node
+                    .append(usvg::Node::new(usvg::NodeKind::Path(usvg_path)));
+            }
+            if let Some(usvg_path) = create_arrow(self.layout, parent_id, path, false) {
                 self.svg_node
                     .append(usvg::Node::new(usvg::NodeKind::Path(usvg_path)));
             }
