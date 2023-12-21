@@ -1,6 +1,6 @@
 use crate::common::error::NelsieError;
-use crate::model::{Color, NodeContentText, PartialTextStyle, Resources, Span, TextStyle};
-use std::ops::Index;
+use crate::model::{Color, NodeContentText, Resources, Span, TextStyle};
+
 use syntect::easy::HighlightLines;
 use syntect::highlighting::Style;
 
@@ -53,7 +53,7 @@ pub fn run_syntax_highlighting(
         let highlighted_line = highlight
             .highlight_line(&line.text, &resources.syntax_set)
             .map_err(|e| {
-                NelsieError::generic_err(format!("Syntax highlight error: {}", e.to_string()))
+                NelsieError::generic_err(format!("Syntax highlight error: {}", e))
             })?;
         let mut spans: Vec<Span> = Vec::with_capacity(highlighted_line.len());
         for (style, word) in highlighted_line {

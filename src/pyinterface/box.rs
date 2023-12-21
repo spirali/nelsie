@@ -1,5 +1,5 @@
 use crate::model::{
-    merge_stepped_styles, Color, NodeContentText, PartialTextStyle, StyleMap, TextAlign, TextStyle,
+    merge_stepped_styles, Color, NodeContentText, PartialTextStyle, StyleMap, TextAlign,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, Step, StepValue,
@@ -20,7 +20,7 @@ use crate::common::error::NelsieError;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
-use taffy::prelude::{AlignContent, AlignItems, JustifyContent};
+use taffy::prelude::{AlignContent, AlignItems};
 use taffy::style::FlexWrap;
 
 #[derive(Debug, FromPyObject)]
@@ -196,7 +196,7 @@ fn process_content(
                 let theme = text
                     .syntax_theme
                     .ok_or_else(|| PyValueError::new_err("Invalid theme"))?;
-                run_syntax_highlighting(&nc_env.resources, &mut node_content, &language, &theme)?;
+                run_syntax_highlighting(nc_env.resources, &mut node_content, &language, &theme)?;
             }
             NodeContent::Text(node_content)
         }
@@ -224,7 +224,7 @@ fn parse_align_items(value: Option<u32>) -> crate::Result<Option<AlignItems>> {
             4 => Ok(AlignItems::Center),
             5 => Ok(AlignItems::Stretch),
             10 => Ok(AlignItems::Baseline),
-            20 | 21 | 22 => Err(NelsieError::parsing_err(
+            20..=22 => Err(NelsieError::parsing_err(
                 "SpaceBetween, SpaceEvenly, SpaceAround values cannot be used in this context",
             )),
             _ => Err(NelsieError::parsing_err("Invalid AlignItems")),

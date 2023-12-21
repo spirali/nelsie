@@ -6,9 +6,9 @@ use crate::model::{LayoutExpr, NodeId};
 use std::collections::BTreeSet;
 
 use std::sync::Arc;
-use taffy::geometry::Size;
+
 use taffy::prelude::{
-    AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, LengthPercentage,
+    AlignContent, AlignItems,
 };
 use taffy::style::FlexWrap;
 
