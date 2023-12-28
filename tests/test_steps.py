@@ -33,3 +33,11 @@ def test_show_steps(deck):
     b = slide.box(show="2+", width=100, height=100, bg_color="red")
     b.box(show="1, 3", width=40, height=40, bg_color="blue")
     b.box(show="4", width=40, height=40, bg_color="green")
+
+
+@check(n_slides=4)
+def test_replace_steps(deck):
+    slide = deck.new_slide(width=200, height=200)
+    box = slide.box(replace_steps={1: 2, 3: 1}, width=InSteps({1: "100", 2: "50", 3: "20"}), height=20, bg_color="green")
+    slide.image("test.svg", width="50%", replace_steps={1: 3, 2: 1})
+    deck.render(output_pdf="/tmp/out.pdf")

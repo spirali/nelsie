@@ -41,10 +41,10 @@
 * Shapes
     * ~~Box background color~~
     * Box border color
-    * Lines
+    * ~~Lines~~
     * Ellipse & Polygon
     * ~~Paths~~
-    * Arrows
+    * ~~Arrows~~
     * Rounded box corners
     * ~~Opacity~~
 * Text
@@ -66,5 +66,5 @@
     * ~~loading ORA + fragments~~
     * ~~ignore fragments~~
     * ~~shift_first_step~~
-    * select steps
+    * ~~select steps~~
     * detect invalid font in SVG image

@@ -12,6 +12,7 @@ use crate::parsers::{
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
+use std::collections::BTreeMap;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::{FromPyObject, PyAny, PyResult};
@@ -66,6 +67,7 @@ impl<'py> FromPyObject<'py> for Content {
 
 #[derive(Debug, FromPyObject)]
 pub(crate) struct BoxConfig {
+    pub replace_steps: Option<BTreeMap<Step, Step>>,
     pub show: Show,
     pub bg_color: ValueOrInSteps<Option<String>>,
     pub x: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
@@ -296,6 +298,7 @@ impl BoxConfig {
         let height = self.height.parse(&mut n_steps, pyparse_opt_length)?;
         let node = Node {
             node_id: new_node_id,
+            replace_steps: self.replace_steps.unwrap_or_default(),
             name: self.name,
             show,
             z_level: self.z_level.into_step_value(&mut n_steps),

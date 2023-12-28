@@ -10,7 +10,6 @@ use taffy::style::{AvailableSpace, Dimension};
 
 pub(crate) struct LayoutContext<'a> {
     resources: &'a Resources,
-    step: Step,
 }
 
 #[derive(Debug)]
@@ -136,34 +135,35 @@ fn gather_taffy_layout<'b>(
 }
 
 impl<'a> LayoutContext<'a> {
-    pub fn new(resources: &'a Resources, step: Step) -> Self {
-        LayoutContext { resources, step }
+    pub fn new(resources: &'a Resources) -> Self {
+        LayoutContext { resources }
     }
 
     fn compute_layout_helper(
         &self,
+        mut step: Step,
         taffy: &mut tf::Taffy,
         node: &Node,
         parent: Option<&Node>,
     ) -> tf::Node {
+        if let Some(s) = node.replace_steps.get(&step) {
+            step = *s;
+        }
         let tf_children: Vec<_> = node
             .child_nodes()
-            .map(|child| self.compute_layout_helper(taffy, child, Some(node)))
+            .map(|child| self.compute_layout_helper(step, taffy, child, Some(node)))
             .collect();
 
-        // let w = node.width.get(self.step);
-        // let h = node.height.get(self.step);
-
-        let w = node.width.at_step(self.step);
-        let h = node.height.at_step(self.step);
+        let w = node.width.at_step(step);
+        let h = node.height.at_step(step);
 
         let (content_w, content_h, content_aspect_ratio) = if w.is_none() || h.is_none() {
             node.content
-                .at_step(self.step)
+                .at_step(step)
                 .as_ref()
                 .map(|content| {
                     let (content_w, content_h) =
-                        compute_content_default_size(self.resources, content, self.step);
+                        compute_content_default_size(self.resources, content, step);
                     if w.is_none() && h.is_none() {
                         (
                             Some(Dimension::Points(content_w)),
@@ -190,34 +190,34 @@ impl<'a> LayoutContext<'a> {
             .or(content_h)
             .unwrap_or(Dimension::Auto);
 
-        let flex_direction = match (node.row.at_step(self.step), node.reverse.at_step(self.step)) {
+        let flex_direction = match (node.row.at_step(step), node.reverse.at_step(step)) {
             (false, false) => tf::FlexDirection::Column,
             (true, false) => tf::FlexDirection::Row,
             (false, true) => tf::FlexDirection::ColumnReverse,
             (true, true) => tf::FlexDirection::RowReverse,
         };
 
-        let position = if is_layout_managed(node, parent, self.step) {
+        let position = if is_layout_managed(node, parent, step) {
             tf::Position::Relative
         } else {
             tf::Position::Absolute
         };
 
         let padding = tf::Rect {
-            left: node.p_left.at_step(self.step).into(),
-            right: node.p_right.at_step(self.step).into(),
-            top: node.p_top.at_step(self.step).into(),
-            bottom: node.p_bottom.at_step(self.step).into(),
+            left: node.p_left.at_step(step).into(),
+            right: node.p_right.at_step(step).into(),
+            top: node.p_top.at_step(step).into(),
+            bottom: node.p_bottom.at_step(step).into(),
         };
 
         let margin = tf::Rect {
-            left: node.m_left.at_step(self.step).into(),
-            right: node.m_right.at_step(self.step).into(),
-            top: node.m_top.at_step(self.step).into(),
-            bottom: node.m_bottom.at_step(self.step).into(),
+            left: node.m_left.at_step(step).into(),
+            right: node.m_right.at_step(step).into(),
+            top: node.m_top.at_step(step).into(),
+            bottom: node.m_bottom.at_step(step).into(),
         };
 
-        let (gap_w, gap_h) = node.gap.at_step(self.step);
+        let (gap_w, gap_h) = node.gap.at_step(step);
 
         /*dbg!(*node.align_items.at_step(self.step));
         dbg!(*node.align_self.at_step(self.step));
@@ -232,15 +232,15 @@ impl<'a> LayoutContext<'a> {
             aspect_ratio: content_aspect_ratio,
             padding,
             margin,
-            flex_wrap: *node.flex_wrap.at_step(self.step),
-            flex_grow: *node.flex_grow.at_step(self.step),
-            flex_shrink: *node.flex_shrink.at_step(self.step),
+            flex_wrap: *node.flex_wrap.at_step(step),
+            flex_grow: *node.flex_grow.at_step(step),
+            flex_shrink: *node.flex_shrink.at_step(step),
 
-            align_items: *node.align_items.at_step(self.step),
-            align_self: *node.align_self.at_step(self.step),
-            justify_self: *node.justify_self.at_step(self.step),
-            align_content: *node.align_content.at_step(self.step),
-            justify_content: *node.justify_content.at_step(self.step),
+            align_items: *node.align_items.at_step(step),
+            align_self: *node.align_self.at_step(step),
+            justify_self: *node.justify_self.at_step(step),
+            align_content: *node.align_content.at_step(step),
+            justify_content: *node.justify_content.at_step(step),
             gap: Size {
                 width: gap_w.into(),
                 height: gap_h.into(),
@@ -250,9 +250,9 @@ impl<'a> LayoutContext<'a> {
         taffy.new_with_children(style, &tf_children).unwrap()
     }
 
-    pub fn compute_layout(&self, slide: &Slide) -> ComputedLayout {
+    pub fn compute_layout(&self, slide: &Slide, step: Step) -> ComputedLayout {
         let mut taffy = tf::Taffy::new();
-        let tf_node = self.compute_layout_helper(&mut taffy, &slide.node, None);
+        let tf_node = self.compute_layout_helper(step, &mut taffy, &slide.node, None);
         let size = tf::Size {
             width: AvailableSpace::Definite(slide.width),
             height: AvailableSpace::Definite(slide.height),
@@ -273,13 +273,13 @@ impl<'a> LayoutContext<'a> {
                 Rectangle {
                     x: node
                         .x
-                        .at_step(self.step)
+                        .at_step(step)
                         .as_ref()
                         .map(|x| result.eval(x, parent_id.unwrap_or(NodeId::new(0))))
                         .unwrap_or_else(|| parent_x + rect.x),
                     y: node
                         .y
-                        .at_step(self.step)
+                        .at_step(step)
                         .as_ref()
                         .map(|y| result.eval(y, parent_id.unwrap_or(NodeId::new(0))))
                         .unwrap_or_else(|| parent_y + rect.y),

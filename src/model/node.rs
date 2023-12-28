@@ -3,13 +3,12 @@ use crate::model::shapes::Drawing;
 use crate::model::text::NodeContentText;
 use crate::model::types::LengthOrAuto;
 use crate::model::{LayoutExpr, NodeId};
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use std::sync::Arc;
 
-use taffy::prelude::{
-    AlignContent, AlignItems,
-};
+use crate::common::Step;
+use taffy::prelude::{AlignContent, AlignItems};
 use taffy::style::FlexWrap;
 
 #[derive(Debug)]
@@ -28,6 +27,8 @@ pub(crate) enum NodeChild {
 pub(crate) struct Node {
     pub node_id: NodeId,
     pub children: Vec<NodeChild>,
+
+    pub replace_steps: BTreeMap<Step, Step>,
 
     pub show: StepValue<bool>,
     pub z_level: StepValue<i32>,

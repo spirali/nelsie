@@ -69,6 +69,7 @@ class BoxConfig:
     bg_color: str | None | InSteps[str | None]
     name: str
     debug_layout: bool | None
+    replace_steps: dict[int, int] | None
 
 
 class BoxBuilder:
@@ -219,6 +220,7 @@ class BoxBuilder:
         bg_color: str | None | InSteps[str | None] = None,
         name: str = "",
         debug_layout: bool | None = None,
+        replace_steps: dict[int, int] | None = None,
         _content: NodeContent | InSteps[NodeContent] = None,
     ):
         parent_box = self.get_box()
@@ -254,6 +256,7 @@ class BoxBuilder:
             bg_color=bg_color,
             name=name,
             debug_layout=debug_layout,
+            replace_steps=replace_steps
         )
         deck = parent_box.deck
         box_id, node_id = deck._deck.new_box(

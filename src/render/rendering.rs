@@ -20,7 +20,6 @@ use usvg_tree::Stroke;
 
 pub(crate) struct RenderContext<'a> {
     resources: &'a Resources,
-    step: Step,
     z_level: i32,
     layout: &'a ComputedLayout,
     svg_node: usvg::Node,
@@ -88,7 +87,6 @@ fn draw_debug_frame(
 impl<'a> RenderContext<'a> {
     pub fn new(
         global_res: &'a Resources,
-        step: Step,
         z_level: i32,
         layout: &'a ComputedLayout,
         svg_node: usvg::Node,
@@ -96,7 +94,6 @@ impl<'a> RenderContext<'a> {
     ) -> Self {
         RenderContext {
             resources: global_res,
-            step,
             z_level,
             layout,
             svg_node,
@@ -104,12 +101,15 @@ impl<'a> RenderContext<'a> {
         }
     }
 
-    fn render_helper(&self, node: &Node) {
-        if !node.show.at_step(self.step) {
+    fn render_helper(&self, mut step: Step, node: &Node) {
+        if let Some(s) = node.replace_steps.get(&step) {
+            step = *s;
+        }
+        if !node.show.at_step(step) {
             return;
         }
-        if *node.z_level.at_step(self.step) == self.z_level {
-            if let Some(color) = &node.bg_color.at_step(self.step) {
+        if *node.z_level.at_step(step) == self.z_level {
+            if let Some(color) = &node.bg_color.at_step(step) {
                 let rect = self.layout.rect(node.node_id).unwrap();
                 let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
                     tiny_skia::Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).unwrap(),
@@ -123,11 +123,11 @@ impl<'a> RenderContext<'a> {
                     .append(usvg::Node::new(usvg::NodeKind::Path(path)));
             }
 
-            if let Some(content) = &node.content.at_step(self.step) {
+            if let Some(content) = &node.content.at_step(step) {
                 let rect = self.layout.rect(node.node_id).unwrap();
                 match content {
                     NodeContent::Text(text) => self.svg_node.append(render_text(
-                        &text.text_style_at_step(self.step),
+                        &text.text_style_at_step(step),
                         match text.text_align {
                             TextAlign::Start => rect.x,
                             TextAlign::Center => rect.x + rect.width / 2.0,
@@ -136,13 +136,9 @@ impl<'a> RenderContext<'a> {
                         rect.y,
                         text.text_align,
                     )),
-                    NodeContent::Image(image) => render_image(
-                        self.step,
-                        image,
-                        rect,
-                        &self.svg_node,
-                        &self.resources.font_db,
-                    ),
+                    NodeContent::Image(image) => {
+                        render_image(step, image, rect, &self.svg_node, &self.resources.font_db)
+                    }
                 }
             }
 
@@ -154,14 +150,14 @@ impl<'a> RenderContext<'a> {
 
         for child in &node.children {
             match child {
-                NodeChild::Node(node) => self.render_helper(node),
-                NodeChild::Draw(draw) => self.draw(node.node_id, draw),
+                NodeChild::Node(node) => self.render_helper(step, node),
+                NodeChild::Draw(draw) => self.draw(step, node.node_id, draw),
             }
         }
     }
 
-    fn draw(&self, parent_id: NodeId, drawing: &Drawing) {
-        for path in drawing.paths.at_step(self.step) {
+    fn draw(&self, step: Step, parent_id: NodeId, drawing: &Drawing) {
+        for path in drawing.paths.at_step(step) {
             if let Some(usvg_path) = create_path(self.layout, parent_id, path) {
                 self.svg_node
                     .append(usvg::Node::new(usvg::NodeKind::Path(usvg_path)));
@@ -177,15 +173,15 @@ impl<'a> RenderContext<'a> {
         }
     }
 
-    pub(crate) fn render_to_svg(self, node: &Node) {
-        self.render_helper(node);
+    pub(crate) fn render_to_svg(self, step: Step, node: &Node) {
+        self.render_helper(step, node);
     }
 }
 
 pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     log::debug!("Creating layout");
-    let layout_builder = LayoutContext::new(render_cfg.resources, render_cfg.step);
-    let layout = layout_builder.compute_layout(render_cfg.slide);
+    let layout_builder = LayoutContext::new(render_cfg.resources);
+    let layout = layout_builder.compute_layout(render_cfg.slide, render_cfg.step);
 
     log::debug!("Layout {:?}", layout);
 
@@ -197,13 +193,12 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     for z_level in z_levels {
         let render_ctx = RenderContext::new(
             render_cfg.resources,
-            render_cfg.step,
             z_level,
             &layout,
             root_svg_node.clone(),
             render_cfg.default_font,
         );
-        render_ctx.render_to_svg(&render_cfg.slide.node);
+        render_ctx.render_to_svg(render_cfg.step, &render_cfg.slide.node);
     }
     let size = usvg::Size::from_wh(render_cfg.slide.width, render_cfg.slide.height).unwrap();
 
