@@ -97,19 +97,6 @@ impl Node {
             })
     }
 
-    /*pub fn collect_font_families<'a>(&'a self, out: &mut HashSet<&'a FontFamily>) {
-        for content in self.content.values() {
-            if let Some(NodeContent::Text(text)) = content {
-                for style in &text.styles {
-                    out.insert(&style.font_family);
-                }
-            }
-        }
-        for child in self.child_nodes() {
-            child.collect_font_families(out);
-        }
-    }*/
-
     pub fn collect_z_levels(&self, out: &mut BTreeSet<i32>) {
         out.extend(self.z_level.values());
         for child in self.child_nodes() {

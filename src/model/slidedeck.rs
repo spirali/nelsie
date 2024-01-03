@@ -79,6 +79,7 @@ pub(crate) struct SlideDeck {
     pub(crate) slides: Vec<Slide>,
     pub(crate) global_styles: Arc<StyleMap>,
     pub(crate) default_font: Arc<FontData>,
+    pub(crate) creation_time: std::time::Instant,
 }
 
 fn detect_font(
@@ -103,6 +104,7 @@ impl SlideDeck {
         default_font: Option<&str>,
         default_monospace_font: Option<&str>,
     ) -> crate::Result<Self> {
+        let creation_time = std::time::Instant::now();
         let default_font = detect_font(
             resources,
             default_font,
@@ -143,6 +145,7 @@ impl SlideDeck {
             slides: Vec::new(),
             global_styles: Arc::new(StyleMap::new(styles)),
             default_font,
+            creation_time,
         })
     }
 }

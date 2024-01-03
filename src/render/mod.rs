@@ -13,6 +13,7 @@ pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use pdf::PdfBuilder;
 use std::path::Path;
 use std::sync::Arc;
+use std::time::Duration;
 
 pub(crate) struct OutputConfig<'a> {
     pub output_pdf: Option<&'a Path>,
@@ -55,6 +56,11 @@ pub(crate) fn render_slide_deck(
     resources: &Resources,
     output_cfg: &OutputConfig,
 ) -> crate::Result<()> {
+    let start_time = std::time::Instant::now();
+    println!(
+        "Slides construction: {:.2}s",
+        (start_time - slide_deck.creation_time).as_secs_f32()
+    );
     if let Some(dir) = output_cfg.output_svg {
         log::debug!("Ensuring SVG output directory: {}", dir.display());
         ensure_directory(dir).map_err(|e| {
@@ -80,6 +86,8 @@ pub(crate) fn render_slide_deck(
     let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
     let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));
 
+    let mut pdf_compose_time = Duration::ZERO;
+
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {
         for tree in render_slide(
             resources,
@@ -89,16 +97,26 @@ pub(crate) fn render_slide_deck(
             &slide_deck.default_font,
         )? {
             if let Some(builder) = &mut pdf_builder {
+                let s = std::time::Instant::now();
                 builder.add_page_from_svg(tree);
+                pdf_compose_time += std::time::Instant::now() - s;
             }
         }
     }
+    println!("Pdf time: {:.2}s", pdf_compose_time.as_secs_f32());
+
     if let Some(builder) = pdf_builder {
         let path = output_cfg.output_pdf.unwrap();
         builder.write(path).map_err(|e| {
             NelsieError::Generic(format!("Writing PDF file {}: {}", path.display(), e))
         })?;
     }
+
+    let render_end_time = std::time::Instant::now();
+    println!(
+        "Total rendering time: {:.2}s",
+        (render_end_time - start_time).as_secs_f32()
+    );
 
     Ok(())
 }
