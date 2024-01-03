@@ -256,7 +256,7 @@ class BoxBuilder:
             bg_color=bg_color,
             name=name,
             debug_layout=debug_layout,
-            replace_steps=replace_steps
+            replace_steps=replace_steps,
         )
         deck = parent_box.deck
         box_id, node_id = deck._deck.new_box(

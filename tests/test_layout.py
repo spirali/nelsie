@@ -170,7 +170,6 @@ def test_layout_gap(deck):
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
     b.box(width=20, height=30, bg_color="blue")
-    deck.render(output_pdf="/tmp/out.pdf")
 
     slide = deck.new_slide(width=50, height=150)
     b = slide.box(
@@ -183,7 +182,6 @@ def test_layout_gap(deck):
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
     b.box(width=20, height=30, bg_color="blue")
-    deck.render(output_pdf="/tmp/out.pdf")
 
     slide = deck.new_slide(width=150, height=50)
     b = slide.box(

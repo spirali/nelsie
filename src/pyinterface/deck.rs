@@ -30,24 +30,6 @@ fn resolve_box_id<'a>(node: &'a mut Node, box_id: &[u32]) -> PyResult<&'a mut No
         .and_then(|child| resolve_box_id(child, &box_id[1..]))
 }
 
-// fn resolve_box_id_to_node_ids<'a>(
-//     node: &'a mut Node,
-//     box_id: &[u32],
-// ) -> Option<(&'a mut Node, Vec<NodeId>)> {
-//     let mut predecessors_ids = Vec::with_capacity(box_id.len() + 1);
-//     predecessors_ids.push(node.node_id);
-//     let mut node = node;
-//     for id in box_id {
-//         if let Some(child) = node.child_node_mut(*id as usize) {
-//             predecessors_ids.push(child.node_id);
-//             node = child;
-//         } else {
-//             return None;
-//         }
-//     }
-//     return Some((node, predecessors_ids));
-// }
-
 fn resolve_slide_id(deck: &mut SlideDeck, slide_id: SlideId) -> PyResult<&mut Slide> {
     deck.slides
         .get_mut(slide_id as usize)
@@ -192,6 +174,15 @@ impl Deck {
                 .map(|style| partial_text_style_to_pyobject(style.at_step(step), py))?
         })
         .to_object(py))
+    }
+
+    fn set_n_steps(&mut self, slide_id: SlideId, value: u32) -> PyResult<()> {
+        resolve_slide_id(&mut self.deck, slide_id)?.n_steps = value.max(1);
+        Ok(())
+    }
+
+    fn get_n_steps(&mut self, slide_id: SlideId) -> PyResult<u32> {
+        Ok(resolve_slide_id(&mut self.deck, slide_id)?.n_steps)
     }
 
     fn render(

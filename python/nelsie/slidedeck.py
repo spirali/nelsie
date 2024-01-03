@@ -27,6 +27,13 @@ class Slide(BoxBuilder):
     def get_box(self):
         return self.root_box
 
+    def set_n_steps(self, value: int):
+        assert value >= 1
+        self.deck._deck.set_n_steps(self._slide_id, value)
+
+    def get_n_steps(self) -> int:
+        return self.deck._deck.get_n_steps(self._slide_id)
+
 
 class SlideDeck:
     def __init__(

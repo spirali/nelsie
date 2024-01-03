@@ -38,6 +38,19 @@ def test_show_steps(deck):
 @check(n_slides=4)
 def test_replace_steps(deck):
     slide = deck.new_slide(width=200, height=200)
-    box = slide.box(replace_steps={1: 2, 3: 1}, width=InSteps({1: "100", 2: "50", 3: "20"}), height=20, bg_color="green")
+    slide.box(
+        replace_steps={1: 2, 3: 1},
+        width=InSteps({1: "100", 2: "50", 3: "20"}),
+        height=20,
+        bg_color="green",
+    )
     slide.image("test.svg", width="50%", replace_steps={1: 3, 2: 1})
-    deck.render(output_pdf="/tmp/out.pdf")
+
+
+def test_set_get_n_steps(deck):
+    slide = deck.new_slide()
+    assert slide.get_n_steps() == 1
+    slide.box(width=InSteps({1: 100, 3: 200, 5: 600}))
+    assert slide.get_n_steps() == 5
+    slide.set_n_steps(3)
+    assert slide.get_n_steps() == 3
