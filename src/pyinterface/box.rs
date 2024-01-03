@@ -249,7 +249,9 @@ fn parse_align_content(value: Option<u32>) -> crate::Result<Option<AlignContent>
             20 => Ok(AlignContent::SpaceBetween),
             21 => Ok(AlignContent::SpaceEvenly),
             22 => Ok(AlignContent::SpaceAround),
-            _ => Err(NelsieError::parsing_err("Invalid AlignContent")),
+            x => Err(NelsieError::parsing_err(format!(
+                "Invalid AlignContent '{x}'"
+            ))),
         })
         .transpose()
 }

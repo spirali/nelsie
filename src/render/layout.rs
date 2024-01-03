@@ -3,10 +3,7 @@ use crate::model::{
 };
 use crate::render::text::get_text_size;
 use std::collections::{BTreeMap, HashMap};
-use taffy::geometry::Size;
 use taffy::prelude as tf;
-
-use taffy::style::{AvailableSpace, Dimension};
 
 pub(crate) struct LayoutContext<'a> {
     resources: &'a Resources,
@@ -166,8 +163,8 @@ impl<'a> LayoutContext<'a> {
                         compute_content_default_size(self.resources, content, step);
                     if w.is_none() && h.is_none() {
                         (
-                            Some(Dimension::Points(content_w)),
-                            Some(Dimension::Points(content_h)),
+                            Some(tf::Dimension::Points(content_w)),
+                            Some(tf::Dimension::Points(content_h)),
                             None,
                         )
                     } else {
@@ -183,12 +180,12 @@ impl<'a> LayoutContext<'a> {
             .as_ref()
             .map(|v| v.into())
             .or(content_w)
-            .unwrap_or(Dimension::Auto);
+            .unwrap_or(tf::Dimension::Auto);
         let height = h
             .as_ref()
             .map(|v| v.into())
             .or(content_h)
-            .unwrap_or(Dimension::Auto);
+            .unwrap_or(tf::Dimension::Auto);
 
         let flex_direction = match (node.row.at_step(step), node.reverse.at_step(step)) {
             (false, false) => tf::FlexDirection::Column,
@@ -241,7 +238,7 @@ impl<'a> LayoutContext<'a> {
             justify_self: *node.justify_self.at_step(step),
             align_content: *node.align_content.at_step(step),
             justify_content: *node.justify_content.at_step(step),
-            gap: Size {
+            gap: tf::Size {
                 width: gap_w.into(),
                 height: gap_h.into(),
             },
@@ -254,8 +251,8 @@ impl<'a> LayoutContext<'a> {
         let mut taffy = tf::Taffy::new();
         let tf_node = self.compute_layout_helper(step, &mut taffy, &slide.node, None);
         let size = tf::Size {
-            width: AvailableSpace::Definite(slide.width),
-            height: AvailableSpace::Definite(slide.height),
+            width: tf::AvailableSpace::Definite(slide.width),
+            height: tf::AvailableSpace::Definite(slide.height),
         };
         taffy.compute_layout(tf_node, size).unwrap();
         let mut node_entries = BTreeMap::new();
