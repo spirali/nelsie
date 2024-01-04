@@ -52,9 +52,7 @@ pub fn run_syntax_highlighting(
     for line in &mut text.styled_lines {
         let highlighted_line = highlight
             .highlight_line(&line.text, &resources.syntax_set)
-            .map_err(|e| {
-                NelsieError::generic_err(format!("Syntax highlight error: {}", e))
-            })?;
+            .map_err(|e| NelsieError::generic_err(format!("Syntax highlight error: {}", e)))?;
         let mut spans: Vec<Span> = Vec::with_capacity(highlighted_line.len());
         for (style, word) in highlighted_line {
             let style_idx = styles.iter().position(|s| s == &style).unwrap_or_else(|| {

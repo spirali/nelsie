@@ -3,7 +3,7 @@ use crate::model::{Color, StepValue, Stroke};
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use usvg_tree::{FontStretch};
+use usvg_tree::FontStretch;
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct FontData {

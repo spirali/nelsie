@@ -7,18 +7,22 @@ fn parse<T: FromStr>(s: &str, value: &str) -> crate::Result<T> {
         .map_err(|_| crate::NelsieError::Parsing(format!("Invalid value: {value}")))
 }
 
+fn parse_string_length(value: &str) -> crate::Result<Length> {
+    Ok(if let Some(s) = value.trim().strip_suffix('%') {
+        Length::Fraction {
+            value: parse::<f32>(s, &value)? / 100.0,
+        }
+    } else {
+        Length::Points {
+            value: parse::<f32>(&value, &value)?,
+        }
+    })
+}
+
 pub(crate) fn parse_length(value: StringOrFloat) -> crate::Result<Length> {
     match value {
         StringOrFloat::Float(value) => Ok(Length::Points { value }),
-        StringOrFloat::String(str) => Ok(if let Some(s) = str.trim().strip_suffix('%') {
-            Length::Fraction {
-                value: parse::<f32>(s, &str)? / 100.0,
-            }
-        } else {
-            Length::Points {
-                value: parse::<f32>(&str, &str)?,
-            }
-        }),
+        StringOrFloat::String(str) => parse_string_length(&str),
     }
 }
 
@@ -47,7 +51,24 @@ pub(crate) fn parse_position(value: StringOrFloatOrExpr, is_x: bool) -> crate::R
                 LayoutExpr::ParentY { shift: v }
             }
         }
-        StringOrFloatOrExpr::String(_v) => todo!(),
+        StringOrFloatOrExpr::String(s) => match parse_string_length(&s)? {
+            Length::Points { value } => {
+                if is_x {
+                    LayoutExpr::ParentX { shift: value }
+                } else {
+                    LayoutExpr::ParentY { shift: value }
+                }
+            }
+            Length::Fraction { value } => {
+                if is_x {
+                    (LayoutExpr::ParentX { shift: 0.0 })
+                        .add(LayoutExpr::ParentWidth { fraction: value })
+                } else {
+                    (LayoutExpr::ParentY { shift: 0.0 })
+                        .add(LayoutExpr::ParentHeight { fraction: value })
+                }
+            }
+        },
         StringOrFloatOrExpr::Expr(expr) => expr,
     })
 }

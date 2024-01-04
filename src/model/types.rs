@@ -69,6 +69,14 @@ pub(crate) enum LayoutExpr {
     Sum { expressions: Vec<LayoutExpr> },
 }
 
+impl LayoutExpr {
+    pub(crate) fn add(self, other: LayoutExpr) -> LayoutExpr {
+        LayoutExpr::Sum {
+            expressions: vec![self, other],
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct Color(svgtypes::Color);
 

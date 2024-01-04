@@ -60,6 +60,13 @@ def test_layout_position(deck):
 
 
 @check()
+def test_layout_position_string(deck):
+    slide = deck.new_slide(width=400, height=300)
+    slide.box(x="30", y="30%", width="50", height="50", bg_color="red")
+    slide.box(x=30, y="80%", width="50", height="50", bg_color="blue")
+
+
+@check()
 def test_z_level(deck):
     slide = deck.new_slide(width=100, height=100)
     slide.box(x=0, y=0, width=75, height=75, z_level=1, bg_color="red")
