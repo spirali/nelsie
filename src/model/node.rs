@@ -30,6 +30,7 @@ pub(crate) struct Node {
 
     pub replace_steps: BTreeMap<Step, Step>,
 
+    pub active: StepValue<bool>,
     pub show: StepValue<bool>,
     pub z_level: StepValue<i32>,
 
@@ -79,6 +80,13 @@ impl Node {
         } else {
             &self.y
         }
+    }
+
+    pub fn child_nodes_at_step(&self, step: Step) -> impl Iterator<Item = &Node> {
+        self.children.iter().filter_map(move |child| match child {
+            NodeChild::Node(node) if *node.active.at_step(step) => Some(node),
+            _ => None,
+        })
     }
 
     pub fn child_nodes(&self) -> impl Iterator<Item = &Node> {

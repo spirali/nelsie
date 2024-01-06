@@ -36,6 +36,7 @@ impl Slide {
                 node_id: NodeId::new(0),
                 children: vec![],
                 replace_steps: Default::default(),
+                active: StepValue::new_const(true),
                 show: StepValue::new_const(true),
                 z_level: StepValue::Const(0),
                 x: StepValue::Const(None),

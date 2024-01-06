@@ -35,6 +35,15 @@ def test_show_steps(deck):
     b.box(show="4", width=40, height=40, bg_color="green")
 
 
+@check(n_slides=3)
+def test_active_steps(deck):
+    slide = deck.new_slide(width=200, height=200)
+    slide.box(width=30, height=30, bg_color="red")
+    slide.box(width=30, height=30, bg_color="green", active="2")
+    slide.box(width=30, height=30, bg_color="orange", active=3)
+    slide.box(width=30, height=30, bg_color="blue")
+
+
 @check(n_slides=4)
 def test_replace_steps(deck):
     slide = deck.new_slide(width=200, height=200)

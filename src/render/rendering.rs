@@ -102,6 +102,10 @@ impl<'a> RenderContext<'a> {
     }
 
     fn render_helper(&self, mut step: Step, node: &Node) {
+        // active is before step replacement!
+        if !node.active.at_step(step) {
+            return;
+        }
         if let Some(s) = node.replace_steps.get(&step) {
             step = *s;
         }

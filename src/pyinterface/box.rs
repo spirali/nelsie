@@ -27,6 +27,7 @@ use taffy::style::FlexWrap;
 #[derive(Debug, FromPyObject)]
 pub(crate) enum Show {
     Bool(bool),
+    Int(u32),
     StringDef(String),
     InSteps(InSteps<bool>),
 }
@@ -68,6 +69,7 @@ impl<'py> FromPyObject<'py> for Content {
 #[derive(Debug, FromPyObject)]
 pub(crate) struct BoxConfig {
     pub replace_steps: Option<BTreeMap<Step, Step>>,
+    pub active: Show,
     pub show: Show,
     pub bg_color: ValueOrInSteps<Option<String>>,
     pub x: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
@@ -256,6 +258,26 @@ fn parse_align_content(value: Option<u32>) -> crate::Result<Option<AlignContent>
         .transpose()
 }
 
+fn show_to_bool_steps(show: Show, mut n_steps: &mut Step) -> PyResult<StepValue<bool>> {
+    Ok(match show {
+        Show::Bool(value) => StepValue::new_const(value),
+        Show::Int(value) => {
+            *n_steps = (*n_steps).max(value);
+            let mut map = BTreeMap::new();
+            map.insert(value, true);
+            map.insert(value + 1, false);
+            StepValue::new_map(map)
+        }
+        Show::StringDef(s) => {
+            let (steps, n) = parse_steps(&s)
+                .ok_or_else(|| PyValueError::new_err(format!("Invalid show definition: {s}")))?;
+            *n_steps = (*n_steps).max(n);
+            steps
+        }
+        Show::InSteps(in_steps) => in_steps.into_step_value(&mut n_steps),
+    })
+}
+
 impl BoxConfig {
     pub fn make_node(
         self,
@@ -285,24 +307,14 @@ impl BoxConfig {
         let y = self.y.parse(&mut n_steps, |v| {
             v.map(|v| parse_position(v.into(), false)).transpose()
         })?;
-        let show = match self.show {
-            Show::Bool(value) => StepValue::new_const(value),
-            Show::StringDef(s) => {
-                let (steps, n) = parse_steps(&s).ok_or_else(|| {
-                    PyValueError::new_err(format!("Invalid show definition: {s}"))
-                })?;
-                n_steps = n_steps.max(n);
-                steps
-            }
-            Show::InSteps(in_steps) => in_steps.into_step_value(&mut n_steps),
-        };
         let width = self.width.parse(&mut n_steps, pyparse_opt_length)?;
         let height = self.height.parse(&mut n_steps, pyparse_opt_length)?;
         let node = Node {
             node_id: new_node_id,
             replace_steps: self.replace_steps.unwrap_or_default(),
             name: self.name,
-            show,
+            active: show_to_bool_steps(self.active, &mut n_steps)?,
+            show: show_to_bool_steps(self.show, &mut n_steps)?,
             z_level: self.z_level.into_step_value(&mut n_steps),
             x,
             y,

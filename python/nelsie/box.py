@@ -41,7 +41,8 @@ AlignSteps = Align | None | InSteps[Align | None]
 
 @dataclass
 class BoxConfig:
-    show: bool | str | InSteps[bool]
+    active: bool | str | int | InSteps[bool]
+    show: bool | str | int | InSteps[bool]
     z_level: int | InSteps[int] | None
     x: Position | InSteps[Position]
     y: Position | InSteps[Position]
@@ -192,7 +193,8 @@ class BoxBuilder:
     def box(
         self,
         *,
-        show: bool | str = True,
+        active: bool | str | int | InSteps[bool] = True,
+        show: bool | str | int | InSteps[bool] = True,
         z_level: int | InSteps[int] | None = None,
         x: Position | InSteps[Position] = None,
         y: Position | InSteps[Position] = None,
@@ -228,6 +230,7 @@ class BoxBuilder:
         if z_level is None:
             z_level = parent_box.z_level
         config = BoxConfig(
+            active=active,
             show=show,
             z_level=z_level,
             x=x,
@@ -267,6 +270,13 @@ class BoxBuilder:
             _content,
         )
         return Box(deck, parent_box.slide, box_id, node_id, name, z_level)
+
+    def overlay(self, **box_args):
+        box_args.setdefault("x", 0)
+        box_args.setdefault("y", 0)
+        box_args.setdefault("width", "100%")
+        box_args.setdefault("height", "100%")
+        return self.box(**box_args)
 
     def x(self, width_fraction: float | int | None = None):
         node_id = self.get_box().node_id
