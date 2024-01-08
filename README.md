@@ -54,7 +54,7 @@
     * TextStyle priorities
     * ~~Text align: left, right, center~~
     * ~~Detecting invalid fonts~~
-    * Line box
+    * ~~Line box~~
     * Inline box
     * ~~Syntax highlight~~
     * Merging own styles & syntax highlight

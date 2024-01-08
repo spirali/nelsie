@@ -31,6 +31,22 @@ class LayoutExpr:
     def height(node_id, fraction):
         return LayoutExpr(("height", node_id, fraction))
 
+    @staticmethod
+    def line_x(node_id, line_idx):
+        return LayoutExpr(("line_x", node_id, line_idx))
+
+    @staticmethod
+    def line_y(node_id, line_idx):
+        return LayoutExpr(("line_y", node_id, line_idx))
+
+    @staticmethod
+    def line_width(node_id, line_idx, fraction):
+        return LayoutExpr(("line_width", node_id, line_idx, fraction))
+
+    @staticmethod
+    def line_height(node_id, line_idx, fraction):
+        return LayoutExpr(("line_height", node_id, line_idx, fraction))
+
 
 def unpack_layout_expr_arg(obj):
     if isinstance(obj, LayoutExpr):

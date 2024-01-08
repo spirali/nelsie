@@ -1,5 +1,6 @@
 use crate::model::{Resources, Span, StyledLine, StyledText, TextAlign, TextStyle};
 
+use crate::render::layout::{Rectangle, TextLayout};
 use crate::render::paths::stroke_to_usvg_stroke;
 use usvg::{NonZeroPositiveF32, TreeTextToPath};
 use usvg_tree::{
@@ -8,12 +9,48 @@ use usvg_tree::{
     TextSpan, Visibility, WritingMode,
 };
 
-pub(crate) fn get_text_size(
+pub(crate) fn get_text_layout(
     resources: &Resources,
     text: &StyledText,
     align: TextAlign,
-) -> (f32, f32) {
-    let text_node = render_text(text, 0.0, 0.0, align);
+) -> (f32, f32, TextLayout) {
+    let mut tmp_text = StyledText {
+        styled_lines: &[],
+        styles: text.styles.clone(),
+        default_font_size: text.default_font_size,
+        default_line_spacing: text.default_line_spacing,
+    };
+    let mut result = TextLayout {
+        lines: Vec::with_capacity(text.styled_lines.len()),
+    };
+    let mut current_y = 0.0;
+    for idx in 0..text.styled_lines.len() {
+        tmp_text.styled_lines = &text.styled_lines[idx..idx + 1];
+        let sx = get_text_width(resources, &tmp_text);
+        let size = text.styled_lines[idx]
+            .font_size(&tmp_text.styles)
+            .unwrap_or(tmp_text.default_font_size);
+
+        result.lines.push(Rectangle {
+            x: 0.0,
+            y: current_y,
+            width: sx,
+            height: size,
+        });
+        current_y += size * tmp_text.default_line_spacing;
+    }
+
+    let width = result
+        .lines
+        .iter()
+        .map(|line| line.width)
+        .max_by(|x, y| x.partial_cmp(y).unwrap())
+        .unwrap_or(0.0);
+    (width, text.height(), result)
+}
+
+fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
+    let text_node = render_text(text, 0.0, 0.0, TextAlign::Start);
     let root_node = usvg::Node::new(NodeKind::Group(usvg::Group::default()));
     root_node.append(text_node);
     let size = usvg::Size::from_wh(8000.0, 6000.0).unwrap();
@@ -26,7 +63,7 @@ pub(crate) fn get_text_size(
         root: root_node,
     };
     tree.convert_text(&resources.font_db);
-    let mut x1 = f32::MAX;
+    //let mut x1 = f32::MAX;
     let mut x2 = f32::MIN;
     if let Some(main) = tree.root.first_child() {
         for child in main.children() {
@@ -34,18 +71,18 @@ pub(crate) fn get_text_size(
             match *borrowed {
                 NodeKind::Path(ref path) => {
                     let bbox = path.text_bbox.unwrap();
-                    x1 = x1.min(bbox.left());
+                    //x1 = x1.min(bbox.left());
                     x2 = x2.max(bbox.right());
                 }
                 _ => unreachable!(),
             }
         }
     }
-    let mut width = x2 - x1;
+    let mut width = x2; // - x1;
     if !f32::is_finite(width) || width < 0.0 {
         width = 0.0;
     }
-    (width, text.height())
+    width
 }
 
 fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (TextSpan, usize) {

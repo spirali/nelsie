@@ -1,7 +1,8 @@
 use crate::model::{
-    LayoutExpr, Length, LengthOrAuto, Node, NodeContent, NodeId, Resources, Slide, Step,
+    LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId, Resources, Slide,
+    Step,
 };
-use crate::render::text::get_text_size;
+use crate::render::text::get_text_layout;
 use std::collections::{BTreeMap, HashMap};
 use taffy::prelude as tf;
 
@@ -18,8 +19,14 @@ pub(crate) struct Rectangle {
 }
 
 #[derive(Debug)]
+pub(crate) struct TextLayout {
+    pub lines: Vec<Rectangle>,
+}
+
+#[derive(Debug)]
 pub(crate) struct LayoutData {
     pub(crate) rect: Rectangle,
+    pub(crate) text_layout: Option<TextLayout>,
 }
 
 #[derive(Default, Debug)]
@@ -28,11 +35,13 @@ pub(crate) struct ComputedLayout {
 }
 
 impl ComputedLayout {
-    fn _rect(&self, node_id: NodeId) -> &Rectangle {
-        &self
-            .node_layout(node_id)
+    fn _layout(&self, node_id: NodeId) -> &LayoutData {
+        self.node_layout(node_id)
             .expect("Node id not found, ordering not correct?")
-            .rect
+    }
+
+    fn _rect(&self, node_id: NodeId) -> &Rectangle {
+        &self._layout(node_id).rect
     }
 
     pub fn eval(&self, expr: &LayoutExpr, parent_node: NodeId) -> f32 {
@@ -49,6 +58,50 @@ impl ComputedLayout {
             LayoutExpr::ParentY { shift } => self._rect(parent_node).y + shift,
             LayoutExpr::ParentWidth { fraction } => self._rect(parent_node).width * fraction,
             LayoutExpr::ParentHeight { fraction } => self._rect(parent_node).height * fraction,
+            LayoutExpr::LineX { node_id, line_idx } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text_layout
+                    .as_ref()
+                    .and_then(|tl| tl.lines.get(*line_idx as usize).map(|line| line.x))
+                    .unwrap_or(0.0)
+                    + layout.rect.x
+            }
+            LayoutExpr::LineY { node_id, line_idx } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text_layout
+                    .as_ref()
+                    .and_then(|tl| tl.lines.get(*line_idx as usize).map(|line| line.y))
+                    .unwrap_or(0.0)
+                    + layout.rect.y
+            }
+            LayoutExpr::LineWidth {
+                node_id,
+                line_idx,
+                fraction,
+            } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text_layout
+                    .as_ref()
+                    .and_then(|tl| tl.lines.get(*line_idx as usize).map(|line| line.width))
+                    .unwrap_or(0.0)
+                    * fraction
+            }
+            LayoutExpr::LineHeight {
+                node_id,
+                line_idx,
+                fraction,
+            } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text_layout
+                    .as_ref()
+                    .and_then(|tl| tl.lines.get(*line_idx as usize).map(|line| line.height))
+                    .unwrap_or(0.0)
+                    * fraction
+            }
         }
     }
 
@@ -69,6 +122,18 @@ fn is_layout_managed(node: &Node, parent: Option<&Node>, step: Step) -> bool {
                 .is_none()
         })
         .unwrap_or(true)
+        && node
+            .width
+            .at_step(step)
+            .as_ref()
+            .map(|v| !v.is_expr())
+            .unwrap_or(true)
+        && node
+            .height
+            .at_step(step)
+            .as_ref()
+            .map(|v| !v.is_expr())
+            .unwrap_or(true)
 }
 
 impl From<&Length> for tf::Dimension {
@@ -99,14 +164,29 @@ impl From<&LengthOrAuto> for tf::LengthPercentageAuto {
     }
 }
 
+impl From<&LengthOrExpr> for tf::Dimension {
+    fn from(value: &LengthOrExpr) -> Self {
+        match value {
+            LengthOrExpr::Points { value } => tf::Dimension::Points(*value),
+            LengthOrExpr::Fraction { value } => tf::Dimension::Percent(*value),
+            LengthOrExpr::Expr(_) => tf::Dimension::Auto,
+        }
+    }
+}
+
 fn compute_content_default_size(
     resources: &Resources,
+    node: &Node,
     content: &NodeContent,
     step: Step,
+    text_layouts: &mut HashMap<NodeId, TextLayout>,
 ) -> (f32, f32) {
     match content {
         NodeContent::Text(text) => {
-            get_text_size(resources, &text.text_style_at_step(step), text.text_align)
+            let (width, height, text_layout) =
+                get_text_layout(resources, &text.text_style_at_step(step), text.text_align);
+            assert!(text_layouts.insert(node.node_id, text_layout).is_none());
+            (width, height)
         }
         NodeContent::Image(image) => (image.loaded_image.width, image.loaded_image.height),
     }
@@ -156,13 +236,14 @@ impl<'a> LayoutContext<'a> {
         taffy: &mut tf::Taffy,
         node: &Node,
         parent: Option<&Node>,
+        text_layouts: &mut HashMap<NodeId, TextLayout>,
     ) -> tf::Node {
         if let Some(s) = node.replace_steps.get(&step) {
             step = *s;
         }
         let tf_children: Vec<_> = node
             .child_nodes_at_step(step)
-            .map(|child| self.compute_layout_helper(step, taffy, child, Some(node)))
+            .map(|child| self.compute_layout_helper(step, taffy, child, Some(node), text_layouts))
             .collect();
 
         let w = node.width.at_step(step);
@@ -173,8 +254,13 @@ impl<'a> LayoutContext<'a> {
                 .at_step(step)
                 .as_ref()
                 .map(|content| {
-                    let (content_w, content_h) =
-                        compute_content_default_size(self.resources, content, step);
+                    let (content_w, content_h) = compute_content_default_size(
+                        self.resources,
+                        node,
+                        content,
+                        step,
+                        text_layouts,
+                    );
                     if w.is_none() && h.is_none() {
                         (
                             Some(tf::Dimension::Points(content_w)),
@@ -263,7 +349,9 @@ impl<'a> LayoutContext<'a> {
 
     pub fn compute_layout(&self, slide: &Slide, step: Step) -> ComputedLayout {
         let mut taffy = tf::Taffy::new();
-        let tf_node = self.compute_layout_helper(step, &mut taffy, &slide.node, None);
+        let mut text_layouts = HashMap::new();
+        let tf_node =
+            self.compute_layout_helper(step, &mut taffy, &slide.node, None, &mut text_layouts);
         let size = tf::Size {
             width: tf::AvailableSpace::Definite(slide.width),
             height: tf::AvailableSpace::Definite(slide.height),
@@ -279,6 +367,7 @@ impl<'a> LayoutContext<'a> {
                     (r.x, r.y)
                 })
                 .unwrap_or((0.0, 0.0));
+            let parent_id = parent_id.unwrap_or(NodeId::new(0));
             result.set_layout(
                 node.node_id,
                 LayoutData {
@@ -287,17 +376,28 @@ impl<'a> LayoutContext<'a> {
                             .x
                             .at_step(step)
                             .as_ref()
-                            .map(|x| result.eval(x, parent_id.unwrap_or(NodeId::new(0))))
+                            .map(|x| result.eval(x, parent_id))
                             .unwrap_or_else(|| parent_x + rect.x),
                         y: node
                             .y
                             .at_step(step)
                             .as_ref()
-                            .map(|y| result.eval(y, parent_id.unwrap_or(NodeId::new(0))))
+                            .map(|y| result.eval(y, parent_id))
                             .unwrap_or_else(|| parent_y + rect.y),
-                        width: rect.width,
-                        height: rect.height,
+                        width: node
+                            .width
+                            .at_step(step)
+                            .as_ref()
+                            .and_then(|v| v.as_expr().map(|v| result.eval(v, parent_id)))
+                            .unwrap_or(rect.width),
+                        height: node
+                            .height
+                            .at_step(step)
+                            .as_ref()
+                            .and_then(|v| v.as_expr().map(|v| result.eval(v, parent_id)))
+                            .unwrap_or(rect.height),
                     },
+                    text_layout: text_layouts.remove(&node.node_id),
                 },
             );
         }

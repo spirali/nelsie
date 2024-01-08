@@ -1,6 +1,6 @@
 from testutils import check
 
-from nelsie import InSteps, Path, Stroke, Arrow
+from nelsie import InSteps, Path, Stroke, Arrow, TextStyle
 
 
 @check()
@@ -100,6 +100,32 @@ def test_path_box_positions(deck):
             .line_to(b1.x(1.0), b1.y(0.5))
         ]
     )
+
+
+@check()
+def test_path_text_line_positions(deck):
+    slide = deck.new_slide(width=160, height=200)
+
+    text = slide.text("Hello world!\nNew line", TextStyle(size=10))
+
+    slide.draw(
+        [
+            Path(stroke=Stroke(color="red", width=1))
+            .move_to(20, 190)
+            .line_to(text.line_x(0), text.line_y(0)),
+            Path(stroke=Stroke(color="green", width=1))
+            .move_to(20, 190)
+            .line_to(text.line_x(1), text.line_y(1)),
+            Path(stroke=Stroke(color="orange", width=1))
+            .move_to(20, 190)
+            .line_to(text.line_x(0, 1.0), text.line_y(0, 1.0)),
+            Path(stroke=Stroke(color="teal", width=1))
+            .move_to(20, 190)
+            .line_to(text.line_x(1, 1.0), text.line_y(1, 1.0))
+
+        ]
+    )
+    deck.render(output_pdf="/tmp/out.pdf")
 
 
 @check(n_slides=2)

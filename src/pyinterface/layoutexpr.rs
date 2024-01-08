@@ -45,6 +45,24 @@ fn extract_layout_expr(obj: &PyAny) -> PyResult<LayoutExpr> {
                     .collect::<PyResult<Vec<LayoutExpr>>>()?,
             })
         }
+        "line_x" => Ok(LayoutExpr::LineX {
+            node_id: NodeId::new(obj.get_item(1)?.extract()?),
+            line_idx: obj.get_item(2)?.extract()?,
+        }),
+        "line_y" => Ok(LayoutExpr::LineY {
+            node_id: NodeId::new(obj.get_item(1)?.extract()?),
+            line_idx: obj.get_item(2)?.extract()?,
+        }),
+        "line_width" => Ok(LayoutExpr::LineWidth {
+            node_id: NodeId::new(obj.get_item(1)?.extract()?),
+            line_idx: obj.get_item(2)?.extract()?,
+            fraction: obj.get_item(3)?.extract()?,
+        }),
+        "line_height" => Ok(LayoutExpr::LineHeight {
+            node_id: NodeId::new(obj.get_item(1)?.extract()?),
+            line_idx: obj.get_item(2)?.extract()?,
+            fraction: obj.get_item(3)?.extract()?,
+        }),
         _ => Err(PyValueError::new_err("Invalid expression")),
     }
 }

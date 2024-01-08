@@ -2,7 +2,8 @@ use super::node::Node;
 use crate::common::error::NelsieError;
 use crate::model::textstyles::FontData;
 use crate::model::{
-    Color, Length, LengthOrAuto, NodeId, PartialTextStyle, Resources, Step, StepValue, StyleMap,
+    Color, Length, LengthOrAuto, LengthOrExpr, NodeId, PartialTextStyle, Resources, Step,
+    StepValue, StyleMap,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -41,8 +42,8 @@ impl Slide {
                 z_level: StepValue::Const(0),
                 x: StepValue::Const(None),
                 y: StepValue::Const(None),
-                width: StepValue::Const(Some(Length::Points { value: width })),
-                height: StepValue::Const(Some(Length::Points { value: height })),
+                width: StepValue::Const(Some(LengthOrExpr::Points { value: width })),
+                height: StepValue::Const(Some(LengthOrExpr::Points { value: height })),
                 row: StepValue::Const(false),
                 reverse: StepValue::Const(false),
                 flex_wrap: StepValue::Const(FlexWrap::NoWrap),

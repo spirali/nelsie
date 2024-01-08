@@ -1,12 +1,13 @@
 use crate::model::{
-    merge_stepped_styles, Color, NodeContentText, PartialTextStyle, StyleMap, TextAlign,
+    merge_stepped_styles, Color, LengthOrExpr, NodeContentText, PartialTextStyle, StyleMap,
+    TextAlign,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, Step, StepValue,
 };
 use crate::parsers::step_parser::parse_steps;
 use crate::parsers::{
-    parse_length, parse_length_auto, parse_position, parse_styled_text,
+    parse_length, parse_length_auto, parse_length_or_expr, parse_position, parse_styled_text,
     parse_styled_text_from_plain_text, run_syntax_highlighting,
 };
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
@@ -74,8 +75,8 @@ pub(crate) struct BoxConfig {
     pub bg_color: ValueOrInSteps<Option<String>>,
     pub x: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
     pub y: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
-    pub width: ValueOrInSteps<Option<PyStringOrFloat>>,
-    pub height: ValueOrInSteps<Option<PyStringOrFloat>>,
+    pub width: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+    pub height: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
     pub row: ValueOrInSteps<bool>,
     pub reverse: ValueOrInSteps<bool>,
     pub flex_wrap: ValueOrInSteps<u32>,
@@ -102,13 +103,10 @@ pub(crate) struct BoxConfig {
     pub debug_layout: Option<String>,
 }
 
-fn pyparse_opt_length(obj: Option<PyStringOrFloat>) -> crate::Result<Option<Length>> {
-    obj.map(|v| parse_length(v.into())).transpose()
-    // match obj {
-    //     None => Ok(None),
-    //     Some(StringOrFloat::String(v)) => parse_length(&v).map(Some),
-    //     Some(StringOrFloat::Float(value)) => Ok(Some(Length::Points { value }))
-    // }
+fn pyparse_opt_length_or_expr(
+    obj: Option<PyStringOrFloatOrExpr>,
+) -> crate::Result<Option<LengthOrExpr>> {
+    obj.map(|v| parse_length_or_expr(v.into())).transpose()
 }
 
 fn parse_len(obj: PyStringOrFloat) -> crate::Result<Length> {
@@ -307,8 +305,10 @@ impl BoxConfig {
         let y = self.y.parse(&mut n_steps, |v| {
             v.map(|v| parse_position(v.into(), false)).transpose()
         })?;
-        let width = self.width.parse(&mut n_steps, pyparse_opt_length)?;
-        let height = self.height.parse(&mut n_steps, pyparse_opt_length)?;
+        let width = self.width.parse(&mut n_steps, pyparse_opt_length_or_expr)?;
+        let height = self
+            .height
+            .parse(&mut n_steps, pyparse_opt_length_or_expr)?;
         let node = Node {
             node_id: new_node_id,
             replace_steps: self.replace_steps.unwrap_or_default(),

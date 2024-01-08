@@ -1,4 +1,4 @@
-use super::{Color, Length, NodeContentImage, StepValue, StyleMap};
+use super::{Color, Length, LengthOrExpr, NodeContentImage, StepValue, StyleMap};
 use crate::model::shapes::Drawing;
 use crate::model::text::NodeContentText;
 use crate::model::types::LengthOrAuto;
@@ -37,8 +37,8 @@ pub(crate) struct Node {
     pub x: StepValue<Option<LayoutExpr>>,
     pub y: StepValue<Option<LayoutExpr>>,
 
-    pub width: StepValue<Option<Length>>,
-    pub height: StepValue<Option<Length>>,
+    pub width: StepValue<Option<LengthOrExpr>>,
+    pub height: StepValue<Option<LengthOrExpr>>,
 
     pub row: StepValue<bool>,
     pub reverse: StepValue<bool>,

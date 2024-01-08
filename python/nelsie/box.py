@@ -292,6 +292,28 @@ class BoxBuilder:
             return expr
         return expr + LayoutExpr.height(node_id, height_fraction)
 
+    def line_x(self, line_idx: int, width_fraction: float | int | None = None):
+        node_id = self.get_box().node_id
+        expr = LayoutExpr.line_x(node_id, line_idx)
+        if width_fraction is None:
+            return expr
+        return expr + LayoutExpr.line_width(node_id, line_idx, width_fraction)
+
+    def line_y(self, line_idx: int, height_fraction: float | int | None = None):
+        node_id = self.get_box().node_id
+        expr = LayoutExpr.line_y(node_id, line_idx)
+        if height_fraction is None:
+            return expr
+        return expr + LayoutExpr.line_height(node_id, line_idx, height_fraction)
+
+    def line_width(self, line_idx: int, fraction: float | int = 1.0):
+        node_id = self.get_box().node_id
+        return LayoutExpr.line_width(node_id, line_idx, fraction)
+
+    def line_height(self, line_idx: int, fraction: float | int = 1.0):
+        node_id = self.get_box().node_id
+        return LayoutExpr.line_height(node_id, line_idx, fraction)
+
 
 class Box(BoxBuilder):
     def __init__(

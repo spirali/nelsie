@@ -20,4 +20,6 @@ pub(crate) use self::text::{NodeContentText, Span, StyledLine, StyledText, TextA
 pub(crate) use self::textstyles::{
     merge_stepped_styles, FontData, PartialTextStyle, StyleMap, TextStyle,
 };
-pub(crate) use self::types::{Color, LayoutExpr, Length, LengthOrAuto, NodeId, Stroke};
+pub(crate) use self::types::{
+    Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId, Stroke,
+};

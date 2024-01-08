@@ -1,4 +1,4 @@
-use crate::model::{LayoutExpr, Length, LengthOrAuto};
+use crate::model::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
 use crate::parsers::{StringOrFloat, StringOrFloatOrExpr};
 use std::str::FromStr;
 
@@ -40,6 +40,17 @@ pub(crate) fn parse_length_auto(value: StringOrFloat) -> crate::Result<LengthOrA
             }
         }),
     }
+}
+
+pub(crate) fn parse_length_or_expr(value: StringOrFloatOrExpr) -> crate::Result<LengthOrExpr> {
+    Ok(match value {
+        StringOrFloatOrExpr::Float(value) => LengthOrExpr::Points { value },
+        StringOrFloatOrExpr::String(str) => match parse_string_length(&str)? {
+            Length::Points { value } => LengthOrExpr::Points { value },
+            Length::Fraction { value } => LengthOrExpr::Fraction { value },
+        },
+        StringOrFloatOrExpr::Expr(expr) => LengthOrExpr::Expr(expr),
+    })
 }
 
 pub(crate) fn parse_position(value: StringOrFloatOrExpr, is_x: bool) -> crate::Result<LayoutExpr> {

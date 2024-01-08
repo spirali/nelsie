@@ -18,6 +18,6 @@ pub(crate) enum StringOrFloatOrExpr {
     Expr(LayoutExpr),
 }
 
-pub(crate) use size::{parse_length, parse_length_auto, parse_position};
+pub(crate) use size::{parse_length, parse_length_auto, parse_length_or_expr, parse_position};
 pub(crate) use syntaxhighlight::run_syntax_highlighting;
 pub(crate) use text::{parse_styled_text, parse_styled_text_from_plain_text};
