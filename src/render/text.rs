@@ -46,6 +46,21 @@ pub(crate) fn get_text_layout(
         .map(|line| line.width)
         .max_by(|x, y| x.partial_cmp(y).unwrap())
         .unwrap_or(0.0);
+
+    match align {
+        TextAlign::Start => { /* Do nothing */ }
+        TextAlign::Center => {
+            for line in result.lines.iter_mut() {
+                line.x = (width - line.width) / 2.0;
+            }
+        }
+        TextAlign::End => {
+            for line in result.lines.iter_mut() {
+                line.x = width - line.width;
+            }
+        }
+    }
+
     (width, text.height(), result)
 }
 

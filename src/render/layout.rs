@@ -349,6 +349,7 @@ impl<'a> LayoutContext<'a> {
 
     pub fn compute_layout(&self, slide: &Slide, step: Step) -> ComputedLayout {
         let mut taffy = tf::Taffy::new();
+        taffy.disable_rounding();
         let mut text_layouts = HashMap::new();
         let tf_node =
             self.compute_layout_helper(step, &mut taffy, &slide.node, None, &mut text_layouts);

@@ -125,7 +125,6 @@ def test_path_text_line_positions(deck):
 
         ]
     )
-    deck.render(output_pdf="/tmp/out.pdf")
 
 
 @check(n_slides=2)

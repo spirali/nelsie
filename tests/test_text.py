@@ -235,4 +235,17 @@ def test_line_box(deck):
     slide.box(x=t.line_x(2), y=t.line_y(2), width=t.line_width(2), height=t.line_height(2), bg_color="red")
     slide.box(x=t.line_x(4), y=t.line_y(4), width=t.line_width(4), height=t.line_height(4), bg_color="orange")
 
-    deck.render(output_pdf="/tmp/out.pdf")
+
+@check()
+def test_line_box_align(deck):
+    deck.set_style("default", TextStyle(size=12))
+    deck.set_style("big", TextStyle(size=18))
+    slide = deck.new_slide(width=150, height=130)
+    t1 = slide.text("x\nyy\nzzzzz", z_level=1, align=TextAlign.Start)
+    t2 = slide.text("x\nyy\nzzzzz", z_level=1, align=TextAlign.Center)
+    t3 = slide.text("x\nyy\nzzzzz", z_level=1, align=TextAlign.End)
+
+    for t in (t1, t2, t3):
+        slide.box(x=t.line_x(0), y=t.line_y(0), width=t.line_width(0), height=t.line_height(0), bg_color="green")
+        slide.box(x=t.line_x(1), y=t.line_y(1), width=t.line_width(1), height=t.line_height(1), bg_color="blue")
+        slide.box(x=t.line_x(2), y=t.line_y(2), width=t.line_width(2), height=t.line_height(2), bg_color="red")
