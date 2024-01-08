@@ -114,7 +114,7 @@ impl<'a> RenderContext<'a> {
         }
         if *node.z_level.at_step(step) == self.z_level {
             if let Some(color) = &node.bg_color.at_step(step) {
-                let rect = self.layout.rect(node.node_id).unwrap();
+                let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
                     tiny_skia::Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).unwrap(),
                 )));
@@ -128,7 +128,7 @@ impl<'a> RenderContext<'a> {
             }
 
             if let Some(content) = &node.content.at_step(step) {
-                let rect = self.layout.rect(node.node_id).unwrap();
+                let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 match content {
                     NodeContent::Text(text) => self.svg_node.append(render_text(
                         &text.text_style_at_step(step),
@@ -147,7 +147,7 @@ impl<'a> RenderContext<'a> {
             }
 
             if let Some(color) = &node.debug_layout {
-                let rect = self.layout.rect(node.node_id).unwrap();
+                let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 draw_debug_frame(rect, &node.name, self.default_font, color, &self.svg_node);
             }
         }

@@ -17,15 +17,22 @@ pub(crate) struct Rectangle {
     pub height: f32,
 }
 
+#[derive(Debug)]
+pub(crate) struct LayoutData {
+    pub(crate) rect: Rectangle,
+}
+
 #[derive(Default, Debug)]
 pub(crate) struct ComputedLayout {
-    node_rects: HashMap<NodeId, Rectangle>,
+    node_rects: HashMap<NodeId, LayoutData>,
 }
 
 impl ComputedLayout {
     fn _rect(&self, node_id: NodeId) -> &Rectangle {
-        self.rect(node_id)
+        &self
+            .node_layout(node_id)
             .expect("Node id not found, ordering not correct?")
+            .rect
     }
 
     pub fn eval(&self, expr: &LayoutExpr, parent_node: NodeId) -> f32 {
@@ -45,11 +52,11 @@ impl ComputedLayout {
         }
     }
 
-    fn set_rect(&mut self, node_id: NodeId, rect: Rectangle) {
-        assert!(self.node_rects.insert(node_id, rect).is_none());
+    fn set_layout(&mut self, node_id: NodeId, layout_data: LayoutData) {
+        assert!(self.node_rects.insert(node_id, layout_data).is_none());
     }
 
-    pub fn rect(&self, node_id: NodeId) -> Option<&Rectangle> {
+    pub fn node_layout(&self, node_id: NodeId) -> Option<&LayoutData> {
         self.node_rects.get(&node_id)
     }
 }
@@ -268,27 +275,29 @@ impl<'a> LayoutContext<'a> {
         for (parent_id, node, rect) in node_entries.values() {
             let (parent_x, parent_y) = parent_id
                 .map(|node_id| {
-                    let r = result.rect(node_id).unwrap();
+                    let r = &result.node_layout(node_id).unwrap().rect;
                     (r.x, r.y)
                 })
                 .unwrap_or((0.0, 0.0));
-            result.set_rect(
+            result.set_layout(
                 node.node_id,
-                Rectangle {
-                    x: node
-                        .x
-                        .at_step(step)
-                        .as_ref()
-                        .map(|x| result.eval(x, parent_id.unwrap_or(NodeId::new(0))))
-                        .unwrap_or_else(|| parent_x + rect.x),
-                    y: node
-                        .y
-                        .at_step(step)
-                        .as_ref()
-                        .map(|y| result.eval(y, parent_id.unwrap_or(NodeId::new(0))))
-                        .unwrap_or_else(|| parent_y + rect.y),
-                    width: rect.width,
-                    height: rect.height,
+                LayoutData {
+                    rect: Rectangle {
+                        x: node
+                            .x
+                            .at_step(step)
+                            .as_ref()
+                            .map(|x| result.eval(x, parent_id.unwrap_or(NodeId::new(0))))
+                            .unwrap_or_else(|| parent_x + rect.x),
+                        y: node
+                            .y
+                            .at_step(step)
+                            .as_ref()
+                            .map(|y| result.eval(y, parent_id.unwrap_or(NodeId::new(0))))
+                            .unwrap_or_else(|| parent_y + rect.y),
+                        width: rect.width,
+                        height: rect.height,
+                    },
                 },
             );
         }
