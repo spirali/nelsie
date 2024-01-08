@@ -209,3 +209,10 @@ def test_layout_expr():
     assert e._expr == ("sum", ("x", 123), 10)
     e2 = e - 20.0
     assert e2._expr == ("sum", ("x", 123), 10, -20.0)
+
+
+@check()
+def test_expr_x_y_weight_height(deck):
+    slide = deck.new_slide(200, 80)
+    box = slide.box(width=180, height=40, bg_color="green")
+    slide.box(x=box.x(0.33), y=box.y(), width=box.width(0.33), height=box.height(0.5), bg_color="blue")
