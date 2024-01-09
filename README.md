@@ -9,7 +9,7 @@
 * New fragment reveling philosophy (removes many needs of overlays)
 * Flexbox layout
 
-* State: **Early prototype**
+* State: **Beta version**
 
 ## TODO
 
@@ -32,12 +32,12 @@
     * Aspect ratio
     * ~~Margin~~
     * ~~Padding~~
-    * Align & Justify items
-    * Gap
+    * ~~Align & Justify items~~
+    * ~~Gap~~
     * ~~Flex grow & shrink~~
     * ~~Absolute positioning~~
     * Flex basis
-    * Positions derived from other boxes
+    * ~~Positions derived from other boxes~~
 * Shapes
     * ~~Box background color~~
     * Box border color
