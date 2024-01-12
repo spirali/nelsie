@@ -141,7 +141,7 @@ fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
     })
 }
 
-fn read_archive_file_as_string<R: std::io::Seek + std::io::Read>(
+fn read_archive_file_as_string<R: std::io::Seek + Read>(
     archive: &mut zip::ZipArchive<R>,
     filename: &str,
 ) -> zip::result::ZipResult<String> {
@@ -152,7 +152,7 @@ fn option_unpack<T>(value: Option<T>) -> crate::Result<T> {
     value.ok_or_else(|| NelsieError::Generic("Invalid format".to_string()))
 }
 
-fn load_ora_stack<R: std::io::Seek + std::io::Read>(
+fn load_ora_stack<R: std::io::Seek + Read>(
     node: &roxmltree::Node,
     archive: &mut zip::ZipArchive<R>,
     layers: &mut Vec<OraLayer>,
@@ -161,6 +161,13 @@ fn load_ora_stack<R: std::io::Seek + std::io::Read>(
     for child in node.children() {
         let tag = child.tag_name().name();
         if tag == "layer" {
+            if child
+                .attribute("visibility")
+                .map(|v| v == "hidden")
+                .unwrap_or(false)
+            {
+                continue;
+            }
             let visibility =
                 parse_steps_from_label(child.attribute("name").unwrap_or("")).map(|(v, n)| {
                     *n_steps = max(*n_steps, n);

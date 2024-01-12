@@ -61,13 +61,16 @@ fn render_ora(
     if rect.width <= 0.00001 || rect.height <= 0.00001 {
         return;
     }
+    if step <= image.shift_steps {
+        return;
+    }
     let scale = (rect.width / width).min(rect.height / height);
     for layer in &ora_data.layers {
         if !image.enable_steps
             || layer
                 .visibility
                 .as_ref()
-                .map(|v| *v.at_step(step))
+                .map(|v| *v.at_step(step - image.shift_steps))
                 .unwrap_or(true)
         {
             create_image_node(
