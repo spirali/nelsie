@@ -56,7 +56,7 @@ fn draw_debug_frame(
         format!("{} [{}x{}]", name, rect.width, rect.height)
     };
     let styled_text = StyledText {
-        styled_lines: &[StyledLine {
+        styled_lines: vec![StyledLine {
             spans: vec![Span {
                 length: text.len() as u32,
                 style_idx: 0,

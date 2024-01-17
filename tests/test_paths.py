@@ -1,6 +1,6 @@
 from testutils import check
 
-from nelsie import InSteps, Path, Stroke, Arrow, TextStyle
+from nelsie import Arrow, InSteps, Path, Stroke, TextStyle
 
 
 @check()
@@ -121,8 +121,7 @@ def test_path_text_line_positions(deck):
             .line_to(text.line_x(0, 1.0), text.line_y(0, 1.0)),
             Path(stroke=Stroke(color="teal", width=1))
             .move_to(20, 190)
-            .line_to(text.line_x(1, 1.0), text.line_y(1, 1.0))
-
+            .line_to(text.line_x(1, 1.0), text.line_y(1, 1.0)),
         ]
     )
 

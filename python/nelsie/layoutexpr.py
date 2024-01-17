@@ -47,6 +47,22 @@ class LayoutExpr:
     def line_height(node_id, line_idx, fraction):
         return LayoutExpr(("line_height", node_id, line_idx, fraction))
 
+    @staticmethod
+    def text_anchor_x(node_id, anchor_id):
+        return LayoutExpr(("anchor_x", node_id, anchor_id))
+
+    @staticmethod
+    def text_anchor_y(node_id, anchor_id):
+        return LayoutExpr(("anchor_y", node_id, anchor_id))
+
+    @staticmethod
+    def text_anchor_width(node_id, anchor_id, fraction):
+        return LayoutExpr(("anchor_width", node_id, anchor_id, fraction))
+
+    @staticmethod
+    def text_anchor_height(node_id, anchor_id, fraction):
+        return LayoutExpr(("anchor_height", node_id, anchor_id, fraction))
+
 
 def unpack_layout_expr_arg(obj):
     if isinstance(obj, LayoutExpr):

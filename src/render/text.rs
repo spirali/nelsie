@@ -1,4 +1,8 @@
-use crate::model::{Resources, Span, StyledLine, StyledText, TextAlign, TextStyle};
+use crate::model::{
+    InTextAnchor, InTextAnchorId, InTextAnchorPoint, Resources, Span, StyledLine, StyledText,
+    TextAlign, TextStyle,
+};
+use std::collections::HashMap;
 
 use crate::render::layout::{Rectangle, TextLayout};
 use crate::render::paths::stroke_to_usvg_stroke;
@@ -9,57 +13,117 @@ use usvg_tree::{
     TextSpan, Visibility, WritingMode,
 };
 
+pub(crate) fn get_in_text_anchor_point(text: &StyledText, point: &InTextAnchorPoint) -> StyledText {
+    let line = &text.styled_lines[point.line_idx as usize];
+    StyledText {
+        styled_lines: vec![StyledLine {
+            spans: line.spans[..point.span_idx as usize].to_vec(),
+            text: line.text.to_string(),
+        }],
+        styles: text.styles.clone(),
+        default_font_size: text.default_font_size,
+        default_line_spacing: text.default_line_spacing,
+    }
+}
+
 pub(crate) fn get_text_layout(
     resources: &Resources,
     text: &StyledText,
     align: TextAlign,
+    anchors: &HashMap<InTextAnchorId, InTextAnchor>,
 ) -> (f32, f32, TextLayout) {
+    let mut anchor_pos = HashMap::new();
+    for anchor in anchors.values() {
+        if !anchor_pos.contains_key(&anchor.start) {
+            let sx = get_text_width(resources, &get_in_text_anchor_point(text, &anchor.start));
+            anchor_pos.insert(anchor.start.clone(), sx);
+        }
+        if !anchor_pos.contains_key(&anchor.end) {
+            let sx = get_text_width(resources, &get_in_text_anchor_point(text, &anchor.end));
+            anchor_pos.insert(anchor.end.clone(), sx);
+        }
+    }
+
+    let mut result_lines = Vec::with_capacity(text.styled_lines.len());
+
     let mut tmp_text = StyledText {
-        styled_lines: &[],
+        styled_lines: Vec::new(),
         styles: text.styles.clone(),
         default_font_size: text.default_font_size,
         default_line_spacing: text.default_line_spacing,
     };
-    let mut result = TextLayout {
-        lines: Vec::with_capacity(text.styled_lines.len()),
-    };
+
     let mut current_y = 0.0;
     for idx in 0..text.styled_lines.len() {
-        tmp_text.styled_lines = &text.styled_lines[idx..idx + 1];
+        tmp_text.styled_lines = vec![text.styled_lines[idx].clone()];
         let sx = get_text_width(resources, &tmp_text);
-        let size = text.styled_lines[idx]
+        let styled_line = &text.styled_lines[idx];
+        let size = styled_line
             .font_size(&tmp_text.styles)
             .unwrap_or(tmp_text.default_font_size);
+        let descender = if idx == 0 {
+            0.0
+        } else {
+            styled_line.line_descender(&tmp_text.styles).unwrap_or(0.0)
+        };
 
-        result.lines.push(Rectangle {
+        result_lines.push(Rectangle {
             x: 0.0,
-            y: current_y,
+            y: current_y - descender,
             width: sx,
             height: size,
         });
-        current_y += size * tmp_text.default_line_spacing;
+        current_y += if idx == 0 {
+            size
+        } else {
+            size * tmp_text.default_line_spacing
+        }
     }
 
-    let width = result
-        .lines
+    let width = result_lines
         .iter()
         .map(|line| line.width)
-        .max_by(|x, y| x.partial_cmp(y).unwrap())
+        .max_by(|w1, w2| w1.partial_cmp(w2).unwrap())
         .unwrap_or(0.0);
 
     match align {
         TextAlign::Start => { /* Do nothing */ }
         TextAlign::Center => {
-            for line in result.lines.iter_mut() {
+            for line in result_lines.iter_mut() {
                 line.x = (width - line.width) / 2.0;
             }
         }
         TextAlign::End => {
-            for line in result.lines.iter_mut() {
+            for line in result_lines.iter_mut() {
                 line.x = width - line.width;
             }
         }
     }
+
+    let anchor_points = anchors
+        .iter()
+        .map(|(anchor_id, anchor)| {
+            let x = anchor_pos.get(&anchor.start).copied().unwrap();
+            let y = result_lines[anchor.start.line_idx as usize].y;
+            (
+                *anchor_id,
+                Rectangle {
+                    x,
+                    y,
+                    width: anchor_pos.get(&anchor.end).copied().unwrap() - x,
+                    height: {
+                        let line = &result_lines[anchor.end.line_idx as usize];
+                        line.y + line.height - y
+                    },
+                },
+            )
+        })
+        .collect();
+
+    let mut result = TextLayout {
+        lines: result_lines,
+        anchor_points,
+    };
 
     (width, text.height(), result)
 }

@@ -2,14 +2,14 @@ import os
 from dataclasses import dataclass
 
 from .basictypes import (
+    Align,
+    FlexWrap,
     Length,
     LengthAuto,
     Position,
     Size,
     TextAlign,
     parse_debug_layout,
-    Align,
-    FlexWrap,
 )
 from .insteps import InSteps
 from .layoutexpr import LayoutExpr
@@ -321,6 +321,28 @@ class BoxBuilder:
     def line_height(self, line_idx: int, fraction: float | int = 1.0):
         node_id = self.get_box().node_id
         return LayoutExpr.line_height(node_id, line_idx, fraction)
+
+    def text_anchor_x(self, anchor_id: int, width_fraction: float | int | None = None):
+        node_id = self.get_box().node_id
+        expr = LayoutExpr.text_anchor_x(node_id, anchor_id)
+        if width_fraction is None:
+            return expr
+        return expr + LayoutExpr.text_anchor_width(node_id, anchor_id, width_fraction)
+
+    def text_anchor_y(self, anchor_id: int, height_fraction: float | int | None = None):
+        node_id = self.get_box().node_id
+        expr = LayoutExpr.text_anchor_y(node_id, anchor_id)
+        if height_fraction is None:
+            return expr
+        return expr + LayoutExpr.text_anchor_height(node_id, anchor_id, height_fraction)
+
+    def text_anchor_width(self, anchor_id: int, fraction: float | int = 1.0):
+        node_id = self.get_box().node_id
+        return LayoutExpr.text_anchor_width(node_id, anchor_id, fraction)
+
+    def text_anchor_height(self, anchor_id: int, fraction: float | int = 1.0):
+        node_id = self.get_box().node_id
+        return LayoutExpr.text_anchor_height(node_id, anchor_id, fraction)
 
 
 class Box(BoxBuilder):

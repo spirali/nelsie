@@ -192,6 +192,7 @@ fn process_content(
                 text_align,
                 default_font_size: main_style.map_ref(|s| s.size.unwrap()),
                 default_line_spacing: main_style.map_ref(|s| s.line_spacing.unwrap()),
+                anchors: parsed.anchors,
             };
 
             if let Some(language) = text.syntax_language {

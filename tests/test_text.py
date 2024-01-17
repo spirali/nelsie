@@ -228,16 +228,42 @@ def test_line_box(deck):
     deck.set_style("default", TextStyle(size=8))
     deck.set_style("big", TextStyle(size=18))
     slide = deck.new_slide(width=120, height=100)
-    t = slide.text("First line\n\n~big{Third} line\n4. line\nLooooooooong line", z_level=1)
+    t = slide.text(
+        "First line\n\n~big{Third} line\n4. line\nLooooooooong line", z_level=1
+    )
 
-    slide.box(x=t.line_x(0), y=t.line_y(0), width=t.line_width(0), height=t.line_height(0), bg_color="green")
-    slide.box(x=t.line_x(1), y=t.line_y(1), width=t.line_width(1), height=t.line_height(1), bg_color="blue")
-    slide.box(x=t.line_x(2), y=t.line_y(2), width=t.line_width(2), height=t.line_height(2), bg_color="red")
-    slide.box(x=t.line_x(4), y=t.line_y(4), width=t.line_width(4), height=t.line_height(4), bg_color="orange")
+    slide.box(
+        x=t.line_x(0),
+        y=t.line_y(0),
+        width=t.line_width(0),
+        height=t.line_height(0),
+        bg_color="green",
+    )
+    slide.box(
+        x=t.line_x(1),
+        y=t.line_y(1),
+        width=t.line_width(1),
+        height=t.line_height(1),
+        bg_color="blue",
+    )
+    slide.box(
+        x=t.line_x(2),
+        y=t.line_y(2),
+        width=t.line_width(2),
+        height=t.line_height(2),
+        bg_color="red",
+    )
+    slide.box(
+        x=t.line_x(4),
+        y=t.line_y(4),
+        width=t.line_width(4),
+        height=t.line_height(4),
+        bg_color="orange",
+    )
 
 
 @check()
-def test_line_box_align(deck):
+def test_text_line_points1(deck):
     deck.set_style("default", TextStyle(size=12))
     deck.set_style("big", TextStyle(size=18))
     slide = deck.new_slide(width=150, height=130)
@@ -246,6 +272,87 @@ def test_line_box_align(deck):
     t3 = slide.text("x\nyy\nzzzzz", z_level=1, align=TextAlign.End)
 
     for t in (t1, t2, t3):
-        slide.box(x=t.line_x(0), y=t.line_y(0), width=t.line_width(0), height=t.line_height(0), bg_color="green")
-        slide.box(x=t.line_x(1), y=t.line_y(1), width=t.line_width(1), height=t.line_height(1), bg_color="blue")
-        slide.box(x=t.line_x(2), y=t.line_y(2), width=t.line_width(2), height=t.line_height(2), bg_color="red")
+        slide.box(
+            x=t.line_x(0),
+            y=t.line_y(0),
+            width=t.line_width(0),
+            height=t.line_height(0),
+            bg_color="green",
+        )
+        slide.box(
+            x=t.line_x(1),
+            y=t.line_y(1),
+            width=t.line_width(1),
+            height=t.line_height(1),
+            bg_color="blue",
+        )
+        slide.box(
+            x=t.line_x(2),
+            y=t.line_y(2),
+            width=t.line_width(2),
+            height=t.line_height(2),
+            bg_color="red",
+        )
+    deck.render(output_pdf="/tmp/out.pdf")
+
+
+@check()
+def test_text_anchor_points(deck):
+    deck.set_style("default", TextStyle(size=12))
+    deck.set_style("green", TextStyle(size=16, color="green"))
+
+    slide = deck.new_slide(width=250, height=250)
+    t = slide.text("Hello ~green{~1{world!}}\n~2{Full line}\n>~100{1}<", z_level=1)
+    slide.box(
+        x=t.text_anchor_x(1),
+        y=t.text_anchor_y(1),
+        width=t.text_anchor_width(1),
+        height=t.text_anchor_height(1),
+        bg_color="orange",
+    )
+    slide.box(
+        x=t.text_anchor_x(2),
+        y=t.text_anchor_y(2),
+        width=t.text_anchor_width(2),
+        height=t.text_anchor_height(2),
+        bg_color="gray",
+    )
+    slide.box(
+        x=t.text_anchor_x(100),
+        y=t.text_anchor_y(100),
+        width=t.text_anchor_width(100),
+        height=t.text_anchor_height(100),
+        bg_color="cyan",
+    )
+    deck.render(output_pdf="/tmp/out.pdf")
+
+
+@check()
+def test_text_line_points2(deck):
+    deck.set_style("default", TextStyle(size=12))
+    deck.set_style("green", TextStyle(size=46, color="green"))
+
+    slide = deck.new_slide(width=250, height=150)
+    t = slide.text("Hello ~green{yWy!}\nFull line gy\nWgy", z_level=1)
+    slide.box(
+        x=t.line_x(0),
+        y=t.line_y(0),
+        width=t.line_width(0),
+        height=t.line_height(0),
+        bg_color="orange",
+    )
+    slide.box(
+        x=t.line_x(1),
+        y=t.line_y(1),
+        width=t.line_width(1),
+        height=t.line_height(1),
+        bg_color="blue",
+    )
+    slide.box(
+        x=t.line_x(2),
+        y=t.line_y(2),
+        width=t.line_width(2),
+        height=t.line_height(2),
+        bg_color="orange",
+    )
+    deck.render(output_pdf="/tmp/out.pdf")

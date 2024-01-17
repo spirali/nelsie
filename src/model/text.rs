@@ -1,14 +1,30 @@
 use crate::model::{Step, StepValue, TextStyle};
 use itertools::Itertools;
+use std::collections::HashMap;
+
+pub(crate) type InTextAnchorId = u32;
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub(crate) struct InTextAnchorPoint {
+    pub line_idx: u32,
+    pub span_idx: u32,
+}
 
 #[derive(Debug)]
+#[cfg_attr(test, derive(PartialEq))]
+pub(crate) struct InTextAnchor {
+    pub start: InTextAnchorPoint,
+    pub end: InTextAnchorPoint,
+}
+
+#[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct Span {
     pub length: u32,
     pub style_idx: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct StyledLine {
     pub spans: Vec<Span>,
@@ -48,14 +64,14 @@ impl StyledLine {
 }
 
 #[derive(Debug)]
-pub(crate) struct StyledText<'a> {
-    pub styled_lines: &'a [StyledLine],
+pub(crate) struct StyledText {
+    pub styled_lines: Vec<StyledLine>,
     pub styles: Vec<TextStyle>,
     pub default_font_size: f32,
     pub default_line_spacing: f32,
 }
 
-impl<'a> StyledText<'a> {
+impl StyledText {
     pub fn height(&self) -> f32 {
         if self.styled_lines.is_empty() {
             return 0.0;
@@ -109,12 +125,13 @@ pub(crate) struct NodeContentText {
     pub text_align: TextAlign,
     pub default_font_size: StepValue<f32>,
     pub default_line_spacing: StepValue<f32>,
+    pub anchors: HashMap<InTextAnchorId, InTextAnchor>,
 }
 
 impl NodeContentText {
     pub fn text_style_at_step(&self, step: Step) -> StyledText {
         StyledText {
-            styled_lines: &self.styled_lines,
+            styled_lines: self.styled_lines.clone(),
             styles: self
                 .styles
                 .iter()

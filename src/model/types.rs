@@ -1,5 +1,6 @@
 use crate::common::error::NelsieError;
 
+use crate::model::InTextAnchorId;
 use std::str::FromStr;
 use usvg::NormalizedF32;
 
@@ -131,6 +132,24 @@ pub(crate) enum LayoutExpr {
     LineHeight {
         node_id: NodeId,
         line_idx: u32,
+        fraction: f32,
+    },
+    InTextAnchorX {
+        node_id: NodeId,
+        anchor_id: InTextAnchorId,
+    },
+    InTextAnchorY {
+        node_id: NodeId,
+        anchor_id: InTextAnchorId,
+    },
+    InTextAnchorWidth {
+        node_id: NodeId,
+        anchor_id: InTextAnchorId,
+        fraction: f32,
+    },
+    InTextAnchorHeight {
+        node_id: NodeId,
+        anchor_id: InTextAnchorId,
         fraction: f32,
     },
     Sum {

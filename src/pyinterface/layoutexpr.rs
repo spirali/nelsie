@@ -63,6 +63,24 @@ fn extract_layout_expr(obj: &PyAny) -> PyResult<LayoutExpr> {
             line_idx: obj.get_item(2)?.extract()?,
             fraction: obj.get_item(3)?.extract()?,
         }),
+        "anchor_x" => Ok(LayoutExpr::InTextAnchorX {
+            node_id: NodeId::new(obj.get_item(1)?.extract()?),
+            anchor_id: obj.get_item(2)?.extract()?,
+        }),
+        "anchor_y" => Ok(LayoutExpr::InTextAnchorY {
+            node_id: NodeId::new(obj.get_item(1)?.extract()?),
+            anchor_id: obj.get_item(2)?.extract()?,
+        }),
+        "anchor_width" => Ok(LayoutExpr::InTextAnchorWidth {
+            node_id: NodeId::new(obj.get_item(1)?.extract()?),
+            anchor_id: obj.get_item(2)?.extract()?,
+            fraction: obj.get_item(3)?.extract()?,
+        }),
+        "anchor_height" => Ok(LayoutExpr::InTextAnchorHeight {
+            node_id: NodeId::new(obj.get_item(1)?.extract()?),
+            anchor_id: obj.get_item(2)?.extract()?,
+            fraction: obj.get_item(3)?.extract()?,
+        }),
         _ => Err(PyValueError::new_err("Invalid expression")),
     }
 }

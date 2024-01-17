@@ -1,6 +1,6 @@
 use crate::model::{
-    LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId, Resources, Slide,
-    Step,
+    InTextAnchorId, InTextAnchorPoint, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node,
+    NodeContent, NodeId, Resources, Slide, Step,
 };
 use crate::render::text::get_text_layout;
 use std::collections::{BTreeMap, HashMap};
@@ -21,6 +21,7 @@ pub(crate) struct Rectangle {
 #[derive(Debug)]
 pub(crate) struct TextLayout {
     pub lines: Vec<Rectangle>,
+    pub anchor_points: HashMap<InTextAnchorId, Rectangle>,
 }
 
 #[derive(Debug)]
@@ -31,7 +32,7 @@ pub(crate) struct LayoutData {
 
 #[derive(Default, Debug)]
 pub(crate) struct ComputedLayout {
-    node_rects: HashMap<NodeId, LayoutData>,
+    node_layout: HashMap<NodeId, LayoutData>,
 }
 
 impl ComputedLayout {
@@ -102,15 +103,59 @@ impl ComputedLayout {
                     .unwrap_or(0.0)
                     * fraction
             }
+            LayoutExpr::InTextAnchorX { node_id, anchor_id } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text_layout
+                    .as_ref()
+                    .and_then(|tl| tl.anchor_points.get(anchor_id).map(|a| a.x))
+                    .unwrap_or(0.0)
+                    + layout.rect.x
+            }
+            LayoutExpr::InTextAnchorY { node_id, anchor_id } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text_layout
+                    .as_ref()
+                    .and_then(|tl| tl.anchor_points.get(anchor_id).map(|a| a.y))
+                    .unwrap_or(0.0)
+                    + layout.rect.y
+            }
+            LayoutExpr::InTextAnchorWidth {
+                node_id,
+                anchor_id,
+                fraction,
+            } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text_layout
+                    .as_ref()
+                    .and_then(|tl| tl.anchor_points.get(anchor_id).map(|a| a.width))
+                    .unwrap_or(0.0)
+                    * fraction
+            }
+            LayoutExpr::InTextAnchorHeight {
+                node_id,
+                anchor_id,
+                fraction,
+            } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text_layout
+                    .as_ref()
+                    .and_then(|tl| tl.anchor_points.get(anchor_id).map(|a| a.height))
+                    .unwrap_or(0.0)
+                    * fraction
+            }
         }
     }
 
     fn set_layout(&mut self, node_id: NodeId, layout_data: LayoutData) {
-        assert!(self.node_rects.insert(node_id, layout_data).is_none());
+        assert!(self.node_layout.insert(node_id, layout_data).is_none());
     }
 
     pub fn node_layout(&self, node_id: NodeId) -> Option<&LayoutData> {
-        self.node_rects.get(&node_id)
+        self.node_layout.get(&node_id)
     }
 }
 
@@ -183,8 +228,12 @@ fn compute_content_default_size(
 ) -> (f32, f32) {
     match content {
         NodeContent::Text(text) => {
-            let (width, height, text_layout) =
-                get_text_layout(resources, &text.text_style_at_step(step), text.text_align);
+            let (width, height, text_layout) = get_text_layout(
+                resources,
+                &text.text_style_at_step(step),
+                text.text_align,
+                &text.anchors,
+            );
             assert!(text_layouts.insert(node.node_id, text_layout).is_none());
             (width, height)
         }

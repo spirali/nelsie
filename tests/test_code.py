@@ -1,5 +1,6 @@
-from nelsie import TextStyle
 from testutils import check
+
+from nelsie import TextStyle
 
 
 @check(n_slides=2)

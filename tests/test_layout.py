@@ -1,6 +1,6 @@
-from nelsie import FlexWrap, Align
 from testutils import check
 
+from nelsie import Align, FlexWrap
 from nelsie.layoutexpr import LayoutExpr
 
 
@@ -215,4 +215,10 @@ def test_layout_expr():
 def test_expr_x_y_weight_height(deck):
     slide = deck.new_slide(200, 80)
     box = slide.box(width=180, height=40, bg_color="green")
-    slide.box(x=box.x(0.33), y=box.y(), width=box.width(0.33), height=box.height(0.5), bg_color="blue")
+    slide.box(
+        x=box.x(0.33),
+        y=box.y(),
+        width=box.width(0.33),
+        height=box.height(0.5),
+        bg_color="blue",
+    )
