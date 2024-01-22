@@ -278,6 +278,24 @@ class BoxBuilder:
         box_args.setdefault("height", "100%")
         return self.box(**box_args)
 
+    def line_box(self, line_idx: int, **box_args):
+        return self.box(
+            x=self.line_x(line_idx),
+            y=self.line_y(line_idx),
+            width=self.line_width(line_idx),
+            height=self.line_height(line_idx),
+            **box_args,
+        )
+
+    def text_anchor_box(self, anchor_id: int, **box_args):
+        return self.box(
+            x=self.text_anchor_x(anchor_id),
+            y=self.text_anchor_y(anchor_id),
+            width=self.text_anchor_width(anchor_id),
+            height=self.text_anchor_height(anchor_id),
+            **box_args,
+        )
+
     def x(self, width_fraction: float | int | None = None):
         node_id = self.get_box().node_id
         expr = LayoutExpr.x(node_id)

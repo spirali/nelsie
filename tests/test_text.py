@@ -302,7 +302,11 @@ def test_text_anchor_points(deck):
 
     for align in (TextAlign.Start, TextAlign.Center, TextAlign.End):
         slide = deck.new_slide(width=180, height=100)
-        t = slide.text("Hello ~green{~1{world!}}\n~2{Full line}\n>~100{1}<<<", z_level=1, align=align)
+        t = slide.text(
+            "Hello ~green{~1{world!}}\n~2{Full line}\n>~100{1}<<<",
+            z_level=1,
+            align=align,
+        )
         slide.box(
             x=t.text_anchor_x(1),
             y=t.text_anchor_y(1),
@@ -354,3 +358,14 @@ def test_text_line_points2(deck):
         height=t.line_height(2),
         bg_color="orange",
     )
+
+
+@check()
+def test_text_boxes(deck):
+    deck.set_style("default", TextStyle(size=12))
+
+    slide = deck.new_slide(width=50, height=50)
+    t = slide.text("Line 1\nL~123{ine} 2!", z_level=1)
+
+    t.line_box(1, bg_color="green", z_level=0)
+    t.text_anchor_box(123, bg_color="orange", z_level=0)

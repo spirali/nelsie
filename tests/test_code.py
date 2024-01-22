@@ -9,26 +9,26 @@ def test_code_rust_syntax_highlight(deck):
     slide = deck.new_slide(width=300, height=150)
     slide.code(
         """
-/* 
+/*
   This is the main function.
 */
 fn main() {
     // Print text to the console.
     println!("Hello World!");
-}    
+}
 """,
         language="rs",
     )
     slide = deck.new_slide(width=300, height=150)
     slide.code(
         """
-/* 
+/*
   This is the main function.
 */
 fn main() {
     // Print text to the console.
     println!("Hello World!");
-}    
+}
 """,
         language="rs",
         theme="Solarized (light)",
