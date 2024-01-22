@@ -104,16 +104,16 @@ pub(crate) fn get_text_layout(
         .iter()
         .map(|(anchor_id, anchor)| {
             let x = anchor_pos.get(&anchor.start).copied().unwrap();
-            let y = result_lines[anchor.start.line_idx as usize].y;
+            let start_line = &result_lines[anchor.start.line_idx as usize];
             (
                 *anchor_id,
                 Rectangle {
-                    x,
-                    y,
+                    x: start_line.x + x,
+                    y: start_line.y,
                     width: anchor_pos.get(&anchor.end).copied().unwrap() - x,
                     height: {
-                        let line = &result_lines[anchor.end.line_idx as usize];
-                        line.y + line.height - y
+                        let end_line = &result_lines[anchor.end.line_idx as usize];
+                        end_line.y + end_line.height - start_line.y
                     },
                 },
             )

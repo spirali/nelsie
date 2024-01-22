@@ -293,38 +293,37 @@ def test_text_line_points1(deck):
             height=t.line_height(2),
             bg_color="red",
         )
-    deck.render(output_pdf="/tmp/out.pdf")
 
 
-@check()
+@check(n_slides=3)
 def test_text_anchor_points(deck):
     deck.set_style("default", TextStyle(size=12))
     deck.set_style("green", TextStyle(size=16, color="green"))
 
-    slide = deck.new_slide(width=250, height=250)
-    t = slide.text("Hello ~green{~1{world!}}\n~2{Full line}\n>~100{1}<", z_level=1)
-    slide.box(
-        x=t.text_anchor_x(1),
-        y=t.text_anchor_y(1),
-        width=t.text_anchor_width(1),
-        height=t.text_anchor_height(1),
-        bg_color="orange",
-    )
-    slide.box(
-        x=t.text_anchor_x(2),
-        y=t.text_anchor_y(2),
-        width=t.text_anchor_width(2),
-        height=t.text_anchor_height(2),
-        bg_color="gray",
-    )
-    slide.box(
-        x=t.text_anchor_x(100),
-        y=t.text_anchor_y(100),
-        width=t.text_anchor_width(100),
-        height=t.text_anchor_height(100),
-        bg_color="cyan",
-    )
-    deck.render(output_pdf="/tmp/out.pdf")
+    for align in (TextAlign.Start, TextAlign.Center, TextAlign.End):
+        slide = deck.new_slide(width=180, height=100)
+        t = slide.text("Hello ~green{~1{world!}}\n~2{Full line}\n>~100{1}<<<", z_level=1, align=align)
+        slide.box(
+            x=t.text_anchor_x(1),
+            y=t.text_anchor_y(1),
+            width=t.text_anchor_width(1),
+            height=t.text_anchor_height(1),
+            bg_color="orange",
+        )
+        slide.box(
+            x=t.text_anchor_x(2),
+            y=t.text_anchor_y(2),
+            width=t.text_anchor_width(2),
+            height=t.text_anchor_height(2),
+            bg_color="gray",
+        )
+        slide.box(
+            x=t.text_anchor_x(100),
+            y=t.text_anchor_y(100),
+            width=t.text_anchor_width(100),
+            height=t.text_anchor_height(100),
+            bg_color="cyan",
+        )
 
 
 @check()
@@ -355,4 +354,3 @@ def test_text_line_points2(deck):
         height=t.line_height(2),
         bg_color="orange",
     )
-    deck.render(output_pdf="/tmp/out.pdf")
