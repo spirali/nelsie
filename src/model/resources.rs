@@ -44,18 +44,29 @@ impl Resources {
             style: Default::default(),
         }) {
             let source = self.font_db.face_source(font_id).unwrap();
-            let descender = match source {
+            let (descender, space_size) = match source {
                 // Small code redundancy because of lifetimes
                 (Source::File(file), idx) => {
                     let data = std::fs::read(file)?;
                     let face = ttf_parser::Face::parse(&data, idx)
                         .map_err(|_| NelsieError::generic_err("Failed to parse font"))?;
-                    face.descender() as f32 / face.height() as f32
+                    let glyph_id = face.glyph_index(' ').unwrap();
+                    let size = face.height() as f32;
+                    (
+                        face.descender() as f32 / size,
+                        face.glyph_hor_advance(glyph_id).unwrap_or(0) as f32
+                            / face.units_per_em() as f32,
+                    )
                 }
                 (Source::Binary(data), idx) => {
                     let face = ttf_parser::Face::parse(data.as_ref().as_ref(), idx)
                         .map_err(|_| NelsieError::generic_err("Failed to parse font"))?;
-                    face.descender() as f32 / face.height() as f32
+                    let glyph_id = face.glyph_index(' ').unwrap();
+                    let size = face.height() as f32;
+                    (
+                        face.descender() as f32 / size,
+                        face.glyph_hor_advance(glyph_id).unwrap_or(0) as f32 / size,
+                    )
                 }
                 _ => {
                     todo!()
@@ -64,6 +75,7 @@ impl Resources {
             Ok(FontData {
                 family_name: family_name.to_string(),
                 descender,
+                space_size,
             })
         } else {
             Err(NelsieError::Generic(format!(

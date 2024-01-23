@@ -38,6 +38,7 @@ fn create_style(s_style: Style) -> PartialTextStyle {
         } else {
             None
         },
+        kerning: None,
     }
 }
 
@@ -62,7 +63,7 @@ pub fn run_syntax_highlighting(
         .ok_or_else(|| NelsieError::generic_err(format!("Theme '{theme_name}' not found")))?;
     let mut highlight = HighlightLines::new(syntax, theme);
     let mut styles = Vec::new();
-    for line in &mut text.styled_lines {
+    for (line_idx, line) in &mut text.styled_lines.iter_mut().enumerate() {
         let highlighted_line = highlight
             .highlight_line(&line.text, &resources.syntax_set)
             .map_err(|e| NelsieError::generic_err(format!("Syntax highlight error: {}", e)))?;
@@ -82,25 +83,30 @@ pub fn run_syntax_highlighting(
                         styles.push(new_style);
                         idx
                     }) as u32;
-                let span_len = len.min(last.length);
-                if spans
-                    .last()
-                    .map(|span| span.style_idx == style_idx)
-                    .unwrap_or(false)
-                {
-                    spans.last_mut().unwrap().length += span_len;
-                } else {
-                    spans.push(Span {
-                        length: span_len,
-                        style_idx,
-                    });
-                }
+
+                spans.push(Span {
+                    length: len.min(last.length),
+                    style_idx,
+                });
+
                 if last.length <= len {
                     len -= last.length;
                     line.spans.pop();
                 } else {
                     last.length -= len;
                     len = 0;
+                    for anchor in text.anchors.values_mut() {
+                        if anchor.start.line_idx as usize == line_idx
+                            && anchor.start.span_idx as usize >= spans.len()
+                        {
+                            anchor.start.span_idx += 1;
+                        }
+                        if anchor.end.line_idx as usize == line_idx
+                            && anchor.end.span_idx as usize >= spans.len()
+                        {
+                            anchor.end.span_idx += 1;
+                        }
+                    }
                 }
             }
         }

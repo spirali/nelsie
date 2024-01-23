@@ -131,9 +131,11 @@ impl SlideDeck {
             italic: Some(false),
             stretch: Some(FontStretch::Normal),
             weight: Some(400),
+            kerning: Some(true),
         };
         let monospace_style = PartialTextStyle {
             font: Some(Arc::new(default_monospace_font_family)),
+            kerning: Some(false),
             ..Default::default()
         };
         let mut styles = HashMap::new();

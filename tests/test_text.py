@@ -369,3 +369,47 @@ def test_text_boxes(deck):
 
     t.line_box(1, bg_color="green", z_level=0)
     t.text_anchor_box(123, bg_color="orange", z_level=0)
+
+
+@check()
+def test_text_kerning(deck):
+    deck.set_style("t1", TextStyle(size=12, kerning=True))
+    deck.set_style("t2", TextStyle(size=12, kerning=False))
+
+    slide = deck.new_slide(width=50, height=50)
+    slide.text("AVAVA", "t1")
+    slide.text("AVAVA", "t2")
+
+
+@check()
+def test_text_anchors_space_prefix(deck):
+    deck.update_style("code", TextStyle(size=22))
+    deck.set_style("s1", TextStyle(color="green"))
+    slide = deck.new_slide(width=560, height=160)
+    t = slide.text(
+        """                                            ~1{C}""",
+        z_level=2,
+        strip=False,
+    )
+    t.text_anchor_box(1, bg_color="orange", z_level=1)
+
+    t = slide.text(
+        "Hello ~1{world!}",
+        z_level=2,
+        strip=False,
+    )
+    t.text_anchor_box(1, bg_color="orange", z_level=1)
+
+
+@check()
+def test_text_anchors_styled_space_prefix(deck):
+    deck.update_style("code", TextStyle(size=22))
+    deck.set_style("s1", TextStyle(size=2))
+    deck.set_style("s2", TextStyle(size=44))
+    slide = deck.new_slide(width=200, height=100)
+    t = slide.text("""~s1{   }~s2{ }~11{C}""", z_level=2)
+    t.line_box(0, bg_color="gray", z_level=0)
+    t.text_anchor_box(11, bg_color="orange", z_level=1)
+    t = slide.text("""~s1{ }~s2{        }~s1{ }~11{C}""", z_level=2)
+    t.line_box(0, bg_color="gray", z_level=0)
+    t.text_anchor_box(11, bg_color="orange", z_level=1)

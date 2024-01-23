@@ -9,6 +9,7 @@ use usvg_tree::FontStretch;
 pub(crate) struct FontData {
     pub family_name: String,
     pub descender: f32,
+    pub space_size: f32,
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -21,6 +22,7 @@ pub(crate) struct PartialTextStyle {
     pub italic: Option<bool>,
     pub stretch: Option<FontStretch>,
     pub weight: Option<u16>,
+    pub kerning: Option<bool>,
 }
 
 impl PartialTextStyle {
@@ -34,6 +36,7 @@ impl PartialTextStyle {
             italic: self.italic?,
             stretch: self.stretch?,
             weight: self.weight?,
+            kerning: self.kerning?,
         })
     }
 
@@ -47,6 +50,7 @@ impl PartialTextStyle {
             italic: other.italic.or(self.italic),
             stretch: other.stretch.or(self.stretch),
             weight: other.weight.or(self.weight),
+            kerning: other.kerning.or(self.kerning),
         }
     }
 }
@@ -61,6 +65,7 @@ pub(crate) struct TextStyle {
     pub italic: bool,
     pub stretch: FontStretch,
     pub weight: u16,
+    pub kerning: bool,
 }
 
 pub(crate) fn merge_stepped_styles(

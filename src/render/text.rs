@@ -2,6 +2,7 @@ use crate::model::{
     InTextAnchor, InTextAnchorId, InTextAnchorPoint, Resources, Span, StyledLine, StyledText,
     TextAlign, TextStyle,
 };
+use itertools::Itertools;
 use std::collections::HashMap;
 
 use crate::render::layout::{Rectangle, TextLayout};
@@ -129,6 +130,7 @@ pub(crate) fn get_text_layout(
 }
 
 fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
+    assert_eq!(text.styled_lines.len(), 1);
     let text_node = render_text(text, 0.0, 0.0, TextAlign::Start);
     let root_node = usvg::Node::new(NodeKind::Group(usvg::Group::default()));
     root_node.append(text_node);
@@ -142,7 +144,6 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
         root: root_node,
     };
     tree.convert_text(&resources.font_db);
-    //let mut x1 = f32::MAX;
     let mut x2 = f32::MIN;
     if let Some(main) = tree.root.first_child() {
         for child in main.children() {
@@ -150,16 +151,34 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
             match *borrowed {
                 NodeKind::Path(ref path) => {
                     let bbox = path.text_bbox.unwrap();
-                    //x1 = x1.min(bbox.left());
                     x2 = x2.max(bbox.right());
                 }
                 _ => unreachable!(),
             }
         }
     }
-    let mut width = x2; // - x1;
+    let mut width = x2;
     if !f32::is_finite(width) || width < 0.0 {
         width = 0.0;
+    }
+
+    /* Because bounding box ignores span that contains only spaces, we have problem with trailing spaces if they are in separate style,
+       we need to increase with for each trailing space
+    */
+
+    let line = &text.styled_lines[0];
+    let line_len = line.spans.iter().map(|s| s.length as usize).sum();
+    let mut line_chars = line.text.chars();
+    for _ in line_len..line.text.len() {
+        line_chars.next_back();
+    }
+    for span in line.spans.iter().rev() {
+        if (0..span.length).all(|_| line_chars.next_back() == Some(' ')) {
+            let style = &text.styles[span.style_idx as usize];
+            width += style.font.space_size * style.size * span.length as f32;
+        } else {
+            break;
+        }
     }
     width
 }
@@ -198,7 +217,7 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (Te
             font,
             font_size: NonZeroPositiveF32::new(text_style.size).unwrap(),
             small_caps: false,
-            apply_kerning: false,
+            apply_kerning: text_style.kerning,
             decoration,
             dominant_baseline: DominantBaseline::Auto,
             alignment_baseline: AlignmentBaseline::Auto,

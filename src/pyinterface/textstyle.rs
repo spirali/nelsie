@@ -18,6 +18,7 @@ pub(crate) struct PyTextStyle {
     pub italic: Option<bool>,
     pub stretch: Option<FontStretch>,
     pub weight: Option<u16>,
+    pub kerning: Option<bool>,
 }
 
 impl PyTextStyle {
@@ -39,6 +40,7 @@ impl PyTextStyle {
             italic: self.italic,
             stretch: self.stretch,
             weight: self.weight,
+            kerning: self.kerning,
         })
     }
 }
@@ -96,6 +98,7 @@ impl<'py> FromPyObject<'py> for PyTextStyle {
             italic: ob.getattr("italic")?.extract()?,
             stretch,
             weight: ob.getattr("weight")?.extract()?,
+            kerning: ob.getattr("kerning")?.extract()?,
         })
     }
 }
@@ -159,6 +162,7 @@ pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Pytho
     map.insert("italic".into(), style.italic.to_object(py));
     map.insert("stretch".into(), stretch_idx.to_object(py));
     map.insert("weight".into(), style.weight.to_object(py));
+    map.insert("kerning".to_string(), style.kerning.to_object(py));
     map.to_object(py)
 }
 
