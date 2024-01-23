@@ -58,58 +58,52 @@ mod test {
     #[test]
     pub fn test_parse() {
         assert_eq!(
-            parse_steps("3")
-                .unwrap()
-                .0
-                .values()
-                .copied()
-                .collect::<Vec<_>>(),
-            vec![false, false, true, false]
+            parse_steps("3").unwrap().0.key_values().collect::<Vec<_>>(),
+            vec![(&1, &false), (&3, &true), (&4, &false)]
         );
         assert_eq!(
-            parse_steps("1,3")
+            parse_steps("1, 3")
                 .unwrap()
                 .0
-                .values()
-                .copied()
+                .key_values()
                 .collect::<Vec<_>>(),
-            vec![true, false, true, false]
+            vec![(&1, &true), (&2, &false), (&3, &true), (&4, &false)]
         );
+
         assert_eq!(
             parse_steps("1,2,4")
                 .unwrap()
                 .0
-                .values()
-                .copied()
+                .key_values()
                 .collect::<Vec<_>>(),
-            vec![true, true, false, true, false]
+            vec![(&1, &true), (&3, &false), (&4, &true), (&5, &false)]
         );
+
         assert_eq!(
             parse_steps("2+")
                 .unwrap()
                 .0
-                .values()
-                .copied()
+                .key_values()
                 .collect::<Vec<_>>(),
-            vec![false, true]
+            vec![(&1, &false), (&2, &true)]
         );
+
         assert_eq!(
             parse_steps("1, 3+")
                 .unwrap()
                 .0
-                .values()
-                .copied()
+                .key_values()
                 .collect::<Vec<_>>(),
-            vec![true, false, true]
+            vec![(&1, &true), (&2, &false), (&3, &true)]
         );
+
         assert_eq!(
             parse_steps("2-7, 10+")
                 .unwrap()
                 .0
-                .values()
-                .copied()
+                .key_values()
                 .collect::<Vec<_>>(),
-            vec![false, true, true, true, true, true, true, false, false, true]
+            vec![(&1, &false), (&2, &true), (&8, &false), (&10, &true)]
         );
     }
 }

@@ -49,10 +49,11 @@ impl<T: Debug> StepValue<T> {
         }
     }
 
-    pub fn key_steps(&self) -> impl Iterator<Item = Step> + '_ {
+    #[cfg(test)]
+    pub fn key_values(&self) -> impl Iterator<Item = (&Step, &T)> + '_ {
         match self {
             StepValue::Const(_) => itertools::Either::Left(std::iter::empty()),
-            StepValue::Steps(v) => itertools::Either::Right(v.keys().copied()),
+            StepValue::Steps(v) => itertools::Either::Right(v.iter()),
         }
     }
 
