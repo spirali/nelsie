@@ -117,6 +117,7 @@ class BoxBuilder:
         text: str,
         style: str | TextStyle | InSteps[TextStyle] | None = None,
         *,
+        parse_styles: bool = True,
         delimiters: str | None = "~{}",
         tab_width: int = 4,
         align: TextAlign = TextAlign.Start,
@@ -124,7 +125,16 @@ class BoxBuilder:
         **box_args,
     ):
         return self._text_box(
-            text, style, None, delimiters, tab_width, box_args, align, None, None, strip
+            text,
+            style,
+            None,
+            delimiters if parse_styles else None,
+            tab_width,
+            box_args,
+            align,
+            None,
+            None,
+            strip,
         )
 
     def code(
@@ -134,6 +144,7 @@ class BoxBuilder:
         style: str | TextStyle | InSteps[TextStyle] | None = None,
         *,
         theme: str | None = None,
+        parse_styles: bool = False,
         delimiters: str | None = "~{}",
         tab_width: int = 4,
         align: TextAlign = TextAlign.Start,
@@ -146,7 +157,7 @@ class BoxBuilder:
             text,
             "code",
             style,
-            None,
+            delimiters if parse_styles else None,
             tab_width,
             box_args,
             align,

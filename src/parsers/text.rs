@@ -1,11 +1,20 @@
 use crate::common::error::NelsieError;
-use crate::model::{InTextAnchor, InTextAnchorId, InTextAnchorPoint, Span, StyledLine};
+use crate::model::{
+    InTextAnchor, InTextAnchorId, InTextAnchorPoint, PartialTextStyle, Span, StyledLine,
+};
+use itertools::Itertools;
 use std::collections::HashMap;
+
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum StyleOrName<'a> {
+    Name(&'a str),
+    Style(PartialTextStyle),
+}
 
 #[derive(Debug)]
 pub(crate) struct ParsedStyledText<'a> {
     pub styled_lines: Vec<StyledLine>,
-    pub styles: Vec<Vec<&'a str>>,
+    pub styles: Vec<Vec<StyleOrName<'a>>>,
     pub anchors: HashMap<InTextAnchorId, InTextAnchor>,
 }
 
@@ -41,13 +50,13 @@ pub(crate) fn parse_styled_text<'a>(
     start_block: char,
     end_block: char,
 ) -> crate::Result<ParsedStyledText> {
-    let mut style_stack: Vec<&str> = Vec::new();
+    let mut style_stack: Vec<StyleOrName<'a>> = Vec::new();
     let mut anchor_stack: Vec<Option<(InTextAnchorId, InTextAnchorPoint)>> = Vec::new();
 
     let mut result_styles = Vec::new();
     let mut result_anchors = HashMap::<InTextAnchorId, InTextAnchor>::new();
 
-    let get_style = |stack: &[&'a str], styles: &mut Vec<Vec<&'a str>>| {
+    let get_style = |stack: &[StyleOrName<'a>], styles: &mut Vec<Vec<StyleOrName<'a>>>| {
         styles.iter().position(|s| s == stack).unwrap_or_else(|| {
             let idx = styles.len();
             styles.push(stack.to_vec());
@@ -95,7 +104,7 @@ pub(crate) fn parse_styled_text<'a>(
                         )));
                     } else {
                         anchor_stack.push(None);
-                        style_stack.push(style_name);
+                        style_stack.push(StyleOrName::Name(style_name));
                     }
                     line = &line[idx + 1..];
                 } else {
@@ -140,7 +149,7 @@ pub(crate) fn parse_styled_text<'a>(
 #[cfg(test)]
 mod tests {
     use crate::model::{InTextAnchor as TA, InTextAnchorPoint as TAP, Span, StyledLine};
-    use crate::parsers::text::{parse_styled_text, ParsedStyledText};
+    use crate::parsers::text::{parse_styled_text, ParsedStyledText, StyleOrName};
 
     fn parse(text: &str) -> crate::Result<ParsedStyledText> {
         parse_styled_text(text, '~', '{', '}')
@@ -149,7 +158,7 @@ mod tests {
     #[test]
     fn test_parse_text_styles() {
         let r = parse("Hello").unwrap();
-        assert_eq!(r.styles, vec![Vec::<String>::new()]);
+        assert_eq!(r.styles, vec![Vec::<_>::new()]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
@@ -162,7 +171,7 @@ mod tests {
         );
 
         let r = parse("Hello\n Line 2 \n\n").unwrap();
-        assert_eq!(r.styles, vec![Vec::<String>::new()]);
+        assert_eq!(r.styles, vec![Vec::<_>::new()]);
         assert_eq!(
             r.styled_lines,
             vec![
@@ -188,7 +197,7 @@ mod tests {
         );
 
         let r = parse("xyz~name{ab}c").unwrap();
-        assert_eq!(r.styles, vec![vec![], vec!["name"]]);
+        assert_eq!(r.styles, vec![vec![], vec![StyleOrName::Name("name")]]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
@@ -211,7 +220,10 @@ mod tests {
         );
 
         let r = parse("~x{a}~y{b}~x{c}").unwrap();
-        assert_eq!(r.styles, vec![vec!["x"], vec!["y"]]);
+        assert_eq!(
+            r.styles,
+            vec![vec![StyleOrName::Name("x")], vec![StyleOrName::Name("y")]]
+        );
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
@@ -234,7 +246,14 @@ mod tests {
         );
 
         let r = parse("~L1{~L2{~L3{x\n\nyy}}}").unwrap();
-        assert_eq!(r.styles, vec![vec!["L1", "L2", "L3"]]);
+        assert_eq!(
+            r.styles,
+            vec![vec![
+                StyleOrName::Name("L1"),
+                StyleOrName::Name("L2"),
+                StyleOrName::Name("L3")
+            ]]
+        );
         assert_eq!(
             r.styled_lines,
             vec![
@@ -265,9 +284,12 @@ mod tests {
             r.styles,
             vec![
                 vec![],
-                vec!["name"],
-                vec!["question"],
-                vec!["question", "highlight"]
+                vec![StyleOrName::Name("name")],
+                vec![StyleOrName::Name("question")],
+                vec![
+                    StyleOrName::Name("question"),
+                    StyleOrName::Name("highlight")
+                ]
             ]
         );
         assert_eq!(
@@ -314,7 +336,7 @@ mod tests {
     #[test]
     fn test_parse_text_anchors() {
         let r = parse("abc~1{IJK}xyz").unwrap();
-        assert_eq!(r.styles, vec![Vec::<String>::new()]);
+        assert_eq!(r.styles, vec![Vec::<_>::new()]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
@@ -351,7 +373,7 @@ mod tests {
         );
 
         let r = parse("~1{IJK}").unwrap();
-        assert_eq!(r.styles, vec![Vec::<String>::new()]);
+        assert_eq!(r.styles, vec![Vec::<_>::new()]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
@@ -378,7 +400,7 @@ mod tests {
         );
 
         let r = parse("~2{abc}~1{xy}").unwrap();
-        assert_eq!(r.styles, vec![Vec::<String>::new()]);
+        assert_eq!(r.styles, vec![Vec::<_>::new()]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
@@ -424,7 +446,7 @@ mod tests {
         );
 
         let r = parse("a~name{b~1{c}d}e").unwrap();
-        assert_eq!(r.styles, vec![vec![], vec!["name"]]);
+        assert_eq!(r.styles, vec![vec![], vec![StyleOrName::Name("name")]]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
@@ -469,7 +491,7 @@ mod tests {
         );
 
         let r = parse("a~21{~name{xxx}z}e").unwrap();
-        assert_eq!(r.styles, vec![vec![], vec!["name"]]);
+        assert_eq!(r.styles, vec![vec![], vec![StyleOrName::Name("name")]]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {

@@ -8,7 +8,7 @@ use crate::model::{
 use crate::parsers::step_parser::parse_steps;
 use crate::parsers::{
     parse_length, parse_length_auto, parse_length_or_expr, parse_position, parse_styled_text,
-    parse_styled_text_from_plain_text, run_syntax_highlighting,
+    parse_styled_text_from_plain_text, run_syntax_highlighting, StyleOrName,
 };
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
@@ -151,7 +151,7 @@ fn process_content(
                 2 => TextAlign::End,
                 _ => return Err(PyValueError::new_err("Invalid text align")),
             };
-            let parsed = if let Some(delimiters) = text.formatting_delimiters {
+            let mut parsed = if let Some(delimiters) = text.formatting_delimiters {
                 if delimiters.chars().count() != 3 {
                     return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
                 }
@@ -163,6 +163,14 @@ fn process_content(
             } else {
                 parse_styled_text_from_plain_text(&text.text)
             };
+
+            if let Some(language) = text.syntax_language {
+                let theme = text
+                    .syntax_theme
+                    .ok_or_else(|| PyValueError::new_err("Invalid theme"))?;
+                run_syntax_highlighting(nc_env.resources, &mut parsed, &language, &theme)?;
+            }
+
             let default = styles.get_style("default")?;
             let mut main_style = if let Some(style) = text.style1 {
                 resolve_style(nc_env.resources, default, style, styles, n_steps)?
@@ -179,14 +187,19 @@ fn process_content(
                 .map(|names| {
                     names
                         .into_iter()
-                        .try_fold(main_style.clone(), |s, name| {
-                            Ok(merge_stepped_styles(&s, styles.get_style(name)?))
+                        .try_fold(main_style.clone(), |s, style_or_name| {
+                            Ok(match style_or_name {
+                                StyleOrName::Name(name) => {
+                                    merge_stepped_styles(&s, styles.get_style(name)?)
+                                }
+                                StyleOrName::Style(style) => s.map(|x| x.merge(&style)),
+                            })
                         })
                         .map(|s| s.map(|v| v.into_text_style().unwrap()))
                 })
                 .collect::<crate::Result<Vec<_>>>()?;
 
-            let mut node_content = NodeContentText {
+            let node_content = NodeContentText {
                 styled_lines: parsed.styled_lines,
                 styles,
                 text_align,
@@ -195,12 +208,6 @@ fn process_content(
                 anchors: parsed.anchors,
             };
 
-            if let Some(language) = text.syntax_language {
-                let theme = text
-                    .syntax_theme
-                    .ok_or_else(|| PyValueError::new_err("Invalid theme"))?;
-                run_syntax_highlighting(nc_env.resources, &mut node_content, &language, &theme)?;
-            }
             NodeContent::Text(node_content)
         }
         Content::Image(image) => {
