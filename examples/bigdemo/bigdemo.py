@@ -1,4 +1,14 @@
-from nelsie import SlideDeck, TextStyle, Resources, TextAlign, Align, Stroke, InSteps
+from nelsie import (
+    Arrow,
+    Path,
+    SlideDeck,
+    TextStyle,
+    Resources,
+    TextAlign,
+    Align,
+    Stroke,
+    InSteps,
+)
 
 resources = Resources()
 resources.load_fonts_dir("karla_font")
@@ -76,20 +86,6 @@ def fragments(slide):
 @deck.slide()
 def in_steps(slide):
     slide.text("Simple mechanism for complex slide changes", m_bottom=40)
-    #     box = slide.box(p_left=20, p_right=20, p_top=20, p_bottom=20, bg_color="#eee")
-    #     box.code(
-    #         """
-    # semaphore = slide.box(width=100, height=300, bg_color="gray")
-    # semaphore.box(
-    #     y=InSteps({1: 10, 2: 110, 3: 210}),
-    #     width=80,
-    #     height=80,
-    #     bg_color=InSteps({1: "red", 2: "orange", 3: "green"}),
-    # )
-    # """,
-    #         language="py",
-    #         style=TextStyle(size=20)
-    #     )
 
     semaphore = slide.box(width=100, height=300, bg_color="gray")
     semaphore.box(
@@ -98,6 +94,16 @@ def in_steps(slide):
         height=80,
         bg_color=InSteps({1: "red", 2: "orange", 3: "green"}),
     )
+
+
+# Layers in SVGs and ORA images ##########################################
+
+
+@deck.slide()
+def images(slide):
+    slide.text("Name-driven revealing layers in SVG and ORA images", m_bottom=40)
+    slide.image("imgs/stepped_logo.ora", width="25%")
+    slide.image("imgs/layers.svg", width="80%")
 
 
 # Header ##########################################
@@ -125,6 +131,155 @@ def header_and_footer(slide):
         "Footer", TextStyle(size=24)
     )
     footer.box(flex_grow=1).text("Hello!", TextStyle(size=24, color="gray"))
+
+
+# Syntax highlighting #################################
+
+CODE_EXAMPLE = """
+# This is comment
+from nelsie import SlideDeck
+
+deck = SlideDeck()
+
+@deck.slide()
+def hello_world(slide):
+    slide.text("Hello world!")
+
+deck.render(output_pdf="slides.pdf")
+"""
+
+
+@deck.slide()
+def text_styles(slide):
+    slide.text("Syntax highlighting", TextStyle(size=64), m_bottom=50)
+
+    slide.code(CODE_EXAMPLE, language="py")
+
+
+# Line highlighting #################################
+
+
+@deck.slide()
+def text_styles(slide):
+    slide.text("Line highlighting", TextStyle(size=64), m_bottom=50)
+
+    text = slide.code(CODE_EXAMPLE, language="py")
+
+    text.line_box(6, bg_color="#bb99bb", z_level=-1)
+
+
+# Pointing into text (1) #################################
+
+
+@deck.slide()
+def text_styles(slide):
+    slide.text("Pointing into text", TextStyle(size=64), m_bottom=50)
+
+    text = slide.code(CODE_EXAMPLE, language="py")
+
+    arrow = Arrow(size=20)
+    slide.draw(
+        Path(stroke=Stroke(color="orange", width=5), arrow_end=arrow)
+        .move_to(text.line_x(3, 1) + 5, text.line_y(3, 0.5))
+        .line_to(text.line_x(9, 1) + 50, text.line_y(3, 0.5))
+        .line_to(text.line_x(9, 1) + 50, text.line_y(9, 0.5))
+        .line_to(text.line_x(9, 1) + 5, text.line_y(9, 0.5))
+    )
+
+
+# Pointing into text (2) #################################
+
+
+@deck.slide()
+def text_styles(slide):
+    slide.text("Pointing into text", TextStyle(size=64), m_bottom=50)
+
+    text = slide.code(CODE_EXAMPLE, language="py")
+
+    comment = slide.box(
+        x="70%",
+        y="45%",
+        p_left=30,
+        p_right=30,
+        p_top=30,
+        p_bottom=30,
+        bg_color="green",
+        border_radius=8,
+    )
+    comment.text("Comment", style=TextStyle(color="white"))
+
+    slide.draw(
+        Path(fill_color="green")
+        .move_to(text.line_x(5, 1.0) + 5, text.line_y(5, 0.5))
+        .line_to(comment.x(0.1), comment.y(0.25))
+        .line_to(comment.x(0.1), comment.y(0.75))
+    )
+
+
+# Pointing into text (3) #################################
+
+
+@deck.slide()
+def text_styles(slide):
+    slide.text("Pointing into text", TextStyle(size=64), m_bottom=50)
+
+    text = slide.code(
+        """
+# This is comment
+from nelsie import SlideDeck
+
+deck = SlideDeck()
+
+@deck.slide()
+def hello_world(~1{slide}):
+    ~2{slide}.text("Hello world!")
+
+deck.render(output_pdf="slides.pdf")
+""",
+        language="py",
+        parse_styles=True,
+    )
+
+    for anchor_id in 1, 2:
+        text.text_anchor_box(anchor_id, bg_color="#aaa", z_level=-1)
+
+    arrow = Arrow(size=15)
+    slide.draw(
+        [
+            Path(stroke=Stroke(color="green", width=5), arrow_end=arrow)
+            .move_to(text.text_anchor_x(2, 0) - 20, text.text_anchor_y(2, 1) + 20)
+            .line_to(text.text_anchor_x(2, 0), text.text_anchor_y(2, 1)),
+            Path(stroke=Stroke(color="green", width=5), arrow_end=arrow)
+            .move_to(text.text_anchor_x(2, 1) + 20, text.text_anchor_y(2, 1) + 20)
+            .line_to(text.text_anchor_x(2, 1), text.text_anchor_y(2, 1)),
+        ]
+    )
+
+
+# Overwriting styles in syntax highlight #################################
+
+
+@deck.slide()
+def text_styles(slide):
+    slide.text("Own styles in syntax highlight", TextStyle(size=64), m_bottom=50)
+
+    slide.set_style("grayout", TextStyle(color="gray", weight=400))
+    text = slide.code(
+        """
+~grayout{# This is comment
+from nelsie import SlideDeck
+
+deck = SlideDeck()}
+
+@deck.slide()
+def hello_world(~1{slide}):
+    ~2{slide}.text("Hello world!")
+
+~grayout{deck.render(output_pdf="slides.pdf")}
+""",
+        language="py",
+        parse_styles=True,
+    )
 
 
 # Fragments ##########################################
