@@ -17,6 +17,7 @@ pub(crate) struct Slide {
     pub(crate) height: f32,
     pub(crate) node: Node,
     pub(crate) n_steps: Step,
+    pub(crate) bg_color: Color,
     node_id_counter: NodeId,
 }
 
@@ -31,6 +32,7 @@ impl Slide {
         Slide {
             width,
             height,
+            bg_color,
             node: Node {
                 styles,
                 name,
@@ -63,7 +65,7 @@ impl Slide {
                 m_bottom: StepValue::Const(LengthOrAuto::ZERO),
                 m_left: StepValue::Const(LengthOrAuto::ZERO),
                 m_right: StepValue::Const(LengthOrAuto::ZERO),
-                bg_color: StepValue::Const(Some(bg_color)),
+                bg_color: StepValue::Const(None),
                 content: StepValue::Const(None),
                 debug_layout: None,
             },

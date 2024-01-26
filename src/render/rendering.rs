@@ -195,6 +195,18 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
 
     log::debug!("Rendering to svg");
     let root_svg_node = usvg::Node::new(usvg::NodeKind::Group(usvg::Group::default()));
+
+    let slide = &render_cfg.slide;
+    let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
+        tiny_skia::Rect::from_xywh(0.0, 0.0, slide.width, slide.height).unwrap(),
+    )));
+    path.fill = Some(Fill {
+        paint: usvg::Paint::Color((&slide.bg_color).into()),
+        opacity: slide.bg_color.opacity(),
+        rule: Default::default(),
+    });
+    root_svg_node.append(usvg::Node::new(usvg::NodeKind::Path(path)));
+
     for z_level in z_levels {
         let render_ctx = RenderContext::new(
             render_cfg.resources,
