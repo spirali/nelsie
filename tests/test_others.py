@@ -16,3 +16,10 @@ def test_box_debug_frame(deck):
     # b.box(width="99%", height="99%")
     #
     # deck.render(output_pdf="/tmp/out.pdf")
+
+
+@check()
+def test_box_border_radius(deck):
+    slide = deck.new_slide(width=150, height=150)
+    slide.box(x=75, y=20, width=35, height=120, bg_color="red", border_radius=10)
+    slide.box(x=10, y=50, width=100, height=10, bg_color="green", border_radius=5)

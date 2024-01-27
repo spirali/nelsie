@@ -46,6 +46,7 @@ impl Slide {
                 y: StepValue::Const(None),
                 width: StepValue::Const(Some(LengthOrExpr::Points { value: width })),
                 height: StepValue::Const(Some(LengthOrExpr::Points { value: height })),
+                border_radius: StepValue::Const(0.0),
                 row: StepValue::Const(false),
                 reverse: StepValue::Const(false),
                 flex_wrap: StepValue::Const(FlexWrap::NoWrap),

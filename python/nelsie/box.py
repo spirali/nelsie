@@ -48,6 +48,7 @@ class BoxConfig:
     y: Position | InSteps[Position]
     width: Size | InSteps[Size]
     height: Size | InSteps[Size]
+    border_radius: float | InSteps[float]
     p_left: Length | InSteps[Length]
     p_right: Length | InSteps[Length]
     p_top: Length | InSteps[Length]
@@ -211,6 +212,7 @@ class BoxBuilder:
         y: Position | InSteps[Position] = None,
         width: Size | InSteps[Size] = None,
         height: Size | InSteps[Size] = None,
+        border_radius: float | InSteps[float] = 0,
         p_left: Length | InSteps[Length] = 0,
         p_right: Length | InSteps[Length] = 0,
         p_top: Length | InSteps[Length] = 0,
@@ -248,6 +250,7 @@ class BoxBuilder:
             y=y,
             width=width,
             height=height,
+            border_radius=border_radius,
             p_left=p_left,
             p_right=p_right,
             p_top=p_top,

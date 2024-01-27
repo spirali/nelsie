@@ -13,7 +13,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::render::image::render_image;
-use crate::render::paths::{create_arrow, create_path};
+use crate::render::paths::{create_arrow, create_path, path_from_rect};
 use crate::render::Resources;
 use usvg::Fill;
 use usvg_tree::Stroke;
@@ -116,9 +116,8 @@ impl<'a> RenderContext<'a> {
         if *node.z_level.at_step(step) == self.z_level {
             if let Some(color) = &node.bg_color.at_step(step) {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
-                let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
-                    tiny_skia::Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).unwrap(),
-                )));
+                let border_radius = *node.border_radius.at_step(step);
+                let mut path = usvg::Path::new(Rc::new(path_from_rect(rect, border_radius)));
                 path.fill = Some(Fill {
                     paint: usvg::Paint::Color(color.into()),
                     opacity: color.opacity(),

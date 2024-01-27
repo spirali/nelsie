@@ -40,6 +40,8 @@ pub(crate) struct Node {
     pub width: StepValue<Option<LengthOrExpr>>,
     pub height: StepValue<Option<LengthOrExpr>>,
 
+    pub border_radius: StepValue<f32>,
+
     pub row: StepValue<bool>,
     pub reverse: StepValue<bool>,
 

@@ -1,5 +1,6 @@
 use crate::model::{NodeId, Path, PathPart, Stroke};
-use crate::render::layout::ComputedLayout;
+use crate::render::layout::{ComputedLayout, Rectangle};
+use resvg::tiny_skia;
 use resvg::tiny_skia::PathBuilder;
 use std::rc::Rc;
 use usvg::NonZeroPositiveF32;
@@ -211,4 +212,26 @@ pub(crate) fn create_arrow(
         }
         svg_path
     })
+}
+
+pub(crate) fn path_from_rect(rect: &Rectangle, border_radius: f32) -> tiny_skia::Path {
+    if border_radius < 0.001 {
+        PathBuilder::from_rect(
+            tiny_skia::Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).unwrap(),
+        )
+    } else {
+        let mut builder = PathBuilder::new();
+        let x2 = rect.x + rect.width;
+        let y2 = rect.y + rect.height;
+        builder.move_to(rect.x + border_radius, rect.y);
+        builder.line_to(x2 - border_radius, rect.y);
+        builder.quad_to(x2, rect.y, x2, rect.y + border_radius);
+        builder.line_to(x2, y2 - border_radius);
+        builder.quad_to(x2, y2, x2 - border_radius, y2);
+        builder.line_to(rect.x + border_radius, y2);
+        builder.quad_to(rect.x, y2, rect.x, y2 - border_radius);
+        builder.line_to(rect.x, rect.y + border_radius);
+        builder.quad_to(rect.x, rect.y, rect.x + border_radius, rect.y);
+        builder.finish().unwrap()
+    }
 }
