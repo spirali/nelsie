@@ -2,7 +2,7 @@ use crate::common::error::NelsieError;
 use crate::model::{
     InTextAnchor, InTextAnchorId, InTextAnchorPoint, PartialTextStyle, Span, StyledLine,
 };
-use itertools::Itertools;
+
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -107,21 +107,19 @@ pub(crate) fn parse_styled_text<'a>(
                         style_stack.push(StyleOrName::Name(style_name));
                     }
                     line = &line[idx + 1..];
-                } else {
-                    if let Some((anchor_id, start)) = anchor_stack.pop().unwrap() {
-                        result_anchors.insert(
-                            anchor_id,
-                            InTextAnchor {
-                                start,
-                                end: InTextAnchorPoint {
-                                    line_idx: line_idx as u32,
-                                    span_idx: spans.len() as u32,
-                                },
+                } else if let Some((anchor_id, start)) = anchor_stack.pop().unwrap() {
+                    result_anchors.insert(
+                        anchor_id,
+                        InTextAnchor {
+                            start,
+                            end: InTextAnchorPoint {
+                                line_idx: line_idx as u32,
+                                span_idx: spans.len() as u32,
                             },
-                        );
-                    } else {
-                        style_stack.pop();
-                    }
+                        },
+                    );
+                } else {
+                    style_stack.pop();
                 }
             } else {
                 if !line.is_empty() {

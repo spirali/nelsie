@@ -63,7 +63,7 @@ pub(crate) fn create_path(
     let mut builder = PathBuilder::new();
 
     for (i, part) in path.parts.iter().enumerate() {
-        let (sx, sy) = move_point_for_arrow(layout, parent_id, &path, i).unwrap_or((0.0, 0.0));
+        let (sx, sy) = move_point_for_arrow(layout, parent_id, path, i).unwrap_or((0.0, 0.0));
         match part {
             PathPart::Move { x, y } => {
                 builder.move_to(

@@ -264,7 +264,7 @@ fn parse_align_content(value: Option<u32>) -> crate::Result<Option<AlignContent>
         .transpose()
 }
 
-fn show_to_bool_steps(show: Show, mut n_steps: &mut Step) -> PyResult<StepValue<bool>> {
+fn show_to_bool_steps(show: Show, n_steps: &mut Step) -> PyResult<StepValue<bool>> {
     Ok(match show {
         Show::Bool(value) => StepValue::new_const(value),
         Show::Int(value) => {
@@ -280,7 +280,7 @@ fn show_to_bool_steps(show: Show, mut n_steps: &mut Step) -> PyResult<StepValue<
             *n_steps = (*n_steps).max(n);
             steps
         }
-        Show::InSteps(in_steps) => in_steps.into_step_value(&mut n_steps),
+        Show::InSteps(in_steps) => in_steps.into_step_value(n_steps),
     })
 }
 

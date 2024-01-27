@@ -2,7 +2,7 @@ use crate::model::{
     InTextAnchor, InTextAnchorId, InTextAnchorPoint, Resources, Span, StyledLine, StyledText,
     TextAlign, TextStyle,
 };
-use itertools::Itertools;
+
 use std::collections::HashMap;
 
 use crate::render::layout::{Rectangle, TextLayout};
@@ -121,7 +121,7 @@ pub(crate) fn get_text_layout(
         })
         .collect();
 
-    let mut result = TextLayout {
+    let result = TextLayout {
         lines: result_lines,
         anchor_points,
     };

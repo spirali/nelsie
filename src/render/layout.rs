@@ -1,5 +1,5 @@
 use crate::model::{
-    InTextAnchorId, InTextAnchorPoint, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node,
+    InTextAnchorId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node,
     NodeContent, NodeId, Resources, Slide, Step,
 };
 use crate::render::text::get_text_layout;

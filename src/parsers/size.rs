@@ -10,11 +10,11 @@ fn parse<T: FromStr>(s: &str, value: &str) -> crate::Result<T> {
 fn parse_string_length(value: &str) -> crate::Result<Length> {
     Ok(if let Some(s) = value.trim().strip_suffix('%') {
         Length::Fraction {
-            value: parse::<f32>(s, &value)? / 100.0,
+            value: parse::<f32>(s, value)? / 100.0,
         }
     } else {
         Length::Points {
-            value: parse::<f32>(&value, &value)?,
+            value: parse::<f32>(value, value)?,
         }
     })
 }

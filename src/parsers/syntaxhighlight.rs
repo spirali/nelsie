@@ -1,5 +1,5 @@
 use crate::common::error::NelsieError;
-use crate::model::{Color, NodeContentText, PartialTextStyle, Resources, Span, TextStyle};
+use crate::model::{Color, PartialTextStyle, Resources, Span};
 
 use crate::parsers::text::ParsedStyledText;
 use crate::parsers::StyleOrName;
