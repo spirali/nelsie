@@ -98,12 +98,20 @@ pub(crate) fn create_path(
                 layout.eval(x, parent_id),
                 layout.eval(y, parent_id),
             ),
+            PathPart::Close => builder.close(),
         }
     }
     builder.finish().map(|p| {
         let mut svg_path = usvg::Path::new(Rc::new(p));
         if let Some(stroke) = &path.stroke {
             svg_path.stroke = Some(stroke_to_usvg_stroke(stroke));
+        }
+        if let Some(color) = &path.fill_color {
+            svg_path.fill = Some(Fill {
+                paint: usvg::Paint::Color(color.into()),
+                opacity: color.opacity(),
+                rule: Default::default(),
+            });
         }
         svg_path
     })
@@ -118,7 +126,7 @@ fn arrow_direction(
     let (x, y, dx, dy) = match part1 {
         PathPart::Move { x, y } | PathPart::Line { x, y } => {
             let part2 = part2?;
-            let (x2, y2) = part2.main_point();
+            let (x2, y2) = part2.main_point()?;
             let x = layout.eval(x, parent_id);
             let y = layout.eval(y, parent_id);
             let x2 = layout.eval(x2, parent_id);
@@ -130,6 +138,9 @@ fn arrow_direction(
         }
         PathPart::Cubic { .. } => {
             todo!()
+        }
+        PathPart::Close => {
+            return None;
         }
     };
     let len = (dx * dx + dy * dy).sqrt();

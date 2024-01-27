@@ -1,6 +1,5 @@
 use crate::common::error::NelsieError;
-use crate::model::PathPart::{Cubic, Line, Move, Quad};
-use crate::model::{Arrow, Path, PathPart, Stroke};
+use crate::model::{Arrow, Color, Path, PathPart, Stroke};
 use crate::parsers::{parse_position, StringOrFloatOrExpr};
 use crate::pyinterface::basictypes::PyStringOrFloatOrExpr;
 
@@ -32,6 +31,7 @@ impl From<PyArrow> for Arrow {
 #[derive(Debug, FromPyObject)]
 pub(crate) struct PyPath {
     stroke: Option<Stroke>,
+    fill_color: Option<Color>,
     commands: Vec<String>,
     points: Vec<PyStringOrFloatOrExpr>,
     arrow_start: Option<PyArrow>,
@@ -49,21 +49,21 @@ fn command_to_part(
             .into())
     };
     match command {
-        "move" => Ok(Move {
+        "move" => Ok(PathPart::Move {
             x: parse_position(next()?, true)?,
             y: parse_position(next()?, false)?,
         }),
-        "line" => Ok(Line {
+        "line" => Ok(PathPart::Line {
             x: parse_position(next()?, true)?,
             y: parse_position(next()?, false)?,
         }),
-        "quad" => Ok(Quad {
+        "quad" => Ok(PathPart::Quad {
             x1: parse_position(next()?, true)?,
             y1: parse_position(next()?, false)?,
             x: parse_position(next()?, true)?,
             y: parse_position(next()?, false)?,
         }),
-        "cubic" => Ok(Cubic {
+        "cubic" => Ok(PathPart::Cubic {
             x1: parse_position(next()?, true)?,
             y1: parse_position(next()?, false)?,
             x2: parse_position(next()?, true)?,
@@ -71,6 +71,7 @@ fn command_to_part(
             x: parse_position(next()?, true)?,
             y: parse_position(next()?, false)?,
         }),
+        "close" => Ok(PathPart::Close),
         _ => Err(NelsieError::generic_err("Invalid path command")),
     }
 }
@@ -80,6 +81,7 @@ impl PyPath {
         let mut points_iter = self.points.into_iter();
         Ok(Path {
             stroke: self.stroke,
+            fill_color: self.fill_color,
             parts: self
                 .commands
                 .into_iter()

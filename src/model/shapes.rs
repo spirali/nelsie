@@ -33,15 +33,17 @@ pub(crate) enum PathPart {
         x: LayoutExpr,
         y: LayoutExpr,
     },
+    Close,
 }
 
 impl PathPart {
-    pub fn main_point(&self) -> (&LayoutExpr, &LayoutExpr) {
+    pub fn main_point(&self) -> Option<(&LayoutExpr, &LayoutExpr)> {
         match self {
             PathPart::Move { x, y }
             | PathPart::Line { x, y }
             | PathPart::Quad { x, y, .. }
-            | PathPart::Cubic { x, y, .. } => (x, y),
+            | PathPart::Cubic { x, y, .. } => Some((x, y)),
+            PathPart::Close => None,
         }
     }
 }
@@ -49,6 +51,7 @@ impl PathPart {
 #[derive(Debug)]
 pub(crate) struct Path {
     pub stroke: Option<Stroke>,
+    pub fill_color: Option<Color>,
     pub parts: Vec<PathPart>,
     pub arrow_start: Option<Arrow>,
     pub arrow_end: Option<Arrow>,

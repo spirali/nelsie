@@ -181,3 +181,17 @@ def test_path_arrows(deck):
             .line_to(100, 250),
         ]
     )
+
+
+@check()
+def test_path_close(deck):
+    slide = deck.new_slide(width=150, height=170)
+    slide.draw(
+        [
+            Path(stroke=Stroke(color="green", width=3), fill_color="gray")
+            .move_to(20, 20)
+            .line_to(120, 50)
+            .line_to(70, 150)
+            .close()
+        ]
+    )

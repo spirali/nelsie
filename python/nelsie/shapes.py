@@ -41,15 +41,22 @@ class Arrow:
 class Path:
     def __init__(
         self,
-        stroke: None | Stroke = None,
+        *,
+        stroke: Stroke | None = None,
+        fill_color: str | None = None,
         arrow_start: Arrow | None = None,
         arrow_end: Arrow | None = None,
     ):
         self.stroke = stroke
+        self.fill_color = fill_color
         self.commands = []
         self.points = []
         self.arrow_start = arrow_start
         self.arrow_end = arrow_end
+
+    def close(self):
+        self.commands.append("close")
+        return self
 
     def move_to(self, x: PathValue, y: PathValue):
         self.commands.append("move")
