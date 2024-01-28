@@ -18,7 +18,8 @@ COLOR1 = "black"
 COLOR2 = "#ddccdd"
 
 deck.update_style("default", TextStyle(font_family="Karla", color=COLOR1))
-deck.set_style("highlight", TextStyle(color="#cc99cc", italic=True, size=46))
+deck.set_style("highlight", TextStyle(color="#cc99cc", weight=800))
+deck.set_style("title", TextStyle(size=64))
 
 
 # First slide #############################################
@@ -44,7 +45,7 @@ def intro(slide):
 
 @deck.slide()
 def hello_world(slide):
-    slide.text("~highlight{Hello world} example", m_bottom=40, style=TextStyle(size=42))
+    slide.text("Hello world example", style="title", m_bottom=40)
     box = slide.box(p_left=20, p_right=20, p_top=20, p_bottom=20, bg_color="#eee")
     box.code(
         """
@@ -67,7 +68,7 @@ deck.render(output_pdf="slides.pdf")
 
 @deck.slide()
 def fragments(slide):
-    slide.text("Nelsie supports ...")
+    slide.text("Nelsie supports ...", style="title")
 
     # A single slide may generate more pages in resulting pdf
     # Argument 'show' controls on which pages of the slides is the box shown.
@@ -76,8 +77,8 @@ def fragments(slide):
     # "2+" - Show from the second page to the last page
     # "2-5" - Show on second page to 5th page
     # "2,3,4" - Show on pages 2, 3, and 4
-    slide.box(show="2+").text("... fragment ...")
-    slide.box(show="3+").text("... revealing.")
+    slide.box(show="2+").text("... fragment ...", style="title")
+    slide.box(show="3+").text("... revealing.", style="title")
 
 
 # InSteps ##########################################
@@ -123,7 +124,7 @@ def header_and_footer(slide):
     header.text("Header Demo", TextStyle(color="white"))
     slide.box(width="100%", height="10", bg_color="gray")
 
-    slide.box(flex_grow=1).text("Content", TextStyle(size=48))
+    slide.box(flex_grow=1).text("Headers & Titles", style="title")
 
     footer = slide.box(row=True, width="100%", height="50", bg_color=COLOR2)
     footer.box(flex_grow=1).text("Hello!", TextStyle(size=24, color="gray"))
@@ -151,7 +152,7 @@ deck.render(output_pdf="slides.pdf")
 
 @deck.slide()
 def text_styles(slide):
-    slide.text("Syntax highlighting", TextStyle(size=64), m_bottom=50)
+    slide.text("Syntax highlighting", "title", m_bottom=50)
 
     slide.code(CODE_EXAMPLE, language="py")
 
@@ -161,7 +162,7 @@ def text_styles(slide):
 
 @deck.slide()
 def text_styles(slide):
-    slide.text("Line highlighting", TextStyle(size=64), m_bottom=50)
+    slide.text("Line highlighting", "title", m_bottom=50)
 
     text = slide.code(CODE_EXAMPLE, language="py")
 
@@ -173,7 +174,7 @@ def text_styles(slide):
 
 @deck.slide()
 def text_styles(slide):
-    slide.text("Pointing into text", TextStyle(size=64), m_bottom=50)
+    slide.text("Pointing into text", "title", m_bottom=50)
 
     text = slide.code(CODE_EXAMPLE, language="py")
 
@@ -192,7 +193,7 @@ def text_styles(slide):
 
 @deck.slide()
 def text_styles(slide):
-    slide.text("Pointing into text", TextStyle(size=64), m_bottom=50)
+    slide.text("Pointing into text", "title", m_bottom=50)
 
     text = slide.code(CODE_EXAMPLE, language="py")
 
@@ -221,7 +222,7 @@ def text_styles(slide):
 
 @deck.slide()
 def text_styles(slide):
-    slide.text("Pointing into text", TextStyle(size=64), m_bottom=50)
+    slide.text("Pointing into text", "title", m_bottom=50)
 
     text = slide.code(
         """
@@ -261,10 +262,10 @@ deck.render(output_pdf="slides.pdf")
 
 @deck.slide()
 def text_styles(slide):
-    slide.text("Own styles in syntax highlight", TextStyle(size=64), m_bottom=50)
+    slide.text("Own styles in syntax highlight", "title", m_bottom=50)
 
     slide.set_style("grayout", TextStyle(color="gray", weight=400))
-    text = slide.code(
+    slide.code(
         """
 ~grayout{# This is comment
 from nelsie import SlideDeck
@@ -282,26 +283,67 @@ def hello_world(~1{slide}):
     )
 
 
-# Fragments ##########################################
+# Console demo ############################################
+
+
+@deck.slide()
+def console_demo(slide):
+    slide.set_style(
+        "shell", slide.get_style("code").merge(TextStyle(color="white", size=24))
+    )
+    slide.set_style("prompt", TextStyle(color="#aaaaff"))
+    slide.set_style("cmd", TextStyle(color="yellow"))
+
+    slide.text("Console demo", "title", m_bottom=30)
+
+    # The 'console' is just text with a few styles
+    # As we want to use "~" character in the text,
+    # we are changing escape_char for styles from "~" to "!"
+    console = slide.box(
+        bg_color="black", p_left=20, p_right=20, p_top=10, p_bottom=10, border_radius=10
+    )
+    console.text(
+        "!prompt{~/nelsie/example/bigdemo$} !cmd{ls}\n"
+        "bigdemo.py  imgs  karla_font\n\n"
+        "!prompt{~/nelsie/example/bigdemo$} !cmd{python3 bigdemo.py}\n",
+        style="shell",
+        style_delimiters="!{}",
+    )
+
+
+# Shapes ##########################################
 
 
 @deck.slide()
 def text_styles(slide):
-    box = slide.box(gap=(0, 40))
-    box.text("Text size", TextStyle(size=64))
+    slide.text("Shapes", "title", m_bottom=40)
 
-    box.set_style("r", TextStyle(color="red"))
-    box.set_style("g", TextStyle(color="green"))
-    box.set_style("b", TextStyle(color="blue"))
-    box.set_style("bold", TextStyle(weight=700))
-    box.set_style("it", TextStyle(italic=True))
-
-    box.text("~bold{bold} ~monospace{monospace} ~it{italics}")
-    box.text("~r{red} ~g{green} ~b{blue}")
-    box.text("Stroke & fill", TextStyle(stroke=Stroke(color=COLOR1), color="green"))
-    box.text(
-        "Stroke without fill", TextStyle(stroke=Stroke(color=COLOR1), color="empty")
+    box = slide.box(width=700, height=100)
+    rect = (
+        Path(stroke=Stroke(color="red", width=5))
+        .move_to(0, 0)
+        .line_to(100, 0)
+        .line_to(100, 100)
+        .line_to(0, 100)
+        .close()
     )
+    triangle = (
+        Path(fill_color="green").move_to(200, 100).line_to(250, 0).line_to(300, 100)
+    )
+    circle = Path.oval(400, 0, 500, 100, fill_color="blue")
+
+    rounded_box = (
+        Path(stroke=Stroke(color="orange", width=5))
+        .move_to(650, 0)
+        .quad_to(700, 0, 700, 50)
+        .quad_to(700, 100, 650, 100)
+        .quad_to(700, 100, 650, 100)
+        .quad_to(600, 100, 600, 50)
+        .line_to(650, 50)
+    )
+
+
+    box.draw([rect, triangle, rounded_box, circle])
 
 
 # FINAL RENDER
