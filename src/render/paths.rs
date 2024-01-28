@@ -1,7 +1,7 @@
 use crate::model::{NodeId, Path, PathPart, Stroke};
 use crate::render::layout::{ComputedLayout, Rectangle};
 use resvg::tiny_skia;
-use resvg::tiny_skia::PathBuilder;
+use resvg::tiny_skia::{PathBuilder, Rect};
 use std::rc::Rc;
 use usvg::NonZeroPositiveF32;
 use usvg_tree::Fill;
@@ -61,61 +61,68 @@ pub(crate) fn create_path(
     parent_id: NodeId,
     path: &Path,
 ) -> Option<usvg::Path> {
-    let mut builder = PathBuilder::new();
-
-    for (i, part) in path.parts.iter().enumerate() {
-        let (sx, sy) = move_point_for_arrow(layout, parent_id, path, i).unwrap_or((0.0, 0.0));
-        match part {
-            PathPart::Move { x, y } => {
-                builder.move_to(
-                    layout.eval(x, parent_id) + sx,
-                    layout.eval(y, parent_id) + sy,
-                );
+    let skia_path = if let Some(PathPart::Oval { x1, y1, x2, y2 }) = path.parts.get(0) {
+        let x1 = layout.eval(x1, parent_id);
+        let y1 = layout.eval(y1, parent_id);
+        let x2 = layout.eval(x2, parent_id);
+        let y2 = layout.eval(y2, parent_id);
+        PathBuilder::from_oval(Rect::from_ltrb(x1, y1, x2, y2)?)
+    } else {
+        let mut builder = PathBuilder::new();
+        for (i, part) in path.parts.iter().enumerate() {
+            let (sx, sy) = move_point_for_arrow(layout, parent_id, path, i).unwrap_or((0.0, 0.0));
+            match part {
+                PathPart::Move { x, y } => {
+                    builder.move_to(
+                        layout.eval(x, parent_id) + sx,
+                        layout.eval(y, parent_id) + sy,
+                    );
+                }
+                PathPart::Line { x, y } => {
+                    builder.line_to(
+                        layout.eval(x, parent_id) + sx,
+                        layout.eval(y, parent_id) + sy,
+                    );
+                }
+                PathPart::Quad { x1, y1, x, y } => builder.quad_to(
+                    layout.eval(x1, parent_id),
+                    layout.eval(y1, parent_id),
+                    layout.eval(x, parent_id),
+                    layout.eval(y, parent_id),
+                ),
+                PathPart::Cubic {
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    x,
+                    y,
+                } => builder.cubic_to(
+                    layout.eval(x1, parent_id),
+                    layout.eval(y1, parent_id),
+                    layout.eval(x2, parent_id),
+                    layout.eval(y2, parent_id),
+                    layout.eval(x, parent_id),
+                    layout.eval(y, parent_id),
+                ),
+                PathPart::Close => builder.close(),
+                PathPart::Oval { .. } => { /* Ignoring Oval, it has to be first if it used */ }
             }
-            PathPart::Line { x, y } => {
-                builder.line_to(
-                    layout.eval(x, parent_id) + sx,
-                    layout.eval(y, parent_id) + sy,
-                );
-            }
-            PathPart::Quad { x1, y1, x, y } => builder.quad_to(
-                layout.eval(x1, parent_id),
-                layout.eval(y1, parent_id),
-                layout.eval(x, parent_id),
-                layout.eval(y, parent_id),
-            ),
-            PathPart::Cubic {
-                x1,
-                y1,
-                x2,
-                y2,
-                x,
-                y,
-            } => builder.cubic_to(
-                layout.eval(x1, parent_id),
-                layout.eval(y1, parent_id),
-                layout.eval(x2, parent_id),
-                layout.eval(y2, parent_id),
-                layout.eval(x, parent_id),
-                layout.eval(y, parent_id),
-            ),
-            PathPart::Close => builder.close(),
         }
+        builder.finish()
+    }?;
+    let mut svg_path = usvg::Path::new(Rc::new(skia_path));
+    if let Some(stroke) = &path.stroke {
+        svg_path.stroke = Some(stroke_to_usvg_stroke(stroke));
     }
-    builder.finish().map(|p| {
-        let mut svg_path = usvg::Path::new(Rc::new(p));
-        if let Some(stroke) = &path.stroke {
-            svg_path.stroke = Some(stroke_to_usvg_stroke(stroke));
-        }
-        if let Some(color) = &path.fill_color {
-            svg_path.fill = Some(Fill {
-                paint: usvg::Paint::Color(color.into()),
-                opacity: color.opacity(),
-                rule: Default::default(),
-            });
-        }
-        svg_path
-    })
+    if let Some(color) = &path.fill_color {
+        svg_path.fill = Some(Fill {
+            paint: usvg::Paint::Color(color.into()),
+            opacity: color.opacity(),
+            rule: Default::default(),
+        });
+    }
+    Some(svg_path)
 }
 
 fn arrow_direction(
@@ -140,7 +147,7 @@ fn arrow_direction(
         PathPart::Cubic { .. } => {
             todo!()
         }
-        PathPart::Close => {
+        PathPart::Close | PathPart::Oval { .. } => {
             return None;
         }
     };
@@ -216,9 +223,7 @@ pub(crate) fn create_arrow(
 
 pub(crate) fn path_from_rect(rect: &Rectangle, border_radius: f32) -> tiny_skia::Path {
     if border_radius < 0.001 {
-        PathBuilder::from_rect(
-            tiny_skia::Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).unwrap(),
-        )
+        PathBuilder::from_rect(Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).unwrap())
     } else {
         let mut builder = PathBuilder::new();
         let x2 = rect.x + rect.width;

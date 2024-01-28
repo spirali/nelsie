@@ -34,6 +34,15 @@ pub(crate) enum PathPart {
         y: LayoutExpr,
     },
     Close,
+
+    // We should create Conic element, unfortunately, tiny skia does not expose conic_to as a public interface
+    // So this is just a hack how to draw a circle
+    Oval {
+        x1: LayoutExpr,
+        y1: LayoutExpr,
+        x2: LayoutExpr,
+        y2: LayoutExpr,
+    },
 }
 
 impl PathPart {
@@ -43,7 +52,7 @@ impl PathPart {
             | PathPart::Line { x, y }
             | PathPart::Quad { x, y, .. }
             | PathPart::Cubic { x, y, .. } => Some((x, y)),
-            PathPart::Close => None,
+            PathPart::Close | PathPart::Oval { .. } => None,
         }
     }
 }

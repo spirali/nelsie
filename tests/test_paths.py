@@ -195,3 +195,21 @@ def test_path_close(deck):
             .close()
         ]
     )
+
+
+@check()
+def test_path_oval(deck):
+    slide = deck.new_slide(width=150, height=150)
+    slide.draw(
+        [
+            Path.oval(
+                25,
+                25,
+                125,
+                125,
+                stroke=Stroke(color="green", width=3),
+                fill_color="gray",
+            ),
+            Path.oval(10, 70, 140, 90, fill_color="red"),
+        ]
+    )

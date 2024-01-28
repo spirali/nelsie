@@ -72,6 +72,12 @@ fn command_to_part(
             y: parse_position(next()?, false)?,
         }),
         "close" => Ok(PathPart::Close),
+        "oval" => Ok(PathPart::Oval {
+            x1: parse_position(next()?, true)?,
+            y1: parse_position(next()?, false)?,
+            x2: parse_position(next()?, true)?,
+            y2: parse_position(next()?, false)?,
+        }),
         _ => Err(NelsieError::generic_err("Invalid path command")),
     }
 }

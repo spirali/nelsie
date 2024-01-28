@@ -1,10 +1,9 @@
 from dataclasses import dataclass
 
 from .basictypes import Stroke
-from .insteps import InSteps
 from .layoutexpr import LayoutExpr
 
-PathValue = int | float | LayoutExpr | InSteps[LayoutExpr]
+PathValue = int | float | LayoutExpr
 
 
 @dataclass
@@ -53,6 +52,21 @@ class Path:
         self.points = []
         self.arrow_start = arrow_start
         self.arrow_end = arrow_end
+
+    @staticmethod
+    def oval(
+        x1: PathValue,
+        y1: PathValue,
+        x2: PathValue,
+        y2: PathValue,
+        *,
+        stroke: Stroke | None = None,
+        fill_color: str | None = None,
+    ):
+        path = Path(stroke=stroke, fill_color=fill_color)
+        path.commands.append("oval")
+        path.points = [x1, y1, x2, y2]
+        return path
 
     def close(self):
         self.commands.append("close")
