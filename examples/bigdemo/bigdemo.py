@@ -14,7 +14,7 @@ resources = Resources()
 resources.load_fonts_dir("karla_font")
 deck = SlideDeck(resources=resources)
 
-COLOR1 = "black"
+COLOR1 = "#333"
 COLOR2 = "#ddccdd"
 
 deck.update_style("default", TextStyle(font_family="Karla", color=COLOR1))
@@ -315,10 +315,10 @@ def console_demo(slide):
 
 
 @deck.slide()
-def text_styles(slide):
+def shapes(slide):
     slide.text("Shapes", "title", m_bottom=40)
 
-    box = slide.box(width=700, height=100)
+    box = slide.box(width=700, height=100, m_bottom=60)
     rect = (
         Path(stroke=Stroke(color="red", width=5))
         .move_to(0, 0)
@@ -341,9 +341,194 @@ def text_styles(slide):
         .quad_to(600, 100, 600, 50)
         .line_to(650, 50)
     )
-
-
     box.draw([rect, triangle, rounded_box, circle])
+
+    box = slide.box(width=700, height=70, m_bottom=60)
+    box.draw(
+        [
+            Path(stroke=Stroke(color="black", width=10, dash_array=[10]))
+            .move_to(0, 0)
+            .line_to(700, 0),
+            Path(
+                stroke=Stroke(
+                    color="black", width=10, dash_array=[10, 20], dash_offset=15
+                )
+            )
+            .move_to(0, 30)
+            .line_to(700, 30),
+            Path(stroke=Stroke(color="black", width=10, dash_array=[30, 10, 5, 10]))
+            .move_to(0, 60)
+            .line_to(700, 60),
+        ]
+    )
+
+    box = slide.box(width=700, height=150)
+    arrow1 = Arrow(size=30)
+    arrow2 = Arrow(size=30, angle=20)
+    arrow3 = Arrow(size=30, inner_point=0.8)
+    arrow4 = Arrow(size=30, inner_point=2.4)
+
+    box.draw(
+        [
+            Path(
+                stroke=Stroke(color="black", width=5),
+                arrow_start=arrow1,
+                arrow_end=arrow1,
+            )
+            .move_to(0, 0)
+            .line_to(700, 0),
+            Path(
+                stroke=Stroke(color="black", width=5),
+                arrow_start=arrow2,
+                arrow_end=arrow2,
+            )
+            .move_to(0, 50)
+            .line_to(700, 50),
+            Path(
+                stroke=Stroke(color="black", width=5),
+                arrow_start=arrow3,
+                arrow_end=arrow3,
+            )
+            .move_to(0, 100)
+            .line_to(700, 100),
+            Path(
+                stroke=Stroke(color="black", width=5),
+                arrow_start=arrow4,
+                arrow_end=arrow4,
+            )
+            .move_to(0, 150)
+            .line_to(700, 150),
+        ]
+    )
+
+
+# Path demo ##########################################
+
+
+@deck.slide()
+def path_demo(slide):
+    root = slide.box(
+        x=250,
+        y="50%",
+        bg_color="#777",
+        border_radius=10,
+        p_left=20,
+        p_right=20,
+        p_top=20,
+        p_bottom=20,
+    )
+    root.text("Root", style=TextStyle(color="white"))
+    child1 = slide.box(
+        x=650,
+        y="20%",
+        bg_color="#777",
+        border_radius=10,
+        p_left=20,
+        p_right=20,
+        p_top=20,
+        p_bottom=20,
+    )
+    child1.text("Child 1", style=TextStyle(color="white"))
+    child2 = slide.box(
+        x=650,
+        y="80%",
+        bg_color="#777",
+        border_radius=10,
+        p_left=20,
+        p_right=20,
+        p_top=20,
+        p_bottom=20,
+    )
+    child2.text("Child 2", style=TextStyle(color="white"))
+    arrow = Arrow(20)
+    x0, y0 = root.x(1), root.y(0.5)
+    x1, y1 = child1.x(0), child1.y(0.5)
+    x2, y2 = child2.x(0), child2.y(0.5)
+
+    x1a, y1a = child1.x(1), child1.y(0.5)
+    x1b, y1b = child1.x(0.5), child1.y(0)
+
+    slide.draw(
+        [
+            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
+            .move_to(x0, y0)
+            .cubic_to(x0 + 300, y0, x1 - 300, y1, x1, y1),
+            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
+            .move_to(x0, y0)
+            .quad_to(x2 - 100, y2, x2, y2),
+            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
+            .move_to(x1a, y1a)
+            .quad_to(x1a + 50, y1a, x1a + 50, y1a - 50)
+            .cubic_to(x1a + 50, y1a - 100, x1b, y1b - 100, x1b, y1b),
+        ]
+    )
+
+    box = slide.box(x=680, y="50%")
+    box.draw(
+        Path(stroke=Stroke(color="#777", width=2), fill_color="orange")
+        .move_to(40, 0)
+        .line_to(80, 40)
+        .line_to(40, 80)
+        .line_to(0, 40)
+        .close()
+    )
+
+
+# Chessboard demo ##########################################
+
+
+@deck.slide()
+def chess_board(slide):
+    # Draw chessboard
+    colors = [COLOR2, "#665566"]
+    tiles = {}
+    board = slide.box(width=500, height=500)
+    for i in range(8):
+        row = board.box(width="100%", flex_grow=1.0, row=True)
+        for j in range(8):
+            b = row.box(height="100%", flex_grow=1.0, bg_color=colors[(i + j) % 2])
+            tiles[(j, i)] = b.overlay(z_level=0)
+
+    # Draw arrow
+    slide.overlay(show="1-3", z_level=1).draw(
+        Path(stroke=Stroke(color="black", width=15), arrow_end=Arrow(30))
+        .move_to(tiles[(3, 4)].x(0.5), tiles[(3, 4)].y(0.5))
+        .line_to(tiles[(3, 2)].x(0.5), tiles[(3, 2)].y(0.5))
+        .line_to(tiles[(4, 2)].x(0.5), tiles[(4, 2)].y(0.5))
+    )
+
+    # Draw knight
+    tiles[(3, 4)].box(show="1", z_level=2).image("imgs/knight.svg")
+    tiles[(3, 3)].box(show="2", z_level=2).image("imgs/knight.svg")
+    tiles[(3, 2)].box(show="3", z_level=2).image("imgs/knight.svg")
+    tiles[(4, 2)].box(show="4", z_level=2).image("imgs/knight.svg")
+
+
+# Debugging frames ##########################################
+
+
+@deck.slide(debug_layout=True)
+def debugging_frames(slide):
+    slide.image("../../docs/imgs/nelsie-logo.jpg", width="25%")
+    title_box = slide.box(
+        width="100%",
+        p_top=20,
+        p_bottom=30,
+        m_top=50,
+        m_bottom=50,
+        bg_color=COLOR2,
+        name="title box",
+        debug_layout="black",
+    )
+    title_box.text("Nelsie", style=TextStyle(size=64, weight=800), m_bottom=15)
+    title_box.text("Framework for Creating Slides", style=TextStyle(size=44))
+
+    slide.set_style("email", slide.get_style("monospace").merge(TextStyle(size=18)))
+    slide.text(
+        "Ada Böhm\n~email{ada@kreatrix.org}", m_bottom=50, align=TextAlign.Center
+    )
+
+    slide.text(x="65%", y="20%", text="Debugging\nframes", style="title")
 
 
 # FINAL RENDER
