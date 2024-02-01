@@ -141,11 +141,18 @@ fn arrow_direction(
             let y2 = layout.eval(y2, parent_id);
             (x, y, x - x2, y - y2)
         }
-        PathPart::Quad { .. } => {
-            todo!()
+        PathPart::Quad {
+            x1: x2,
+            y1: y2,
+            x,
+            y,
         }
-        PathPart::Cubic { .. } => {
-            todo!()
+        | PathPart::Cubic { x2, y2, x, y, .. } => {
+            let x = layout.eval(x, parent_id);
+            let y = layout.eval(y, parent_id);
+            let x2 = layout.eval(x2, parent_id);
+            let y2 = layout.eval(y2, parent_id);
+            (x, y, x - x2, y - y2)
         }
         PathPart::Close | PathPart::Oval { .. } => {
             return None;
