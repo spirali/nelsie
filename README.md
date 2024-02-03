@@ -4,7 +4,7 @@
 
 # Nelsie
 
-Nelsie is a framework for **creating slides programmatically** using Python with a fast renderer written in Rust.
+Nelsie is a framework for **creating slides programmatically** using Python API with a fast renderer written in Rust.
 
 **Quick links**
 
@@ -24,3 +24,25 @@ def hello_world(slide):
 
 deck.render(output_pdf="slides.pdf")
 ```
+
+# Installation
+
+```commandline
+$ pip install nelsie
+```
+
+# Installation from sources
+
+* Install Rust (https://rustup.rs/)
+* Install [Maturin](https://www.maturin.rs/) (`pip install maturin`)
+* Run in Nelsie source code directory:
+  ```commandline
+  python3 -m venv venv
+  source venv/bin/activate
+  maturin build --release
+  ```
+
+
+# History
+
+Nelsie is a complete rewrite of the previous project [Elsie](https://github.com/spirali/elsie). Nelsie solves the biggest pain of Elsie: Dependancy on Inkscape as a renderer engine (It makes difficult to install Elsie on some systems; performance issues and problems when Inkscape changes its programming API). This is solved by a rendering engine shipped within the Nelsie package. Nelsie also offers many improvements in API, namely introduction of `InSteps` and the flexbox layout engine.
