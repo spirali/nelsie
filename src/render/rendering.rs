@@ -71,7 +71,7 @@ fn draw_debug_frame(
             line_spacing: 0.0,
             italic: false,
             stretch: Default::default(),
-            weight: 400,
+            weight: 700,
             kerning: true,
         }],
         default_font_size: 8.0,

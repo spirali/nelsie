@@ -111,6 +111,7 @@ class BoxBuilder:
             enable_steps=enable_steps,
             shift_steps=shift_steps,
         )
+        box_args.setdefault("name", f"image: {path}")
         return self.box(_content=image, **box_args)
 
     def text(
@@ -125,6 +126,7 @@ class BoxBuilder:
         strip=True,
         **box_args,
     ):
+        box_args.setdefault("name", "text")
         return self._text_box(
             text,
             style,
@@ -152,6 +154,7 @@ class BoxBuilder:
         strip=True,
         **box_args,
     ):
+        box_args.setdefault("name", "code")
         if theme is None:
             theme = self.get_box().deck.default_theme
         return self._text_box(
@@ -234,12 +237,15 @@ class BoxBuilder:
         gap: tuple[Length, Length] | InSteps[tuple[Length, Length]] = (0.0, 0.0),
         bg_color: str | None | InSteps[str | None] = None,
         name: str = "",
-        debug_layout: bool | None = None,
+        debug_layout: bool | str | None = None,
         replace_steps: dict[int, int] | None = None,
         _content: NodeContent | InSteps[NodeContent] = None,
     ):
         parent_box = self.get_box()
-        debug_layout = parse_debug_layout(debug_layout)
+        if debug_layout is None:
+            debug_layout = parent_box.slide.debug_layout
+        else:
+            debug_layout = parse_debug_layout(debug_layout)
         if z_level is None:
             z_level = parent_box.z_level
         config = BoxConfig(

@@ -52,7 +52,7 @@ class FlexWrap(enum.IntEnum):
 
 def parse_debug_layout(value: bool | str) -> str | None:
     if value is True:
-        value = "#ff00ff"
+        return "#ff00ff"
     elif not value:
-        value = None
-    return typing.cast(None | str, value)
+        return None
+    return typing.cast(str, value)

@@ -22,6 +22,7 @@ class Slide(BoxBuilder):
         self._slide_id = slide_id
         self.name = name
         self.image_directory = image_directory
+        self.debug_layout = debug_layout
         self.root_box = Box(deck, self, [], 0, name, 0)
 
     def get_box(self):
