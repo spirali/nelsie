@@ -113,7 +113,8 @@ impl<'a> RenderContext<'a> {
         if !node.show.at_step(step) {
             return;
         }
-        if *node.z_level.at_step(step) == self.z_level {
+        let is_current_z_level = *node.z_level.at_step(step) == self.z_level;
+        if is_current_z_level {
             if let Some(color) = &node.bg_color.at_step(step) {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 let border_radius = *node.border_radius.at_step(step);
@@ -155,7 +156,11 @@ impl<'a> RenderContext<'a> {
         for child in &node.children {
             match child {
                 NodeChild::Node(node) => self.render_helper(step, node),
-                NodeChild::Draw(draw) => self.draw(step, node.node_id, draw),
+                NodeChild::Draw(draw) => {
+                    if is_current_z_level {
+                        self.draw(step, node.node_id, draw)
+                    }
+                }
             }
         }
     }
