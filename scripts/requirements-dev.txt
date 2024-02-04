@@ -2,3 +2,5 @@ Pillow
 black
 isort
 flake8
+mkdocs-material
+mkdocs-minify-plugin
