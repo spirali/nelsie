@@ -22,7 +22,7 @@ deck = SlideDeck()
 def hello_world(slide):
     slide.text("Hello world!")
 
-deck.render(output_pdf="slides.pdf")
+deck.render("slides.pdf")
 ```
 
 # Installation

@@ -61,7 +61,7 @@ pub(crate) fn create_path(
     parent_id: NodeId,
     path: &Path,
 ) -> Option<usvg::Path> {
-    let skia_path = if let Some(PathPart::Oval { x1, y1, x2, y2 }) = path.parts.get(0) {
+    let skia_path = if let Some(PathPart::Oval { x1, y1, x2, y2 }) = path.parts.first() {
         let x1 = layout.eval(x1, parent_id);
         let y1 = layout.eval(y1, parent_id);
         let x2 = layout.eval(x2, parent_id);

@@ -65,9 +65,9 @@ def check(n_slides: int = 1, error=None, error_match: str | None = None):
                 fn(deck)
                 if error is not None:
                     with pytest.raises(error, match=error_match):
-                        deck.render(output_png=name)
+                        deck.render(name, "png")
                 else:
-                    deck.render(output_png=name)
+                    deck.render(name, "png")
                     with open(os.path.join(tmp_path, "check.txt"), "w") as f:
                         f.write(name)
                     compare_images(

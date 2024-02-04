@@ -57,7 +57,7 @@ deck = SlideDeck()
 def hello_world(slide):
     slide.text("Hello world!")
 
-deck.render(output_pdf="slides.pdf")
+deck.render("slides.pdf")
 """,
         language="py",
     )
@@ -146,7 +146,7 @@ deck = SlideDeck()
 def hello_world(slide):
     slide.text("Hello world!")
 
-deck.render(output_pdf="slides.pdf")
+deck.render("slides.pdf")
 """
 
 
@@ -235,7 +235,7 @@ deck = SlideDeck()
 def hello_world(~1{slide}):
     ~2{slide}.text("Hello world!")
 
-deck.render(output_pdf="slides.pdf")
+deck.render("slides.pdf")
 """,
         language="py",
         parse_styles=True,
@@ -276,7 +276,7 @@ deck = SlideDeck()}
 def hello_world(~1{slide}):
     ~2{slide}.text("Hello world!")
 
-~grayout{deck.render(output_pdf="slides.pdf")}
+~grayout{deck.render("slides.pdf")}
 """,
         language="py",
         parse_styles=True,
@@ -533,4 +533,4 @@ def debugging_frames(slide):
 
 # FINAL RENDER
 
-deck.render(output_pdf="bigdemo.pdf")
+deck.render("bigdemo.pdf")

@@ -5,13 +5,16 @@ use crate::pyinterface::path::PyPath;
 use crate::pyinterface::r#box::{BoxConfig, Content, NodeCreationEnv};
 use crate::pyinterface::resources::Resources;
 use crate::pyinterface::textstyle::{partial_text_style_to_pyobject, PyTextStyle};
-use crate::render::{render_slide_deck, OutputConfig};
+use crate::render::{render_slide_deck, OutputConfig, OutputFormat};
 use itertools::Itertools;
-use pyo3::exceptions::PyException;
+use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python, ToPyObject};
 use std::str::FromStr;
 
+use pyo3::types::{PyBytes, PyNone};
 use std::sync::Arc;
+
+
 
 #[pyclass]
 pub(crate) struct Deck {
@@ -187,19 +190,35 @@ impl Deck {
 
     fn render(
         &self,
+        py: Python<'_>,
         resources: &mut Resources,
-        output_pdf: Option<&str>,
-        output_svg: Option<&str>,
-        output_png: Option<&str>,
-    ) -> PyResult<()> {
-        Ok(render_slide_deck(
-            &self.deck,
-            &resources.resources,
-            &OutputConfig {
-                output_pdf: output_pdf.map(std::path::Path::new),
-                output_png: output_png.map(std::path::Path::new),
-                output_svg: output_svg.map(std::path::Path::new),
-            },
-        )?)
+        path: Option<&str>,
+        format: Option<&str>,
+    ) -> PyResult<PyObject> {
+        let format = match format {
+            Some("pdf") => OutputFormat::Pdf,
+            Some("svg") => OutputFormat::Svg,
+            Some("png") => OutputFormat::Png,
+            _ => return Err(PyValueError::new_err("Unknown output format")),
+        };
+        let result = py.allow_threads(|| {
+            render_slide_deck(
+                &self.deck,
+                &resources.resources,
+                &OutputConfig {
+                    path: path.map(std::path::Path::new),
+                    format,
+                },
+            )
+        })?;
+        if result.is_empty() {
+            Ok(PyNone::get(py).to_object(py))
+        } else {
+            Ok(result
+                .iter()
+                .map(|(slide_idx, step, data)| (slide_idx, step, PyBytes::new(py, data)))
+                .collect_vec()
+                .to_object(py))
+        }
     }
 }

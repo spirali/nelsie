@@ -8,17 +8,36 @@ mod text;
 
 use crate::common::error::NelsieError;
 use crate::common::fileutils::ensure_directory;
+
 use crate::model::{FontData, Resources, Slide, SlideDeck};
+use crate::render::core::RenderingResult;
 pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use pdf::PdfBuilder;
+
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 
+#[derive(Copy, Clone)]
+pub(crate) enum OutputFormat {
+    Pdf,
+    Svg,
+    Png,
+}
+
+impl OutputFormat {
+    pub fn extension(&self) -> &'static str {
+        match self {
+            OutputFormat::Pdf => "pdf",
+            OutputFormat::Svg => "svg",
+            OutputFormat::Png => "png",
+        }
+    }
+}
+
 pub(crate) struct OutputConfig<'a> {
-    pub output_pdf: Option<&'a Path>,
-    pub output_svg: Option<&'a Path>,
-    pub output_png: Option<&'a Path>,
+    pub path: Option<&'a Path>,
+    pub format: OutputFormat,
 }
 
 fn render_slide(
@@ -27,24 +46,18 @@ fn render_slide(
     slide_idx: usize,
     slide: &Slide,
     default_font: &Arc<FontData>,
-) -> crate::Result<Vec<usvg::Tree>> {
+) -> crate::Result<Vec<RenderingResult>> {
     log::debug!("Rendering slide {}", slide_idx);
     (1..=slide.n_steps)
         .map(|step| {
-            let output_svg = output_cfg
-                .output_svg
-                .map(|p| p.join(format!("{}-{}.svg", slide_idx, step)));
-            let output_png = output_cfg
-                .output_png
-                .map(|p| p.join(format!("{}-{}.png", slide_idx, step)));
-
             let render_cfg = RenderConfig {
                 resources,
-                output_svg: output_svg.as_deref(),
-                output_png: output_png.as_deref(),
                 slide,
+                slide_idx,
                 step,
                 default_font,
+                output_format: output_cfg.format,
+                output_path: output_cfg.path,
             };
             render_slide_step(&render_cfg)
         })
@@ -55,61 +68,69 @@ pub(crate) fn render_slide_deck(
     slide_deck: &SlideDeck,
     resources: &Resources,
     output_cfg: &OutputConfig,
-) -> crate::Result<()> {
+) -> crate::Result<Vec<(usize, usize, Vec<u8>)>> {
     let start_time = std::time::Instant::now();
     println!(
         "Slides construction: {:.2}s",
         (start_time - slide_deck.creation_time).as_secs_f32()
     );
-    if let Some(dir) = output_cfg.output_svg {
-        log::debug!("Ensuring SVG output directory: {}", dir.display());
-        ensure_directory(dir).map_err(|e| {
-            NelsieError::Generic(format!(
-                "Cannot create directory for SVG files: {}: {}",
-                dir.display(),
-                e
-            ))
-        })?;
-    }
 
-    if let Some(dir) = output_cfg.output_png {
-        log::debug!("Ensuring PNG output directory: {}", dir.display());
-        ensure_directory(dir).map_err(|e| {
-            NelsieError::Generic(format!(
-                "Cannot create directory for PNG files: {}: {}",
-                dir.display(),
-                e
-            ))
-        })?;
-    }
+    let mut pdf_builder = if let OutputFormat::Pdf = output_cfg.format {
+        let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
+        Some(PdfBuilder::new(n_steps))
+    } else {
+        if let Some(dir) = output_cfg.path {
+            log::debug!("Ensuring output directory: {}", dir.display());
+            ensure_directory(dir).map_err(|e| {
+                NelsieError::Generic(format!(
+                    "Cannot create directory for output files: {}: {}",
+                    dir.display(),
+                    e
+                ))
+            })?;
+        }
+        None
+    };
 
-    let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
-    let mut pdf_builder = output_cfg.output_pdf.map(|_| PdfBuilder::new(n_steps));
+    let mut result_data = Vec::new();
 
     let mut pdf_compose_time = Duration::ZERO;
 
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {
-        for tree in render_slide(
+        for (step_idx, result) in render_slide(
             resources,
             output_cfg,
             slide_idx,
             slide,
             &slide_deck.default_font,
-        )? {
-            if let Some(builder) = &mut pdf_builder {
-                let s = std::time::Instant::now();
-                builder.add_page_from_svg(tree);
-                pdf_compose_time += std::time::Instant::now() - s;
+        )?
+        .into_iter()
+        .enumerate()
+        {
+            match result {
+                RenderingResult::None => { /* Do nothing */ }
+                RenderingResult::Tree(tree) => {
+                    let s = std::time::Instant::now();
+                    pdf_builder.as_mut().unwrap().add_page_from_svg(tree);
+                    pdf_compose_time += std::time::Instant::now() - s;
+                }
+                RenderingResult::BytesData(data) => {
+                    result_data.push((slide_idx, step_idx, data));
+                }
             }
         }
     }
     println!("Pdf time: {:.2}s", pdf_compose_time.as_secs_f32());
 
     if let Some(builder) = pdf_builder {
-        let path = output_cfg.output_pdf.unwrap();
-        builder.write(path).map_err(|e| {
-            NelsieError::Generic(format!("Writing PDF file {}: {}", path.display(), e))
-        })?;
+        if let Some(path) = output_cfg.path {
+            builder.write(path).map_err(|e| {
+                NelsieError::Generic(format!("Writing PDF file {}: {}", path.display(), e))
+            })?;
+        } else {
+            // TODO: Introduce a public method for getting data without writing in svg2pdf
+            //result_data.push(builder.finish());
+        }
     }
 
     let render_end_time = std::time::Instant::now();
@@ -118,5 +139,5 @@ pub(crate) fn render_slide_deck(
         (render_end_time - start_time).as_secs_f32()
     );
 
-    Ok(())
+    Ok(result_data)
 }

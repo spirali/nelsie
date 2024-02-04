@@ -1,5 +1,5 @@
 import pathlib
-from typing import Optional
+from typing import Optional, Literal
 
 from . import nelsie as nelsie_rs
 from .basictypes import parse_debug_layout
@@ -118,16 +118,11 @@ class SlideDeck:
 
     def render(
         self,
+        path: Optional[str | pathlib.Path],
+        output_format: Literal["pdf"] | Literal["svg"] | Literal["png"] = "pdf",
         *,
-        output_pdf: Optional[str | pathlib.Path] = None,
-        output_svg: Optional[str | pathlib.Path] = None,
-        output_png: Optional[str | pathlib.Path] = None,
         debug: bool = False,
     ):
-        if output_pdf:
-            output_pdf = str(output_pdf)
-        if output_png:
-            output_png = str(output_png)
-        if output_svg:
-            output_svg = str(output_svg)
-        self._deck.render(self.resources, output_pdf, output_svg, output_png)
+        if path:
+            path = str(path)
+        return self._deck.render(self.resources, path, output_format)
