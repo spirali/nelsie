@@ -1,0 +1,48 @@
+site_name: Nelsie
+
+site_url: https://spirali.github.io/nelsie/
+repo_url: https://github.com/spirali/nelsie
+edit_uri: blob/master/docs/
+
+site_description: Documentation of Nelsie, library for generating slides
+site_author: Ada Böhm
+
+nav:
+  - Overview: README.md
+  - install.md
+  - getting_started.md
+  - examples.md
+
+theme:
+  name: material
+  # custom_dir: docs/template
+
+# extra_javascript:
+#   - js/clipboard.js
+
+# extra_css:
+#   - css/clipboard.css
+
+markdown_extensions:
+  - toc:
+      permalink: "#"
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+
+plugins:
+  # - elsie:
+  #     render_format: png
+  # - nedoc
+  - search
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true
