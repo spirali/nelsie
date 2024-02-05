@@ -36,13 +36,13 @@ markdown_extensions:
 
 
 plugins:
-  # - elsie:
-  #     render_format: png
+  - nelsie:
+      render_format: png
   # - nedoc
   - search
-  - minify:
-      minify_html: true
-      minify_js: true
-      minify_css: true
-      htmlmin_opts:
-        remove_comments: true
+#  - minify:
+#      minify_html: true
+#      minify_js: true
+#      minify_css: true
+#      htmlmin_opts:
+#        remove_comments: true

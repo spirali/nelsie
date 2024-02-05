@@ -15,6 +15,6 @@ deck = SlideDeck()
 @deck.slide()
 def hello_world(slide):
     slide.text("Hello world!")
-
-deck.render(output_pdf="slides.pdf")
+    
+deck.render("slides.pdf")  #!IGNORE
 ```
