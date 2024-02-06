@@ -41,7 +41,7 @@ class InSteps(Generic[T]):
     def key_steps(self):
         return self.in_step_values.keys()
 
-    def zip(self, other: "InSteps[S]") -> "InSteps[(S, T)]":
+    def zip(self, other: "InSteps[S]") -> "InSteps[tuple[S, T]]":
         keys = set(self.key_steps())
         keys.update(other.key_steps())
         return InSteps(
