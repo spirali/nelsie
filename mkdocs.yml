@@ -12,7 +12,10 @@ nav:
   - install.md
   - getting_started.md
   - examples.md
-
+  - api.md
+  - User guide:
+      - guide/deck.md
+      - guide/steps.md
 theme:
   name: material
   # custom_dir: docs/template
