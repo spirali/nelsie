@@ -30,7 +30,7 @@ pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<RenderingRe
     tree.convert_text(&render_cfg.resources.font_db);
 
     let result = match render_cfg.output_format {
-        OutputFormat::Pdf => RenderingResult::Tree(tree),
+        OutputFormat::Pdf => return Ok(RenderingResult::Tree(tree)),
         OutputFormat::Svg => {
             let svg = tree.to_string(&XmlOptions::default());
             RenderingResult::BytesData(svg.into_bytes())
