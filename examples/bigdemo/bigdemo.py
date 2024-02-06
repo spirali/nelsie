@@ -362,11 +362,12 @@ def shapes(slide):
         ]
     )
 
-    box = slide.box(width=700, height=150)
+    box = slide.box(width=700, height=220)
     arrow1 = Arrow(size=30)
     arrow2 = Arrow(size=30, angle=20)
     arrow3 = Arrow(size=30, inner_point=0.8)
     arrow4 = Arrow(size=30, inner_point=2.4)
+    arrow5 = Arrow(size=30, stroke_width=5)
 
     box.draw(
         [
@@ -398,6 +399,13 @@ def shapes(slide):
             )
             .move_to(0, 150)
             .line_to(700, 150),
+            Path(
+                stroke=Stroke(color="black", width=5),
+                arrow_start=arrow5,
+                arrow_end=arrow5,
+            )
+            .move_to(0, 200)
+            .line_to(700, 200),
         ]
     )
 

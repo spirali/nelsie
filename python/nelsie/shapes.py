@@ -9,32 +9,28 @@ PathValue = int | float | LayoutExpr
 @dataclass
 class Arrow:
     """
-    Represents an SVG arrow head.
-
-    Can be attached to the start or end points of lines.
-
-    Attributes
-    ----------
-    size : float
-        Size of the arrow head in pixels.
-    angle : float
-        Angle of the arrow head.
-    color: str | None
-        Color of arrow, if None color is taken from path
-    stroke_width : float | None
-        Width of the arrow head edge.
-    inner_point : float
-        Shape of the arrow head.
-        < 1.0 -> Sharper arrow.
-        = 1.0 -> Normal arrow.
-        > 1.0 -> Diamond shape arrow.
+    Represents an SVG arrow head. Can be attached to the start or end points of lines.
     """
 
     size: float = 10
+    """Size of the arrow head in pixels."""
+
     angle: float = 40
+    """Angle of the arrow head."""
+
     color: str | None = None
+    """Color of arrow, if None color is taken from path"""
+
     stroke_width: float | None = None
+    """If None then a filled arrow is drawn, if float then stroked arrow is drawn with the given stroke width"""
+
     inner_point: float | None = None
+    """ Shape of the arrow head.
+
+        * < 1.0 -> Sharper arrow.
+        * = 1.0 -> Normal arrow.
+        * > 1.0 -> Diamond shape arrow.
+    """
 
 
 class Path:
