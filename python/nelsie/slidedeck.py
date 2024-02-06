@@ -10,6 +10,13 @@ Resources = nelsie_rs.Resources
 
 
 class Slide(BoxBuilder):
+    """
+    Represents a slide in a slide deck.
+
+    It should be created via calling method `.new_slide()` on a deck via decorator `@deck.slide()`
+    """
+
+
     def __init__(
         self,
         deck: "SlideDeck",
@@ -18,6 +25,9 @@ class Slide(BoxBuilder):
         image_directory: str,
         debug_layout: str | None,
     ):
+        """
+        @private
+        """
         self.deck = deck
         self._slide_id = slide_id
         self.name = name
@@ -26,6 +36,9 @@ class Slide(BoxBuilder):
         self.root_box = Box(deck, self, [], 0, name, 0)
 
     def get_box(self):
+        """
+        @private
+        """
         return self.root_box
 
     def set_n_steps(self, value: int):
@@ -49,14 +62,24 @@ class SlideDeck:
         default_theme: str = "InspiredGitHub",
     ):
         """
-        Available syntax highlight themes:
-          * "base16-ocean.dark",
-          * "base16-eighties.dark"
-          * "base16-mocha.dark"
-          * "base16-ocean.light"
-          * "InspiredGitHub"
-          * "Solarized (dark)"
-          * "Solarized (light)"
+        A top-level class of Nelsie. It represents a set of slides.
+
+        Arguments:
+        * width - default width of a slide (could be overriden for each slide)
+        * height - default width of a slide (could be overriden for each slide)
+        * bg_color - default background color a slide (could be overriden for each slide)
+        * image_directory - default path where images are searched for (could be overriden for each slide)
+        * resource - Resource instance, if None a new instance is created
+        * default_font - Name of default font
+        * default_theme - Name of default theme for syntax highlighting:
+            Available themes:
+            * "base16-ocean.dark",
+            * "base16-eighties.dark"
+            * "base16-mocha.dark"
+            * "base16-ocean.light"
+            * "InspiredGitHub"
+            * "Solarized (dark)"
+            * "Solarized (light)"
         """
         if resources is None:
             resources = Resources()
@@ -80,13 +103,16 @@ class SlideDeck:
 
     def new_slide(
         self,
-        width: Optional[float] = None,
-        height: Optional[float] = None,
-        bg_color: Optional[str] = None,
+        width: float | None = None,
+        height: float | None = None,
+        bg_color: str | None = None,
         image_directory: str | None = None,
         name: str = "",
         debug_layout: bool | str = False,
-    ):
+    ) -> Slide:
+        """
+        Creates a new slide in the slide deck.
+        """
         if width is None:
             width = self.width
         if height is None:
@@ -101,13 +127,27 @@ class SlideDeck:
 
     def slide(
         self,
-        width: Optional[float] = None,
-        height: Optional[float] = None,
-        bg_color: Optional[str] = None,
+        width: float | None = None,
+        height: float | None = None,
+        bg_color: str | None = None,
         image_directory: str | None = None,
         name: str = "",
         debug_layout: bool | str = False,
     ):
+        """
+        Decorator for creating new slide.
+        It immediately calls the decorated function that should define content of the slide.
+        Slide is automatically added into the deck.
+
+        Example:
+        ```python
+        deck = SlideDeck()
+
+        @deck.slide()
+        def my_first_slide(slide):
+            slide.text("Hello!")
+        ```
+        """
         def helper(fn):
             slide = self.new_slide(
                 width, height, bg_color, image_directory, name, debug_layout
@@ -118,11 +158,20 @@ class SlideDeck:
 
     def render(
         self,
-        path: Optional[str | pathlib.Path],
+        path: str | pathlib.Path | None,
         output_format: Literal["pdf"] | Literal["svg"] | Literal["png"] = "pdf",
         *,
         debug: bool = False,
-    ):
+    ) -> None | list[bytes]:
+        """
+        Render slides
+
+        If format is "pdf" then a single PDF file is created. If format is "svg" or "png" then
+        `path` specifies a directory where the slides are created as an individual files.
+
+        If `path` is None then objects are not written to the file system, and they are returned as python objects
+        from the method call.
+        """
         if path:
             path = str(path)
         return self._deck.render(self.resources, path, output_format)

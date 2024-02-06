@@ -5,6 +5,23 @@ S = TypeVar("S")
 
 
 class InSteps(Generic[T]):
+    """
+    InSteps is a wrapper that allows to set a different values for each step.
+    InSteps defines values in "key" steps, in other steps the value remains until it is changed
+    another key step.
+
+    Example:
+    ```python
+    slide.box(..., bg_color=InSteps({1: "green", 4: "red"})
+    ```
+
+    Defines "green" background for steps 1, 2, 3; and "red" for step 4 and further.
+
+    InSteps can be also initialized by a list, then it defines values for first `n` steps,
+    where `n` is a length of the list. It means that `InSteps(["a", "b", "c"])` is equal to
+    `InSteps({1: "a", 2: "b", 3: "c"})`
+    """
+
     def __init__(
         self,
         values: Sequence[T] | dict[int, T],
