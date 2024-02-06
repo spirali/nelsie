@@ -76,16 +76,26 @@ class BoxConfig:
 
 class BoxBuilder:
     def get_box(self):
+        """
+        @private
+        """
         raise NotImplementedError
 
-    def set_style(self, name: str, style: TextStyle):
+    def set_style(self, name: str, style: TextStyle | InSteps[TextStyle]):
+        """
+        Set text style under given name.
+        """
         box = self.get_box()
         deck = box.deck
         deck._deck.set_style(
             deck.resources, name, style, False, box.slide._slide_id, box._box_id
         )
 
-    def update_style(self, name: str, style: TextStyle):
+    def update_style(self, name: str, style: TextStyle | InSteps[TextStyle]):
+        """
+        Load a text style and merge it with the `style` and save it back.
+        Throws an exception if a style under given name does not exist.
+        """
         box = self.get_box()
         deck = box.deck
         deck._deck.set_style(
@@ -93,6 +103,14 @@ class BoxBuilder:
         )
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
+        """
+        Get text style under given name. Style is returned for a given `step`.
+        Throws an exception if a style under given name does not exist.
+
+        This function returns text style even when InSteps was used to set the style,
+        as it returns text style for a given step.
+        """
+
         box = self.get_box()
         return _data_to_text_style(
             box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id)
@@ -100,7 +118,7 @@ class BoxBuilder:
 
     def image(self, path: str, enable_steps=True, shift_steps=0, **box_args):
         """
-        Load image; supported formats: svg, png, jpeg, gif, ora
+        Create a box with an image. Supported formats: SVG, PNG, JPEG, GIF, ORA
         """
         assert shift_steps >= 0
         slide = self.get_box().slide
@@ -126,6 +144,9 @@ class BoxBuilder:
         strip=True,
         **box_args,
     ):
+        """
+        Create a box with a text.
+        """
         box_args.setdefault("name", "text")
         return self._text_box(
             text,
@@ -154,6 +175,9 @@ class BoxBuilder:
         strip=True,
         **box_args,
     ):
+        """
+        Create a box with a syntax highlighted text.
+        """
         box_args.setdefault("name", "code")
         if theme is None:
             theme = self.get_box().deck.default_theme
@@ -198,6 +222,10 @@ class BoxBuilder:
         return self.box(_content=text_content, **box_args)
 
     def draw(self, paths: Path | list[Path] | InSteps[Path | list[Path]]):
+        """
+        Draw one or paths in the slide.
+        """
+
         if isinstance(paths, Path):
             paths = [paths]
         elif isinstance(paths, InSteps):
@@ -241,6 +269,9 @@ class BoxBuilder:
         replace_steps: dict[int, int] | None = None,
         _content: NodeContent | InSteps[NodeContent] = None,
     ):
+        """
+        Create a new child box
+        """
         parent_box = self.get_box()
         if debug_layout is None:
             debug_layout = parent_box.slide.debug_layout
@@ -292,6 +323,9 @@ class BoxBuilder:
         return Box(deck, parent_box.slide, box_id, node_id, name, z_level)
 
     def overlay(self, **box_args):
+        """
+        Create a new box that spans over the box
+        """
         box_args.setdefault("x", 0)
         box_args.setdefault("y", 0)
         box_args.setdefault("width", "100%")
@@ -299,6 +333,9 @@ class BoxBuilder:
         return self.box(**box_args)
 
     def line_box(self, line_idx: int, **box_args):
+        """
+        Creates a new box over a text line in the box
+        """
         return self.box(
             x=self.line_x(line_idx),
             y=self.line_y(line_idx),
@@ -308,6 +345,10 @@ class BoxBuilder:
         )
 
     def text_anchor_box(self, anchor_id: int, **box_args):
+        """
+        Creates a new box over a text anchor in the box
+        """
+
         return self.box(
             x=self.text_anchor_x(anchor_id),
             y=self.text_anchor_y(anchor_id),
@@ -316,74 +357,118 @@ class BoxBuilder:
             **box_args,
         )
 
-    def x(self, width_fraction: float | int | None = None):
+    def x(self, width_fraction: float | int | None = None) -> LayoutExpr:
+        """
+        Get an expression with X coordinate relative to the box.
+        """
+
         node_id = self.get_box().node_id
         expr = LayoutExpr.x(node_id)
         if width_fraction is None:
             return expr
         return expr + LayoutExpr.width(node_id, width_fraction)
 
-    def y(self, height_fraction: float | int | None = None):
+    def y(self, height_fraction: float | int | None = None) -> LayoutExpr:
+        """
+        Get an expression with Y coordinate relative to the box.
+        """
         node_id = self.get_box().node_id
         expr = LayoutExpr.y(node_id)
         if height_fraction is None:
             return expr
         return expr + LayoutExpr.height(node_id, height_fraction)
 
-    def width(self, fraction: float | int = 1.0):
+    def width(self, fraction: float | int = 1.0) -> LayoutExpr:
+        """
+        Get an expression with width of the parent box.
+        """
         node_id = self.get_box().node_id
         return LayoutExpr.width(node_id, fraction)
 
-    def height(self, fraction: float | int = 1.0):
+    def height(self, fraction: float | int = 1.0) -> LayoutExpr:
+        """
+        Get an expression with height of the parent box.
+        """
         node_id = self.get_box().node_id
         return LayoutExpr.height(node_id, fraction)
 
-    def line_x(self, line_idx: int, width_fraction: float | int | None = None):
+    def line_x(self, line_idx: int, width_fraction: float | int | None = None) -> LayoutExpr:
+        """
+        Get an expression with X coordinate of a given line of text in the box.
+        """
         node_id = self.get_box().node_id
         expr = LayoutExpr.line_x(node_id, line_idx)
         if width_fraction is None:
             return expr
         return expr + LayoutExpr.line_width(node_id, line_idx, width_fraction)
 
-    def line_y(self, line_idx: int, height_fraction: float | int | None = None):
+    def line_y(self, line_idx: int, height_fraction: float | int | None = None) -> LayoutExpr:
+        """
+        Get an expression with Y coordinate of a given line of text in the box.
+        """
         node_id = self.get_box().node_id
         expr = LayoutExpr.line_y(node_id, line_idx)
         if height_fraction is None:
             return expr
         return expr + LayoutExpr.line_height(node_id, line_idx, height_fraction)
 
-    def line_width(self, line_idx: int, fraction: float | int = 1.0):
+    def line_width(self, line_idx: int, fraction: float | int = 1.0) -> LayoutExpr:
+        """
+        Get an expression with a width of a given line of text in the box.
+        """
         node_id = self.get_box().node_id
         return LayoutExpr.line_width(node_id, line_idx, fraction)
 
-    def line_height(self, line_idx: int, fraction: float | int = 1.0):
+    def line_height(self, line_idx: int, fraction: float | int = 1.0) -> LayoutExpr:
+        """
+        Get an expression with a height of a given line of text in the box.
+        """
         node_id = self.get_box().node_id
         return LayoutExpr.line_height(node_id, line_idx, fraction)
 
-    def text_anchor_x(self, anchor_id: int, width_fraction: float | int | None = None):
+    def text_anchor_x(self, anchor_id: int, width_fraction: float | int | None = None) -> LayoutExpr:
+        """
+        Get an expression with X coordinate of a given text anchor in the box.
+        """
         node_id = self.get_box().node_id
         expr = LayoutExpr.text_anchor_x(node_id, anchor_id)
         if width_fraction is None:
             return expr
         return expr + LayoutExpr.text_anchor_width(node_id, anchor_id, width_fraction)
 
-    def text_anchor_y(self, anchor_id: int, height_fraction: float | int | None = None):
+    def text_anchor_y(self, anchor_id: int, height_fraction: float | int | None = None) -> LayoutExpr:
+        """
+        Get an expression with Y coordinate of a given text anchor in the box.
+        """
         node_id = self.get_box().node_id
         expr = LayoutExpr.text_anchor_y(node_id, anchor_id)
         if height_fraction is None:
             return expr
         return expr + LayoutExpr.text_anchor_height(node_id, anchor_id, height_fraction)
 
-    def text_anchor_width(self, anchor_id: int, fraction: float | int = 1.0):
+    def text_anchor_width(self, anchor_id: int, fraction: float | int = 1.0) -> LayoutExpr:
+        """
+        Get an expression with a height of a given text anchor in the box.
+        """
         node_id = self.get_box().node_id
         return LayoutExpr.text_anchor_width(node_id, anchor_id, fraction)
 
-    def text_anchor_height(self, anchor_id: int, fraction: float | int = 1.0):
+    def text_anchor_height(self, anchor_id: int, fraction: float | int = 1.0) -> LayoutExpr:
+        """
+        Get an expression with a height of a given text anchor in the box.
+        """
         node_id = self.get_box().node_id
         return LayoutExpr.text_anchor_height(node_id, anchor_id, fraction)
 
 
 class Box(BoxBuilder):
+    """
+    The box in slide layout.
+
+    It should be created via calling method `.box()` on a slide or another box.
+    Note that interesting methods came from Box's parent: BoxBuilder.
+    """
+
     def __init__(
         self,
         deck,
@@ -393,6 +478,9 @@ class Box(BoxBuilder):
         name: str,
         z_level: int,
     ):
+        """
+        @private
+        """
         self.deck = deck
         self.slide = slide
         self._box_id = box_id
@@ -401,4 +489,7 @@ class Box(BoxBuilder):
         self.z_level = z_level
 
     def get_box(self):
+        """
+        @private
+        """
         return self
