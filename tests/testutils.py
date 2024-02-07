@@ -36,9 +36,7 @@ def compare_images(new_dir, old_dir, n_slides, threshold):
         raise Exception(f"Checks {old_dir} does not exists")
     old_names.sort()
     if new_names != old_names:
-        raise Exception(
-            f"Produced files do not match with check files; new = {new_names}, old = {old_names}"
-        )
+        raise Exception(f"Produced files do not match with check files; new = {new_names}, old = {old_names}")
     for name in new_names:
         new_img = Image.open(os.path.join(new_dir, name))
         old_img = Image.open(os.path.join(old_dir, name))
@@ -49,9 +47,7 @@ def compare_images(new_dir, old_dir, n_slides, threshold):
             combined = concat_images([new_img, old_img, difference])
             path = os.path.abspath(f"combined-{name}.png")
             combined.save(path)
-            raise Exception(
-                f"Slide {os.path.join(new_dir, name)} difference is {diff} (limit is {threshold})"
-            )
+            raise Exception(f"Slide {os.path.join(new_dir, name)} difference is {diff} (limit is {threshold})")
 
 
 def check(n_slides: int = 1, error=None, error_match: str | None = None):

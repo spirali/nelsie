@@ -93,7 +93,6 @@ def render_slide(
     debug_boxes: bool,
     render_format: str,
 ) -> str:
-
     code = [line for line in code if "#!IGNORE" not in line]
     code = "\n".join(trim_indent(code))
     template = f"""
@@ -127,13 +126,8 @@ from nelsie import SlideDeck
 
     update_js = f"document.getElementById('{uid}_current').textContent = c_{uid}; document.getElementById('{uid}_img').src = data_{uid}[c_{uid} - 1]"
     on_click1 = f"c_{uid} -= 1; if (c_{uid} < 1) c_{uid} = 1; {update_js}"
-    on_click2 = (
-        f"c_{uid} += 1; if (c_{uid} > {n_pages}) c_{uid} = {n_pages}; {update_js}"
-    )
-    data_array = [
-        f'"data:image/png;base64,{base64.b64encode(data).decode()}"'
-        for _, _, data in result
-    ]
+    on_click2 = f"c_{uid} += 1; if (c_{uid} > {n_pages}) c_{uid} = {n_pages}; {update_js}"
+    data_array = [f'"data:image/png;base64,{base64.b64encode(data).decode()}"' for _, _, data in result]
     inital_page = 1
 
     if n_pages > 1:

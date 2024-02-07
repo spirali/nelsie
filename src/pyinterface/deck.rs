@@ -14,8 +14,6 @@ use std::str::FromStr;
 use pyo3::types::{PyBytes, PyNone};
 use std::sync::Arc;
 
-
-
 #[pyclass]
 pub(crate) struct Deck {
     deck: SlideDeck,
