@@ -58,6 +58,7 @@ class SlideDeck:
         image_directory: str | None = None,
         resources: Resources | None = None,
         default_font: str | None = None,
+        default_monospace_font: str | None = None,
         default_theme: str = "InspiredGitHub",
     ):
         """
@@ -89,7 +90,7 @@ class SlideDeck:
         self.image_directory = image_directory
         self.resources = resources
         self.default_theme = default_theme
-        self._deck = nelsie_rs.Deck(resources, default_font)
+        self._deck = nelsie_rs.Deck(resources, default_font, default_monospace_font)
 
     def set_style(self, name: str, style: TextStyle):
         self._deck.set_style(self.resources, name, style, False, None, None)

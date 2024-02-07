@@ -14,10 +14,21 @@ sys.path.insert(0, os.path.join(ROOT_DIR, "nelsie-api"))
 
 from nelsie import Resources, SlideDeck  # noqa
 
-# To speedup tests, load resources just once
-resources = Resources()
+
+@pytest.fixture(scope="session")
+def resources():
+    resources = Resources()
+
+    # Let us fix the fonts, so we have the same results across all OSs
+    resources.load_fonts_dir(os.path.join(ASSETS_DIR, "fonts"))
+    return resources
 
 
 @pytest.fixture()
-def deck():
-    return SlideDeck(image_directory=ASSETS_DIR, resources=resources)
+def deck(resources):
+    return SlideDeck(
+        image_directory=ASSETS_DIR,
+        resources=resources,
+        default_font="DejaVu Sans",
+        default_monospace_font="DejaVu Sans Mono",
+    )

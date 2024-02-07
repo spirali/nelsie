@@ -1,5 +1,4 @@
-pytest
-Pillow
-ruff
 mkdocs-material
 mkdocs-minify-plugin
+docs/mkdocs-nelsie-plugin
+pdoc
