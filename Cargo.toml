@@ -9,7 +9,7 @@ name = "nelsie"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.20", features = ["abi3-py38"] }
+pyo3 = { version = "0.20", features = ["abi3-py39"] }
 taffy = "0.3.17"
 resvg = "0.36.0"
 usvg = "0.36.0" # Must be synchronized with resvg
