@@ -1,6 +1,6 @@
 use crate::model::{
-    InTextAnchorId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node,
-    NodeContent, NodeId, Resources, Slide, Step,
+    InTextAnchorId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId,
+    Resources, Slide, Step,
 };
 use crate::render::text::get_text_layout;
 use std::collections::{BTreeMap, HashMap};

@@ -1,6 +1,5 @@
+pytest
 Pillow
-black
-isort
-flake8
+ruff
 mkdocs-material
 mkdocs-minify-plugin

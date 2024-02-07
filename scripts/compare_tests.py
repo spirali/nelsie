@@ -32,9 +32,7 @@ class FailedTest:
 
 
 def collect_failed_tests() -> list[FailedTest]:
-    paths = Path(f"/tmp/pytest-of-{os.getlogin()}/pytest-current/").rglob(
-        "*current/check.txt"
-    )
+    paths = Path(f"/tmp/pytest-of-{os.getlogin()}/pytest-current/").rglob("*current/check.txt")
     fails = []
     for path in paths:
         with open(path, "r") as f:
@@ -48,9 +46,7 @@ def collect_failed_tests() -> list[FailedTest]:
         files = sorted(files)
         diffs = []
         for file in files:
-            diff = image_diff(
-                os.path.join(test_dir, file), os.path.join(check_dir, file)
-            )
+            diff = image_diff(os.path.join(test_dir, file), os.path.join(check_dir, file))
             diffs.append(diff)
         if max(diffs) > LIMIT:
             fails.append(
@@ -81,9 +77,7 @@ def report(failed_tests):
         for failed_test in failed_tests:
             f.write(f"<h2>{failed_test.name}</h2>")
             f.write("<table>")
-            f.write(
-                "<tr><td>Name</td><td>Reference</td><td>Test</td><td>Diff</td></tr>"
-            )
+            f.write("<tr><td>Name</td><td>Reference</td><td>Test</td><td>Diff</td></tr>")
             for file, df in zip(failed_test.files, failed_test.diffs):
                 f.write(f"<tr><td>{file}</td>")
                 f.write(

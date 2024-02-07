@@ -19,18 +19,10 @@ def test_layout_directions(deck):
         box.box(width=200, height=200, bg_color="green")
         box.box(width=300, height=300, bg_color="blue")
 
-    make_slide(
-        deck.new_slide().box(width="100%", height="100%", row=False, reverse=False)
-    )
-    make_slide(
-        deck.new_slide().box(width="100%", height="100%", row=False, reverse=True)
-    )
-    make_slide(
-        deck.new_slide().box(width="100%", height="100%", row=True, reverse=False)
-    )
-    make_slide(
-        deck.new_slide().box(width="100%", height="100%", row=True, reverse=True)
-    )
+    make_slide(deck.new_slide().box(width="100%", height="100%", row=False, reverse=False))
+    make_slide(deck.new_slide().box(width="100%", height="100%", row=False, reverse=True))
+    make_slide(deck.new_slide().box(width="100%", height="100%", row=True, reverse=False))
+    make_slide(deck.new_slide().box(width="100%", height="100%", row=True, reverse=True))
 
 
 @check(n_slides=5)
@@ -112,9 +104,7 @@ def test_layout_flex_grow(deck):
 @check()
 def test_layout_flex_wrap(deck):
     slide = deck.new_slide(width=150, height=150)
-    b = slide.box(
-        row=True, height="100%", width="100%", bg_color="gray", flex_wrap=FlexWrap.Wrap
-    )
+    b = slide.box(row=True, height="100%", width="100%", bg_color="gray", flex_wrap=FlexWrap.Wrap)
     b.box(width=40, height=30, bg_color="orange")
     b.box(width=40, height=30, bg_color="blue")
     b.box(width=40, height=30, bg_color="orange")
@@ -126,17 +116,13 @@ def test_layout_flex_wrap(deck):
 @check(n_slides=4)
 def test_layout_justify_content(deck):
     slide = deck.new_slide(width=50, height=150)
-    b = slide.box(
-        height="100%", width="100%", bg_color="gray", justify_content=Align.Start
-    )
+    b = slide.box(height="100%", width="100%", bg_color="gray", justify_content=Align.Start)
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
     b.box(width=20, height=30, bg_color="blue")
 
     slide = deck.new_slide(width=50, height=150)
-    b = slide.box(
-        height="100%", width="100%", bg_color="gray", justify_content=Align.End
-    )
+    b = slide.box(height="100%", width="100%", bg_color="gray", justify_content=Align.End)
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
     b.box(width=20, height=30, bg_color="blue")

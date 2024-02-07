@@ -1,5 +1,5 @@
 import pathlib
-from typing import Optional, Literal
+from typing import Literal
 
 from . import nelsie as nelsie_rs
 from .basictypes import parse_debug_layout
@@ -15,7 +15,6 @@ class Slide(BoxBuilder):
 
     It should be created via calling method `.new_slide()` on a deck via decorator `@deck.slide()`
     """
-
 
     def __init__(
         self,
@@ -148,10 +147,9 @@ class SlideDeck:
             slide.text("Hello!")
         ```
         """
+
         def helper(fn):
-            slide = self.new_slide(
-                width, height, bg_color, image_directory, name, debug_layout
-            )
+            slide = self.new_slide(width, height, bg_color, image_directory, name, debug_layout)
             return fn(slide)
 
         return helper

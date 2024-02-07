@@ -43,10 +43,7 @@ class TextStyle:
     def merge(self, other: "TextStyle") -> "TextStyle":
         assert isinstance(other, TextStyle)
         return TextStyle(
-            *[
-                b if b is not None else a
-                for (a, b) in zip(unpack_dataclass(self), unpack_dataclass(other))
-            ]
+            *[b if b is not None else a for (a, b) in zip(unpack_dataclass(self), unpack_dataclass(other))]
         )
 
 
