@@ -14,7 +14,7 @@ nav:
   - examples.md
   - api.md
   - User guide:
-      - guide/deck.md
+      - guide/basics.md
       - guide/steps.md
 theme:
   name: material
@@ -35,6 +35,9 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
   - pymdownx.superfences
 
 

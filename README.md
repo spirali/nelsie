@@ -31,19 +31,3 @@ deck.render("slides.pdf")
 ```commandline
 $ pip install nelsie
 ```
-
-# Installation from sources
-
-* Install Rust (https://rustup.rs/)
-* Install [Maturin](https://www.maturin.rs/) (`pip install maturin`)
-* Run in Nelsie source code directory:
-  ```commandline
-  python3 -m venv venv
-  source venv/bin/activate
-  maturin build --release
-  ```
-
-
-# History
-
-Nelsie is a complete rewrite of the previous project [Elsie](https://github.com/spirali/elsie). Nelsie solves the biggest pain of Elsie: Dependancy on Inkscape as a renderer engine (It makes difficult to install Elsie on some systems; performance issues and problems when Inkscape changes its programming API). This is solved by a rendering engine shipped within the Nelsie package. Nelsie also offers many improvements in API, namely introduction of `InSteps` and the flexbox layout engine.

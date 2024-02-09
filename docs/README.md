@@ -1,3 +1,7 @@
+<p align="center">
+<img src='imgs/nelsie-logo.jpg' width='400'>
+</p>
+
 # Nelsie
 
 Nelsie allows you to create slides programmatically using Python. It is a library
@@ -10,3 +14,10 @@ makes the process of creating slides smoother and more reliable.
 
 Nelsie focuses on controlling what the audience sees, so you can continuously reveal fragments of the slide,
 or simply manage which parts are highlighted.
+
+
+## History
+
+Nelsie is a complete rewrite of the previous project [Elsie](https://github.com/spirali/elsie). Nelsie solves the biggest pain of Elsie: Dependancy on Inkscape as a renderer engine (It makes difficult to install Elsie on some systems; performance issues and problems when Inkscape changes its programming API). This is solved by a rendering engine shipped within the Nelsie package. Nelsie also offers many improvements in API, namely introduction of `InSteps` and the flexbox layout engine.
+
+Nelsie is a complete rewrite of the previous project [Elsie](https://github.com/spirali/elsie). Nelsie solves the biggest problems of Elsie: Dependency on Inkscape as a rendering engine (This makes Elsie difficult to install on some systems; performance issues and problems when Inkscape changes its programming API). This is solved by a own rendering engine (based on [resvg](https://github.com/RazrFalcon/resvg)) included in the Nelsie package. Nelsie also offers many API improvements, namely the introduction of InSteps and the Flexbox layout engine.
