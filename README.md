@@ -8,7 +8,7 @@ Nelsie is a framework for **creating slides programmatically** using Python API 
 
 **Quick links**
 
-- Documentation: TODO
+- [Documentation](https://spirali.github.io/nelsie/) [status: in progress]
 - Demonstration of features ([PDF](https://spirali.github.io/nelsie/pdf/bigdemo.pdf), [source code](examples/bigdemo/bigdemo.py))
 
 

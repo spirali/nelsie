@@ -20,6 +20,7 @@ nav:
   - Reference manual:
       - reference/output.md
       - reference/debug_layout.md
+      - reference/resources.md
 
 theme:
   name: material
