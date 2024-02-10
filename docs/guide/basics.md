@@ -1,6 +1,7 @@
 
 # Basics
 
+
 ## Slide deck
 
 A presentation (a set of slides) is represented in Nelsie as an instance of SlideDeck class.
@@ -44,3 +45,12 @@ def first_slide(slide):
 The decorator immediately calls the wrapped function that sets the content of the slide. The main function of the decorator is to break slides into individual functions for code clarity.
 
 
+## Rendering the slide deck
+
+Once all the slides have been created, you can render them into PDF with a `.render()` call on the slide deck.
+
+```python
+deck.render("slides.pdf")
+```
+
+You can also get SVG or PNG images from the slides, see the [Output formats section](output.md) for more information.

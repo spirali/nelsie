@@ -14,7 +14,7 @@ a library function for futher slides on the page.
 
 Example:
 ```nelsie,width=300,height=300
-slide.box().text("Hello world")
+slide.text("Hello world")
 ```
 """
 
@@ -97,21 +97,9 @@ def render_slide(
     code = "\n".join(trim_indent(code))
     template = f"""
 from nelsie import SlideDeck
-# import elsie
-# from elsie.boxtree.box import Box
-# from elsie.render.jupyter import render_slide_html as elsie_render_slide
-
-# {ctx.get_lib_code()}
-
-# slides = elsie.SlideDeck(width={width}, height={height}, name_policy="ignore")
-# slide = slides.new_slide()
-
+deck = SlideDeck()
 {code}
-
-# result = elsie_render_slide(slides._slides[-1], format="{render_format}")
 """.strip()
-
-    print(template)
 
     locals = {}
     code_object = compile(template, "nelsie_render.py", "exec")
@@ -148,7 +136,7 @@ from nelsie import SlideDeck
         """.strip()
     else:
         return f"""
-        <div><img style="border: 1px solid black" width="300" src={data_array[0]}/></div>
+        <div style="padding-bottom: 1.5em"><img style="border: 1px solid black" width="300" src={data_array[0]}/></div>
         """.strip()
 
 

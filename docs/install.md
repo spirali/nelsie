@@ -1,12 +1,16 @@
 # Installation
 
+
+## Installation via `pip` (recommended)
+
 ```commandline
 $ pip install nelsie
 ```
 
 Nelsie supports Linux, Windows, and MacOS X on all major platforms.
 
-# Installation from sources
+
+## Installation from sources
 
 * Install Rust (https://rustup.rs/)
 * Install [Maturin](https://www.maturin.rs/) (`pip install maturin`)

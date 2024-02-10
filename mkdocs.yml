@@ -15,7 +15,12 @@ nav:
   - api.md
   - User guide:
       - guide/basics.md
+      - guide/layout.md
       - guide/steps.md
+  - Reference manual:
+      - reference/output.md
+      - reference/debug_layout.md
+
 theme:
   name: material
   # custom_dir: docs/template
