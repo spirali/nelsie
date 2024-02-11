@@ -208,3 +208,14 @@ def test_expr_x_y_weight_height(deck):
         height=box.height(0.5),
         bg_color="blue",
     )
+
+
+@check(n_slides=2)
+def test_m_xy_p_xy(deck):
+    slide = deck.new_slide(100, 100)
+    box = slide.box(bg_color="green")
+    box.box(width=30, height=30, m_x=10, m_y=20, bg_color="red")
+
+    slide = deck.new_slide(100, 100)
+    box = slide.box(bg_color="green", p_x=20, p_y=10)
+    box.box(width=30, height=30, bg_color="red")

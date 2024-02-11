@@ -203,14 +203,18 @@ class BoxBuilder:
         width: Size | InSteps[Size] = None,
         height: Size | InSteps[Size] = None,
         border_radius: float | InSteps[float] = 0,
-        p_left: Length | InSteps[Length] = 0,
-        p_right: Length | InSteps[Length] = 0,
-        p_top: Length | InSteps[Length] = 0,
-        p_bottom: Length | InSteps[Length] = 0,
-        m_left: LengthAuto | InSteps[LengthAuto] = 0,
-        m_right: LengthAuto | InSteps[LengthAuto] = 0,
-        m_top: LengthAuto | InSteps[LengthAuto] = 0,
-        m_bottom: LengthAuto | InSteps[LengthAuto] = 0,
+        p_left: Length | InSteps[Length] | None = None,
+        p_right: Length | InSteps[Length] | None = None,
+        p_top: Length | InSteps[Length] | None = None,
+        p_bottom: Length | InSteps[Length] | None = None,
+        p_x: Length | InSteps[Length] = 0,
+        p_y: Length | InSteps[Length] = 0,
+        m_left: LengthAuto | InSteps[LengthAuto] | None = None,
+        m_right: LengthAuto | InSteps[LengthAuto] | None = None,
+        m_top: LengthAuto | InSteps[LengthAuto] | None = None,
+        m_bottom: LengthAuto | InSteps[LengthAuto] | None = None,
+        m_x: LengthAuto | InSteps[LengthAuto] = 0,
+        m_y: LengthAuto | InSteps[LengthAuto] = 0,
         row: bool | InSteps[bool] = False,
         reverse: bool | InSteps[bool] = False,
         flex_wrap: FlexWrap | InSteps[FlexWrap] = FlexWrap.NoWrap,
@@ -238,6 +242,25 @@ class BoxBuilder:
             debug_layout = parse_debug_layout(debug_layout)
         if z_level is None:
             z_level = parent_box.z_level
+
+        if p_left is None:
+            p_left = p_x
+        if p_right is None:
+            p_right = p_x
+        if p_bottom is None:
+            p_bottom = p_y
+        if p_top is None:
+            p_top = p_y
+
+        if m_left is None:
+            m_left = m_x
+        if m_right is None:
+            m_right = m_x
+        if m_bottom is None:
+            m_bottom = m_y
+        if m_top is None:
+            m_top = m_y
+
         deck = parent_box.deck
         box_id, node_id = deck._deck.new_box(
             deck.resources,
