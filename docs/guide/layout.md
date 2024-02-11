@@ -2,13 +2,14 @@
 
 Nelsie uses a layout system that is based on the Flexbox system and adds some extra features.
 
-The central element of the Nelsie layout system is the _Box_.
-Each Nelsie slide contains a layout hierarchy tree of boxes. Boxes do not directly produce visual output, but they dictate how their children are laid out on a slide.
+The central element of the Nelsie layout system is the _Box_. A box is a rectangular area on a slide that has a position and size.
+A box can contain other boxes or content (a text or an image).
+Each Nelsie slide contains a hierarchical tree of boxes.
+Boxes usually do not produce visual output directly, but they dictate how their children are arranged on a slide.
 
+## Creating a box
 
-# Creating a box
-
-A new box is created by calling the `.box()` method on an existing box or a slide. This will return a new box that will be a child of the element on which you call the box method. 
+A new box is created by calling the `.box()` method on an existing box or a slide. This will return a new box that will be a child of the element on which you call the box method.
 
 This is a s minimal example where we create a box inside a slide:
 
@@ -33,7 +34,9 @@ def three_boxes(slide):
     slide.box(width=600, height=200, bg_color="blue")
 ```
 
-# Debugging layout
+The full reference on `.box()` parameters is in the section [Box](../reference/box.md)
+
+## Debugging layout
 
 Another way how to visualize boxes is to set `debug_layout` to `True` in the slide configuration: 
 
@@ -48,7 +51,7 @@ def debug_boxes(slide):
 For more configuration for debugging layout, see [Debugging layout](../reference/debug_layout.md).
 
 
-# Box main axis
+## Box main axis
 
 Boxes can have either be vertical or horizontal main axis:
 
@@ -67,3 +70,171 @@ def three_boxes(slide):
     my_box.box(width=200, height=200, bg_color="green")
     my_box.box(width=200, height=200, bg_color="blue")
 ```
+
+!!! note "A box in a box"
+    
+    Box can contain other boxes. A box within the box can be created by calling the `.box()` method
+    on the parent box. In this example, the slide's root box contains `my_box` and `my_box` contains three
+    other boxes.
+
+
+## Box size
+
+Each box has a width and a height. By default, the box tries to take up as little space as possible. It will
+wraps its content tightly. If there is no content, the box has zero size.
+This behaviour can be configured by setting the `width`, `height`, `flex-grow` and `flex-shrink` parameters.
+
+### Width and Height
+
+Weight/height parameters:
+
+* `None` - (default) Automatic size. Minimum size around the content if `flex-grow` / `flex-shrink` is not set.
+* `int` or `float` or `str` containing digits -- A fixed size given in pixels (example values: `20.5`, or `"1.5"`)
+* `str` in format `"XX%"` where `XX` is an integer -- A relative size to the parent box, in percent (example: `"50%"`)
+* `LayoutExpr` - A fixed size defined by a [layout expression](#layout-expressions).
+
+
+### Flex grow
+
+The `flex_grow` parameter takes a `float` value. The default is `0`. This attribute specifies how much of the remaining space of its parent box should be allocated to this box. 
+
+The remaining space is the size of the box minus the size of all its children. If multiple sibling boxes have positive `flex_grow' values, it is distributed according to the ratio defined by their values.
+
+This property is equivalent to the CSS property `flex-grow'.
+
+```nelsie
+@deck.slide()
+def flex_grow_demo(slide):
+    slide.box(width=200, height=100, bg_color="red")
+    slide.box(width=200, flex_grow=1, bg_color="green")
+    slide.box(width=200, height=200, bg_color="blue")
+```
+
+## Padding & Margin
+
+Padding (inner space) and margin (outer space) can be set via `p_left`, `p_right`, `p_top`, and `p_bottom` for setting padding and `m_left`, `m_right`, `m_top`, and `m_bottom` for setting a margin. 
+
+```nelsie
+@deck.slide()
+def flex_grow_demo(slide):
+    my_box = slide.box(p_top=100, p_left=50, bg_color="red")
+    my_box.box(width=200, height=200, bg_color="green")
+```
+
+There are also the following parameters for setting more padding/margin parameters at once:
+
+* `p_x` that sets `p_left` and `p_right`
+* `p_y` that sets `p_top` and `p_bottom`
+* `m_x` that sets `m_left` and `m_right`
+* `m_y` that sets `m_top` and `m_bottom`
+
+
+## Araning box children
+
+Nelsie provides a [flexbox layout system](https://css-tricks.com/snippets/css/a-guide-to-flexbox/).
+See [Flexbox froggy](https://flexboxfroggy.com/) for a nice tutorial.
+
+Nelsie supports from flexbox: `justify_content`, `align_items`, `align_self`, `align_items`, `align_self`, `justify_self`, `align_content`, `justify_content` and `gap`.
+
+The default configuration is `"center"` for configurations `justify_content` and `align_items`, i.e. items are put in the center on both axes.
+
+
+### Example for `justify_content`
+
+```nelsie
+@deck.slide()
+def justify_content_start(slide):
+    b = slide.box(height="100%", justify_content="start")
+    b.box(width=200, height=150, bg_color="red")
+    b.box(width=200, height=150, bg_color="green")
+    b.box(width=200, height=150, bg_color="blue")
+
+
+@deck.slide()
+def justify_content_end(slide):
+    b = slide.box(height="100%", justify_content="end")
+    b.box(width=200, height=150, bg_color="red")
+    b.box(width=200, height=150, bg_color="green")
+    b.box(width=200, height=150, bg_color="blue")
+
+
+@deck.slide()
+def justify_content_end(slide):
+    b = slide.box(height="100%", justify_content="space-evenly")
+    b.box(width=200, height=150, bg_color="red")
+    b.box(width=200, height=150, bg_color="green")
+    b.box(width=200, height=150, bg_color="blue")
+
+```
+
+## Fixed positioning of a box
+
+You can set parameters `x` and `y` to set a fix position of the box independantly on the layout engine.
+
+* `None` - (default) Coordianes are set by the layout engine.
+* `int` or `float` or `str` containing digits -- A fixed position given relative to the parent box in pixels (example values: `20.5`, or `"1.5"`)
+* `str` in format `"XX%"` where `XX` is an integer -- A fixed position relative to the parent box, in percent (example value: `"50%"` means that `x` (resp. `y`) is set to the 50% of width (resp. height) of the parent box)
+* `LayoutExpr` - A fixed position defined by a [layout expression](#layout-expressions). 
+
+
+## Layout expressions
+
+Sometimes we need a position relative to a box that is not the direct parent. 
+For this reason, there are "layout expressions" that serve as placeholders for the
+that can be used even if the layout is not yet finished.
+Layout expressions for boxes can be created by calling `.x()`, `.y()`, `.width()`, `.height()` on a box.
+
+Example:
+
+```nelsie
+@deck.slide()
+def layout_expression_demo(slide):
+    box1 = slide.box(width=300, height=100, bg_color="red")
+    box2 = slide.box(width=150, height=200, bg_color="green")
+    
+    # Create a new box relative to the box1 x-position and box2 y-position
+    slide.box(x=box1.x(), y=box2.y(), width=50, height=50, bg_color="blue")
+```
+
+When the layout is created, you cannot get the value of expression as the whole layout is not constructed yet;
+however you can make a simple mathematical operations on expressions. Nelsie remebers them and applies them when the final value is computed.
+
+```nelsie
+@deck.slide()
+def layout_expression_demo(slide):
+    box1 = slide.box(width=300, height=100, bg_color="red")
+    box2 = slide.box(width=150, height=200, bg_color="green")
+    
+    # Create a new box relative to the box1 x-position - 50 and box2 y-position + 100
+    slide.box(x=box1.x() - 75, y=box2.y() + 100,
+              width=50, height=50, bg_color="blue")
+```
+
+All of these methods take an optional `float' parameter, which sets the position or size
+with respect to the fraction of the box size in the given dimension, e.g. `.x(0.5)` means the center of the box on the `X` axis. More precisely, it is defined as follows:
+
+* `.x(v)` = `.x()` + v * `.width()`
+* `.y(v)` = `.y()` + v * `.width()`
+* `.width(v)` = v * `.width()`
+* `.width(v)` = h * `.width()`
+
+Example:
+
+```nelsie
+@deck.slide()
+def layout_expression_demo(slide):
+    box1 = slide.box(width=300, height=400, bg_color="red")
+
+    slide.box(x=box1.x(0.5), y=box1.y(0.25), 
+              width=box1.width(0.5), height=box1.height(0.5),
+              bg_color="green")
+```    
+
+There are more layout expressions then position and size of a box, see XXXX.
+
+## Method `.overlay()`
+
+There is a `.overlay()` method that is a shortcut for `.box(x=0, y=0, width="100%", height="100%")`;
+it creates a box that spans over the whole parent box.
+
+

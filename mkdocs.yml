@@ -16,11 +16,14 @@ nav:
   - User guide:
       - guide/basics.md
       - guide/layout.md
+      - guide/text.md
       - guide/steps.md
   - Reference manual:
       - reference/output.md
+      - reference/box.md
       - reference/debug_layout.md
       - reference/resources.md
+      - reference/layoutexpr.md
 
 theme:
   name: material
@@ -50,11 +53,11 @@ markdown_extensions:
 plugins:
   - nelsie:
       render_format: png
-  # - nedoc
   - search
-#  - minify:
-#      minify_html: true
-#      minify_js: true
-#      minify_css: true
-#      htmlmin_opts:
-#        remove_comments: true
+  - autorefs
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true

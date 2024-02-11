@@ -1,4 +1,5 @@
 mkdocs-material
 mkdocs-minify-plugin
+mkdocs-autorefs
 docs/mkdocs-nelsie-plugin
 pdoc

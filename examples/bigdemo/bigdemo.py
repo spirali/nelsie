@@ -4,7 +4,6 @@ from nelsie import (
     SlideDeck,
     TextStyle,
     Resources,
-    TextAlign,
     Stroke,
     InSteps,
 )
