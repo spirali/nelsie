@@ -248,6 +248,7 @@ fn show_to_bool_steps(show: Show, n_steps: &mut Step) -> PyResult<StepValue<bool
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn make_node(
     new_node_id: NodeId,
     nc_env: &mut NodeCreationEnv,

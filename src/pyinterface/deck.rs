@@ -89,6 +89,7 @@ impl Deck {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn new_box(
         &mut self,
         resources: &mut Resources,
