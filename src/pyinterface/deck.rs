@@ -2,15 +2,17 @@ use crate::common::Step;
 use crate::model::{Color, Drawing, Node, NodeChild, Path, Slide, SlideDeck, StepValue};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use crate::pyinterface::path::PyPath;
-use crate::pyinterface::r#box::{BoxConfig, Content, NodeCreationEnv};
+use crate::pyinterface::r#box::{make_node, Content, NodeCreationEnv, Show};
 use crate::pyinterface::resources::Resources;
 use crate::pyinterface::textstyle::{partial_text_style_to_pyobject, PyTextStyle};
 use crate::render::{render_slide_deck, OutputConfig, OutputFormat};
 use itertools::Itertools;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python, ToPyObject};
+use std::collections::BTreeMap;
 use std::str::FromStr;
 
+use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use pyo3::types::{PyBytes, PyNone};
 use std::sync::Arc;
 
@@ -92,7 +94,40 @@ impl Deck {
         resources: &mut Resources,
         slide_id: SlideId,
         box_id: BoxId,
-        config: BoxConfig,
+
+        active: Show,
+        show: Show,
+        bg_color: ValueOrInSteps<Option<String>>,
+        x: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+        y: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+        width: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+        height: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+        border_radius: ValueOrInSteps<f32>,
+        row: ValueOrInSteps<bool>,
+        reverse: ValueOrInSteps<bool>,
+        flex_wrap: ValueOrInSteps<u32>,
+        flex_grow: ValueOrInSteps<f32>,
+        flex_shrink: ValueOrInSteps<f32>,
+
+        align_items: ValueOrInSteps<Option<u32>>,
+        align_self: ValueOrInSteps<Option<u32>>,
+        justify_self: ValueOrInSteps<Option<u32>>,
+        align_content: ValueOrInSteps<Option<u32>>,
+        justify_content: ValueOrInSteps<Option<u32>>,
+        gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
+
+        p_left: ValueOrInSteps<PyStringOrFloat>,
+        p_right: ValueOrInSteps<PyStringOrFloat>,
+        p_top: ValueOrInSteps<PyStringOrFloat>,
+        p_bottom: ValueOrInSteps<PyStringOrFloat>,
+        m_left: ValueOrInSteps<PyStringOrFloat>,
+        m_right: ValueOrInSteps<PyStringOrFloat>,
+        m_top: ValueOrInSteps<PyStringOrFloat>,
+        m_bottom: ValueOrInSteps<PyStringOrFloat>,
+        z_level: ValueOrInSteps<i32>,
+        name: String,
+        debug_layout: Option<String>,
+        replace_steps: Option<BTreeMap<crate::model::Step, crate::model::Step>>,
         content: Option<Content>,
     ) -> PyResult<(BoxId, u32)> {
         let slide = resolve_slide_id(&mut self.deck, slide_id)?;
@@ -102,8 +137,43 @@ impl Deck {
         let mut nce = NodeCreationEnv {
             resources: &mut resources.resources,
         };
-        let (node, n_steps) =
-            config.make_node(node_id, &mut nce, parent_node.styles.clone(), content)?;
+        let (node, n_steps) = make_node(
+            node_id,
+            &mut nce,
+            parent_node.styles.clone(),
+            active,
+            show,
+            bg_color,
+            x,
+            y,
+            width,
+            height,
+            border_radius,
+            row,
+            reverse,
+            flex_wrap,
+            flex_grow,
+            flex_shrink,
+            align_items,
+            align_self,
+            justify_self,
+            align_content,
+            justify_content,
+            gap,
+            p_left,
+            p_right,
+            p_top,
+            p_bottom,
+            m_left,
+            m_right,
+            m_top,
+            m_bottom,
+            z_level,
+            name,
+            debug_layout,
+            replace_steps,
+            content,
+        )?;
         slide.n_steps = slide.n_steps.max(n_steps);
 
         let new_id = parent_node.children.len() as u32;

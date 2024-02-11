@@ -39,41 +39,6 @@ NodeContent = ImageContent | TextContent | None
 AlignSteps = Align | None | InSteps[Align | None]
 
 
-@dataclass
-class BoxConfig:
-    active: bool | str | int | InSteps[bool]
-    show: bool | str | int | InSteps[bool]
-    z_level: int | InSteps[int] | None
-    x: Position | InSteps[Position]
-    y: Position | InSteps[Position]
-    width: Size | InSteps[Size]
-    height: Size | InSteps[Size]
-    border_radius: float | InSteps[float]
-    p_left: Length | InSteps[Length]
-    p_right: Length | InSteps[Length]
-    p_top: Length | InSteps[Length]
-    p_bottom: Length | InSteps[Length]
-    m_left: LengthAuto | InSteps[LengthAuto]
-    m_right: LengthAuto | InSteps[LengthAuto]
-    m_top: LengthAuto | InSteps[LengthAuto]
-    m_bottom: LengthAuto | InSteps[LengthAuto]
-    row: bool | InSteps[bool]
-    reverse: bool | InSteps[bool]
-    flex_wrap: FlexWrap | InSteps[FlexWrap]
-    flex_grow: float | InSteps[float]
-    flex_shrink: float | InSteps[float]
-    align_items: AlignSteps
-    align_self: AlignSteps
-    justify_self: AlignSteps
-    align_content: AlignSteps
-    justify_content: AlignSteps
-    gap: tuple[Length, Length] | InSteps[tuple[Length, Length]]
-    bg_color: str | None | InSteps[str | None]
-    name: str
-    debug_layout: bool | None
-    replace_steps: dict[int, int] | None
-
-
 class BoxBuilder:
     def get_box(self):
         """
@@ -273,7 +238,11 @@ class BoxBuilder:
             debug_layout = parse_debug_layout(debug_layout)
         if z_level is None:
             z_level = parent_box.z_level
-        config = BoxConfig(
+        deck = parent_box.deck
+        box_id, node_id = deck._deck.new_box(
+            deck.resources,
+            parent_box.slide._slide_id,
+            parent_box._box_id,
             active=active,
             show=show,
             z_level=z_level,
@@ -305,14 +274,7 @@ class BoxBuilder:
             name=name,
             debug_layout=debug_layout,
             replace_steps=replace_steps,
-        )
-        deck = parent_box.deck
-        box_id, node_id = deck._deck.new_box(
-            deck.resources,
-            parent_box.slide._slide_id,
-            parent_box._box_id,
-            config,
-            _content,
+            content=_content,
         )
         return Box(deck, parent_box.slide, box_id, node_id, name, z_level)
 

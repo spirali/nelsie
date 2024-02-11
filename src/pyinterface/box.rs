@@ -67,43 +67,6 @@ impl<'py> FromPyObject<'py> for Content {
     }
 }
 
-#[derive(Debug, FromPyObject)]
-pub(crate) struct BoxConfig {
-    pub replace_steps: Option<BTreeMap<Step, Step>>,
-    pub active: Show,
-    pub show: Show,
-    pub bg_color: ValueOrInSteps<Option<String>>,
-    pub x: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
-    pub y: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
-    pub width: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
-    pub height: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
-    pub border_radius: ValueOrInSteps<f32>,
-    pub row: ValueOrInSteps<bool>,
-    pub reverse: ValueOrInSteps<bool>,
-    pub flex_wrap: ValueOrInSteps<u32>,
-    pub flex_grow: ValueOrInSteps<f32>,
-    pub flex_shrink: ValueOrInSteps<f32>,
-
-    pub align_items: ValueOrInSteps<Option<u32>>,
-    pub align_self: ValueOrInSteps<Option<u32>>,
-    pub justify_self: ValueOrInSteps<Option<u32>>,
-    pub align_content: ValueOrInSteps<Option<u32>>,
-    pub justify_content: ValueOrInSteps<Option<u32>>,
-    pub gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
-
-    pub p_left: ValueOrInSteps<PyStringOrFloat>,
-    pub p_right: ValueOrInSteps<PyStringOrFloat>,
-    pub p_top: ValueOrInSteps<PyStringOrFloat>,
-    pub p_bottom: ValueOrInSteps<PyStringOrFloat>,
-    pub m_left: ValueOrInSteps<PyStringOrFloat>,
-    pub m_right: ValueOrInSteps<PyStringOrFloat>,
-    pub m_top: ValueOrInSteps<PyStringOrFloat>,
-    pub m_bottom: ValueOrInSteps<PyStringOrFloat>,
-    pub z_level: ValueOrInSteps<i32>,
-    pub name: String,
-    pub debug_layout: Option<String>,
-}
-
 fn pyparse_opt_length_or_expr(
     obj: Option<PyStringOrFloatOrExpr>,
 ) -> crate::Result<Option<LengthOrExpr>> {
@@ -285,86 +248,106 @@ fn show_to_bool_steps(show: Show, n_steps: &mut Step) -> PyResult<StepValue<bool
     })
 }
 
-impl BoxConfig {
-    pub fn make_node(
-        self,
-        new_node_id: NodeId,
-        nc_env: &mut NodeCreationEnv,
-        styles: Arc<StyleMap>,
-        content: Option<Content>,
-    ) -> PyResult<(Node, Step)> {
-        let mut n_steps = 1;
-        let mut n_steps2 = 1;
-        let content = content
-            .map(|c| process_content(c, nc_env, &styles, &mut n_steps2))
-            .transpose()?;
-        n_steps = n_steps.max(n_steps2);
-        let flex_wrap = self.flex_wrap.parse(&mut n_steps, |f| match f {
-            0 => Ok(FlexWrap::NoWrap),
-            1 => Ok(FlexWrap::Wrap),
-            2 => Ok(FlexWrap::WrapReverse),
-            _ => Err(PyValueError::new_err("Invalid wrap value")),
-        })?;
-        let bg_color = self.bg_color.parse(&mut n_steps, |v| {
-            v.as_deref().map(Color::from_str).transpose()
-        })?;
-        let x = self.x.parse(&mut n_steps, |v| {
-            v.map(|v| parse_position(v.into(), true)).transpose()
-        })?;
-        let y = self.y.parse(&mut n_steps, |v| {
-            v.map(|v| parse_position(v.into(), false)).transpose()
-        })?;
-        let width = self.width.parse(&mut n_steps, pyparse_opt_length_or_expr)?;
-        let height = self
-            .height
-            .parse(&mut n_steps, pyparse_opt_length_or_expr)?;
-        let node = Node {
-            node_id: new_node_id,
-            replace_steps: self.replace_steps.unwrap_or_default(),
-            name: self.name,
-            active: show_to_bool_steps(self.active, &mut n_steps)?,
-            show: show_to_bool_steps(self.show, &mut n_steps)?,
-            z_level: self.z_level.into_step_value(&mut n_steps),
-            x,
-            y,
-            width,
-            height,
-            border_radius: self.border_radius.into_step_value(&mut n_steps),
-            row: self.row.into_step_value(&mut n_steps),
-            reverse: self.reverse.into_step_value(&mut n_steps),
-            flex_wrap,
-            flex_grow: self.flex_grow.into_step_value(&mut n_steps),
-            flex_shrink: self.flex_shrink.into_step_value(&mut n_steps),
-            align_items: self.align_items.parse(&mut n_steps, parse_align_items)?,
-            align_self: self.align_self.parse(&mut n_steps, parse_align_items)?,
-            justify_self: self.justify_self.parse(&mut n_steps, parse_align_items)?,
-            align_content: self
-                .align_content
-                .parse(&mut n_steps, parse_align_content)?,
-            justify_content: self
-                .justify_content
-                .parse(&mut n_steps, parse_align_content)?,
-            gap: self.gap.parse(&mut n_steps, |(w, h)| {
-                crate::Result::Ok((parse_len(w)?, parse_len(h)?))
-            })?,
-            p_top: self.p_top.parse(&mut n_steps, parse_len)?,
-            p_bottom: self.p_bottom.parse(&mut n_steps, parse_len)?,
-            p_left: self.p_left.parse(&mut n_steps, parse_len)?,
-            p_right: self.p_right.parse(&mut n_steps, parse_len)?,
-            m_top: self.m_top.parse(&mut n_steps, parse_len_auto)?,
-            m_bottom: self.m_bottom.parse(&mut n_steps, parse_len_auto)?,
-            m_left: self.m_left.parse(&mut n_steps, parse_len_auto)?,
-            m_right: self.m_right.parse(&mut n_steps, parse_len_auto)?,
-            bg_color,
-            content: StepValue::new_const(content),
-            debug_layout: self
-                .debug_layout
-                .as_deref()
-                .map(Color::from_str)
-                .transpose()?,
-            children: Vec::new(),
-            styles,
-        };
-        Ok((node, n_steps))
-    }
+pub(crate) fn make_node(
+    new_node_id: NodeId,
+    nc_env: &mut NodeCreationEnv,
+    styles: Arc<StyleMap>,
+    active: Show,
+    show: Show,
+    bg_color: ValueOrInSteps<Option<String>>,
+    x: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+    y: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+    width: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+    height: ValueOrInSteps<Option<PyStringOrFloatOrExpr>>,
+    border_radius: ValueOrInSteps<f32>,
+    row: ValueOrInSteps<bool>,
+    reverse: ValueOrInSteps<bool>,
+    flex_wrap: ValueOrInSteps<u32>,
+    flex_grow: ValueOrInSteps<f32>,
+    flex_shrink: ValueOrInSteps<f32>,
+
+    align_items: ValueOrInSteps<Option<u32>>,
+    align_self: ValueOrInSteps<Option<u32>>,
+    justify_self: ValueOrInSteps<Option<u32>>,
+    align_content: ValueOrInSteps<Option<u32>>,
+    justify_content: ValueOrInSteps<Option<u32>>,
+    gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
+
+    p_left: ValueOrInSteps<PyStringOrFloat>,
+    p_right: ValueOrInSteps<PyStringOrFloat>,
+    p_top: ValueOrInSteps<PyStringOrFloat>,
+    p_bottom: ValueOrInSteps<PyStringOrFloat>,
+    m_left: ValueOrInSteps<PyStringOrFloat>,
+    m_right: ValueOrInSteps<PyStringOrFloat>,
+    m_top: ValueOrInSteps<PyStringOrFloat>,
+    m_bottom: ValueOrInSteps<PyStringOrFloat>,
+    z_level: ValueOrInSteps<i32>,
+    name: String,
+    debug_layout: Option<String>,
+    replace_steps: Option<BTreeMap<Step, Step>>,
+    content: Option<Content>,
+) -> PyResult<(Node, Step)> {
+    let mut n_steps = 1;
+    let mut n_steps2 = 1;
+    let content = content
+        .map(|c| process_content(c, nc_env, &styles, &mut n_steps2))
+        .transpose()?;
+    n_steps = n_steps.max(n_steps2);
+    let flex_wrap = flex_wrap.parse(&mut n_steps, |f| match f {
+        0 => Ok(FlexWrap::NoWrap),
+        1 => Ok(FlexWrap::Wrap),
+        2 => Ok(FlexWrap::WrapReverse),
+        _ => Err(PyValueError::new_err("Invalid wrap value")),
+    })?;
+    let bg_color = bg_color.parse(&mut n_steps, |v| {
+        v.as_deref().map(Color::from_str).transpose()
+    })?;
+    let x = x.parse(&mut n_steps, |v| {
+        v.map(|v| parse_position(v.into(), true)).transpose()
+    })?;
+    let y = y.parse(&mut n_steps, |v| {
+        v.map(|v| parse_position(v.into(), false)).transpose()
+    })?;
+    let width = width.parse(&mut n_steps, pyparse_opt_length_or_expr)?;
+    let height = height.parse(&mut n_steps, pyparse_opt_length_or_expr)?;
+    let node = Node {
+        node_id: new_node_id,
+        replace_steps: replace_steps.unwrap_or_default(),
+        name,
+        active: show_to_bool_steps(active, &mut n_steps)?,
+        show: show_to_bool_steps(show, &mut n_steps)?,
+        z_level: z_level.into_step_value(&mut n_steps),
+        x,
+        y,
+        width,
+        height,
+        border_radius: border_radius.into_step_value(&mut n_steps),
+        row: row.into_step_value(&mut n_steps),
+        reverse: reverse.into_step_value(&mut n_steps),
+        flex_wrap,
+        flex_grow: flex_grow.into_step_value(&mut n_steps),
+        flex_shrink: flex_shrink.into_step_value(&mut n_steps),
+        align_items: align_items.parse(&mut n_steps, parse_align_items)?,
+        align_self: align_self.parse(&mut n_steps, parse_align_items)?,
+        justify_self: justify_self.parse(&mut n_steps, parse_align_items)?,
+        align_content: align_content.parse(&mut n_steps, parse_align_content)?,
+        justify_content: justify_content.parse(&mut n_steps, parse_align_content)?,
+        gap: gap.parse(&mut n_steps, |(w, h)| {
+            crate::Result::Ok((parse_len(w)?, parse_len(h)?))
+        })?,
+        p_top: p_top.parse(&mut n_steps, parse_len)?,
+        p_bottom: p_bottom.parse(&mut n_steps, parse_len)?,
+        p_left: p_left.parse(&mut n_steps, parse_len)?,
+        p_right: p_right.parse(&mut n_steps, parse_len)?,
+        m_top: m_top.parse(&mut n_steps, parse_len_auto)?,
+        m_bottom: m_bottom.parse(&mut n_steps, parse_len_auto)?,
+        m_left: m_left.parse(&mut n_steps, parse_len_auto)?,
+        m_right: m_right.parse(&mut n_steps, parse_len_auto)?,
+        bg_color,
+        content: StepValue::new_const(content),
+        debug_layout: debug_layout.as_deref().map(Color::from_str).transpose()?,
+        children: Vec::new(),
+        styles,
+    };
+    Ok((node, n_steps))
 }
