@@ -1,7 +1,3 @@
-nelsie-api/build
-nelsie-api/dist
-nelsie-api/nelsie/backend/nelsie-builder
-nelsie-builder/target
 *.pdf
 .idea
 .vscode
@@ -10,3 +6,5 @@ __pycache__
 report_imgs
 report.html
 *.so
+docs/mkdocs-nelsie-plugin/build/
+docs/mkdocs-nelsie-plugin/mkdocs_nelsie_plugin.egg-info/
