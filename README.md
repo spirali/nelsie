@@ -1,8 +1,11 @@
+
 <p align="center">
 <img src='docs/imgs/nelsie-logo.jpg' width='400'>
 </p>
 
 # Nelsie
+
+[![Build](https://github.com/spirali/nelsie/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/spirali/nelsie/actions/workflows/build.yaml)
 
 Nelsie is a framework for **creating slides programmatically** using Python API with a fast renderer written in Rust.
 
