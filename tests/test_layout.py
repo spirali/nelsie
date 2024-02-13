@@ -1,6 +1,5 @@
 from testutils import check
 
-from nelsie import Align, FlexWrap
 from nelsie.layoutexpr import LayoutExpr
 
 
@@ -104,7 +103,7 @@ def test_layout_flex_grow(deck):
 @check()
 def test_layout_flex_wrap(deck):
     slide = deck.new_slide(width=150, height=150)
-    b = slide.box(row=True, height="100%", width="100%", bg_color="gray", flex_wrap=FlexWrap.Wrap)
+    b = slide.box(row=True, height="100%", width="100%", bg_color="gray", flex_wrap="wrap")
     b.box(width=40, height=30, bg_color="orange")
     b.box(width=40, height=30, bg_color="blue")
     b.box(width=40, height=30, bg_color="orange")
@@ -116,13 +115,13 @@ def test_layout_flex_wrap(deck):
 @check(n_slides=4)
 def test_layout_justify_content(deck):
     slide = deck.new_slide(width=50, height=150)
-    b = slide.box(height="100%", width="100%", bg_color="gray", justify_content=Align.Start)
+    b = slide.box(height="100%", width="100%", bg_color="gray", justify_content="start")
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
     b.box(width=20, height=30, bg_color="blue")
 
     slide = deck.new_slide(width=50, height=150)
-    b = slide.box(height="100%", width="100%", bg_color="gray", justify_content=Align.End)
+    b = slide.box(height="100%", width="100%", bg_color="gray", justify_content="end")
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
     b.box(width=20, height=30, bg_color="blue")
@@ -132,7 +131,7 @@ def test_layout_justify_content(deck):
         height="100%",
         width="100%",
         bg_color="gray",
-        justify_content=Align.SpaceEvenly,
+        justify_content="space-evenly",
     )
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
@@ -143,7 +142,7 @@ def test_layout_justify_content(deck):
         height="100%",
         width="100%",
         bg_color="gray",
-        justify_content=Align.SpaceAround,
+        justify_content="space-around",
     )
     b.box(width=20, height=30, bg_color="red")
     b.box(width=20, height=30, bg_color="green")
@@ -157,7 +156,7 @@ def test_layout_gap(deck):
         height="100%",
         width="100%",
         bg_color="gray",
-        justify_content=Align.Start,
+        justify_content="start",
         gap=(0, 10),
     )
     b.box(width=20, height=30, bg_color="red")
@@ -169,7 +168,7 @@ def test_layout_gap(deck):
         height="100%",
         width="100%",
         bg_color="gray",
-        justify_content=Align.Start,
+        justify_content="start",
         gap=(0, "15%"),
     )
     b.box(width=20, height=30, bg_color="red")
@@ -182,7 +181,7 @@ def test_layout_gap(deck):
         height="100%",
         width="100%",
         bg_color="gray",
-        justify_content=Align.Start,
+        justify_content="start",
         gap=(30, 20),
     )
     b.box(width=20, height=30, bg_color="red")

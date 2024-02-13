@@ -5,7 +5,6 @@ from nelsie import (
     TextStyle,
     Resources,
     TextAlign,
-    Align,
     Stroke,
     InSteps,
 )
@@ -33,7 +32,7 @@ def intro(slide):
     title_box.text("Framework for Creating Slides", style=TextStyle(size=44))
 
     slide.set_style("email", slide.get_style("monospace").merge(TextStyle(size=18)))
-    slide.text("Ada Böhm\n~email{ada@kreatrix.org}", m_bottom=50, align=TextAlign.Center)
+    slide.text("Ada Böhm\n~email{ada@kreatrix.org}", m_bottom=50, align="center")
 
 
 # Hello world #############################################
@@ -112,7 +111,7 @@ def header_and_footer(slide):
         row=True,
         width="100%",
         bg_color="#aa99aa",
-        justify_content=Align.End,
+        justify_content="end",
         p_top=25,
         p_bottom=25,
         p_right=20,
@@ -510,7 +509,7 @@ def debugging_frames(slide):
     title_box.text("Framework for Creating Slides", style=TextStyle(size=44))
 
     slide.set_style("email", slide.get_style("monospace").merge(TextStyle(size=18)))
-    slide.text("Ada Böhm\n~email{ada@kreatrix.org}", m_bottom=50, align=TextAlign.Center)
+    slide.text("Ada Böhm\n~email{ada@kreatrix.org}", m_bottom=50, align="center")
 
     slide.text(x="65%", y="20%", text="Debugging\nframes", style="title")
 

@@ -4,7 +4,7 @@ import pytest
 from testutils import check
 
 import nelsie
-from nelsie import FontStretch, InSteps, Stroke, TextAlign, TextStyle
+from nelsie import FontStretch, InSteps, Stroke, TextStyle
 
 
 def test_text_update():
@@ -174,17 +174,17 @@ def test_text_monospace(deck):
 def test_text_align(deck):
     slide = deck.new_slide(width=100, height=130)
     slide.set_style("default", TextStyle(size=12))
-    slide.text("Hello world\nNow!\nand there", align=TextAlign.Start, bg_color="red")
+    slide.text("Hello world\nNow!\nand there", align="start", bg_color="red")
     slide.text(
         "Hello world\nNow!\nand there",
         style=TextStyle(color="green"),
-        align=TextAlign.Center,
+        align="center",
         bg_color="gray",
     )
     slide.text(
         "Hello world\nNow!\nand there",
         style=TextStyle(color="blue"),
-        align=TextAlign.End,
+        align="end",
         bg_color="#990099",
     )
 
@@ -257,9 +257,9 @@ def test_text_line_points1(deck):
     deck.set_style("default", TextStyle(size=12))
     deck.set_style("big", TextStyle(size=18))
     slide = deck.new_slide(width=150, height=130)
-    t1 = slide.text("x\nyy\nzzzzz", z_level=1, align=TextAlign.Start)
-    t2 = slide.text("x\nyy\nzzzzz", z_level=1, align=TextAlign.Center)
-    t3 = slide.text("x\nyy\nzzzzz", z_level=1, align=TextAlign.End)
+    t1 = slide.text("x\nyy\nzzzzz", z_level=1, align="start")
+    t2 = slide.text("x\nyy\nzzzzz", z_level=1, align="center")
+    t3 = slide.text("x\nyy\nzzzzz", z_level=1, align="end")
 
     for t in (t1, t2, t3):
         slide.box(
@@ -290,7 +290,7 @@ def test_text_anchor_points(deck):
     deck.set_style("default", TextStyle(size=12))
     deck.set_style("green", TextStyle(size=16, color="green"))
 
-    for align in (TextAlign.Start, TextAlign.Center, TextAlign.End):
+    for align in ("start", "center", "end"):
         slide = deck.new_slide(width=180, height=100)
         t = slide.text(
             "Hello ~green{~1{world!}}\n~2{Full line}\n>~100{1}<<<",

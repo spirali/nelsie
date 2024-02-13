@@ -1,4 +1,3 @@
-import enum
 import typing
 from dataclasses import dataclass
 from typing import Literal
@@ -19,35 +18,34 @@ class Stroke:
     dash_offset: float = 0.0
 
 
-@enum.unique
-class TextAlign(enum.IntEnum):
-    Start = 0
-    Center = 1
-    End = 2
+TextAlign = Literal["start", "center", "end"]
 
 
-@enum.unique
-class Align(enum.IntEnum):
-    Start = 0
-    End = 1
-    FlexStart = 2
-    FlexEnd = 3
-    Center = 4
-    Stretch = 5
+AlignItems = Literal[
+    "start",
+    "end",
+    "flex-start",
+    "flex-end",
+    "flex-end",
+    "center",
+    "stretch",
+    "baseline",
+]
 
-    Baseline = 10  # Allowed in align_items, align_self, justify_self
+AlignContent = Literal[
+    "start",
+    "end",
+    "flex-start",
+    "flex-end",
+    "flex-end",
+    "center",
+    "stretch",
+    "space-between",
+    "space-evenly",
+    "space-around",
+]
 
-    # Allowed in justify_content, align_content
-    SpaceBetween = 20
-    SpaceEvenly = 21
-    SpaceAround = 22
-
-
-@enum.unique
-class FlexWrap(enum.IntEnum):
-    NoWrap = 0
-    Wrap = 1
-    WrapReverse = 2
+FlexWrap = Literal["nowrap", "wrap", "wrap-reverse"]
 
 
 def parse_debug_layout(value: bool | str) -> str | None:

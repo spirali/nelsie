@@ -188,39 +188,33 @@ fn process_content(
     })
 }
 
-fn parse_align_items(value: Option<u32>) -> crate::Result<Option<AlignItems>> {
+fn parse_align_items(value: Option<&str>) -> crate::Result<Option<AlignItems>> {
     value
         .map(|v| match v {
-            0 => Ok(AlignItems::Start),
-            1 => Ok(AlignItems::End),
-            2 => Ok(AlignItems::FlexStart),
-            3 => Ok(AlignItems::FlexEnd),
-            4 => Ok(AlignItems::Center),
-            5 => Ok(AlignItems::Stretch),
-            10 => Ok(AlignItems::Baseline),
-            20..=22 => Err(NelsieError::parsing_err(
-                "SpaceBetween, SpaceEvenly, SpaceAround values cannot be used in this context",
-            )),
+            "start" => Ok(AlignItems::Start),
+            "end" => Ok(AlignItems::End),
+            "flex-start" => Ok(AlignItems::FlexStart),
+            "flex-end" => Ok(AlignItems::FlexEnd),
+            "center" => Ok(AlignItems::Center),
+            "stretch" => Ok(AlignItems::Stretch),
+            "baseline" => Ok(AlignItems::Baseline),
             _ => Err(NelsieError::parsing_err("Invalid AlignItems")),
         })
         .transpose()
 }
 
-fn parse_align_content(value: Option<u32>) -> crate::Result<Option<AlignContent>> {
+fn parse_align_content(value: Option<&str>) -> crate::Result<Option<AlignContent>> {
     value
         .map(|v| match v {
-            0 => Ok(AlignContent::Start),
-            1 => Ok(AlignContent::End),
-            2 => Ok(AlignContent::FlexStart),
-            3 => Ok(AlignContent::FlexEnd),
-            4 => Ok(AlignContent::Center),
-            5 => Ok(AlignContent::Stretch),
-            10 => Err(NelsieError::parsing_err(
-                "Baseline value cannot be used in this context",
-            )),
-            20 => Ok(AlignContent::SpaceBetween),
-            21 => Ok(AlignContent::SpaceEvenly),
-            22 => Ok(AlignContent::SpaceAround),
+            "start" => Ok(AlignContent::Start),
+            "end" => Ok(AlignContent::End),
+            "flex-start" => Ok(AlignContent::FlexStart),
+            "flex-end" => Ok(AlignContent::FlexEnd),
+            "center" => Ok(AlignContent::Center),
+            "stretch" => Ok(AlignContent::Stretch),
+            "space-between" => Ok(AlignContent::SpaceBetween),
+            "space-evenly" => Ok(AlignContent::SpaceEvenly),
+            "space-around" => Ok(AlignContent::SpaceAround),
             x => Err(NelsieError::parsing_err(format!(
                 "Invalid AlignContent '{x}'"
             ))),
@@ -263,15 +257,15 @@ pub(crate) fn make_node(
     border_radius: ValueOrInSteps<f32>,
     row: ValueOrInSteps<bool>,
     reverse: ValueOrInSteps<bool>,
-    flex_wrap: ValueOrInSteps<u32>,
+    flex_wrap: ValueOrInSteps<&str>,
     flex_grow: ValueOrInSteps<f32>,
     flex_shrink: ValueOrInSteps<f32>,
 
-    align_items: ValueOrInSteps<Option<u32>>,
-    align_self: ValueOrInSteps<Option<u32>>,
-    justify_self: ValueOrInSteps<Option<u32>>,
-    align_content: ValueOrInSteps<Option<u32>>,
-    justify_content: ValueOrInSteps<Option<u32>>,
+    align_items: ValueOrInSteps<Option<&str>>,
+    align_self: ValueOrInSteps<Option<&str>>,
+    justify_self: ValueOrInSteps<Option<&str>>,
+    align_content: ValueOrInSteps<Option<&str>>,
+    justify_content: ValueOrInSteps<Option<&str>>,
     gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
 
     p_left: ValueOrInSteps<PyStringOrFloat>,
@@ -295,9 +289,9 @@ pub(crate) fn make_node(
         .transpose()?;
     n_steps = n_steps.max(n_steps2);
     let flex_wrap = flex_wrap.parse(&mut n_steps, |f| match f {
-        0 => Ok(FlexWrap::NoWrap),
-        1 => Ok(FlexWrap::Wrap),
-        2 => Ok(FlexWrap::WrapReverse),
+        "nowrap" => Ok(FlexWrap::NoWrap),
+        "wrap" => Ok(FlexWrap::Wrap),
+        "wrap-reverse" => Ok(FlexWrap::WrapReverse),
         _ => Err(PyValueError::new_err("Invalid wrap value")),
     })?;
     let bg_color = bg_color.parse(&mut n_steps, |v| {

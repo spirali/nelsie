@@ -2,7 +2,8 @@ import os
 from dataclasses import dataclass
 
 from .basictypes import (
-    Align,
+    AlignItems,
+    AlignContent,
     FlexWrap,
     Length,
     LengthAuto,
@@ -23,7 +24,7 @@ class TextContent:
     style1: TextStyle | str | None
     style2: TextStyle | str | None
     formatting_delimiters: str
-    text_align: TextAlign
+    text_align: int
     syntax_language: str | None
     syntax_theme: str | None
 
@@ -36,7 +37,8 @@ class ImageContent:
 
 
 NodeContent = ImageContent | TextContent | None
-AlignSteps = Align | None | InSteps[Align | None]
+AlignItemsSteps = AlignItems | None | InSteps[AlignItems | None]
+AlignContentSteps = AlignContent | None | InSteps[AlignContent | None]
 
 
 class BoxBuilder:
@@ -99,7 +101,7 @@ class BoxBuilder:
         parse_styles: bool = True,
         style_delimiters: str | None = "~{}",
         tab_width: int = 4,
-        align: TextAlign = TextAlign.Start,
+        align: TextAlign = "start",
         strip=True,
         **box_args,
     ):
@@ -130,7 +132,7 @@ class BoxBuilder:
         parse_styles: bool = False,
         style_delimiters: str | None = "~{}",
         tab_width: int = 4,
-        align: TextAlign = TextAlign.Start,
+        align: TextAlign = "start",
         strip=True,
         **box_args,
     ):
@@ -169,6 +171,14 @@ class BoxBuilder:
         if strip:
             text = text.strip()
         text = text.replace("\t", " " * tab_width)
+        if align == "start":
+            align = 0
+        elif align == "center":
+            align = 1
+        elif align == "end":
+            align = 2
+        else:
+            raise Exception(f"Invalid alignment: {align}")
         text_content = TextContent(
             text=text,
             style1=style1,
@@ -217,14 +227,14 @@ class BoxBuilder:
         m_y: LengthAuto | InSteps[LengthAuto] = 0,
         row: bool | InSteps[bool] = False,
         reverse: bool | InSteps[bool] = False,
-        flex_wrap: FlexWrap | InSteps[FlexWrap] = FlexWrap.NoWrap,
+        flex_wrap: FlexWrap | InSteps[FlexWrap] = "nowrap",
         flex_grow: float | InSteps[float] = 0.0,
         flex_shrink: float | InSteps[float] = 1.0,
-        align_items: AlignSteps = Align.Center,
-        align_self: AlignSteps = None,
-        justify_self: AlignSteps = None,
-        align_content: AlignSteps = None,
-        justify_content: AlignSteps = Align.Center,
+        align_items: AlignItemsSteps = "center",
+        align_self: AlignItemsSteps = None,
+        justify_self: AlignItemsSteps = None,
+        align_content: AlignContentSteps = None,
+        justify_content: AlignContentSteps = "center",
         gap: tuple[Length, Length] | InSteps[tuple[Length, Length]] = (0.0, 0.0),
         bg_color: str | None | InSteps[str | None] = None,
         name: str = "",

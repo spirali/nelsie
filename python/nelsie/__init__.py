@@ -1,4 +1,4 @@
-from .basictypes import Align, FlexWrap, Stroke, TextAlign
+from .basictypes import AlignItems, AlignContent, FlexWrap, Stroke, TextAlign
 from .insteps import InSteps
 from .shapes import Arrow, Path
 from .slidedeck import Resources, SlideDeck, Slide
@@ -15,7 +15,8 @@ __all__ = [
     "FontStretch",
     "TextAlign",
     "FlexWrap",
-    "Align",
+    "AlignItems",
+    "AlignContent",
     "Arrow",
     "BoxBuilder",
     "Box",
