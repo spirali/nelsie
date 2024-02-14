@@ -1,7 +1,9 @@
 # Installation
 
+Nelsie requires Python 3.10+.
 
 ## Installation via `pip` (recommended)
+
 
 ```commandline
 $ pip install nelsie

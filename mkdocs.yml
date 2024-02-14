@@ -16,17 +16,24 @@ nav:
   - User guide:
       - guide/basics.md
       - guide/layout.md
-      - guide/text.md
       - guide/steps.md
+      - guide/text.md
+      - guide/code.md
+      - guide/text_pos.md
+      - guide/images.md
+      - guide/paths.md
   - Reference manual:
       - reference/output.md
       - reference/box.md
       - reference/debug_layout.md
       - reference/resources.md
       - reference/layoutexpr.md
+      - reference/colors.md
 
 theme:
   name: material
+  features:
+    - navigation.sections
   # custom_dir: docs/template
 
 # extra_javascript:

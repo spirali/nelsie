@@ -84,7 +84,7 @@ def in_steps(slide):
 
     semaphore = slide.box(width=100, height=300, bg_color="gray")
     semaphore.box(
-        y=InSteps({1: 10, 2: 110, 3: 210}),
+        y=InSteps({1: 20, 2: 110, 3: 210}),
         width=80,
         height=80,
         bg_color=InSteps({1: "red", 2: "orange", 3: "green"}),
