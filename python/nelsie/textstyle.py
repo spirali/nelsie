@@ -29,7 +29,7 @@ class TextStyle:
     stretch: FontStretch | None = None
     kerning: bool | None = None
 
-    # 1-1000; 400 = Normal, 700 = Bolt
+    # 1-1000; 400 = Normal, 700 = Bold
     weight: int | None = None
 
     def __post_init__(self):

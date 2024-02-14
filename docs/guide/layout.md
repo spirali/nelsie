@@ -38,7 +38,7 @@ The full reference on `.box()` parameters is in the section [Box](../reference/b
 
 ## Debugging layout
 
-Another way how to visualize boxes is to set `debug_layout` to `True` in the slide configuration: 
+Another way how to visualize boxes is to set `debug_layout` to `True` in the slide configuration:
 
 ```nelsie
 @deck.slide(debug_layout=True)
@@ -59,7 +59,7 @@ Boxes can have either be vertical or horizontal main axis:
 
 * Horizontal boxes place its child items horizontally in a row. Their main axis is horizontal and their cross axis is vertical.
 
-By default, box is vertical. It can be changed by setting the parameter `row`:
+By default, box is vertical. It can be changed by setting the parameter `row` to `True`:
 
 ```nelsie
 @deck.slide()
@@ -72,10 +72,23 @@ def three_boxes(slide):
 ```
 
 !!! note "A box in a box"
-    
+
     Box can contain other boxes. A box within the box can be created by calling the `.box()` method
     on the parent box. In this example, the slide's root box contains `my_box` and `my_box` contains three
     other boxes.
+
+You can change the reverse order of child boxes by setting `reverse=True`.
+It will arrange elements from left to right (or bottom to top if `row=True`).
+
+```nelsie
+@deck.slide()
+def three_boxes(slide):
+
+    my_box = slide.box(reverse=True)
+    my_box.box(width=200, height=200, bg_color="red")
+    my_box.box(width=200, height=200, bg_color="green")
+    my_box.box(width=200, height=200, bg_color="blue")
+```
 
 
 ## Box size
@@ -96,7 +109,7 @@ Weight/height parameters:
 
 ### Flex grow
 
-The `flex_grow` parameter takes a `float` value. The default is `0`. This attribute specifies how much of the remaining space of its parent box should be allocated to this box. 
+The `flex_grow` parameter takes a `float` value. The default is `0`. This attribute specifies how much of the remaining space of its parent box should be allocated to this box.
 
 The remaining space is the size of the box minus the size of all its children. If multiple sibling boxes have positive `flex_grow' values, it is distributed according to the ratio defined by their values.
 
@@ -112,7 +125,7 @@ def flex_grow_demo(slide):
 
 ## Padding & Margin
 
-Padding (inner space) and margin (outer space) can be set via `p_left`, `p_right`, `p_top`, and `p_bottom` for setting padding and `m_left`, `m_right`, `m_top`, and `m_bottom` for setting a margin. 
+Padding (inner space) and margin (outer space) can be set via `p_left`, `p_right`, `p_top`, and `p_bottom` for setting padding and `m_left`, `m_right`, `m_top`, and `m_bottom` for setting a margin.
 
 ```nelsie
 @deck.slide()
@@ -128,8 +141,7 @@ There are also the following parameters for setting more padding/margin paramete
 * `m_x` that sets `m_left` and `m_right`
 * `m_y` that sets `m_top` and `m_bottom`
 
-
-## Araning box children
+## Arraning box children
 
 Nelsie provides a [flexbox layout system](https://css-tricks.com/snippets/css/a-guide-to-flexbox/).
 See [Flexbox froggy](https://flexboxfroggy.com/) for a nice tutorial.
@@ -137,7 +149,6 @@ See [Flexbox froggy](https://flexboxfroggy.com/) for a nice tutorial.
 Nelsie supports from flexbox: `justify_content`, `align_items`, `align_self`, `align_items`, `align_self`, `justify_self`, `align_content`, `justify_content` and `gap`.
 
 The default configuration is `"center"` for configurations `justify_content` and `align_items`, i.e. items are put in the center on both axes.
-
 
 ### Example for `justify_content`
 
@@ -174,12 +185,12 @@ You can set parameters `x` and `y` to set a fix position of the box independantl
 * `None` - (default) Coordianes are set by the layout engine.
 * `int` or `float` or `str` containing digits -- A fixed position given relative to the parent box in pixels (example values: `20.5`, or `"1.5"`)
 * `str` in format `"XX%"` where `XX` is an integer -- A fixed position relative to the parent box, in percent (example value: `"50%"` means that `x` (resp. `y`) is set to the 50% of width (resp. height) of the parent box)
-* `LayoutExpr` - A fixed position defined by a [layout expression](#layout-expressions). 
+* `LayoutExpr` - A fixed position defined by a [layout expression](#layout-expressions).
 
 
 ## Layout expressions
 
-Sometimes we need a position relative to a box that is not the direct parent. 
+Sometimes we need a position relative to a box that is not the direct parent.
 For this reason, there are "layout expressions" that serve as placeholders for the
 that can be used even if the layout is not yet finished.
 Layout expressions for boxes can be created by calling `.x()`, `.y()`, `.width()`, `.height()` on a box.
@@ -191,7 +202,7 @@ Example:
 def layout_expression_demo(slide):
     box1 = slide.box(width=300, height=100, bg_color="red")
     box2 = slide.box(width=150, height=200, bg_color="green")
-    
+
     # Create a new box relative to the box1 x-position and box2 y-position
     slide.box(x=box1.x(), y=box2.y(), width=50, height=50, bg_color="blue")
 ```
@@ -204,7 +215,7 @@ however you can make a simple mathematical operations on expressions. Nelsie rem
 def layout_expression_demo(slide):
     box1 = slide.box(width=300, height=100, bg_color="red")
     box2 = slide.box(width=150, height=200, bg_color="green")
-    
+
     # Create a new box relative to the box1 x-position - 50 and box2 y-position + 100
     slide.box(x=box1.x() - 75, y=box2.y() + 100,
               width=50, height=50, bg_color="blue")
@@ -225,10 +236,10 @@ Example:
 def layout_expression_demo(slide):
     box1 = slide.box(width=300, height=400, bg_color="red")
 
-    slide.box(x=box1.x(0.5), y=box1.y(0.25), 
+    slide.box(x=box1.x(0.5), y=box1.y(0.25),
               width=box1.width(0.5), height=box1.height(0.5),
               bg_color="green")
-```    
+```
 
 There are more layout expressions then position and size of a box, see XXXX.
 
