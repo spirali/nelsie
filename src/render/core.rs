@@ -1,4 +1,5 @@
 use crate::model::{FontData, Resources, Slide, Step};
+use crate::render::counters::CountersMap;
 use crate::render::rendering::render_to_svg_tree;
 use crate::render::OutputFormat;
 use crate::NelsieError;
@@ -16,6 +17,7 @@ pub(crate) struct RenderConfig<'a> {
     pub default_font: &'a Arc<FontData>,
     pub output_format: OutputFormat,
     pub output_path: Option<&'a Path>,
+    pub counter_values: &'a CountersMap<'a>,
 }
 
 pub(crate) enum RenderingResult {
@@ -48,18 +50,7 @@ pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<RenderingRe
                     .encode_png()
                     .map_err(|e| NelsieError::Generic(e.to_string()))?,
             )
-        } // if let Some(path) = render_cfg.output_path {
-          //     std::fs::write(path, svg).map_err(|e| {
-          //         NelsieError::Generic(format!(
-          //             "Cannot write target SVG file: {}: {}",
-          //             path.display(),
-          //             e
-          //         ))
-          //     })?;
-          //     RenderingResult::None
-          // } else {
-          //     RenderingResult::BytesData(svg.into_bytes())
-          // }
+        }
     };
 
     if let Some(path) = render_cfg.output_path {

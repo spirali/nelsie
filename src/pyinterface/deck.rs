@@ -62,6 +62,7 @@ impl Deck {
         height: f32,
         bg_color: &str,
         name: String,
+        counters: Option<Vec<String>>,
     ) -> PyResult<SlideId> {
         let slide_id = self.deck.slides.len() as SlideId;
         self.deck.slides.push(Slide::new(
@@ -70,6 +71,7 @@ impl Deck {
             name,
             Color::from_str(bg_color)?,
             self.deck.global_styles.clone(),
+            counters.unwrap_or_default(),
         ));
         Ok(slide_id)
     }

@@ -49,6 +49,7 @@ pub(crate) struct TextContent {
     text_align: u32,
     syntax_language: Option<String>,
     syntax_theme: Option<String>,
+    parse_counters: bool,
 }
 
 #[derive(Debug)]
@@ -170,6 +171,7 @@ fn process_content(
                 default_font_size: main_style.map_ref(|s| s.size.unwrap()),
                 default_line_spacing: main_style.map_ref(|s| s.line_spacing.unwrap()),
                 anchors: parsed.anchors,
+                parse_counters: text.parse_counters,
             };
 
             NodeContent::Text(node_content)

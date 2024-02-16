@@ -12,18 +12,18 @@ use resvg::tiny_skia;
 use std::rc::Rc;
 use std::sync::Arc;
 
+use crate::render::counters::replace_counters;
 use crate::render::image::render_image;
 use crate::render::paths::{create_arrow, create_path, path_from_rect};
-use crate::render::Resources;
+
 use usvg::Fill;
 use usvg_tree::Stroke;
 
 pub(crate) struct RenderContext<'a> {
-    resources: &'a Resources,
+    config: &'a RenderConfig<'a>,
     z_level: i32,
     layout: &'a ComputedLayout,
     svg_node: usvg::Node,
-    default_font: &'a Arc<FontData>,
 }
 
 impl From<&Color> for usvg::Color {
@@ -87,18 +87,16 @@ fn draw_debug_frame(
 
 impl<'a> RenderContext<'a> {
     pub fn new(
-        global_res: &'a Resources,
+        config: &'a RenderConfig<'a>,
         z_level: i32,
         layout: &'a ComputedLayout,
         svg_node: usvg::Node,
-        default_font: &'a Arc<FontData>,
     ) -> Self {
         RenderContext {
-            resources: global_res,
+            config,
             z_level,
             layout,
             svg_node,
-            default_font,
         }
     }
 
@@ -131,25 +129,48 @@ impl<'a> RenderContext<'a> {
             if let Some(content) = &node.content.at_step(step) {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 match content {
-                    NodeContent::Text(text) => self.svg_node.append(render_text(
-                        &text.text_style_at_step(step),
-                        match text.text_align {
-                            TextAlign::Start => rect.x,
-                            TextAlign::Center => rect.x + rect.width / 2.0,
-                            TextAlign::End => rect.x + rect.width,
-                        },
-                        rect.y,
-                        text.text_align,
-                    )),
-                    NodeContent::Image(image) => {
-                        render_image(step, image, rect, &self.svg_node, &self.resources.font_db)
+                    NodeContent::Text(text) => {
+                        let mut t = text.text_style_at_step(step);
+                        if text.parse_counters {
+                            // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
+                            // for counters
+                            replace_counters(
+                                self.config.counter_values,
+                                &mut t,
+                                self.config.slide_idx,
+                                self.config.step,
+                            );
+                        }
+                        self.svg_node.append(render_text(
+                            &t,
+                            match text.text_align {
+                                TextAlign::Start => rect.x,
+                                TextAlign::Center => rect.x + rect.width / 2.0,
+                                TextAlign::End => rect.x + rect.width,
+                            },
+                            rect.y,
+                            text.text_align,
+                        ))
                     }
+                    NodeContent::Image(image) => render_image(
+                        step,
+                        image,
+                        rect,
+                        &self.svg_node,
+                        &self.config.resources.font_db,
+                    ),
                 }
             }
 
             if let Some(color) = &node.debug_layout {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
-                draw_debug_frame(rect, &node.name, self.default_font, color, &self.svg_node);
+                draw_debug_frame(
+                    rect,
+                    &node.name,
+                    self.config.default_font,
+                    color,
+                    &self.svg_node,
+                );
             }
         }
 
@@ -189,7 +210,7 @@ impl<'a> RenderContext<'a> {
 
 pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     log::debug!("Creating layout");
-    let layout_builder = LayoutContext::new(render_cfg.resources);
+    let layout_builder = LayoutContext::new(render_cfg);
     let layout = layout_builder.compute_layout(render_cfg.slide, render_cfg.step);
 
     log::debug!("Layout {:?}", layout);
@@ -212,13 +233,7 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg_tree::Tree {
     root_svg_node.append(usvg::Node::new(usvg::NodeKind::Path(path)));
 
     for z_level in z_levels {
-        let render_ctx = RenderContext::new(
-            render_cfg.resources,
-            z_level,
-            &layout,
-            root_svg_node.clone(),
-            render_cfg.default_font,
-        );
+        let render_ctx = RenderContext::new(render_cfg, z_level, &layout, root_svg_node.clone());
         render_ctx.render_to_svg(render_cfg.step, &render_cfg.slide.node);
     }
     let size = usvg::Size::from_wh(render_cfg.slide.width, render_cfg.slide.height).unwrap();
