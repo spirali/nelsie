@@ -109,6 +109,7 @@ class SlideDeck:
         image_directory: str | None = None,
         name: str = "",
         debug_layout: bool | str = False,
+        counters: list[str] | None = None,
     ) -> Slide:
         """
         Creates a new slide in the slide deck.
@@ -122,7 +123,7 @@ class SlideDeck:
         if image_directory is None:
             image_directory = self.image_directory
         debug_layout = parse_debug_layout(debug_layout)
-        slide_id = self._deck.new_slide(width, height, bg_color, name)
+        slide_id = self._deck.new_slide(width, height, bg_color, name, counters)
         return Slide(self, slide_id, name, image_directory, debug_layout)
 
     def slide(

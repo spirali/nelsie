@@ -1,4 +1,5 @@
 mod core;
+mod counters;
 mod image;
 mod layout;
 mod paths;
@@ -14,6 +15,7 @@ use crate::render::core::RenderingResult;
 pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use pdf::PdfBuilder;
 
+use crate::render::counters::{compute_counters, CountersMap};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
@@ -46,6 +48,7 @@ fn render_slide(
     slide_idx: usize,
     slide: &Slide,
     default_font: &Arc<FontData>,
+    counter_values: &CountersMap,
 ) -> crate::Result<Vec<RenderingResult>> {
     log::debug!("Rendering slide {}", slide_idx);
     (1..=slide.n_steps)
@@ -58,6 +61,7 @@ fn render_slide(
                 default_font,
                 output_format: output_cfg.format,
                 output_path: output_cfg.path,
+                counter_values,
             };
             render_slide_step(&render_cfg)
         })
@@ -75,9 +79,12 @@ pub(crate) fn render_slide_deck(
         (start_time - slide_deck.creation_time).as_secs_f32()
     );
 
+    let counter_values = compute_counters(slide_deck);
+
     let mut pdf_builder = if let OutputFormat::Pdf = output_cfg.format {
-        let n_steps = slide_deck.slides.iter().map(|s| s.n_steps).sum();
-        Some(PdfBuilder::new(n_steps))
+        Some(PdfBuilder::new(
+            counter_values.get("global").unwrap().n_pages,
+        ))
     } else {
         if let Some(dir) = output_cfg.path {
             log::debug!("Ensuring output directory: {}", dir.display());
@@ -103,6 +110,7 @@ pub(crate) fn render_slide_deck(
             slide_idx,
             slide,
             &slide_deck.default_font,
+            &counter_values,
         )?
         .into_iter()
         .enumerate()

@@ -1,6 +1,6 @@
 from testutils import check
 
-from nelsie import InSteps
+from nelsie import InSteps, TextStyle
 
 
 def test_step_values():
@@ -63,3 +63,46 @@ def test_set_get_n_steps(deck):
     assert slide.get_n_steps() == 5
     slide.set_n_steps(3)
     assert slide.get_n_steps() == 3
+
+
+@check(n_slides=4)
+def test_step_global_counter(deck):
+    deck.set_style("default", TextStyle(size=12))
+    deck.set_style("g", TextStyle(color="green"))
+    deck.set_style("r", TextStyle(color="red"))
+    slide = deck.new_slide(width=100, height=40)
+    slide.text("$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)", parse_counters=True, bg_color="gray")
+    slide.set_n_steps(2)
+    slide = deck.new_slide(width=400, height=100)
+    slide.text("$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)", bg_color="gray")
+    slide = deck.new_slide(width=100, height=40)
+    slide.text(
+        "$(global_slide)/$(global_slides) ~g{!!!} ~r{$(global_page)}/$(global_pages) ~g{!!!}",
+        parse_counters=True,
+        bg_color="gray",
+    )
+
+
+@check(n_slides=6)
+def test_step_other_counter(deck):
+    def create_slide(counters=None):
+        slide = deck.new_slide(width=100, height=40, counters=counters)
+        slide.text("$(my_slide)/$(my_slides)  $(my_page)/$(my_pages)", parse_counters=True, bg_color="gray")
+        return slide
+
+    deck.set_style("default", TextStyle(size=12))
+    create_slide()
+    create_slide(counters=["my"])
+    create_slide(counters=["other"])
+    slide = create_slide(counters=["my"])
+    slide.set_n_steps(3)
+    create_slide()
+    slide.set_n_steps(2)
+
+
+@check()
+def test_step_invalid_counter(deck):
+    deck.set_style("default", TextStyle(size=12))
+    deck.set_style("g", TextStyle(color="green"))
+    slide = deck.new_slide(width=100, height=40)
+    slide.text("$(global_~g{page})", bg_color="gray", parse_counters=True)

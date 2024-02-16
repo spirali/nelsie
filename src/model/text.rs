@@ -81,6 +81,28 @@ impl StyledText {
             })
             .sum()
     }
+
+    fn replace_line(line: &mut StyledLine, value1: &str, value2: &str) {
+        'top: while let Some(target_idx) = line.text.find(value1) {
+            let mut idx = 0;
+            for span in line.spans.iter_mut() {
+                let end = idx + span.length as usize;
+                if target_idx >= idx && target_idx + value1.len() <= end {
+                    span.length = span.length + value2.len() as u32 - value1.len() as u32;
+                    line.text = line.text.replace(value1, value2);
+                    continue 'top;
+                }
+                idx = end;
+            }
+            break;
+        }
+    }
+
+    pub fn replace_text(&mut self, value1: &str, value2: &str) {
+        for line in &mut self.styled_lines {
+            Self::replace_line(line, value1, value2)
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -98,6 +120,7 @@ pub(crate) struct NodeContentText {
     pub default_font_size: StepValue<f32>,
     pub default_line_spacing: StepValue<f32>,
     pub anchors: HashMap<InTextAnchorId, InTextAnchor>,
+    pub parse_counters: bool,
 }
 
 impl NodeContentText {

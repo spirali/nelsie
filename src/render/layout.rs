@@ -1,13 +1,15 @@
 use crate::model::{
     InTextAnchorId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId,
-    Resources, Slide, Step,
+    Slide, Step,
 };
+use crate::render::counters::replace_counters;
 use crate::render::text::get_text_layout;
+use crate::render::RenderConfig;
 use std::collections::{BTreeMap, HashMap};
 use taffy::prelude as tf;
 
 pub(crate) struct LayoutContext<'a> {
-    resources: &'a Resources,
+    config: &'a RenderConfig<'a>,
 }
 
 #[derive(Debug)]
@@ -220,7 +222,7 @@ impl From<&LengthOrExpr> for tf::Dimension {
 }
 
 fn compute_content_default_size(
-    resources: &Resources,
+    config: &RenderConfig,
     node: &Node,
     content: &NodeContent,
     step: Step,
@@ -228,12 +230,14 @@ fn compute_content_default_size(
 ) -> (f32, f32) {
     match content {
         NodeContent::Text(text) => {
-            let (width, height, text_layout) = get_text_layout(
-                resources,
-                &text.text_style_at_step(step),
-                text.text_align,
-                &text.anchors,
-            );
+            let mut t = text.text_style_at_step(step);
+            if text.parse_counters {
+                // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
+                // for counters
+                replace_counters(config.counter_values, &mut t, config.slide_idx, config.step);
+            }
+            let (width, height, text_layout) =
+                get_text_layout(config.resources, &t, text.text_align, &text.anchors);
             assert!(text_layouts.insert(node.node_id, text_layout).is_none());
             (width, height)
         }
@@ -275,8 +279,8 @@ fn gather_taffy_layout<'b>(
 }
 
 impl<'a> LayoutContext<'a> {
-    pub fn new(resources: &'a Resources) -> Self {
-        LayoutContext { resources }
+    pub fn new(config: &'a RenderConfig<'a>) -> Self {
+        LayoutContext { config }
     }
 
     fn compute_layout_helper(
@@ -304,7 +308,7 @@ impl<'a> LayoutContext<'a> {
                 .as_ref()
                 .map(|content| {
                     let (content_w, content_h) = compute_content_default_size(
-                        self.resources,
+                        self.config,
                         node,
                         content,
                         step,

@@ -18,6 +18,7 @@ pub(crate) struct Slide {
     pub(crate) node: Node,
     pub(crate) n_steps: Step,
     pub(crate) bg_color: Color,
+    pub(crate) counters: Vec<String>,
     node_id_counter: NodeId,
 }
 
@@ -28,11 +29,13 @@ impl Slide {
         name: String,
         bg_color: Color,
         styles: Arc<StyleMap>,
+        counters: Vec<String>,
     ) -> Self {
         Slide {
             width,
             height,
             bg_color,
+            counters,
             node: Node {
                 styles,
                 name,
