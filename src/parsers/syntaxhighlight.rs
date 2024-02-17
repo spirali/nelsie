@@ -50,7 +50,8 @@ pub fn run_syntax_highlighting(
 ) -> crate::Result<()> {
     let syntax = resources
         .syntax_set
-        .find_syntax_by_extension(language_name)
+        .find_syntax_by_name(language_name)
+        .or_else(|| resources.syntax_set.find_syntax_by_extension(language_name))
         .ok_or_else(|| {
             NelsieError::generic_err(format!(
                 "Language '{language_name}' for syntax highlighting not found"

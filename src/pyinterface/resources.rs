@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use pyo3::{pyclass, pymethods, PyResult};
 
 #[pyclass]
@@ -17,5 +18,15 @@ impl Resources {
     fn load_fonts_dir(&mut self, path: &str) -> PyResult<()> {
         self.resources.load_fonts_dir(path);
         Ok(())
+    }
+
+    fn syntaxes(&self) -> PyResult<Vec<(String, Vec<String>)>> {
+        Ok(self
+            .resources
+            .syntax_set
+            .syntaxes()
+            .iter()
+            .map(|s| (s.name.clone(), s.file_extensions.clone()))
+            .collect_vec())
     }
 }
