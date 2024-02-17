@@ -29,4 +29,14 @@ impl Resources {
             .map(|s| (s.name.clone(), s.file_extensions.clone()))
             .collect_vec())
     }
+
+    fn themes(&self) -> PyResult<Vec<String>> {
+        Ok(self
+            .resources
+            .theme_set
+            .themes
+            .keys()
+            .cloned()
+            .collect_vec())
+    }
 }
