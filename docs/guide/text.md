@@ -41,7 +41,7 @@ The `TextStyle` constructor has the following parameters; each parameter can be 
     * 400 = Normal
     * 700 = Bold
 * `kerning`: `bool` - Enables/Disables kerning
-* `stroke`: `Stroke | None` - If not `None`, font is drawn in stroked mode.
+* `stroke`: `Stroke | None` - If not `None`, font is drawn in stroked mode (see [Path](paths.md for documentation of `Stroke` class)
 * `stretch`: `FontStretch`:
     * `FontStretch.UltraCondensed`
     * `FontStretch.ExtraCondensed`

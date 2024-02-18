@@ -141,7 +141,7 @@ There are also the following parameters for setting more padding/margin paramete
 * `m_x` that sets `m_left` and `m_right`
 * `m_y` that sets `m_top` and `m_bottom`
 
-## Arraning box children
+## Arranging box children
 
 Nelsie provides a [flexbox layout system](https://css-tricks.com/snippets/css/a-guide-to-flexbox/).
 See [Flexbox froggy](https://flexboxfroggy.com/) for a nice tutorial.
@@ -187,61 +187,6 @@ You can set parameters `x` and `y` to set a fix position of the box independantl
 * `str` in format `"XX%"` where `XX` is an integer -- A fixed position relative to the parent box, in percent (example value: `"50%"` means that `x` (resp. `y`) is set to the 50% of width (resp. height) of the parent box)
 * `LayoutExpr` - A fixed position defined by a [layout expression](#layout-expressions).
 
-
-## Layout expressions
-
-Sometimes we need a position relative to a box that is not the direct parent.
-For this reason, there are "layout expressions" that serve as placeholders for the
-that can be used even if the layout is not yet finished.
-Layout expressions for boxes can be created by calling `.x()`, `.y()`, `.width()`, `.height()` on a box.
-
-Example:
-
-```nelsie
-@deck.slide()
-def layout_expression_demo(slide):
-    box1 = slide.box(width=300, height=100, bg_color="red")
-    box2 = slide.box(width=150, height=200, bg_color="green")
-
-    # Create a new box relative to the box1 x-position and box2 y-position
-    slide.box(x=box1.x(), y=box2.y(), width=50, height=50, bg_color="blue")
-```
-
-When the layout is created, you cannot get the value of expression as the whole layout is not constructed yet;
-however you can make a simple mathematical operations on expressions. Nelsie remebers them and applies them when the final value is computed.
-
-```nelsie
-@deck.slide()
-def layout_expression_demo(slide):
-    box1 = slide.box(width=300, height=100, bg_color="red")
-    box2 = slide.box(width=150, height=200, bg_color="green")
-
-    # Create a new box relative to the box1 x-position - 50 and box2 y-position + 100
-    slide.box(x=box1.x() - 75, y=box2.y() + 100,
-              width=50, height=50, bg_color="blue")
-```
-
-All of these methods take an optional `float' parameter, which sets the position or size
-with respect to the fraction of the box size in the given dimension, e.g. `.x(0.5)` means the center of the box on the `X` axis. More precisely, it is defined as follows:
-
-* `.x(v)` = `.x()` + v * `.width()`
-* `.y(v)` = `.y()` + v * `.width()`
-* `.width(v)` = v * `.width()`
-* `.width(v)` = h * `.width()`
-
-Example:
-
-```nelsie
-@deck.slide()
-def layout_expression_demo(slide):
-    box1 = slide.box(width=300, height=400, bg_color="red")
-
-    slide.box(x=box1.x(0.5), y=box1.y(0.25),
-              width=box1.width(0.5), height=box1.height(0.5),
-              bg_color="green")
-```
-
-There are more layout expressions then position and size of a box, see XXXX.
 
 ## Method `.overlay()`
 

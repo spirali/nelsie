@@ -1,4 +1,4 @@
-# Box
+# Box reference
 
 Box is a basic layout in Nelsie. It represents a rectangular area on the slide.
 

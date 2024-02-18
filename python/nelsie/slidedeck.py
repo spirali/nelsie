@@ -73,7 +73,7 @@ class SlideDeck:
         * default_font - Name of default font
         * default_theme - Name of default theme for syntax highlighting:
             Available themes:
-            * "base16-ocean.dark",
+            * "base16-ocean.dark"
             * "base16-eighties.dark"
             * "base16-mocha.dark"
             * "base16-ocean.light"

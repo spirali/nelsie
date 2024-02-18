@@ -19,16 +19,16 @@ nav:
       - guide/steps.md
       - guide/text.md
       - guide/code.md
-      - guide/text_pos.md
       - guide/images.md
       - guide/paths.md
-  - Reference manual:
-      - reference/output.md
-      - reference/box.md
-      - reference/debug_layout.md
-      - reference/resources.md
-      - reference/layoutexpr.md
-      - reference/colors.md
+      - guide/layoutexpr.md
+      - guide/rendering.md
+      - guide/counters.md
+      - guide/output.md
+      - guide/debug_layout.md
+      - guide/resources.md
+      - guide/box.md
+      - guide/colors.md
 
 theme:
   name: material
