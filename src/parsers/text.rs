@@ -87,9 +87,12 @@ pub(crate) fn parse_styled_text<'a>(
                 }
                 line = &line[idx + 1..];
                 if c == esc_char {
-                    let idx = line
-                        .find(start_block)
-                        .ok_or_else(|| NelsieError::parsing_err("Invalid style formatting"))?;
+                    let idx = line.find(start_block).ok_or_else(|| {
+                        NelsieError::parsing_err(format!(
+                            "Invalid style formatting (line {}): character '{}' found, but no following '{}')",
+                            line_idx + 1, esc_char, start_block
+                        ))
+                    })?;
                     let style_name = &line[..idx];
                     if style_name.chars().all(|x| x.is_ascii_digit()) {
                         let anchor_id: InTextAnchorId = style_name

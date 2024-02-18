@@ -19,12 +19,46 @@ fn main() {
 
 You can change the style by passing the parameter `style`:
 
+```nelsie
+@deck.slide()
+def code_demo(slide):
+    slide.code("print('Hello world!')", "Python", style=TextStyle(size=60))
+```
+
+
 ## Named style `"code"`.
 
-The `.code()` method use the named style `"code"`as default default style. 
+The `.code()` method uses the named style `"code"` as the default style.
+This allows you to change the code style globally or locally per slide.
+
+```python
+deck.update_style("code", TextStyle(size=60))
+```
 
 
 ## Inline text styles
+
+In contrast to `.text()`, the `.code()` method does not parse inline styles by default.
+But parsing the styles can be enabled by argument `parse_styles`.
+
+```nelsie
+@deck.slide()
+def code_demo(slide):
+    slide.set_style("big", TextStyle(size=80, color="orange"))
+    slide.code("print('~big{Hello} world!')", "Python",
+               style=TextStyle(size=60), parse_styles=True)
+```
+
+If characters "~", "{", "}" clashes with your programming language,
+you can change it by the `style_delimiters` parameter.
+
+```nelsie
+@deck.slide()
+def code_demo(slide):
+    slide.set_style("big", TextStyle(size=80, color="orange"))
+    slide.code("print('!big<Hello> world!')", "Python",
+               style=TextStyle(size=60), parse_styles=True, style_delimiters="!<>")
+```
 
 
 ## Syntax highlighting themes
