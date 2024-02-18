@@ -56,13 +56,39 @@ you can change it by the `style_delimiters` parameter.
 @deck.slide()
 def code_demo(slide):
     slide.set_style("big", TextStyle(size=80, color="orange"))
-    slide.code("print('!big<Hello> world!')", "Python",
-               style=TextStyle(size=60), parse_styles=True, style_delimiters="!<>")
+    slide.code("print('$big<Hello> world!')", "Python",
+               style=TextStyle(size=60), parse_styles=True, style_delimiters="$<>")
 ```
 
 
-## Syntax highlighting themes
+## Syntax highlighting color themes
 
+You can change color theme by passing argument `theme`:
+
+```nelsie
+@deck.slide()
+def code_demo(slide):
+    slide.code("print('Hello world!')", "Python",
+               theme="Solarized (light)", style=TextStyle(size=60))
+```
+
+You can also change the color theme globally by setting `default_theme` in `SlideDeck`:
+
+```python
+deck = SlideDeck(default_theme="Solarized (light)")
+```
+
+The list of supported color themes; the default theme is "InspiredGitHub":
+
+* "base16-ocean.dark"
+* "base16-eighties.dark"
+* "base16-mocha.dark"
+* "base16-ocean.light"
+* "InspiredGitHub"
+* "Solarized (dark)"
+* "Solarized (light)"
+
+This list is also programmatically available through [`Resources`](../reference/resources.md)
 
 ## The list of supported syntaxes
 

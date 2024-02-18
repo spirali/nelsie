@@ -96,7 +96,7 @@ def render_slide(
     code = [line for line in code if "#!IGNORE" not in line]
     code = "\n".join(trim_indent(code))
     template = f"""
-from nelsie import SlideDeck, TextStyle, Arrow, Stroke, InSteps
+from nelsie import SlideDeck, TextStyle, Arrow, Stroke, InSteps, Path
 deck = SlideDeck()
 {code}
 """.strip()
