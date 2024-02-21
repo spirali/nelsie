@@ -34,7 +34,7 @@ def three_boxes(slide):
     slide.box(width=600, height=200, bg_color="blue")
 ```
 
-The full reference on `.box()` parameters is in the section [Box](../reference/box.md)
+The full reference on `.box()` parameters is in the section [Box](box.md)
 
 ## Debugging layout
 
@@ -48,7 +48,7 @@ def debug_boxes(slide):
     slide.box(width=600, height=200)
 ```
 
-For more configuration for debugging layout, see [Debugging layout](../reference/debug_layout.md).
+For more configuration for debugging layout, see [Debugging layout](debug_layout.md).
 
 
 ## Box main axis

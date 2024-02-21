@@ -88,11 +88,11 @@ The list of supported color themes; the default theme is "InspiredGitHub":
 * "Solarized (dark)"
 * "Solarized (light)"
 
-This list is also programmatically available through [`Resources`](../reference/resources.md)
+This list is also programmatically available through [`Resources`](resources.md)
 
 ## The list of supported syntaxes
 
-This list is also programmatically available through [`Resources`](../reference/resources.md)
+This list is also programmatically available through [`Resources`](resources.md)
 
 * ASP (asa)
 * ActionScript (as)

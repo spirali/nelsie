@@ -2,7 +2,7 @@
 
 Box is a basic layout in Nelsie. It represents a rectangular area on the slide.
 
-A new box is created by calling the `.box()` method on an existing box or a slide. This will return a new box that will be a child of the element on which you call the box method. 
+A new box is created by calling the `.box()` method on an existing box or a slide. This will return a new box that will be a child of the element on which you call the box method.
 
 
 ## Parameters of `.box()`
@@ -20,12 +20,12 @@ A new box is created by calling the `.box()` method on an existing box or a slid
         * `"<number>-<number>"` - the box is shown in the steps in the given range.
         * Comma separated list of the expression above. Then the box is shown in the union of steps defined by expressions. Example: `"1, 5, 20-30, 35+"`.
 * `active` - Takes the same parameters as `show` but in steps when the box is not active, it is also removed from the layout, i.e. no space is reserved for the box.
-* `replace_steps` - Takes `None` or a dictionary that maps 
+* `replace_steps` - Takes `None` or a dictionary that maps
 
 
 ### Ordering parameters
 
-* `z_level` - Integer value used in paint ordering. Higher number is drown later. If not set, value is inherited from the parent box. Default value of the slide root's box is `0`.
+* `z_level` - An integer value used in painting order. Higher numbers are drawn later. If not set, the value is inherited from the parent box. The default value of the slide root box is `0`.
 
 ### Background parameters
 
@@ -44,22 +44,22 @@ A new box is created by calling the `.box()` method on an existing box or a slid
 
 * `height` - Height of the box
     * The paramter takes the same values as `width`.
-    
+
 * `row` - If `True` then the box arranges its children horizontally; otherwise vertically. Default: `False`
-* `reverse` - If `True` then child boxes are ordered in the reverse order; i.e. in bottom-up (or right-left if `row` is `True`) Default: `False`. 
-* `flex_wrap` - 
-* `flex_grow` - The `flex_grow` parameter takes a `float` value. The default is `0`. This attribute specifies how much of the remaining space of its parent box should be allocated to this box. 
+* `reverse` - If `True` then child boxes are ordered in the reverse order; i.e. in bottom-up (or right-left if `row` is `True`) Default: `False`.
+* `flex_wrap` -
+* `flex_grow` - The `flex_grow` parameter takes a `float` value. The default is `0`. This attribute specifies how much of the remaining space of its parent box should be allocated to this box.
 
     The remaining space is the size of the box minus the size of all its children. If multiple sibling boxes have positive `flex_grow' values, it is distributed according to the ratio defined by their values.
 
     This property is equivalent to the CSS property `flex-grow'.
-* `flex_shrink` - 
+* `flex_shrink` -
 * `align_items` -
-* `align_self` - 
-* `justify_self` - 
+* `align_self` -
+* `justify_self` -
 * `align_content` -
-* `justify_content` - 
-* `gap` - 
+* `justify_content` -
+* `gap` -
 
 ### Padding parameters
 
@@ -70,7 +70,7 @@ A new box is created by calling the `.box()` method on an existing box or a slid
 * `p_x` - Shortcut for setting `p_left` and `p_right` to the same value
 * `p_y` - Shortcut for setting `p_top` and `p_bottom` to the same value
 
-### Margin parameters 
+### Margin parameters
 
 * `m_left` - Left margin
 * `m_right` - Right margin

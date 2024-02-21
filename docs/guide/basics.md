@@ -53,4 +53,4 @@ Once all the slides have been created, you can render them into PDF with a `.ren
 deck.render("slides.pdf")
 ```
 
-You can also get SVG or PNG images from the slides, see the [Output formats section](../reference/output.md) for more information.
+You can also get SVG or PNG images from the slides, see the [Output formats section](output.md) for more information.
