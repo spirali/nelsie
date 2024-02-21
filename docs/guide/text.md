@@ -41,7 +41,7 @@ The `TextStyle` constructor has the following parameters; each parameter can be 
     * 400 = Normal
     * 700 = Bold
 * `kerning`: `bool` - Enables/Disables kerning
-* `stroke`: `Stroke | None` - If not `None`, font is drawn in stroked mode (see [Path](paths.md for documentation of `Stroke` class)
+* `stroke`: `Stroke | None` - If not `None`, font is drawn in stroked mode (see [Paths](paths.md) for documentation of `Stroke` class)
 * `stretch`: `FontStretch`:
     * `FontStretch.UltraCondensed`
     * `FontStretch.ExtraCondensed`
@@ -116,7 +116,7 @@ def inline_style_demo(slide):
 ## Fonts
 
 A font can be specified by the `font_family` parameter of `TextStyle`.
-All system fonts are available by default. You can add more fonts via [Resources](../reference/resources.md).
+All system fonts are available by default. You can add more fonts via [Resources](resources.md).
 
 Nelsie is not shipped with a built-in font and tries to automatically detect a sans-serif font as `font_family` for the `"default"` style and a monospace font for the `"monospace"` style.
 

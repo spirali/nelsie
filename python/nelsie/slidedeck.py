@@ -134,6 +134,7 @@ class SlideDeck:
         image_directory: str | None = None,
         name: str = "",
         debug_layout: bool | str = False,
+        counters: list[str] | None = None,
     ):
         """
         Decorator for creating new slide.
@@ -151,7 +152,7 @@ class SlideDeck:
         """
 
         def helper(fn):
-            slide = self.new_slide(width, height, bg_color, image_directory, name, debug_layout)
+            slide = self.new_slide(width, height, bg_color, image_directory, name, debug_layout, counters)
             return fn(slide)
 
         return helper
