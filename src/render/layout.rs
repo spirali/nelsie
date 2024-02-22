@@ -186,7 +186,7 @@ fn is_layout_managed(node: &Node, parent: Option<&Node>, step: Step) -> bool {
 impl From<&Length> for tf::Dimension {
     fn from(value: &Length) -> Self {
         match value {
-            Length::Points { value } => tf::Dimension::Points(*value),
+            Length::Points { value } => tf::Dimension::Length(*value),
             Length::Fraction { value } => tf::Dimension::Percent(*value),
         }
     }
@@ -195,7 +195,7 @@ impl From<&Length> for tf::Dimension {
 impl From<&Length> for tf::LengthPercentage {
     fn from(value: &Length) -> Self {
         match value {
-            Length::Points { value } => tf::LengthPercentage::Points(*value),
+            Length::Points { value } => tf::LengthPercentage::Length(*value),
             Length::Fraction { value } => tf::LengthPercentage::Percent(*value),
         }
     }
@@ -204,7 +204,7 @@ impl From<&Length> for tf::LengthPercentage {
 impl From<&LengthOrAuto> for tf::LengthPercentageAuto {
     fn from(value: &LengthOrAuto) -> Self {
         match value {
-            LengthOrAuto::Points { value } => tf::LengthPercentageAuto::Points(*value),
+            LengthOrAuto::Points { value } => tf::LengthPercentageAuto::Length(*value),
             LengthOrAuto::Fraction { value } => tf::LengthPercentageAuto::Percent(*value),
             LengthOrAuto::Auto => tf::LengthPercentageAuto::Auto,
         }
@@ -214,7 +214,7 @@ impl From<&LengthOrAuto> for tf::LengthPercentageAuto {
 impl From<&LengthOrExpr> for tf::Dimension {
     fn from(value: &LengthOrExpr) -> Self {
         match value {
-            LengthOrExpr::Points { value } => tf::Dimension::Points(*value),
+            LengthOrExpr::Points { value } => tf::Dimension::Length(*value),
             LengthOrExpr::Fraction { value } => tf::Dimension::Percent(*value),
             LengthOrExpr::Expr(_) => tf::Dimension::Auto,
         }
@@ -249,8 +249,8 @@ fn gather_taffy_layout<'b>(
     mut step: Step,
     node: &'b Node,
     parent: Option<&Node>,
-    taffy: &tf::Taffy,
-    tf_node: tf::Node,
+    taffy: &tf::TaffyTree,
+    tf_node: tf::NodeId,
     out: &mut BTreeMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>,
 ) {
     if let Some(s) = node.replace_steps.get(&step) {
@@ -286,11 +286,11 @@ impl<'a> LayoutContext<'a> {
     fn compute_layout_helper(
         &self,
         mut step: Step,
-        taffy: &mut tf::Taffy,
+        taffy: &mut tf::TaffyTree,
         node: &Node,
         parent: Option<&Node>,
         text_layouts: &mut HashMap<NodeId, TextLayout>,
-    ) -> tf::Node {
+    ) -> tf::NodeId {
         if let Some(s) = node.replace_steps.get(&step) {
             step = *s;
         }
@@ -316,8 +316,8 @@ impl<'a> LayoutContext<'a> {
                     );
                     if w.is_none() && h.is_none() {
                         (
-                            Some(tf::Dimension::Points(content_w)),
-                            Some(tf::Dimension::Points(content_h)),
+                            Some(tf::Dimension::Length(content_w)),
+                            Some(tf::Dimension::Length(content_h)),
                             None,
                         )
                     } else {
@@ -401,7 +401,7 @@ impl<'a> LayoutContext<'a> {
     }
 
     pub fn compute_layout(&self, slide: &Slide, step: Step) -> ComputedLayout {
-        let mut taffy = tf::Taffy::new();
+        let mut taffy = tf::TaffyTree::new();
         taffy.disable_rounding();
         let mut text_layouts = HashMap::new();
         let tf_node =
