@@ -55,8 +55,8 @@ def my_slide(slide):
 Formats that supports layers (SVG and OpenRaster) may control revealing a part of image
 in steps by naming layers. JPEG, PNG, and GIF image does not have any impact on steps.
 
-If a layer has a name that ends with `**EXPR` where `EXPR` is an expression allowed in box's `show` argument.
-Example: A layer with name "My layer **2-4" will be shown only steps 2-4.
+If a layer has a name that ends with `**EXPR` where `EXPR` is an expression allowed in box's `show` argument, except for last/next/last+/next+ keywords. Keywords are not allowed in an image step definitions.
+Example: A layer with name "My layer **2-4" will be shown only steps 2, 3, 4.
 
 ### Example
 
@@ -96,7 +96,7 @@ It basically adds a constant to all step definitions in an image.
 ```nelsie
 @deck.slide()
 def image_demo(slide):
-    
+
     # The first image will be shown at step 3
     slide.image("./imgs/stepped_logo.ora", shift_steps=2)
 ```
