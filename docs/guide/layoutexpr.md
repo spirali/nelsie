@@ -11,7 +11,7 @@ There are three of type of layout expressions:
 
 * **Box layout expressions**: They refer to a box layout properties. They are created by calling `.x()`, `.y()`, `.width()`, `.height()` on a box coordines and width.
 * **Line expressions**: They refer to a line of a text. They are created by calling `.line_x(line_idx)`, `.line_y(line_idx)`, `.line_width(line_idx)`, `.line_height(line_idx)` on a box with a text.
-* **Text anchor expressions**: They refer to a part of a text. They are created by calling `.text_anrchor_x(anchor_id)`, `.text_anrchor_y(anchor_id)`, `.text_anrchor_width(anchor_id)`, `.text_anrchor_height(anchor_id)` on a box with a text.
+* **Text anchor expressions**: They refer to a part of a text. They are created by calling `.text_anchor_x(anchor_id)`, `.text_anchor_y(anchor_id)`, `.text_anchor_width(anchor_id)`, `.text_anchor_height(anchor_id)` on a box with a text.
 
 ## Box layout expressions
 
@@ -33,12 +33,12 @@ Line layout expressions require one parameter that is the index of the line; the
 @deck.slide()
 def layout_expression_demo(slide):
     box = slide.text("""
-Lorem ipsum dolor sit amet, 
+Lorem ipsum dolor sit amet,
 consectetuer adipiscing elit.
 Nulla turpis magna, cursus sit amet, suscipit a,
 interdum id, felis.
     """)
-    
+
     slide.box(x=box.line_x(1),
               y=box.line_y(1),
               width=box.line_width(1),
@@ -58,12 +58,12 @@ the name of style is composed of digits. These digits then define the ID of the 
 @deck.slide()
 def layout_expression_demo(slide):
     box = slide.text("""
-Lorem ~42{ipsum} dolor sit amet, 
+Lorem ~42{ipsum} dolor sit amet,
 consectetuer adipiscing elit.
 ~105{Nulla turpis magna}, cursus sit amet, suscipit a,
 interdum id, felis.
     """)
-    
+
     slide.box(x=box.text_anchor_x(42),
               y=box.text_anchor_y(42),
               width=box.text_anchor_width(42),
