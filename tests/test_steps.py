@@ -106,3 +106,29 @@ def test_step_invalid_counter(deck):
     deck.set_style("g", TextStyle(color="green"))
     slide = deck.new_slide(width=100, height=40)
     slide.text("$(global_~g{page})", bg_color="gray", parse_counters=True)
+
+
+@check(n_slides=4)
+def test_show_next_last_keywords(deck):
+    deck.set_style("default", TextStyle(size=12))
+    slide = deck.new_slide(width=100, height=100)
+    slide.box(show="last").text("Last")
+    slide.box(show="next").text("Next")
+    slide.box(show="last+").text("Last+")
+    slide.box(show="next+").text("Next+")
+    slide.box(show=3).text("Jump")
+    slide.box(show="last").text("Last2")
+    slide.box(show="next").text("Next2")
+
+
+@check(n_slides=4)
+def test_active_next_last_keywords(deck):
+    deck.set_style("default", TextStyle(size=12))
+    slide = deck.new_slide(width=100, height=100)
+    slide.box(active="last").text("Last")
+    slide.box(active="next").text("Next")
+    slide.box(active="last+").text("Last+")
+    slide.box(active="next+").text("Next+")
+    slide.box(active=3).text("Jump")
+    slide.box(active="last").text("Last2")
+    slide.box(active="next").text("Next2")

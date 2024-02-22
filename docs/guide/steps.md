@@ -72,6 +72,7 @@ def show_demo(slide):
     slide.box(active=3).text("Three")
 ```
 
+
 ## `InSteps` class
 
 `InSteps` defines different values for step of slides.
@@ -171,6 +172,31 @@ def inslides_demo(slide):
 ```
 
 The `.set_n_steps()` method should be called after all step values have been configured, because any subsequent call of step configuration may again increase the final number of steps.
+
+You get the information of the current number of steps for a slide by calling:
+
+```python
+slide.get_n_steps()
+```
+
+## `last`, `last+`, `next`, `next+` keywords
+
+Box `show` and `active` takes also the following keywords:
+
+* "last" is equvalent to `slide.get_n_steps()`
+* "last+" is equvalent to `f"{slide.get_n_steps()}+"`
+* "next" is equvalent to `slide.get_n_steps() + 1`
+* "next+" is equvalent to `f"{slide.get_n_steps() + 1}+"`
+
+```nelsie
+@deck.slide()
+def keywords_demo(slide):
+    slide.text("Line 1")
+    slide.text("Line 2", show="next+")
+    slide.text("Line 3", show="next+")
+    slide.text("Line 4", show="last")
+```
+
 
 ## Step replacing
 
