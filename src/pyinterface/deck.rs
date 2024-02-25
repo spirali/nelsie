@@ -5,7 +5,7 @@ use crate::pyinterface::path::PyPath;
 use crate::pyinterface::r#box::{make_node, Content, NodeCreationEnv, Show};
 use crate::pyinterface::resources::Resources;
 use crate::pyinterface::textstyle::{partial_text_style_to_pyobject, PyTextStyle};
-use crate::render::{render_slide_deck, OutputConfig, OutputFormat};
+use crate::render::{render_slide_deck, OutputConfig, OutputFormat, VerboseLevel};
 use itertools::Itertools;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::{pyclass, pymethods, PyObject, PyResult, Python, ToPyObject};
@@ -263,13 +263,20 @@ impl Deck {
         &self,
         py: Python<'_>,
         resources: &mut Resources,
+        verbose: u32,
+        format: &str,
         path: Option<&str>,
-        format: Option<&str>,
     ) -> PyResult<PyObject> {
+        let verbose_level = match verbose {
+            0 => VerboseLevel::Silent,
+            1 => VerboseLevel::Normal,
+            2 => VerboseLevel::Full,
+            _ => return Err(PyValueError::new_err("Invalid verbose level")),
+        };
         let format = match format {
-            Some("pdf") => OutputFormat::Pdf,
-            Some("svg") => OutputFormat::Svg,
-            Some("png") => OutputFormat::Png,
+            "pdf" => OutputFormat::Pdf,
+            "svg" => OutputFormat::Svg,
+            "png" => OutputFormat::Png,
             _ => return Err(PyValueError::new_err("Unknown output format")),
         };
         let result = py.allow_threads(|| {
@@ -280,6 +287,7 @@ impl Deck {
                     path: path.map(std::path::Path::new),
                     format,
                 },
+                verbose_level,
             )
         })?;
         if result.is_empty() {

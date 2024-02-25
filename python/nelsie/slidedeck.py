@@ -162,7 +162,7 @@ class SlideDeck:
         path: str | pathlib.Path | None,
         output_format: Literal["pdf"] | Literal["svg"] | Literal["png"] = "pdf",
         *,
-        debug: bool = False,
+        verbose: int = 1,
     ) -> None | list[bytes]:
         """
         Render slides
@@ -175,4 +175,4 @@ class SlideDeck:
         """
         if path:
             path = str(path)
-        return self._deck.render(self.resources, path, output_format)
+        return self._deck.render(self.resources, verbose, output_format, path)
