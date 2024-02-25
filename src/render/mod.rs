@@ -42,6 +42,27 @@ pub(crate) struct OutputConfig<'a> {
     pub format: OutputFormat,
 }
 
+pub(crate) enum VerboseLevel {
+    Silent,
+    Normal,
+    Full,
+}
+
+impl VerboseLevel {
+    pub fn is_full(&self) -> bool {
+        match self {
+            VerboseLevel::Silent | VerboseLevel::Normal => false,
+            VerboseLevel::Full => true,
+        }
+    }
+    pub fn is_normal_or_more(&self) -> bool {
+        match self {
+            VerboseLevel::Silent => false,
+            VerboseLevel::Normal | VerboseLevel::Full => true,
+        }
+    }
+}
+
 fn render_slide(
     resources: &Resources,
     output_cfg: &OutputConfig,
@@ -72,19 +93,20 @@ pub(crate) fn render_slide_deck(
     slide_deck: &SlideDeck,
     resources: &Resources,
     output_cfg: &OutputConfig,
+    verbose_level: VerboseLevel,
 ) -> crate::Result<Vec<(usize, usize, Vec<u8>)>> {
     let start_time = std::time::Instant::now();
-    println!(
-        "Slides construction: {:.2}s",
-        (start_time - slide_deck.creation_time).as_secs_f32()
-    );
+    if verbose_level.is_full() {
+        println!(
+            "Slides construction: {:.2}s",
+            (start_time - slide_deck.creation_time).as_secs_f32()
+        );
+    }
 
     let counter_values = compute_counters(slide_deck);
-
+    let n_pages = counter_values.get("global").unwrap().n_pages;
     let mut pdf_builder = if let OutputFormat::Pdf = output_cfg.format {
-        Some(PdfBuilder::new(
-            counter_values.get("global").unwrap().n_pages,
-        ))
+        Some(PdfBuilder::new(n_pages))
     } else {
         if let Some(dir) = output_cfg.path {
             log::debug!("Ensuring output directory: {}", dir.display());
@@ -102,6 +124,12 @@ pub(crate) fn render_slide_deck(
     let mut result_data = Vec::new();
 
     let mut pdf_compose_time = Duration::ZERO;
+
+    let progress_bar = if verbose_level.is_normal_or_more() {
+        Some(indicatif::ProgressBar::new(n_pages.into()))
+    } else {
+        None
+    };
 
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {
         for (step_idx, result) in render_slide(
@@ -126,10 +154,14 @@ pub(crate) fn render_slide_deck(
                     result_data.push((slide_idx, step_idx, data));
                 }
             }
+            if let Some(bar) = &progress_bar {
+                bar.inc(1);
+            }
         }
     }
-    println!("Pdf time: {:.2}s", pdf_compose_time.as_secs_f32());
-
+    if let Some(bar) = &progress_bar {
+        bar.finish();
+    }
     if let Some(builder) = pdf_builder {
         if let Some(path) = output_cfg.path {
             builder.write(path).map_err(|e| {
@@ -141,11 +173,14 @@ pub(crate) fn render_slide_deck(
         }
     }
 
-    let render_end_time = std::time::Instant::now();
-    println!(
-        "Total rendering time: {:.2}s",
-        (render_end_time - start_time).as_secs_f32()
-    );
+    if verbose_level.is_full() {
+        let render_end_time = std::time::Instant::now();
+        println!(
+            "Total rendering time: {:.2}s",
+            (render_end_time - start_time).as_secs_f32()
+        );
+        println!("   |--- Pdf time: {:.2}s", pdf_compose_time.as_secs_f32());
+    }
 
     Ok(result_data)
 }
