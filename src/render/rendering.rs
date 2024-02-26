@@ -126,7 +126,7 @@ impl<'a> RenderContext<'a> {
                     .append(usvg::Node::new(usvg::NodeKind::Path(path)));
             }
 
-            if let Some(content) = &node.content.at_step(step) {
+            if let Some(content) = &node.content {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 match content {
                     NodeContent::Text(text) => {

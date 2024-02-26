@@ -67,7 +67,7 @@ pub(crate) struct Node {
     pub m_right: StepValue<LengthOrAuto>,
 
     pub bg_color: StepValue<Option<Color>>,
-    pub content: StepValue<Option<NodeContent>>,
+    pub content: Option<NodeContent>,
 
     pub styles: Arc<StyleMap>,
 
