@@ -236,8 +236,12 @@ fn compute_content_default_size(
                 // for counters
                 replace_counters(config.counter_values, &mut t, config.slide_idx, config.step);
             }
-            let (width, height, text_layout) =
-                get_text_layout(config.resources, &t, text.text_align, &text.anchors);
+            let (width, height, text_layout) = get_text_layout(
+                config.resources,
+                &t,
+                text.text_align,
+                &text.parsed_text.anchors,
+            );
             assert!(text_layouts.insert(node.node_id, text_layout).is_none());
             (width, height)
         }
@@ -304,7 +308,6 @@ impl<'a> LayoutContext<'a> {
 
         let (content_w, content_h, content_aspect_ratio) = if w.is_none() || h.is_none() {
             node.content
-                .at_step(step)
                 .as_ref()
                 .map(|content| {
                     let (content_w, content_h) = compute_content_default_size(

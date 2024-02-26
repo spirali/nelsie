@@ -1,6 +1,6 @@
 use crate::model::{
-    merge_stepped_styles, Color, LengthOrExpr, NodeContentText, PartialTextStyle, StyleMap,
-    TextAlign,
+    merge_stepped_styles, Color, LengthOrExpr, NodeContentText, ParsedText, PartialTextStyle,
+    StyleMap, TextAlign,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, Step, StepValue,
@@ -102,6 +102,59 @@ fn resolve_style(
     })
 }
 
+fn process_text_parsing(
+    text: &str,
+    resources: &Resources,
+    formatting_delimiters: Option<&str>,
+    syntax_language: Option<&str>,
+    syntax_theme: Option<&str>,
+    main_style: &StepValue<PartialTextStyle>,
+    styles: &StyleMap,
+) -> PyResult<ParsedText> {
+    let mut parsed = if let Some(delimiters) = formatting_delimiters {
+        if delimiters.chars().count() != 3 {
+            return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
+        }
+        let mut f = delimiters.chars();
+        let esc_char = f.next().unwrap();
+        let start_block = f.next().unwrap();
+        let end_block = f.next().unwrap();
+        parse_styled_text(text, esc_char, start_block, end_block)?
+    } else {
+        parse_styled_text_from_plain_text(text)
+    };
+
+    if let Some(language) = &syntax_language {
+        let theme = syntax_theme
+            .as_ref()
+            .ok_or_else(|| PyValueError::new_err("Invalid theme"))?;
+        run_syntax_highlighting(resources, &mut parsed, language, theme)?;
+    }
+
+    let styles = parsed
+        .styles
+        .into_iter()
+        .map(|names| {
+            names
+                .into_iter()
+                .try_fold(main_style.clone(), |s, style_or_name| {
+                    Ok(match style_or_name {
+                        StyleOrName::Name(name) => {
+                            merge_stepped_styles(&s, styles.get_style(name)?)
+                        }
+                        StyleOrName::Style(style) => s.map(|x| x.merge(&style)),
+                    })
+                })
+                .map(|s| s.map(|v| v.into_text_style().unwrap()))
+        })
+        .collect::<crate::Result<Vec<_>>>()?;
+    Ok(ParsedText {
+        styled_lines: parsed.styled_lines,
+        styles,
+        anchors: parsed.anchors,
+    })
+}
+
 fn process_content(
     content: Content,
     nc_env: &mut NodeCreationEnv,
@@ -116,26 +169,6 @@ fn process_content(
                 2 => TextAlign::End,
                 _ => return Err(PyValueError::new_err("Invalid text align")),
             };
-            let mut parsed = if let Some(delimiters) = text.formatting_delimiters {
-                if delimiters.chars().count() != 3 {
-                    return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
-                }
-                let mut f = delimiters.chars();
-                let esc_char = f.next().unwrap();
-                let start_block = f.next().unwrap();
-                let end_block = f.next().unwrap();
-                parse_styled_text(&text.text, esc_char, start_block, end_block)?
-            } else {
-                parse_styled_text_from_plain_text(&text.text)
-            };
-
-            if let Some(language) = text.syntax_language {
-                let theme = text
-                    .syntax_theme
-                    .ok_or_else(|| PyValueError::new_err("Invalid theme"))?;
-                run_syntax_highlighting(nc_env.resources, &mut parsed, &language, &theme)?;
-            }
-
             let default = styles.get_style("default")?;
             let mut main_style = if let Some(style) = text.style1 {
                 resolve_style(nc_env.resources, default, style, styles, n_steps)?
@@ -146,31 +179,21 @@ fn process_content(
                 main_style = resolve_style(nc_env.resources, &main_style, style, styles, n_steps)?
             };
 
-            let styles = parsed
-                .styles
-                .into_iter()
-                .map(|names| {
-                    names
-                        .into_iter()
-                        .try_fold(main_style.clone(), |s, style_or_name| {
-                            Ok(match style_or_name {
-                                StyleOrName::Name(name) => {
-                                    merge_stepped_styles(&s, styles.get_style(name)?)
-                                }
-                                StyleOrName::Style(style) => s.map(|x| x.merge(&style)),
-                            })
-                        })
-                        .map(|s| s.map(|v| v.into_text_style().unwrap()))
-                })
-                .collect::<crate::Result<Vec<_>>>()?;
+            let parsed_text = process_text_parsing(
+                &text.text,
+                nc_env.resources,
+                text.formatting_delimiters.as_deref(),
+                text.syntax_language.as_deref(),
+                text.syntax_theme.as_deref(),
+                &main_style,
+                styles,
+            )?;
 
             let node_content = NodeContentText {
-                styled_lines: parsed.styled_lines,
-                styles,
+                parsed_text,
                 text_align,
                 default_font_size: main_style.map_ref(|s| s.size.unwrap()),
                 default_line_spacing: main_style.map_ref(|s| s.line_spacing.unwrap()),
-                anchors: parsed.anchors,
                 parse_counters: text.parse_counters,
             };
 
@@ -341,7 +364,7 @@ pub(crate) fn make_node(
         m_left: m_left.parse(&mut n_steps, parse_len_auto)?,
         m_right: m_right.parse(&mut n_steps, parse_len_auto)?,
         bg_color,
-        content: StepValue::new_const(content),
+        content,
         debug_layout: debug_layout.as_deref().map(Color::from_str).transpose()?,
         children: Vec::new(),
         styles,
