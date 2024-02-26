@@ -509,7 +509,7 @@ dependencies = [
 
 [[package]]
 name = "nelsie"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "env_logger",
  "imagesize",
