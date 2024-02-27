@@ -240,7 +240,7 @@ fn compute_content_default_size(
                 config.resources,
                 &t,
                 text.text_align,
-                &text.parsed_text.anchors,
+                &text.parsed_text.at_step(step).anchors,
             );
             assert!(text_layouts.insert(node.node_id, text_layout).is_none());
             (width, height)

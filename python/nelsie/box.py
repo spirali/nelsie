@@ -108,7 +108,7 @@ class BoxBuilder:
 
     def text(
         self,
-        text: str,
+        text: str | InSteps[str],
         style: str | TextStyle | InSteps[TextStyle] | None = None,
         *,
         parse_styles: bool = True,
@@ -186,9 +186,15 @@ class BoxBuilder:
         strip,
         parse_counters,
     ):
-        if strip:
-            text = text.strip()
-        text = text.replace("\t", " " * tab_width)
+        if isinstance(text, str):
+            if strip:
+                text = text.strip()
+            text = text.replace("\t", " " * tab_width)
+        else:
+            if strip:
+                text = text.map(lambda x: x.strip())
+            text = text.map(lambda x: x.replace("\t", " " * tab_width))
+
         if align == "start":
             align = 0
         elif align == "center":

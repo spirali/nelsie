@@ -112,7 +112,7 @@ pub(crate) enum TextAlign {
     End,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct ParsedText {
     pub styled_lines: Vec<StyledLine>,
     pub styles: Vec<StepValue<TextStyle>>,
@@ -121,7 +121,7 @@ pub(crate) struct ParsedText {
 
 #[derive(Debug)]
 pub(crate) struct NodeContentText {
-    pub parsed_text: ParsedText,
+    pub parsed_text: StepValue<ParsedText>,
     pub text_align: TextAlign,
     pub default_font_size: StepValue<f32>,
     pub default_line_spacing: StepValue<f32>,
@@ -130,7 +130,7 @@ pub(crate) struct NodeContentText {
 
 impl NodeContentText {
     pub fn text_style_at_step(&self, step: Step) -> StyledText {
-        let parsed_text = &self.parsed_text;
+        let parsed_text = &self.parsed_text.at_step(step);
         StyledText {
             styled_lines: parsed_text.styled_lines.clone(),
             styles: parsed_text
