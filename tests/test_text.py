@@ -403,3 +403,9 @@ def test_text_anchors_styled_space_prefix(deck):
     t = slide.text("""~s1{ }~s2{        }~s1{ }~11{C}""", z_level=2)
     t.line_box(0, bg_color="gray", z_level=0)
     t.text_anchor_box(11, bg_color="orange", z_level=1)
+
+
+@check(n_slides=3)
+def test_text_in_steps(deck):
+    slide = deck.new_slide(width=200, height=100)
+    slide.text(InSteps(["one", "two", "three"]))

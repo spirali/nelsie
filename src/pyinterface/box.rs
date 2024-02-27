@@ -42,7 +42,7 @@ pub(crate) struct ImageContent {
 
 #[derive(Debug, FromPyObject)]
 pub(crate) struct TextContent {
-    text: String,
+    text: ValueOrInSteps<String>,
     style1: Option<PyTextStyleOrName>,
     style2: Option<PyTextStyleOrName>,
     formatting_delimiters: Option<String>,
@@ -179,15 +179,17 @@ fn process_content(
                 main_style = resolve_style(nc_env.resources, &main_style, style, styles, n_steps)?
             };
 
-            let parsed_text = process_text_parsing(
-                &text.text,
-                nc_env.resources,
-                text.formatting_delimiters.as_deref(),
-                text.syntax_language.as_deref(),
-                text.syntax_theme.as_deref(),
-                &main_style,
-                styles,
-            )?;
+            let parsed_text = text.text.parse(n_steps, |txt| {
+                process_text_parsing(
+                    &txt,
+                    nc_env.resources,
+                    text.formatting_delimiters.as_deref(),
+                    text.syntax_language.as_deref(),
+                    text.syntax_theme.as_deref(),
+                    &main_style,
+                    styles,
+                )
+            })?;
 
             let node_content = NodeContentText {
                 parsed_text,
