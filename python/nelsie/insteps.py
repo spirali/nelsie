@@ -47,7 +47,7 @@ class InSteps(Generic[T]):
             return v
         if step <= 0:
             return default
-        return self.get(step - 1)
+        return self.get(step - 1, default)
 
     def map(self, fn):
         return InSteps(
@@ -68,7 +68,7 @@ class InSteps(Generic[T]):
 
 
 def zip_in_steps(values: list[S | InSteps[S]], default: S) -> InSteps[list[S]]:
-    keys = set(*[x.key_steps() if isinstance(x, InSteps) else (1,) for x in values])
+    keys = set().union(*[x.key_steps() if isinstance(x, InSteps) else (1,) for x in values])
     return InSteps(
         {step: [x.get(step, default) if isinstance(x, InSteps) else x for x in values] for step in keys},
         n_steps=max(x.n_steps if isinstance(x, InSteps) else 1 for x in values),

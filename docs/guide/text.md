@@ -197,6 +197,27 @@ def text_style_demo(slide):
     Hence `.set_style()` for `"default"` style always behaves as `.update_style()`.  
 
 
+## Text and `InSteps`
+
+You may use `InSteps` in `.text()`:
+
+```nelsie
+@deck.slide()
+def text_style_demo(slide):
+    slide.set_style("default", TextStyle(size=80))
+    slide.text(InSteps({1: "Hello world!", 2: "Hello Nelsie!"}))
+```
+
+You can also provide an array of strings and `InSteps`. String in the array is concatenated for each step:
+
+```nelsie
+@deck.slide()
+def text_style_demo(slide):
+    slide.set_style("default", TextStyle(size=80))
+    slide.text(["Hello ", InSteps({1: "world", 2: "Nelsie"}), "!"])
+```
+
+
 ## Text styles and `InSteps`
 
 When a style is set through `set_style` an instance of `InSteps` can be used:
