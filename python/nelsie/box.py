@@ -12,7 +12,7 @@ from .basictypes import (
     TextAlign,
     parse_debug_layout,
 )
-from .insteps import InSteps
+from .insteps import InSteps, zip_in_steps
 from .layoutexpr import LayoutExpr
 from .shapes import Path
 from .textstyle import TextStyle, _data_to_text_style
@@ -186,14 +186,19 @@ class BoxBuilder:
         strip,
         parse_counters,
     ):
+        def text_preprocess(x):
+            if strip:
+                x = x.strip()
+            return x.replace("\t", " " * tab_width)
+
         if isinstance(text, str):
-            if strip:
-                text = text.strip()
-            text = text.replace("\t", " " * tab_width)
+            text = text_preprocess(text)
+        elif isinstance(text, list):
+            text = zip_in_steps(text, "").map(lambda x: text_preprocess("".join(x)))
+        elif isinstance(text, InSteps):
+            text = text.map(text_preprocess)
         else:
-            if strip:
-                text = text.map(lambda x: x.strip())
-            text = text.map(lambda x: x.replace("\t", " " * tab_width))
+            raise Exception("Invalid type for text")
 
         if align == "start":
             align = 0

@@ -409,3 +409,10 @@ def test_text_anchors_styled_space_prefix(deck):
 def test_text_in_steps(deck):
     slide = deck.new_slide(width=200, height=100)
     slide.text(InSteps(["one", "two", "three"]))
+
+
+@check(n_slides=3)
+def test_array_text_in_steps(deck):
+    slide = deck.new_slide(width=100, height=30)
+    slide.set_style("default", TextStyle(size=12))
+    slide.text(["Hello ", InSteps(["world", "Nelsie", "user"]), " ", InSteps({2: "!"})])
