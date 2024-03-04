@@ -29,6 +29,7 @@ nav:
       - guide/resources.md
       - guide/box.md
       - guide/colors.md
+      - guide/list.md
 
 theme:
   name: material
