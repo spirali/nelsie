@@ -7,9 +7,10 @@ use crate::model::{
 };
 use std::collections::HashMap;
 use std::sync::Arc;
+use svg2pdf::usvg;
 use taffy::prelude as tf;
 use taffy::style::FlexWrap;
-use usvg_tree::FontStretch;
+use usvg::FontStretch;
 
 #[derive(Debug)]
 pub(crate) struct Slide {

@@ -3,8 +3,8 @@ use crate::render::layout::{ComputedLayout, Rectangle};
 use resvg::tiny_skia;
 use resvg::tiny_skia::{PathBuilder, Rect};
 use std::rc::Rc;
-use usvg::NonZeroPositiveF32;
-use usvg_tree::Fill;
+use svg2pdf::usvg;
+use usvg::{Fill, NonZeroPositiveF32};
 
 pub(crate) fn stroke_to_usvg_stroke(stroke: &Stroke) -> usvg::Stroke {
     usvg::Stroke {
@@ -228,9 +228,9 @@ pub(crate) fn create_arrow(
     })
 }
 
-pub(crate) fn path_from_rect(rect: &Rectangle, border_radius: f32) -> tiny_skia::Path {
+pub(crate) fn path_from_rect(rect: &Rectangle, border_radius: f32) -> Option<tiny_skia::Path> {
     if border_radius < 0.001 {
-        PathBuilder::from_rect(Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).unwrap())
+        Rect::from_xywh(rect.x, rect.y, rect.width, rect.height).map(PathBuilder::from_rect)
     } else {
         let mut builder = PathBuilder::new();
         let x2 = rect.x + rect.width;
@@ -244,6 +244,6 @@ pub(crate) fn path_from_rect(rect: &Rectangle, border_radius: f32) -> tiny_skia:
         builder.quad_to(rect.x, y2, rect.x, y2 - border_radius);
         builder.line_to(rect.x, rect.y + border_radius);
         builder.quad_to(rect.x, rect.y, rect.x + border_radius, rect.y);
-        builder.finish().unwrap()
+        builder.finish()
     }
 }

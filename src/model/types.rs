@@ -2,6 +2,7 @@ use crate::common::error::NelsieError;
 
 use crate::model::InTextAnchorId;
 use std::str::FromStr;
+use svg2pdf::usvg;
 use usvg::NormalizedF32;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]

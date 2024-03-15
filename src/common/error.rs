@@ -1,3 +1,4 @@
+use svg2pdf::usvg;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -5,7 +6,7 @@ pub enum NelsieError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]
-    Xml(#[from] roxmltree::Error),
+    Xml(#[from] usvg::roxmltree::Error),
     #[error(transparent)]
     Svg(#[from] usvg::Error),
     #[error(transparent)]

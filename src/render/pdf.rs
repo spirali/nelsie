@@ -1,6 +1,7 @@
 use pdf_writer::Finish;
 use pdf_writer::{Content, Name, Rect, Ref};
 use std::path::Path;
+use svg2pdf::usvg;
 
 pub(crate) struct PdfBuilder {
     pdf: pdf_writer::Pdf,
