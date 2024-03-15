@@ -1,11 +1,11 @@
 use crate::common::error::NelsieError;
 use crate::model::ImageManager;
 
-use usvg::fontdb;
+use svg2pdf::usvg::fontdb;
 
 use crate::model::textstyles::FontData;
-use usvg::fontdb::Family::Name;
-use usvg::fontdb::Source;
+use svg2pdf::usvg::fontdb::Family::Name;
+use svg2pdf::usvg::fontdb::Source;
 
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;

@@ -7,7 +7,9 @@ use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use usvg::TreeParsing;
+
+use svg2pdf::usvg;
+use usvg::{roxmltree, TreeParsing};
 
 use crate::NelsieError;
 
@@ -21,7 +23,7 @@ pub(crate) struct SvgImageData {
        usvg::Tree for each step because of tree stripping, so recreating from data is not as bad.
     */
     pub data: Vec<u8>,
-    pub id_visibility: Vec<(String, StepValue<bool>)>,
+    pub id_visibility: HashMap<String, StepValue<bool>>,
     pub n_steps: Step,
 }
 
@@ -108,7 +110,7 @@ fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
 
     // Parse label step definitions
     let mut n_steps = 1;
-    let mut id_visibility = Vec::new();
+    let mut id_visibility = HashMap::new();
     for node in xml_tree.descendants() {
         if let Some(label) =
             node.attribute(("http://www.inkscape.org/namespaces/inkscape", "label"))
@@ -124,10 +126,10 @@ fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
                 continue;
             };
             n_steps = max(n_steps, n);
-            id_visibility.push((id.to_string(), steps));
+            id_visibility.insert(id.to_string(), steps);
         }
     }
-    // TODO: We need to load tree only for width and hight, so we probably do not need to load whole tree
+
     let tree = usvg::Tree::from_xmltree(&xml_tree, &usvg::Options::default())?;
     //tree.convert_text(font_db);
     Ok(LoadedImage {

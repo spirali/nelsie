@@ -6,7 +6,8 @@ use pyo3::{FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
-use usvg_tree::FontStretch;
+use svg2pdf::usvg;
+use usvg::FontStretch;
 
 #[derive(Debug, Default)]
 pub(crate) struct PyTextStyle {

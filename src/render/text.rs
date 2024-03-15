@@ -7,11 +7,11 @@ use std::collections::HashMap;
 
 use crate::render::layout::{Rectangle, TextLayout};
 use crate::render::paths::stroke_to_usvg_stroke;
-use usvg::{NonZeroPositiveF32, TreeTextToPath};
-use usvg_tree::{
-    AlignmentBaseline, CharacterPosition, DominantBaseline, Fill, Font, FontStyle, LengthAdjust,
-    NodeKind, PaintOrder, Text, TextAnchor, TextChunk, TextDecoration, TextFlow, TextRendering,
-    TextSpan, Visibility, WritingMode,
+use svg2pdf::usvg;
+use usvg::{
+    AlignmentBaseline, DominantBaseline, Fill, Font, FontStyle, LengthAdjust, NonZeroPositiveF32,
+    PaintOrder, PostProcessingSteps, Text, TextAnchor, TextChunk, TextDecoration, TextFlow,
+    TextRendering, TextSpan, Tree, TreePostProc, Visibility, WritingMode,
 };
 
 pub(crate) fn get_in_text_anchor_point(text: &StyledText, point: &InTextAnchorPoint) -> StyledText {
@@ -132,10 +132,10 @@ pub(crate) fn get_text_layout(
 fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     assert_eq!(text.styled_lines.len(), 1);
     let text_node = render_text(text, 0.0, 0.0, TextAlign::Start);
-    let root_node = usvg::Node::new(NodeKind::Group(usvg::Group::default()));
-    root_node.append(text_node);
+    let mut root_node = usvg::Group::default();
+    root_node.children.push(text_node);
     let size = usvg::Size::from_wh(8000.0, 6000.0).unwrap();
-    let mut tree = usvg_tree::Tree {
+    let mut tree = Tree {
         size,
         view_box: usvg::ViewBox {
             rect: size.to_non_zero_rect(0.0, 0.0),
@@ -143,29 +143,20 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
         },
         root: root_node,
     };
-    tree.convert_text(&resources.font_db);
-    let mut x2 = f32::MIN;
-    if let Some(main) = tree.root.first_child() {
-        for child in main.children() {
-            let borrowed = child.borrow();
-            match *borrowed {
-                NodeKind::Path(ref path) => {
-                    let bbox = path.text_bbox.unwrap();
-                    x2 = x2.max(bbox.right());
-                }
-                _ => unreachable!(),
-            }
-        }
-    }
-    let mut width = x2;
-    if !f32::is_finite(width) || width < 0.0 {
-        width = 0.0;
-    }
+    let postprocessing = PostProcessingSteps {
+        convert_text_into_paths: true,
+    };
+    tree.postprocess(postprocessing, &resources.font_db);
+
+    let mut width = tree
+        .root
+        .abs_bounding_box()
+        .map(|bbox| bbox.right())
+        .unwrap_or(0.0);
 
     /* Because bounding box ignores span that contains only spaces, we have problem with trailing spaces if they are in separate style,
        we need to increase with for each trailing space
     */
-
     let line = &text.styled_lines[0];
     let line_len = line.spans.iter().map(|s| s.length as usize).sum();
     let mut line_chars = line.text.chars();
@@ -274,15 +265,6 @@ pub(crate) fn render_text(
         .iter()
         .map(|sl| sl.text.len())
         .sum();
-    let pos_list = vec![
-        CharacterPosition {
-            x: None,
-            y: None,
-            dx: None,
-            dy: None,
-        };
-        n_chars
-    ];
     let rot_list = vec![0.0; n_chars];
 
     let mut current_y = y;
@@ -316,12 +298,16 @@ pub(crate) fn render_text(
         .collect();
     let text = Text {
         id: String::new(),
-        transform: Default::default(),
         rendering_mode: TextRendering::GeometricPrecision,
-        positions: pos_list,
+        dx: vec![],
+        dy: vec![],
         rotate: rot_list,
         writing_mode: WritingMode::LeftToRight,
         chunks,
+        abs_transform: Default::default(),
+        bounding_box: None,
+        stroke_bounding_box: None,
+        flattened: None,
     };
-    usvg::Node::new(NodeKind::Text(text))
+    usvg::Node::Text(Box::new(text))
 }
