@@ -214,7 +214,7 @@ impl<'a> RenderContext<'a> {
     }
 }
 
-pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg::Tree {
+pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> Tree {
     log::debug!("Creating layout");
     let layout_builder = LayoutContext::new(render_cfg);
     let layout = layout_builder.compute_layout(render_cfg.slide, render_cfg.step);

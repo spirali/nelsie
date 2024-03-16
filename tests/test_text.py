@@ -416,3 +416,11 @@ def test_array_text_in_steps(deck):
     slide = deck.new_slide(width=100, height=30)
     slide.set_style("default", TextStyle(size=12))
     slide.text(["Hello ", InSteps(["world", "Nelsie", "user"]), " ", InSteps({2: "!"})])
+
+
+@check()
+def test_text_padding(deck):
+    slide = deck.new_slide(width=100, height=40)
+    slide.set_style("default", TextStyle(size=12))
+    slide.text("Hello", bg_color="orange", p_left=20, p_right=30, p_bottom=5, p_top=5)
+    deck.render("/tmp/out.pdf")

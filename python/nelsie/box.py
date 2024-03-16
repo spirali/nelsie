@@ -107,17 +107,17 @@ class BoxBuilder:
         return self.box(_content=image, **box_args)
 
     def text(
-        self,
-        text: str | InSteps[str],
-        style: str | TextStyle | InSteps[TextStyle] | None = None,
-        *,
-        parse_styles: bool = True,
-        style_delimiters: str | None = "~{}",
-        tab_width: int = 4,
-        align: TextAlign = "start",
-        strip=True,
-        parse_counters: bool = False,
-        **box_args,
+            self,
+            text: str | InSteps[str],
+            style: str | TextStyle | InSteps[TextStyle] | None = None,
+            *,
+            parse_styles: bool = True,
+            style_delimiters: str | None = "~{}",
+            tab_width: int = 4,
+            align: TextAlign = "start",
+            strip=True,
+            parse_counters: bool = False,
+            **box_args,
     ):
         """
         Create a box with a text.
@@ -138,19 +138,19 @@ class BoxBuilder:
         )
 
     def code(
-        self,
-        text: str,
-        language: str,
-        style: str | TextStyle | InSteps[TextStyle] | None = None,
-        *,
-        theme: str | None = None,
-        parse_styles: bool = False,
-        style_delimiters: str | None = "~{}",
-        tab_width: int = 4,
-        align: TextAlign = "start",
-        strip=True,
-        parse_counters: bool = False,
-        **box_args,
+            self,
+            text: str,
+            language: str,
+            style: str | TextStyle | InSteps[TextStyle] | None = None,
+            *,
+            theme: str | None = None,
+            parse_styles: bool = False,
+            style_delimiters: str | None = "~{}",
+            tab_width: int = 4,
+            align: TextAlign = "start",
+            strip=True,
+            parse_counters: bool = False,
+            **box_args,
     ):
         """
         Create a box with a syntax highlighted text.
@@ -173,18 +173,18 @@ class BoxBuilder:
         )
 
     def _text_box(
-        self,
-        text,
-        style1,
-        style2,
-        delimiters,
-        tab_width,
-        box_args,
-        align,
-        language,
-        theme,
-        strip,
-        parse_counters,
+            self,
+            text,
+            style1,
+            style2,
+            delimiters,
+            tab_width,
+            box_args,
+            align,
+            language,
+            theme,
+            strip,
+            parse_counters,
     ):
         def text_preprocess(x):
             if strip:
@@ -218,7 +218,8 @@ class BoxBuilder:
             syntax_theme=theme,
             parse_counters=parse_counters,
         )
-        return self.box(_content=text_content, **box_args)
+
+        return self.box(**box_args).box(_content=text_content, debug_layout=False)
 
     def draw(self, paths: Path | list[Path] | InSteps[Path | list[Path]]):
         """
@@ -233,44 +234,44 @@ class BoxBuilder:
         box.deck._deck.draw(box.slide._slide_id, box._box_id, paths)
 
     def box(
-        self,
-        *,
-        active: bool | str | int | InSteps[bool] = True,
-        show: bool | str | int | InSteps[bool] = True,
-        z_level: int | InSteps[int] | None = None,
-        x: Position | InSteps[Position] = None,
-        y: Position | InSteps[Position] = None,
-        width: Size | InSteps[Size] = None,
-        height: Size | InSteps[Size] = None,
-        border_radius: float | InSteps[float] = 0,
-        p_left: Length | InSteps[Length] | None = None,
-        p_right: Length | InSteps[Length] | None = None,
-        p_top: Length | InSteps[Length] | None = None,
-        p_bottom: Length | InSteps[Length] | None = None,
-        p_x: Length | InSteps[Length] = 0,
-        p_y: Length | InSteps[Length] = 0,
-        m_left: LengthAuto | InSteps[LengthAuto] | None = None,
-        m_right: LengthAuto | InSteps[LengthAuto] | None = None,
-        m_top: LengthAuto | InSteps[LengthAuto] | None = None,
-        m_bottom: LengthAuto | InSteps[LengthAuto] | None = None,
-        m_x: LengthAuto | InSteps[LengthAuto] = 0,
-        m_y: LengthAuto | InSteps[LengthAuto] = 0,
-        row: bool | InSteps[bool] = False,
-        reverse: bool | InSteps[bool] = False,
-        flex_wrap: FlexWrap | InSteps[FlexWrap] = "nowrap",
-        flex_grow: float | InSteps[float] = 0.0,
-        flex_shrink: float | InSteps[float] = 1.0,
-        align_items: AlignItemsSteps = "center",
-        align_self: AlignItemsSteps = None,
-        justify_self: AlignItemsSteps = None,
-        align_content: AlignContentSteps = None,
-        justify_content: AlignContentSteps = "center",
-        gap: tuple[Length, Length] | InSteps[tuple[Length, Length]] = (0.0, 0.0),
-        bg_color: str | None | InSteps[str | None] = None,
-        name: str = "",
-        debug_layout: bool | str | None = None,
-        replace_steps: dict[int, int] | None = None,
-        _content: NodeContent | InSteps[NodeContent] = None,
+            self,
+            *,
+            active: bool | str | int | InSteps[bool] = True,
+            show: bool | str | int | InSteps[bool] = True,
+            z_level: int | InSteps[int] | None = None,
+            x: Position | InSteps[Position] = None,
+            y: Position | InSteps[Position] = None,
+            width: Size | InSteps[Size] = None,
+            height: Size | InSteps[Size] = None,
+            border_radius: float | InSteps[float] = 0,
+            p_left: Length | InSteps[Length] | None = None,
+            p_right: Length | InSteps[Length] | None = None,
+            p_top: Length | InSteps[Length] | None = None,
+            p_bottom: Length | InSteps[Length] | None = None,
+            p_x: Length | InSteps[Length] = 0,
+            p_y: Length | InSteps[Length] = 0,
+            m_left: LengthAuto | InSteps[LengthAuto] | None = None,
+            m_right: LengthAuto | InSteps[LengthAuto] | None = None,
+            m_top: LengthAuto | InSteps[LengthAuto] | None = None,
+            m_bottom: LengthAuto | InSteps[LengthAuto] | None = None,
+            m_x: LengthAuto | InSteps[LengthAuto] = 0,
+            m_y: LengthAuto | InSteps[LengthAuto] = 0,
+            row: bool | InSteps[bool] = False,
+            reverse: bool | InSteps[bool] = False,
+            flex_wrap: FlexWrap | InSteps[FlexWrap] = "nowrap",
+            flex_grow: float | InSteps[float] = 0.0,
+            flex_shrink: float | InSteps[float] = 1.0,
+            align_items: AlignItemsSteps = "center",
+            align_self: AlignItemsSteps = None,
+            justify_self: AlignItemsSteps = None,
+            align_content: AlignContentSteps = None,
+            justify_content: AlignContentSteps = "center",
+            gap: tuple[Length, Length] | InSteps[tuple[Length, Length]] = (0.0, 0.0),
+            bg_color: str | None | InSteps[str | None] = None,
+            name: str = "",
+            debug_layout: bool | str | None = None,
+            replace_steps: dict[int, int] | None = None,
+            _content: NodeContent | InSteps[NodeContent] = None,
     ):
         """
         Create a new child box
@@ -489,13 +490,13 @@ class Box(BoxBuilder):
     """
 
     def __init__(
-        self,
-        deck,
-        slide,
-        box_id,
-        node_id,
-        name: str,
-        z_level: int,
+            self,
+            deck,
+            slide,
+            box_id,
+            node_id,
+            name: str,
+            z_level: int,
     ):
         """
         @private
