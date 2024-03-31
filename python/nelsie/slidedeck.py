@@ -59,7 +59,7 @@ class SlideDeck:
         resources: Resources | None = None,
         default_font: str | None = None,
         default_monospace_font: str | None = None,
-        default_theme: str = "InspiredGitHub",
+        default_code_theme: str = "InspiredGitHub",
         default_code_language: str | None = None,
     ):
         """
@@ -73,7 +73,7 @@ class SlideDeck:
         * resource - Resource instance, if None a new instance is created
         * default_font - Name of default font
         * default_monospace_font - Name of the default monospace font
-        * default_theme - Name of default theme for syntax highlighting:
+        * default_code_theme - Name of default theme for syntax highlighting (.code() method):
             Available themes:
             * "base16-ocean.dark"
             * "base16-eighties.dark"
@@ -82,7 +82,7 @@ class SlideDeck:
             * "InspiredGitHub"
             * "Solarized (dark)"
             * "Solarized (light)"
-        * default_code_language Default language to use for .code
+        * default_code_language - Default language to use for syntax highlighting (.code() method)
         """
         if resources is None:
             resources = Resources()
@@ -92,7 +92,7 @@ class SlideDeck:
         self.bg_color = bg_color
         self.image_directory = image_directory
         self.resources = resources
-        self.default_theme = default_theme
+        self.default_code_theme = default_code_theme
         self.default_code_language = default_code_language
         self._deck = nelsie_rs.Deck(resources, default_font, default_monospace_font)
 

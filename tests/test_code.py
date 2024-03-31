@@ -99,3 +99,15 @@ def test_code_style_delimiters(deck):
     slide.code(
         "print('$big<Hello> world!')", "Python", style=TextStyle(size=12), parse_styles=True, style_delimiters="$<>"
     )
+
+
+@check()
+def test_code_language_none(deck):
+    slide = deck.new_slide(width=200, height=30)
+    slide.code("print('Hello world!')", None, style=TextStyle(size=12))
+
+
+@check(deck_kwargs=dict(default_code_language="Python"))
+def test_code_language_default(deck):
+    slide = deck.new_slide(width=200, height=30)
+    slide.code("print('Hello world!')", style=TextStyle(size=12))
