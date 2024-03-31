@@ -41,19 +41,15 @@ A new box is created by calling the `.box()` method on an existing box or a slid
     * `int` or `float` or `str` containing digits -- A fixed size given in pixels (example: `20.5`, or `"1.5"`)
     * `str` in format `"XX%"` where `XX` is an integer -- A relative size to the parent box, in percent (example: `"50%"`)
     * `LayoutExpr` -- A fixed size defined by a layout expression.
-
 * `height` - Height of the box
     * The paramter takes the same values as `width`.
-
 * `row` - If `True` then the box arranges its children horizontally; otherwise vertically. Default: `False`
 * `reverse` - If `True` then child boxes are ordered in the reverse order; i.e. in bottom-up (or right-left if `row` is `True`) Default: `False`.
 * `flex_wrap` -
 * `flex_grow` - The `flex_grow` parameter takes a `float` value. The default is `0`. This attribute specifies how much of the remaining space of its parent box should be allocated to this box.
-
-    The remaining space is the size of the box minus the size of all its children. If multiple sibling boxes have positive `flex_grow' values, it is distributed according to the ratio defined by their values.
-
-    This property is equivalent to the CSS property `flex-grow'.
-* `flex_shrink` -
+    The remaining space is the size of the box minus the size of all its children. If multiple sibling boxes have positive `flex_grow` values, it is distributed according to the ratio defined by their values.
+    This property is equivalent to the CSS property `flex-grow`.
+* `flex_shrink` - The `flex_grow` parameter takes a `float` value. The default is `0`. If the size of all flex items is larger than the flex container, items shrink to fit according to `flex_shrink`.     This property is equivalent to the CSS property `flex-grow`.
 * `align_items` -
 * `align_self` -
 * `justify_self` -

@@ -275,7 +275,7 @@ class BoxBuilder:
         _content: NodeContent | InSteps[NodeContent] = None,
     ):
         """
-        Create a new child box
+        Create a new child box. See [Box reference](https://spirali.github.io/nelsie/guide/box/) for documentation
         """
         parent_box = self.get_box()
         if debug_layout is None:
