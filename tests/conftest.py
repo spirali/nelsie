@@ -11,7 +11,6 @@ ASSETS_DIR = os.path.join(PYTEST_DIR, "assets")
 
 sys.path.insert(0, os.path.join(ROOT_DIR, "nelsie-api"))
 
-
 from nelsie import Resources, SlideDeck  # noqa
 
 
@@ -25,10 +24,17 @@ def resources():
 
 
 @pytest.fixture()
-def deck(resources):
-    return SlideDeck(
-        image_directory=ASSETS_DIR,
-        resources=resources,
-        default_font="DejaVu Sans",
-        default_monospace_font="DejaVu Sans Mono",
-    )
+def deck_builder(resources):
+    def helper(**kwargs):
+        kwargs.setdefault("image_directory", ASSETS_DIR)
+        kwargs.setdefault("default_font", "DejaVu Sans")
+        kwargs.setdefault("default_monospace_font", "DejaVu Sans Mono")
+        kwargs.setdefault("resources", resources)
+        return SlideDeck(**kwargs)
+
+    return helper
+
+
+@pytest.fixture()
+def deck(deck_builder):
+    return deck_builder()

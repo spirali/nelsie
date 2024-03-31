@@ -50,14 +50,18 @@ def compare_images(new_dir, old_dir, n_slides, threshold):
             raise Exception(f"Slide {os.path.join(new_dir, name)} difference is {diff} (limit is {threshold})")
 
 
-def check(n_slides: int = 1, error=None, error_match: str | None = None):
+def check(n_slides: int = 1, error=None, error_match: str | None = None, deck_kwargs=None):
     def wrapper(fn):
         name = fn.__name__
         if name.startswith("test_"):
             name = name[5:]
 
-        def helper(tmp_path, deck):
+        def helper(tmp_path, deck_builder):
             with change_workdir(tmp_path):
+                if deck_kwargs is None:
+                    deck = deck_builder()
+                else:
+                    deck = deck_builder(**deck_kwargs)
                 fn(deck)
                 if error is not None:
                     with pytest.raises(error, match=error_match):
