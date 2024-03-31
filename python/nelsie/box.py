@@ -140,7 +140,7 @@ class BoxBuilder:
     def code(
         self,
         text: str,
-        language: str,
+        language: str | None = None,
         style: str | TextStyle | InSteps[TextStyle] | None = None,
         *,
         theme: str | None = None,
@@ -158,6 +158,10 @@ class BoxBuilder:
         box_args.setdefault("name", "code")
         if theme is None:
             theme = self.get_box().deck.default_theme
+        if language is None:
+            language = self.get_box().deck.default_code_language
+        if language is None:
+            raise Exception("Language for code not specified")
         return self._text_box(
             text,
             "code",

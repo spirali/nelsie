@@ -60,6 +60,7 @@ class SlideDeck:
         default_font: str | None = None,
         default_monospace_font: str | None = None,
         default_theme: str = "InspiredGitHub",
+        default_code_language: str | None = None,
     ):
         """
         A top-level class of Nelsie. It represents a set of slides.
@@ -71,6 +72,7 @@ class SlideDeck:
         * image_directory - default path where images are searched for (could be overriden for each slide)
         * resource - Resource instance, if None a new instance is created
         * default_font - Name of default font
+        * default_monospace_font - Name of the default monospace font
         * default_theme - Name of default theme for syntax highlighting:
             Available themes:
             * "base16-ocean.dark"
@@ -80,6 +82,7 @@ class SlideDeck:
             * "InspiredGitHub"
             * "Solarized (dark)"
             * "Solarized (light)"
+        * default_code_language Default language to use for .code
         """
         if resources is None:
             resources = Resources()
@@ -90,6 +93,7 @@ class SlideDeck:
         self.image_directory = image_directory
         self.resources = resources
         self.default_theme = default_theme
+        self.default_code_language = default_code_language
         self._deck = nelsie_rs.Deck(resources, default_font, default_monospace_font)
 
     def set_style(self, name: str, style: TextStyle):
