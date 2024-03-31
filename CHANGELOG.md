@@ -1,4 +1,4 @@
-# DEV
+# 0.5
 
 ## New features
 
