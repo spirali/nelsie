@@ -15,6 +15,24 @@ fn main() {
 }""", "Rust")
 ```
 
+
+## Default syntax language for syntax highlighting
+
+If you use mostly a single programming through the slides, you can set the default language for syntax highlighting.
+
+
+```nelsie
+deck = SlideDeck(default_code_language="Rust")
+
+@deck.slide()
+def code_demo(slide):
+    slide.code("""
+fn main() {
+    println!("Hello world!")
+}""")
+```
+
+
 ## Styling code
 
 You can change the style by passing the parameter `style`:
@@ -72,10 +90,10 @@ def code_demo(slide):
                theme="Solarized (light)", style=TextStyle(size=60))
 ```
 
-You can also change the color theme globally by setting `default_theme` in `SlideDeck`:
+You can also change the color theme globally by setting `default_code_theme` in `SlideDeck`:
 
 ```python
-deck = SlideDeck(default_theme="Solarized (light)")
+deck = SlideDeck(default_code_theme="Solarized (light)")
 ```
 
 The list of supported color themes; the default theme is "InspiredGitHub":
@@ -169,3 +187,8 @@ This list is also programmatically available through [`Resources`](resources.md)
 * camlp4 ()
 * commands-builtin-shell-bash ()
 * reStructuredText (rst, rest)
+
+
+## Empty language
+
+Language for syntax highlighting can be se to `None`. In such case, no syntax highlighting is used while all other `.code()` properties are used.
