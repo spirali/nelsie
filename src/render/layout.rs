@@ -234,7 +234,12 @@ fn compute_content_default_size(
             if text.parse_counters {
                 // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
                 // for counters
-                replace_counters(config.counter_values, &mut t, config.slide_idx, config.step);
+                replace_counters(
+                    config.counter_values,
+                    &mut t,
+                    config.slide_id as u32,
+                    config.step,
+                );
             }
             let (width, height, text_layout) = get_text_layout(
                 config.resources,
