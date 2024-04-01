@@ -14,7 +14,7 @@ pub(crate) use self::image::{
 pub(crate) use self::node::{Node, NodeChild, NodeContent};
 pub(crate) use self::resources::Resources;
 pub(crate) use self::shapes::{Arrow, Drawing, Path, PathPart};
-pub(crate) use self::slidedeck::{Slide, SlideDeck};
+pub(crate) use self::slidedeck::{Slide, SlideDeck, SlideId};
 pub(crate) use self::steps::{Step, StepValue};
 pub(crate) use self::text::{
     InTextAnchor, InTextAnchorId, InTextAnchorPoint, NodeContentText, ParsedText, Span, StyledLine,

@@ -147,8 +147,6 @@ pub(crate) fn render_slide_deck(
                 RenderingResult::None => { /* Do nothing */ }
                 RenderingResult::Tree(tree) => {
                     let s = std::time::Instant::now();
-                    dbg!(slide_idx, step_idx);
-                    dbg!(&global_counter.indices);
                     pdf_builder.as_mut().unwrap().add_page_from_svg(
                         global_counter
                             .indices
