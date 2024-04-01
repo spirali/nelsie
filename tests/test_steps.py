@@ -71,10 +71,17 @@ def test_step_global_counter(deck):
     deck.set_style("g", TextStyle(color="green"))
     deck.set_style("r", TextStyle(color="red"))
     slide = deck.new_slide(width=100, height=40)
-    slide.text("$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)", parse_counters=True, bg_color="gray")
+    slide.text(
+        "$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)",
+        parse_counters=True,
+        bg_color="gray",
+    )
     slide.set_n_steps(2)
     slide = deck.new_slide(width=400, height=100)
-    slide.text("$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)", bg_color="gray")
+    slide.text(
+        "$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)",
+        bg_color="gray",
+    )
     slide = deck.new_slide(width=100, height=40)
     slide.text(
         "$(global_slide)/$(global_slides) ~g{!!!} ~r{$(global_page)}/$(global_pages) ~g{!!!}",
@@ -137,3 +144,50 @@ def test_active_next_last_keywords(deck):
     slide.box(active=3).text("Jump")
     slide.box(active="last").text("Last2")
     slide.box(active="next").text("Next2")
+
+
+@check(n_slides=8)
+def test_subslides(deck):
+    deck.set_style("default", TextStyle(size=8))
+
+    def counters(parent):
+        text = "$(global_slide)/$(global_slides) $(global_page)/$(global_pages)"
+        parent.text(text, x=0, y=0, parse_counters=True, z_level=1)
+
+    slide = deck.new_slide(width=40, height=70)
+    counters(slide)
+    slide.box(width=20, height=20, bg_color="red")
+    slide.box(width=20, height=20, bg_color="orange", show="next+")
+    slide.box(width=20, height=20, bg_color="green", show="next+")
+
+    slide2 = slide.new_slide_at(3, width=40, height=40)
+    counters(slide2)
+    slide2.box(width=10, height=10, bg_color="blue")
+    slide2.box(width=10, height=10, bg_color="blue", show="next+")
+
+    slide3 = slide.new_slide_at(3, width=40, height=40)
+    counters(slide3)
+    slide3.box(width=10, height=10, bg_color="purple")
+
+    slide4 = slide2.new_slide_at(3, width=40, height=40)
+    counters(slide4)
+    slide4.box(width=5, height=5, bg_color="gray")
+
+    slide5 = slide.new_slide_at(6, width=40, height=40)
+    counters(slide5)
+    slide5.box(width=10, height=10, bg_color="black")
+
+
+@check(n_slides=4)
+def test_subslides_decorator(deck):
+    deck.set_style("default", TextStyle(size=12))
+
+    @deck.slide(width=100, height=50)
+    def my_slide(slide):
+        slide.box().text("One")
+        slide.box(show="next+").text("Two")
+        slide.box(show="next+").text("Three")
+
+    @my_slide.slide_at(3, width=100, height=50)
+    def inserted(slide):
+        slide.text("Inserted")

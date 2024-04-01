@@ -47,6 +47,14 @@ class Slide(BoxBuilder):
     def get_n_steps(self) -> int:
         return self.deck._deck.get_n_steps(self._slide_id)
 
+    def new_slide_at(self, step: int, **slide_kwargs):
+        slide_kwargs["parent_slide"] = (self._slide_id, step)
+        return self.deck.new_slide(**slide_kwargs)
+
+    def slide_at(self, step: int, **slide_kwargs):
+        slide_kwargs["parent_slide"] = (self._slide_id, step)
+        return self.deck.slide(**slide_kwargs)
+
 
 class SlideDeck:
     def __init__(
@@ -107,6 +115,7 @@ class SlideDeck:
 
     def new_slide(
         self,
+        *,
         width: float | None = None,
         height: float | None = None,
         bg_color: str | None = None,
@@ -114,6 +123,7 @@ class SlideDeck:
         name: str = "",
         debug_layout: bool | str = False,
         counters: list[str] | None = None,
+        parent_slide: tuple[Slide, int] | None = None,
     ) -> Slide:
         """
         Creates a new slide in the slide deck.
@@ -127,11 +137,12 @@ class SlideDeck:
         if image_directory is None:
             image_directory = self.image_directory
         debug_layout = parse_debug_layout(debug_layout)
-        slide_id = self._deck.new_slide(width, height, bg_color, name, counters)
+        slide_id = self._deck.new_slide(width, height, bg_color, name, counters, parent_slide)
         return Slide(self, slide_id, name, image_directory, debug_layout)
 
     def slide(
         self,
+        *,
         width: float | None = None,
         height: float | None = None,
         bg_color: str | None = None,
@@ -139,6 +150,7 @@ class SlideDeck:
         name: str = "",
         debug_layout: bool | str = False,
         counters: list[str] | None = None,
+        parent_slide: tuple[Slide, int] | None = None,
     ):
         """
         Decorator for creating new slide.
@@ -156,8 +168,18 @@ class SlideDeck:
         """
 
         def helper(fn):
-            slide = self.new_slide(width, height, bg_color, image_directory, name, debug_layout, counters)
-            return fn(slide)
+            slide = self.new_slide(
+                width=width,
+                height=height,
+                bg_color=bg_color,
+                image_directory=image_directory,
+                name=name,
+                debug_layout=debug_layout,
+                counters=counters,
+                parent_slide=parent_slide,
+            )
+            fn(slide)
+            return slide
 
         return helper
 

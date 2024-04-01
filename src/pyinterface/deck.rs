@@ -63,8 +63,14 @@ impl Deck {
         bg_color: &str,
         name: String,
         counters: Option<Vec<String>>,
+        parent: Option<(SlideId, Step)>,
     ) -> PyResult<SlideId> {
         let slide_id = self.deck.slides.len() as SlideId;
+        if let Some((_, step)) = parent {
+            if step == 0 {
+                return Err(PyException::new_err("Invalid step"));
+            }
+        }
         self.deck.slides.push(Slide::new(
             width,
             height,
@@ -72,6 +78,7 @@ impl Deck {
             Color::from_str(bg_color)?,
             self.deck.global_styles.clone(),
             counters.unwrap_or_default(),
+            parent,
         ));
         Ok(slide_id)
     }

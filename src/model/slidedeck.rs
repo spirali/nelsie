@@ -12,6 +12,8 @@ use taffy::prelude as tf;
 use taffy::style::FlexWrap;
 use usvg::FontStretch;
 
+pub(crate) type SlideId = u32;
+
 #[derive(Debug)]
 pub(crate) struct Slide {
     pub(crate) width: f32,
@@ -20,6 +22,7 @@ pub(crate) struct Slide {
     pub(crate) n_steps: Step,
     pub(crate) bg_color: Color,
     pub(crate) counters: Vec<String>,
+    pub(crate) parent: Option<(SlideId, Step)>,
     node_id_counter: NodeId,
 }
 
@@ -31,12 +34,14 @@ impl Slide {
         bg_color: Color,
         styles: Arc<StyleMap>,
         counters: Vec<String>,
+        parent: Option<(SlideId, Step)>,
     ) -> Self {
         Slide {
             width,
             height,
             bg_color,
             counters,
+            parent,
             node: Node {
                 styles,
                 name,
