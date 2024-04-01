@@ -14,7 +14,7 @@ use usvg::{TreeWriting, XmlOptions};
 pub(crate) struct RenderConfig<'a> {
     pub resources: &'a Resources,
     pub slide: &'a Slide,
-    pub slide_idx: usize,
+    pub slide_id: usize,
     pub step: Step,
     pub default_font: &'a Arc<FontData>,
     pub output_format: OutputFormat,
@@ -61,7 +61,7 @@ pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<RenderingRe
         if let RenderingResult::BytesData(data) = result {
             let final_path = path.join(format!(
                 "{}-{}.{}",
-                render_cfg.slide_idx,
+                render_cfg.slide_id,
                 render_cfg.step,
                 render_cfg.output_format.extension()
             ));

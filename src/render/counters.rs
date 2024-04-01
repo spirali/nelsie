@@ -1,80 +1,100 @@
 use crate::common::Step;
 use crate::model::{SlideDeck, StyledText};
-use std::collections::Bound::Unbounded;
-use std::collections::{BTreeMap, HashMap};
-use std::ops::Bound::Excluded;
+use itertools::Itertools;
+use std::collections::{BTreeMap, HashMap, HashSet};
 
-#[derive(Default)]
-pub(crate) struct SlideCounterValue {
+pub(crate) type CountersMap<'a> = HashMap<&'a str, Counter>;
+
+#[derive(Debug)]
+pub(crate) struct Indices {
     pub(crate) slide_idx: u32,
     pub(crate) page_idx: u32,
 }
 
-#[derive(Default)]
-pub(crate) struct CounterValues {
-    pub(crate) per_slide: BTreeMap<usize, SlideCounterValue>,
+#[derive(Debug)]
+pub(crate) struct Counter {
+    pub(crate) indices: BTreeMap<(u32, u32), Indices>,
     pub(crate) n_slides: u32,
     pub(crate) n_pages: u32,
 }
 
-pub(crate) type CountersMap<'a> = HashMap<&'a str, CounterValues>;
+impl Counter {
+    fn new(page_ordering: &[(bool, u32, u32)]) -> Counter {
+        let mut indices = BTreeMap::new();
+        let mut slide_idx = 0;
+        let mut page_idx = 0;
+        let mut prev_slide_id = u32::MAX;
+        for (active, slide_id, step) in page_ordering.iter() {
+            if *active {
+                page_idx += 1;
+                if *slide_id != prev_slide_id {
+                    slide_idx += 1;
+                    prev_slide_id = *slide_id;
+                }
+            }
+            indices.insert(
+                (*slide_id, *step),
+                Indices {
+                    slide_idx: if slide_idx == 0 { 0 } else { slide_idx - 1 },
+                    page_idx: if page_idx == 0 { 0 } else { page_idx - 1 },
+                },
+            );
+        }
+        Counter {
+            n_pages: page_idx,
+            n_slides: slide_idx,
+            indices,
+        }
+    }
+}
 
 pub(crate) fn replace_counters(
     counter_values: &CountersMap,
     styled_text: &mut StyledText,
-    slide_idx: usize,
+    slide_id: u32,
     step: Step,
 ) {
     for (name, values) in counter_values {
-        let (slide_idx, page_idx) = values
-            .per_slide
-            .get(&slide_idx)
-            .map(|x| (x.slide_idx, x.page_idx + step))
-            .unwrap_or_else(|| {
-                values
-                    .per_slide
-                    .range((Excluded(slide_idx), Unbounded))
-                    .next()
-                    .map(|x| (x.1.slide_idx - 1, x.1.page_idx))
-                    .unwrap_or((values.n_slides, values.n_pages))
-            });
-        styled_text.replace_text(&format!("$({name}_slide)"), &slide_idx.to_string());
-        styled_text.replace_text(&format!("$({name}_page)"), &page_idx.to_string());
+        let Indices {
+            slide_idx,
+            page_idx,
+        } = values.indices.get(&(slide_id, step)).unwrap();
+        styled_text.replace_text(&format!("$({name}_slide)"), &(slide_idx + 1).to_string());
+        styled_text.replace_text(&format!("$({name}_page)"), &(page_idx + 1).to_string());
         styled_text.replace_text(&format!("$({name}_slides)"), &values.n_slides.to_string());
         styled_text.replace_text(&format!("$({name}_pages)"), &values.n_pages.to_string());
     }
 }
 
 pub(crate) fn compute_counters(slide_deck: &SlideDeck) -> CountersMap {
-    let mut counter_values = CountersMap::new();
-    let mut global_counter = CounterValues {
-        per_slide: Default::default(),
-        n_slides: slide_deck.slides.len() as u32,
-        n_pages: 0,
-    };
-
+    let mut global_pages = Vec::new();
+    let mut counter_names: HashSet<&String> = HashSet::new();
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {
-        global_counter.per_slide.insert(
-            slide_idx,
-            SlideCounterValue {
-                slide_idx: slide_idx as u32 + 1,
-                page_idx: global_counter.n_pages,
-            },
-        );
-        global_counter.n_pages += slide.n_steps;
-        for counter_name in &slide.counters {
-            let v = counter_values.entry(counter_name).or_default();
-            v.n_slides += 1;
-            v.per_slide.insert(
-                slide_idx,
-                SlideCounterValue {
-                    slide_idx: v.n_slides,
-                    page_idx: v.n_pages,
-                },
-            );
-            v.n_pages += slide.n_steps;
+        let slide_idx = slide_idx as u32;
+        for name in &slide.counters {
+            counter_names.insert(name);
+        }
+        for step in 1..=slide.n_steps {
+            global_pages.push((true, slide_idx, step))
         }
     }
-    counter_values.insert("global", global_counter);
-    counter_values
+    let global_counter = Counter::new(&global_pages);
+    let mut map = CountersMap::new();
+    for name in counter_names {
+        let pages = global_pages
+            .iter()
+            .map(|(_, slide_idx, step)| {
+                (
+                    slide_deck.slides[*slide_idx as usize]
+                        .counters
+                        .contains(name),
+                    *slide_idx,
+                    *step,
+                )
+            })
+            .collect_vec();
+        map.insert(name, Counter::new(&pages));
+    }
+    map.insert("global", global_counter);
+    map
 }

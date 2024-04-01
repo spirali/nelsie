@@ -77,7 +77,7 @@ fn render_slide(
             let render_cfg = RenderConfig {
                 resources,
                 slide,
-                slide_idx,
+                slide_id: slide_idx,
                 step,
                 default_font,
                 output_format: output_cfg.format,
@@ -104,9 +104,9 @@ pub(crate) fn render_slide_deck(
     }
 
     let counter_values = compute_counters(slide_deck);
-    let n_pages = counter_values.get("global").unwrap().n_pages;
+    let global_counter = counter_values.get("global").unwrap();
     let mut pdf_builder = if let OutputFormat::Pdf = output_cfg.format {
-        Some(PdfBuilder::new(n_pages))
+        Some(PdfBuilder::new(global_counter.n_pages))
     } else {
         if let Some(dir) = output_cfg.path {
             log::debug!("Ensuring output directory: {}", dir.display());
@@ -126,7 +126,7 @@ pub(crate) fn render_slide_deck(
     let mut pdf_compose_time = Duration::ZERO;
 
     let progress_bar = if verbose_level.is_normal_or_more() {
-        Some(indicatif::ProgressBar::new(n_pages.into()))
+        Some(indicatif::ProgressBar::new(global_counter.n_pages.into()))
     } else {
         None
     };
@@ -147,7 +147,16 @@ pub(crate) fn render_slide_deck(
                 RenderingResult::None => { /* Do nothing */ }
                 RenderingResult::Tree(tree) => {
                     let s = std::time::Instant::now();
-                    pdf_builder.as_mut().unwrap().add_page_from_svg(tree);
+                    dbg!(slide_idx, step_idx);
+                    dbg!(&global_counter.indices);
+                    pdf_builder.as_mut().unwrap().add_page_from_svg(
+                        global_counter
+                            .indices
+                            .get(&(slide_idx as u32, (step_idx + 1) as u32))
+                            .unwrap()
+                            .page_idx as usize,
+                        tree,
+                    );
                     pdf_compose_time += std::time::Instant::now() - s;
                 }
                 RenderingResult::BytesData(data) => {

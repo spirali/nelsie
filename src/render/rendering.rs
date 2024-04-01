@@ -140,7 +140,7 @@ impl<'a> RenderContext<'a> {
                             replace_counters(
                                 self.config.counter_values,
                                 &mut t,
-                                self.config.slide_idx,
+                                self.config.slide_id as u32,
                                 self.config.step,
                             );
                         }

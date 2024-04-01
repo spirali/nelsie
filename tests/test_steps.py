@@ -83,20 +83,25 @@ def test_step_global_counter(deck):
     )
 
 
-@check(n_slides=6)
+@check(n_slides=8)
 def test_step_other_counter(deck):
-    def create_slide(counters=None):
+    def create_slide(counters=None, color="black"):
         slide = deck.new_slide(width=100, height=40, counters=counters)
-        slide.text("$(my_slide)/$(my_slides)  $(my_page)/$(my_pages)", parse_counters=True, bg_color="gray")
+        slide.text(
+            "$(my_slide)/$(my_slides)  $(my_page)/$(my_pages)",
+            style=TextStyle(color=color),
+            parse_counters=True,
+            bg_color="gray",
+        )
         return slide
 
     deck.set_style("default", TextStyle(size=12))
     create_slide()
-    create_slide(counters=["my"])
+    create_slide(counters=["my"], color="red")
     create_slide(counters=["other"])
-    slide = create_slide(counters=["my"])
+    slide = create_slide(counters=["my"], color="blue")
     slide.set_n_steps(3)
-    create_slide()
+    slide = create_slide()
     slide.set_n_steps(2)
 
 

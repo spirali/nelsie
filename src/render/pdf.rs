@@ -6,7 +6,6 @@ use svg2pdf::usvg;
 pub(crate) struct PdfBuilder {
     pdf: pdf_writer::Pdf,
     page_ids: Vec<Ref>,
-    page_idx: usize,
     alloc_ref: Ref,
     page_tree_id: Ref,
 }
@@ -30,28 +29,21 @@ impl PdfBuilder {
         PdfBuilder {
             pdf,
             page_ids,
-            page_idx: 0,
             alloc_ref,
             page_tree_id,
         }
     }
 
-    pub fn add_page_from_svg(&mut self, tree: usvg::Tree) {
-        let page_id = self.page_ids[self.page_idx];
+    pub fn add_page_from_svg(&mut self, page_idx: usize, tree: usvg::Tree) {
+        let page_id = self.page_ids[page_idx];
 
         let content_id = self.alloc_ref.bump();
         let mut page = self.pdf.page(page_id);
         page.media_box(Rect::new(0.0, 0.0, tree.size.width(), tree.size.height()));
         page.parent(self.page_tree_id);
-        // page.group()
-        //     .transparency()
-        //     .isolated(true)
-        //     .knockout(false)
-        //     .color_space()
-        //     .srgb();
         page.contents(content_id);
 
-        let name_str = format!("S{}", self.page_idx);
+        let name_str = format!("S{}", page_idx);
         let svg_name = Name(name_str.as_bytes());
         let mut resources = page.resources();
 
@@ -68,8 +60,6 @@ impl PdfBuilder {
             .transform([tree.size.width(), 0.0, 0.0, tree.size.height(), 0.0, 0.0])
             .x_object(svg_name);
         self.pdf.stream(content_id, &content.finish());
-
-        self.page_idx += 1;
     }
 
     pub fn write(self, path: &Path) -> crate::Result<()> {
