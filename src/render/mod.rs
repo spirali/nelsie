@@ -10,7 +10,7 @@ mod text;
 use crate::common::error::NelsieError;
 use crate::common::fileutils::ensure_directory;
 
-use crate::model::{FontData, Resources, Slide, SlideDeck};
+use crate::model::{FontData, Resources, Slide, SlideDeck, SlideId};
 use crate::render::core::RenderingResult;
 pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use pdf::PdfBuilder;
@@ -66,18 +66,18 @@ impl VerboseLevel {
 fn render_slide(
     resources: &Resources,
     output_cfg: &OutputConfig,
-    slide_idx: usize,
+    slide_id: SlideId,
     slide: &Slide,
     default_font: &Arc<FontData>,
     counter_values: &CountersMap,
 ) -> crate::Result<Vec<RenderingResult>> {
-    log::debug!("Rendering slide {}", slide_idx);
+    log::debug!("Rendering slide {}", slide_id);
     (1..=slide.n_steps)
         .map(|step| {
             let render_cfg = RenderConfig {
                 resources,
                 slide,
-                slide_id: slide_idx,
+                slide_id,
                 step,
                 default_font,
                 output_format: output_cfg.format,
@@ -139,7 +139,7 @@ pub(crate) fn render_slide_deck(
         for (step_idx, result) in render_slide(
             resources,
             output_cfg,
-            slide_idx,
+            slide_idx as SlideId,
             slide,
             &slide_deck.default_font,
             &counter_values,
