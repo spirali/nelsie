@@ -49,17 +49,26 @@ impl Resources {
     }
 
     pub fn load_code_syntax_dir(&mut self, path: &Path) -> crate::Result<()> {
-        log::debug!("Adding syntax directory {}", path.display());
+        log::debug!("Adding code syntax directory {}", path.display());
         let syntax_set = std::mem::take(&mut self.syntax_set);
         let mut builder = syntax_set.into_builder();
-        builder.add_from_folder(path, false).map_err(|e| {
-            NelsieError::Generic(format!("Adding syntax failed: {}", e.to_string()))
-        })?;
+        builder
+            .add_from_folder(path, false)
+            .map_err(|e| NelsieError::Generic(format!("Adding syntax failed: {}", e)))?;
         self.syntax_set = builder.build();
         Ok(())
     }
 
-    pub fn load_fonts_dir<P: AsRef<std::path::Path>>(&mut self, path: P) {
+    pub fn load_code_theme_dir(&mut self, path: &Path) -> crate::Result<()> {
+        log::debug!("Adding code theme directory {}", path.display());
+        self.theme_set
+            .add_from_folder(path)
+            .map_err(|e| NelsieError::Generic(format!("Adding theme failed: {}", e)))?;
+        Ok(())
+    }
+
+    pub fn load_fonts_dir(&mut self, path: &Path) {
+        log::debug!("Adding font directory {}", path.display());
         self.font_db.load_fonts_dir(path)
     }
 
