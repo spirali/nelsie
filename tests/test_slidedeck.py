@@ -18,14 +18,14 @@ def test_render_outputs(tmp_path, deck):
 
     assert deck.render(out_svg, "svg") is None
 
-    with open(out_svg / "0-1.svg", "rb") as f:
+    with open(out_svg / "0-0-1.svg", "rb") as f:
         data = f.read()
         assert data.startswith(
             b"""<svg width="1024" height="768" viewBox="0 0 1024 768" xmlns="http://www.w3.org/2000/svg">"""
         )
         assert svg_data[0] == (0, 0, data)
 
-    with open(out_svg / "1-1.svg", "rb") as f:
+    with open(out_svg / "1-1-1.svg", "rb") as f:
         data = f.read()
         assert data.startswith(
             b"""<svg width="1024" height="768" viewBox="0 0 1024 768" xmlns="http://www.w3.org/2000/svg">"""
@@ -37,12 +37,12 @@ def test_render_outputs(tmp_path, deck):
 
     deck.render(out_png, "png")
 
-    with open(out_png / "0-1.png", "rb") as f:
+    with open(out_png / "0-0-1.png", "rb") as f:
         data = f.read()
         assert data[:4] == b"\x89PNG"
         assert png_data[0] == (0, 0, data)
 
-    with open(out_png / "1-1.png", "rb") as f:
+    with open(out_png / "1-1-1.png", "rb") as f:
         data = f.read()
         assert data[:4] == b"\x89PNG"
         assert png_data[1] == (1, 0, data)

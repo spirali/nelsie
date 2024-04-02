@@ -1,4 +1,4 @@
-use crate::model::{FontData, Resources, Slide, Step};
+use crate::model::{FontData, Resources, Slide, SlideId, Step};
 use crate::render::counters::CountersMap;
 use crate::render::rendering::render_to_svg_tree;
 use crate::render::OutputFormat;
@@ -14,7 +14,7 @@ use usvg::{TreeWriting, XmlOptions};
 pub(crate) struct RenderConfig<'a> {
     pub resources: &'a Resources,
     pub slide: &'a Slide,
-    pub slide_id: usize,
+    pub slide_id: SlideId,
     pub step: Step,
     pub default_font: &'a Arc<FontData>,
     pub output_format: OutputFormat,
@@ -59,11 +59,20 @@ pub(crate) fn render_slide_step(render_cfg: &RenderConfig) -> Result<RenderingRe
 
     if let Some(path) = render_cfg.output_path {
         if let RenderingResult::BytesData(data) = result {
+            let counter = render_cfg.counter_values.get("global").unwrap();
+            let page_idx = counter
+                .indices
+                .get(&(render_cfg.slide_id, render_cfg.step))
+                .unwrap()
+                .page_idx;
+            let padding = counter.n_pages.to_string().len();
             let final_path = path.join(format!(
-                "{}-{}.{}",
+                "{:0padding$}-{}-{}.{}",
+                page_idx,
                 render_cfg.slide_id,
                 render_cfg.step,
-                render_cfg.output_format.extension()
+                render_cfg.output_format.extension(),
+                padding = padding,
             ));
             std::fs::write(&final_path, data).map_err(|e| {
                 NelsieError::Generic(format!(

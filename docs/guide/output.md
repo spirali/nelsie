@@ -5,7 +5,7 @@ how to get them as Python objects.
 
 ## Rendering into PDF
 
-By default, the `.render()` method on a slide deck takes a filename and creates a PDF file. 
+By default, the `.render()` method on a slide deck takes a filename and creates a PDF file.
 
 ```python
 from nelsie import SlideDeck
@@ -16,7 +16,6 @@ deck = SlideDeck()
 
 deck.render("slides.pdf")
 ```
-
 
 ## Rendering into SVG or PNG
 
@@ -29,16 +28,16 @@ deck = SlideDeck()
 
 # Add slides here
 
-deck.render("output/path1", "svg") # Render slides to SVG 
+deck.render("output/path1", "svg")  # Render slides to SVG
 
-deck.render("output/path2", "png") # Render slides to PNG
+deck.render("output/path2", "png")  # Render slides to PNG
 ```
 
-Unlike PDF, the first parameter is not a path to a file, but to a directory where 
-Nelsie creates SVG (or PNG) images, one image per slide page. 
+Unlike PDF, the first parameter is not a path to a file, but to a directory where
+Nelsie creates SVG (or PNG) images, one image per slide page.
 Nelsie will create the target directory if it does not exist.
-Images are named in the format "X-Y.svg" (or "X-Y.png"), where X is the slide index and Y is a step. 
-
+Images are named in the format "X-Y-Z.svg" (or "X-Y-Z.png"), where X is the page index (zero padded), Y is the slide
+index and Z is a step.
 
 ## In-memory rendering
 
@@ -47,7 +46,7 @@ the images as Python objects. It returns a list of triplets (`slide_id`, `step`,
 `bytes` instance with the image.
 
 ```python
-pages = deck.render(None, "png") 
+pages = deck.render(None, "png")
 
 print(pages)  # Print returned triplets with pages
 ```
