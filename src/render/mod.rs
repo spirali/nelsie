@@ -123,6 +123,10 @@ pub(crate) fn render_slide_deck(
 
     let mut result_data = Vec::new();
 
+    if output_cfg.path.is_none() {
+        result_data.resize(global_counter.n_pages as usize, (0, 0, Vec::new()))
+    }
+
     let mut pdf_compose_time = Duration::ZERO;
 
     let progress_bar = if verbose_level.is_normal_or_more() {
@@ -143,22 +147,24 @@ pub(crate) fn render_slide_deck(
         .into_iter()
         .enumerate()
         {
+            let page_idx = global_counter
+                .indices
+                .get(&(slide_idx as u32, (step_idx + 1) as u32))
+                .unwrap()
+                .page_idx as usize;
+
             match result {
                 RenderingResult::None => { /* Do nothing */ }
                 RenderingResult::Tree(tree) => {
                     let s = std::time::Instant::now();
-                    pdf_builder.as_mut().unwrap().add_page_from_svg(
-                        global_counter
-                            .indices
-                            .get(&(slide_idx as u32, (step_idx + 1) as u32))
-                            .unwrap()
-                            .page_idx as usize,
-                        tree,
-                    );
+                    pdf_builder
+                        .as_mut()
+                        .unwrap()
+                        .add_page_from_svg(page_idx, tree);
                     pdf_compose_time += std::time::Instant::now() - s;
                 }
                 RenderingResult::BytesData(data) => {
-                    result_data.push((slide_idx, step_idx, data));
+                    result_data[page_idx] = (slide_idx, step_idx, data);
                 }
             }
             if let Some(bar) = &progress_bar {

@@ -1,3 +1,9 @@
+# Unreleased
+
+## New features
+
+* Subslides insertion (`.slide_at()`)
+
 # 0.5
 
 ## New features
