@@ -30,8 +30,13 @@ impl Resources {
         Ok(())
     }
 
+    fn load_code_theme_dir(&mut self, path: &str) -> PyResult<()> {
+        self.resources.load_code_theme_dir(Path::new(path))?;
+        Ok(())
+    }
+
     fn load_fonts_dir(&mut self, path: &str) -> PyResult<()> {
-        self.resources.load_fonts_dir(path);
+        self.resources.load_fonts_dir(Path::new(path));
         Ok(())
     }
 

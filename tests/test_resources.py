@@ -28,3 +28,13 @@ def test_resources_add_syntax():
 def test_resources_themes(resources):
     themes = resources.themes()
     assert "InspiredGitHub" in themes
+
+
+def test_resources_add_theme():
+    r = new_resources()
+    r.load_code_theme_dir(ASSETS_DIR)
+    themes = r.themes()
+    assert "test" in themes
+    deck = SlideDeck(resources=r)
+    slide = deck.new_slide()
+    slide.code("if (x > 0) { return 1 }", "C", theme="test")
