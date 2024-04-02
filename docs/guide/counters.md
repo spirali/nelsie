@@ -2,11 +2,15 @@
 
 Page counters serves to show information about the current page or the total number of pages on slides.
 
-The following variables can be used in any text on slide if parameter `parse_counters` of `.text()` (or `.code()`) is set to `True`. The `<NAME>` is a name of the actual counter.
+The following variables can be used in any text on slide if parameter `parse_counters` of `.text()` (or `.code()`) is
+set to `True`. The `<NAME>` is a name of the actual counter.
 
 * `$(<NAME>_page)` -- The current page index (counted from 1) for the given counter.
 * `$(<NAME>_pages)` -- The total number of pages of the counter.
-* `$(<NAME>_slide)` -- The current slide index (counted from 1) for the given counter. Note that a slide may produce more steps and therefore may have more pages. For all pages of the same slide, the slide index remains the same.
+* `$(<NAME>_slide)` -- The current slide index (counted from 1) for the given counter. Note that a slide may produce
+  more steps and therefore may have more pages. For all pages of the same slide, the slide index remains the same if
+  there is no inserted slided. In case of inserting a slide, switching back to the original slide also increases slide
+  index counter if the inserted slide was included in counter.
 * `$(<NAME>_slides)` -- The total number of slide for the given counter.
 
 The counter `global` always exists and it includes all slides.

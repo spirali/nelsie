@@ -23,6 +23,7 @@ nav:
       - guide/paths.md
       - guide/layoutexpr.md
       - guide/rendering.md
+      - guide/insert.md
       - guide/counters.md
       - guide/output.md
       - guide/debug_layout.md
