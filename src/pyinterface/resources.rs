@@ -1,5 +1,6 @@
 use itertools::Itertools;
 use pyo3::{pyclass, pymethods, PyResult};
+use std::path::Path;
 
 #[pyclass]
 pub(crate) struct Resources {
@@ -9,10 +10,24 @@ pub(crate) struct Resources {
 #[pymethods]
 impl Resources {
     #[new]
-    fn new() -> PyResult<Self> {
+    #[pyo3(signature = (system_fonts=true, default_code_syntaxes=true, default_code_themes=true))]
+    fn new(
+        system_fonts: bool,
+        default_code_syntaxes: bool,
+        default_code_themes: bool,
+    ) -> PyResult<Self> {
         Ok(Resources {
-            resources: crate::model::Resources::new(),
+            resources: crate::model::Resources::new(
+                system_fonts,
+                default_code_syntaxes,
+                default_code_themes,
+            ),
         })
+    }
+
+    fn load_code_syntax_dir(&mut self, path: &str) -> PyResult<()> {
+        self.resources.load_code_syntax_dir(Path::new(path))?;
+        Ok(())
     }
 
     fn load_fonts_dir(&mut self, path: &str) -> PyResult<()> {

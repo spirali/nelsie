@@ -1,5 +1,6 @@
 use crate::common::error::NelsieError;
 use crate::model::ImageManager;
+use std::path::Path;
 
 use svg2pdf::usvg::fontdb;
 
@@ -18,11 +19,26 @@ pub(crate) struct Resources {
 }
 
 impl Resources {
-    pub fn new() -> Resources {
+    pub fn new(
+        system_fonts: bool,
+        default_code_syntaxes: bool,
+        default_code_themes: bool,
+    ) -> Resources {
         let mut font_db = fontdb::Database::new();
-        font_db.load_system_fonts();
-        let syntax_set = SyntaxSet::load_defaults_nonewlines();
-        let theme_set = ThemeSet::load_defaults();
+        if system_fonts {
+            font_db.load_system_fonts();
+        }
+        let syntax_set = if default_code_syntaxes {
+            SyntaxSet::load_defaults_nonewlines()
+        } else {
+            SyntaxSet::new()
+        };
+
+        let theme_set = if default_code_themes {
+            ThemeSet::load_defaults()
+        } else {
+            ThemeSet::new()
+        };
 
         Resources {
             font_db,
@@ -30,6 +46,17 @@ impl Resources {
             syntax_set,
             theme_set,
         }
+    }
+
+    pub fn load_code_syntax_dir(&mut self, path: &Path) -> crate::Result<()> {
+        log::debug!("Adding syntax directory {}", path.display());
+        let syntax_set = std::mem::take(&mut self.syntax_set);
+        let mut builder = syntax_set.into_builder();
+        builder.add_from_folder(path, false).map_err(|e| {
+            NelsieError::Generic(format!("Adding syntax failed: {}", e.to_string()))
+        })?;
+        self.syntax_set = builder.build();
+        Ok(())
     }
 
     pub fn load_fonts_dir<P: AsRef<std::path::Path>>(&mut self, path: P) {
