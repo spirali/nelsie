@@ -3,6 +3,7 @@
 ## New features
 
 * Subslides insertion (`.slide_at()`)
+* Custom code syntaxes and code color themes
 
 # 0.5
 

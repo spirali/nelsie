@@ -106,10 +106,12 @@ The list of supported color themes; the default theme is "InspiredGitHub":
 * "Solarized (dark)"
 * "Solarized (light)"
 
-This list is also programmatically available through [`Resources`](resources.md)
+Custom color themes can be added through [`Resources`](resources.md).
+This list is also programmatically available through [`Resources`](resources.md).
 
 ## The list of supported syntaxes
 
+Custom syntax can be added through [`Resources`](resources.md).
 This list is also programmatically available through [`Resources`](resources.md)
 
 * ASP (asa)
