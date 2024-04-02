@@ -97,7 +97,11 @@ def test_code_style_delimiters(deck):
     slide = deck.new_slide(width=300, height=50)
     slide.set_style("big", TextStyle(size=20, color="orange"))
     slide.code(
-        "print('$big<Hello> world!')", "Python", style=TextStyle(size=12), parse_styles=True, style_delimiters="$<>"
+        "print('$big<Hello> world!')",
+        "Python",
+        style=TextStyle(size=12),
+        parse_styles=True,
+        style_delimiters="$<>",
     )
 
 
