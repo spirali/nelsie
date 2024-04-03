@@ -131,6 +131,9 @@ pub(crate) fn get_text_layout(
 
 fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     assert_eq!(text.styled_lines.len(), 1);
+    if text.styled_lines[0].text.is_empty() {
+        return 0f32;
+    }
     let text_node = render_text(text, 0.0, 0.0, TextAlign::Start);
     let mut root_node = usvg::Group::default();
     root_node.children.push(text_node);
@@ -174,8 +177,8 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     width
 }
 
-fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (TextSpan, usize) {
-    let text_style = &text_styles[chunk.style_idx as usize];
+fn create_svg_span(text_styles: &[TextStyle], span: &Span, start: usize) -> (TextSpan, usize) {
+    let text_style = &text_styles[span.style_idx as usize];
     let fill = text_style.color.as_ref().map(|color| Fill {
         paint: usvg::Paint::Color(color.into()),
         opacity: color.opacity(),
@@ -197,7 +200,7 @@ fn create_svg_span(text_styles: &[TextStyle], chunk: &Span, start: usize) -> (Te
         line_through: None,
     };
     let stroke = text_style.stroke.as_ref().map(|s| stroke_to_usvg_stroke(s));
-    let end = start + chunk.length as usize;
+    let end = start + span.length as usize;
     (
         TextSpan {
             start,
@@ -238,6 +241,7 @@ fn render_line(
         spans: styled_line
             .spans
             .iter()
+            .filter(|span| span.length > 0)
             .map(|span| {
                 let (span, new_pos) = create_svg_span(text_styles, span, pos);
                 pos = new_pos;
