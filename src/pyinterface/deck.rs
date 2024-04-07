@@ -13,6 +13,7 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
+use pyo3::pybacked::PyBackedStr;
 use pyo3::types::{PyBytes, PyNone};
 use std::sync::Arc;
 
@@ -115,15 +116,15 @@ impl Deck {
         border_radius: ValueOrInSteps<f32>,
         row: ValueOrInSteps<bool>,
         reverse: ValueOrInSteps<bool>,
-        flex_wrap: ValueOrInSteps<&str>,
+        flex_wrap: ValueOrInSteps<PyBackedStr>,
         flex_grow: ValueOrInSteps<f32>,
         flex_shrink: ValueOrInSteps<f32>,
 
-        align_items: ValueOrInSteps<Option<&str>>,
-        align_self: ValueOrInSteps<Option<&str>>,
-        justify_self: ValueOrInSteps<Option<&str>>,
-        align_content: ValueOrInSteps<Option<&str>>,
-        justify_content: ValueOrInSteps<Option<&str>>,
+        align_items: ValueOrInSteps<Option<PyBackedStr>>,
+        align_self: ValueOrInSteps<Option<PyBackedStr>>,
+        justify_self: ValueOrInSteps<Option<PyBackedStr>>,
+        align_content: ValueOrInSteps<Option<PyBackedStr>>,
+        justify_content: ValueOrInSteps<Option<PyBackedStr>>,
         gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
 
         p_left: ValueOrInSteps<PyStringOrFloat>,
@@ -298,11 +299,11 @@ impl Deck {
             )
         })?;
         if result.is_empty() {
-            Ok(PyNone::get(py).to_object(py))
+            Ok(PyNone::get_bound(py).to_object(py))
         } else {
             Ok(result
                 .iter()
-                .map(|(slide_idx, step, data)| (slide_idx, step, PyBytes::new(py, data)))
+                .map(|(slide_idx, step, data)| (slide_idx, step, PyBytes::new_bound(py, data)))
                 .collect_vec()
                 .to_object(py))
         }

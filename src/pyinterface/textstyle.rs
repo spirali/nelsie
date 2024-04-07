@@ -2,8 +2,10 @@ use crate::model::{Color, PartialTextStyle, Resources, Stroke};
 
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
+use pyo3::pybacked::PyBackedStr;
 use pyo3::{FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
 use std::collections::HashMap;
+use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::Arc;
 use svg2pdf::usvg;
@@ -48,7 +50,8 @@ impl PyTextStyle {
 
 impl<'py> FromPyObject<'py> for Color {
     fn extract(ob: &'py PyAny) -> PyResult<Self> {
-        Ok(Color::from_str(ob.extract()?)?)
+        let s: PyBackedStr = ob.extract()?;
+        Ok(Color::from_str(s.deref())?)
     }
 }
 
@@ -71,18 +74,18 @@ impl<'py> FromPyObject<'py> for PyTextStyle {
             .transpose()?;
         let color = ob
             .getattr("color")?
-            .extract::<Option<&str>>()?
+            .extract::<Option<PyBackedStr>>()?
             .map(|c| -> PyResult<_> {
                 if c.trim() == "empty" {
                     Ok(None)
                 } else {
-                    Ok(Some(Color::from_str(c)?))
+                    Ok(Some(Color::from_str(c.deref())?))
                 }
             })
             .transpose()?;
         let stroke_attr = ob.getattr("stroke")?;
-        let stroke = if let Ok(s) = stroke_attr.extract::<&str>() {
-            if s == "empty" {
+        let stroke = if let Ok(s) = stroke_attr.extract::<PyBackedStr>() {
+            if s.deref() == "empty" {
                 Some(None)
             } else {
                 return Err(PyValueError::new_err("Invalid stroke value"));
