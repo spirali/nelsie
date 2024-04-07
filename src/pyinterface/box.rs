@@ -14,11 +14,13 @@ use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
 use std::collections::BTreeMap;
+use std::ops::Deref;
 
 use pyo3::exceptions::PyValueError;
 use pyo3::{FromPyObject, PyAny, PyResult};
 
 use crate::common::error::NelsieError;
+use pyo3::pybacked::PyBackedStr;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -215,9 +217,9 @@ fn process_content(
     })
 }
 
-fn parse_align_items(value: Option<&str>) -> crate::Result<Option<AlignItems>> {
+fn parse_align_items(value: Option<PyBackedStr>) -> crate::Result<Option<AlignItems>> {
     value
-        .map(|v| match v {
+        .map(|v| match v.deref() {
             "start" => Ok(AlignItems::Start),
             "end" => Ok(AlignItems::End),
             "flex-start" => Ok(AlignItems::FlexStart),
@@ -230,9 +232,9 @@ fn parse_align_items(value: Option<&str>) -> crate::Result<Option<AlignItems>> {
         .transpose()
 }
 
-fn parse_align_content(value: Option<&str>) -> crate::Result<Option<AlignContent>> {
+fn parse_align_content(value: Option<PyBackedStr>) -> crate::Result<Option<AlignContent>> {
     value
-        .map(|v| match v {
+        .map(|v| match v.deref() {
             "start" => Ok(AlignContent::Start),
             "end" => Ok(AlignContent::End),
             "flex-start" => Ok(AlignContent::FlexStart),
@@ -284,15 +286,15 @@ pub(crate) fn make_node(
     border_radius: ValueOrInSteps<f32>,
     row: ValueOrInSteps<bool>,
     reverse: ValueOrInSteps<bool>,
-    flex_wrap: ValueOrInSteps<&str>,
+    flex_wrap: ValueOrInSteps<PyBackedStr>,
     flex_grow: ValueOrInSteps<f32>,
     flex_shrink: ValueOrInSteps<f32>,
 
-    align_items: ValueOrInSteps<Option<&str>>,
-    align_self: ValueOrInSteps<Option<&str>>,
-    justify_self: ValueOrInSteps<Option<&str>>,
-    align_content: ValueOrInSteps<Option<&str>>,
-    justify_content: ValueOrInSteps<Option<&str>>,
+    align_items: ValueOrInSteps<Option<PyBackedStr>>,
+    align_self: ValueOrInSteps<Option<PyBackedStr>>,
+    justify_self: ValueOrInSteps<Option<PyBackedStr>>,
+    align_content: ValueOrInSteps<Option<PyBackedStr>>,
+    justify_content: ValueOrInSteps<Option<PyBackedStr>>,
     gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
 
     p_left: ValueOrInSteps<PyStringOrFloat>,
@@ -315,7 +317,7 @@ pub(crate) fn make_node(
         .map(|c| process_content(c, nc_env, &styles, &mut n_steps2))
         .transpose()?;
     n_steps = n_steps.max(n_steps2);
-    let flex_wrap = flex_wrap.parse(&mut n_steps, |f| match f {
+    let flex_wrap = flex_wrap.parse(&mut n_steps, |f| match f.deref() {
         "nowrap" => Ok(FlexWrap::NoWrap),
         "wrap" => Ok(FlexWrap::Wrap),
         "wrap-reverse" => Ok(FlexWrap::WrapReverse),
