@@ -1,9 +1,10 @@
 use crate::common::error::NelsieError;
+use std::fmt::{Display, Formatter};
 
 use crate::model::InTextAnchorId;
 use std::str::FromStr;
-use svg2pdf::usvg;
-use usvg::NormalizedF32;
+
+
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub(crate) struct NodeId(u32);
@@ -174,9 +175,9 @@ impl Color {
         Color(color)
     }
 
-    pub fn opacity(&self) -> NormalizedF32 {
+    /*pub fn opacity(&self) -> NormalizedF32 {
         NormalizedF32::new_u8(self.0.alpha)
-    }
+    }*/
 }
 
 impl From<&Color> for svgtypes::Color {
@@ -195,12 +196,17 @@ impl FromStr for Color {
     }
 }
 
-impl ToString for Color {
-    fn to_string(&self) -> String {
+impl Display for Color {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         if self.0.alpha == 255 {
-            format!("#{:02x}{:02x}{:02x}", self.0.red, self.0.green, self.0.blue)
+            write!(
+                f,
+                "#{:02x}{:02x}{:02x}",
+                self.0.red, self.0.green, self.0.blue
+            )
         } else {
-            format!(
+            write!(
+                f,
                 "#{:02x}{:02x}{:02x}{:02x}",
                 self.0.red, self.0.green, self.0.blue, self.0.alpha
             )
@@ -208,7 +214,7 @@ impl ToString for Color {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Stroke {
     pub color: Color,
     pub width: f32,

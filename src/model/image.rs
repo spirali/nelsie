@@ -22,8 +22,7 @@ pub(crate) struct SvgImageData {
        On the other hand, it not as bad as it seems at first sight, since we would have to clone
        usvg::Tree for each step because of tree stripping, so recreating from data is not as bad.
     */
-    pub data: Vec<u8>,
-    pub id_visibility: HashMap<String, StepValue<bool>>,
+    pub tree: xmltree::Element,
     pub n_steps: Step,
 }
 
@@ -106,6 +105,10 @@ fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
 fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
     let str_data = std::str::from_utf8(&raw_data)
         .map_err(|_e| NelsieError::Generic("Invalid utf-8 data".to_string()))?;
+
+    let tree = xmltree::Element::parse(raw_data.as_slice())
+        .map_err(|e| NelsieError::Generic(format!("SVG parsing failed {e}")))?;
+
     let xml_tree = roxmltree::Document::parse(str_data)?;
 
     // Parse label step definitions
@@ -130,16 +133,13 @@ fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
         }
     }
 
-    let tree = usvg::Tree::from_xmltree(&xml_tree, &usvg::Options::default())?;
+    let usvg_tree = usvg::Tree::from_xmltree(&xml_tree, &usvg::Options::default())?;
+
     //tree.convert_text(font_db);
     Ok(LoadedImage {
-        width: tree.size.width(),
-        height: tree.size.height(),
-        data: LoadedImageData::Svg(SvgImageData {
-            data: raw_data,
-            n_steps,
-            id_visibility,
-        }),
+        width: usvg_tree.size.width(),
+        height: usvg_tree.size.height(),
+        data: LoadedImageData::Svg(SvgImageData { tree, n_steps }),
     })
 }
 

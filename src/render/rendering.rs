@@ -1,29 +1,30 @@
-use super::text::render_text;
 use crate::model::{
-    Color, Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine,
+    Color, Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, Stroke, StyledLine,
     StyledText, TextAlign, TextStyle,
 };
-use crate::render::core::RenderConfig;
-use crate::render::layout::{ComputedLayout, LayoutContext, Rectangle};
+use crate::render::layout::{ComputedLayout, LayoutContext};
+use crate::render::RenderConfig;
 
 use std::collections::BTreeSet;
 
-use resvg::tiny_skia;
-use std::rc::Rc;
 use std::sync::Arc;
 
 use crate::render::counters::replace_counters;
-use crate::render::image::render_image;
-use crate::render::paths::{create_arrow, create_path, path_from_rect};
+use crate::render::image::render_image_to_canvas;
+use crate::render::paths::{create_arrow, path_from_rect, path_to_svg};
 
+use crate::common::Rectangle;
+use crate::parsers::SimpleXmlWriter;
+use crate::render::canvas::{Canvas, CanvasItem};
+use crate::render::pathbuilder::PathBuilder;
+use crate::render::text::{render_text_to_canvas, render_text_to_svg};
 use svg2pdf::usvg;
-use usvg::{Fill, Stroke, Tree};
 
 pub(crate) struct RenderContext<'a> {
     config: &'a RenderConfig<'a>,
     z_level: i32,
     layout: &'a ComputedLayout,
-    svg_node: &'a mut usvg::Group,
+    canvas: &'a mut Canvas,
 }
 
 impl From<&Color> for usvg::Color {
@@ -38,18 +39,26 @@ fn draw_debug_frame(
     name: &str,
     font: &Arc<FontData>,
     color: &Color,
-    svg_node: &mut usvg::Group,
+    canvas: &mut Canvas,
 ) {
-    let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
-        tiny_skia::Rect::from_xywh(rect.x, rect.y, rect.width.max(1.0), rect.height.max(1.0))
-            .unwrap(),
-    )));
-    path.stroke = Some(Stroke {
-        paint: usvg::Paint::Color(color.into()),
-        dasharray: Some(vec![5.0, 2.5]),
-        ..Default::default()
+    let mut xml = SimpleXmlWriter::new();
+    let mut path = PathBuilder::new(
+        Some(Stroke {
+            color: color.clone(),
+            width: 1.0,
+            dash_array: Some(vec![5.0, 2.5]),
+            dash_offset: 0.0,
+        }),
+        None,
+    );
+    path.rect(&Rectangle {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width.max(1.0),
+        height: rect.height.max(1.0),
     });
-    svg_node.children.push(usvg::Node::Path(Box::new(path)));
+    path.write_svg(&mut xml);
+
     let text = if name.is_empty() {
         format!("[{}x{}]", rect.width, rect.height)
     } else {
@@ -77,12 +86,20 @@ fn draw_debug_frame(
         default_font_size: 8.0,
         default_line_spacing: 0.0,
     };
-    svg_node.children.push(render_text(
+    render_text_to_svg(
+        &mut xml,
         &styled_text,
         rect.x + 2.0,
         rect.y + 3.0,
         TextAlign::Start,
-    ));
+    );
+    canvas.add(CanvasItem::SvgChunk(xml.into_string()));
+    /*svg_node.children.push(render_text(
+        &styled_text,
+        rect.x + 2.0,
+        rect.y + 3.0,
+        TextAlign::Start,
+    ));*/
 }
 
 impl<'a> RenderContext<'a> {
@@ -90,13 +107,13 @@ impl<'a> RenderContext<'a> {
         config: &'a RenderConfig<'a>,
         z_level: i32,
         layout: &'a ComputedLayout,
-        svg_node: &'a mut usvg::Group,
+        canvas: &'a mut Canvas,
     ) -> RenderContext<'a> {
         RenderContext {
             config,
             z_level,
             layout,
-            svg_node,
+            canvas,
         }
     }
 
@@ -116,17 +133,11 @@ impl<'a> RenderContext<'a> {
             if let Some(color) = &node.bg_color.at_step(step) {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 let border_radius = *node.border_radius.at_step(step);
-                if let Some(p) = path_from_rect(rect, border_radius) {
-                    let mut path = usvg::Path::new(Rc::new(p));
-                    path.fill = Some(Fill {
-                        paint: usvg::Paint::Color(color.into()),
-                        opacity: color.opacity(),
-                        rule: Default::default(),
-                    });
-                    self.svg_node
-                        .children
-                        .push(usvg::Node::Path(Box::new(path)));
-                }
+                let mut path = PathBuilder::new(None, Some(color.clone()));
+                path_from_rect(&mut path, rect, border_radius);
+                let mut xml = SimpleXmlWriter::new();
+                path.write_svg(&mut xml);
+                self.canvas.add(CanvasItem::SvgChunk(xml.into_string()))
             }
 
             if let Some(content) = &node.content {
@@ -144,24 +155,11 @@ impl<'a> RenderContext<'a> {
                                 self.config.step,
                             );
                         }
-                        self.svg_node.children.push(render_text(
-                            &t,
-                            match text.text_align {
-                                TextAlign::Start => rect.x,
-                                TextAlign::Center => rect.x + rect.width / 2.0,
-                                TextAlign::End => rect.x + rect.width,
-                            },
-                            rect.y,
-                            text.text_align,
-                        ))
+                        render_text_to_canvas(&t, rect, text.text_align, self.canvas);
                     }
-                    NodeContent::Image(image) => render_image(
-                        step,
-                        image,
-                        rect,
-                        self.svg_node,
-                        &self.config.resources.font_db,
-                    ),
+                    NodeContent::Image(image) => {
+                        render_image_to_canvas(image, step, rect, self.canvas)
+                    }
                 }
             }
 
@@ -172,7 +170,7 @@ impl<'a> RenderContext<'a> {
                     &node.name,
                     self.config.default_font,
                     color,
-                    self.svg_node,
+                    self.canvas,
                 );
             }
         }
@@ -190,23 +188,17 @@ impl<'a> RenderContext<'a> {
     }
 
     fn draw(&mut self, step: Step, parent_id: NodeId, drawing: &Drawing) {
-        for path in drawing.paths.at_step(step) {
-            if let Some(usvg_path) = create_path(self.layout, parent_id, path) {
-                self.svg_node
-                    .children
-                    .push(usvg::Node::Path(Box::new(usvg_path)));
-            }
-            if let Some(usvg_path) = create_arrow(self.layout, parent_id, path, true) {
-                self.svg_node
-                    .children
-                    .push(usvg::Node::Path(Box::new(usvg_path)));
-            }
-            if let Some(usvg_path) = create_arrow(self.layout, parent_id, path, false) {
-                self.svg_node
-                    .children
-                    .push(usvg::Node::Path(Box::new(usvg_path)));
-            }
+        let paths = drawing.paths.at_step(step);
+        if paths.is_empty() {
+            return;
         }
+        let mut xml = SimpleXmlWriter::new();
+        for path in drawing.paths.at_step(step) {
+            path_to_svg(&mut xml, self.layout, parent_id, path);
+            create_arrow(&mut xml, self.layout, parent_id, path, true);
+            create_arrow(&mut xml, self.layout, parent_id, path, false);
+        }
+        self.canvas.add(CanvasItem::SvgChunk(xml.into_string()))
     }
 
     pub(crate) fn render_to_svg(mut self, step: Step, node: &Node) {
@@ -214,7 +206,7 @@ impl<'a> RenderContext<'a> {
     }
 }
 
-pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg::Tree {
+pub(crate) fn render_to_canvas(render_cfg: &RenderConfig) -> Canvas {
     log::debug!("Creating layout");
     let layout_builder = LayoutContext::new(render_cfg);
     let layout = layout_builder.compute_layout(render_cfg.slide, render_cfg.step);
@@ -224,34 +216,13 @@ pub(crate) fn render_to_svg_tree(render_cfg: &RenderConfig) -> usvg::Tree {
     let mut z_levels = BTreeSet::new();
     render_cfg.slide.node.collect_z_levels(&mut z_levels);
 
-    log::debug!("Rendering to svg");
-    let mut root_svg_node = usvg::Group::default();
-
+    log::debug!("Rendering to canvas");
     let slide = &render_cfg.slide;
-    let mut path = usvg::Path::new(Rc::new(tiny_skia::PathBuilder::from_rect(
-        tiny_skia::Rect::from_xywh(0.0, 0.0, slide.width, slide.height).unwrap(),
-    )));
-    path.fill = Some(Fill {
-        paint: usvg::Paint::Color((&slide.bg_color).into()),
-        opacity: slide.bg_color.opacity(),
-        rule: Default::default(),
-    });
-    root_svg_node
-        .children
-        .push(usvg::Node::Path(Box::new(path)));
+    let mut canvas = Canvas::new(slide.width, slide.height, slide.bg_color.clone());
 
     for z_level in z_levels {
-        let render_ctx = RenderContext::new(render_cfg, z_level, &layout, &mut root_svg_node);
+        let render_ctx = RenderContext::new(render_cfg, z_level, &layout, &mut canvas);
         render_ctx.render_to_svg(render_cfg.step, &render_cfg.slide.node);
     }
-    let size = usvg::Size::from_wh(render_cfg.slide.width, render_cfg.slide.height).unwrap();
-
-    Tree {
-        size,
-        view_box: usvg::ViewBox {
-            rect: size.to_non_zero_rect(0.0, 0.0),
-            aspect: usvg::AspectRatio::default(),
-        },
-        root: root_svg_node,
-    }
+    canvas
 }
