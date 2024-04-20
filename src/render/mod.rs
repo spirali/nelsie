@@ -1,40 +1,38 @@
-mod core;
+mod canvas;
 mod counters;
 mod image;
 mod layout;
+mod pagebuilder;
+mod pathbuilder;
 mod paths;
 mod pdf;
 mod rendering;
 mod text;
 
-use crate::common::error::NelsieError;
-use crate::common::fileutils::ensure_directory;
-
 use crate::model::{FontData, Resources, Slide, SlideDeck, SlideId};
-use crate::render::core::RenderingResult;
-pub(crate) use core::{render_slide_step, RenderConfig};
 pub(crate) use pdf::PdfBuilder;
 
+use crate::common::Step;
 use crate::render::counters::{compute_counters, CountersMap};
+use crate::render::pagebuilder::PageBuilder;
+use crate::render::rendering::render_to_canvas;
 use std::path::Path;
 use std::sync::Arc;
-use std::time::Duration;
+
+pub(crate) struct RenderConfig<'a> {
+    pub resources: &'a Resources,
+    pub slide: &'a Slide,
+    pub slide_id: SlideId,
+    pub step: Step,
+    pub default_font: &'a Arc<FontData>,
+    pub counter_values: &'a CountersMap<'a>,
+}
 
 #[derive(Debug, Copy, Clone)]
 pub(crate) enum OutputFormat {
     Pdf,
     Svg,
     Png,
-}
-
-impl OutputFormat {
-    pub fn extension(&self) -> &'static str {
-        match self {
-            OutputFormat::Pdf => "pdf",
-            OutputFormat::Svg => "svg",
-            OutputFormat::Png => "png",
-        }
-    }
 }
 
 pub(crate) struct OutputConfig<'a> {
@@ -65,28 +63,32 @@ impl VerboseLevel {
 
 fn render_slide(
     resources: &Resources,
-    output_cfg: &OutputConfig,
+    builder: &PageBuilder,
     slide_id: SlideId,
     slide: &Slide,
     default_font: &Arc<FontData>,
     counter_values: &CountersMap,
-) -> crate::Result<Vec<RenderingResult>> {
+) -> crate::Result<()> {
     log::debug!("Rendering slide {}", slide_id);
-    (1..=slide.n_steps)
-        .map(|step| {
-            let render_cfg = RenderConfig {
-                resources,
-                slide,
-                slide_id,
-                step,
-                default_font,
-                output_format: output_cfg.format,
-                output_path: output_cfg.path,
-                counter_values,
-            };
-            render_slide_step(&render_cfg)
-        })
-        .collect()
+    for step in 1..=slide.n_steps {
+        let render_cfg = RenderConfig {
+            resources,
+            slide,
+            slide_id,
+            step,
+            default_font,
+            counter_values,
+        };
+        let canvas = render_to_canvas(&render_cfg);
+        let counter = render_cfg.counter_values.get("global").unwrap();
+        let page_idx = counter
+            .indices
+            .get(&(render_cfg.slide_id, render_cfg.step))
+            .unwrap()
+            .page_idx;
+        builder.add_page(slide_id, step, page_idx, canvas, render_cfg.resources)?
+    }
+    Ok(())
 }
 
 pub(crate) fn render_slide_deck(
@@ -105,86 +107,26 @@ pub(crate) fn render_slide_deck(
 
     let counter_values = compute_counters(slide_deck);
     let global_counter = counter_values.get("global").unwrap();
-    let mut pdf_builder = if let OutputFormat::Pdf = output_cfg.format {
-        Some(PdfBuilder::new(global_counter.n_pages))
-    } else {
-        if let Some(dir) = output_cfg.path {
-            log::debug!("Ensuring output directory: {}", dir.display());
-            ensure_directory(dir).map_err(|e| {
-                NelsieError::Generic(format!(
-                    "Cannot create directory for output files: {}: {}",
-                    dir.display(),
-                    e
-                ))
-            })?;
-        }
-        None
-    };
-
-    let mut result_data = Vec::new();
-
-    if output_cfg.path.is_none() {
-        result_data.resize(global_counter.n_pages as usize, (0, 0, Vec::new()))
-    }
-
-    let mut pdf_compose_time = Duration::ZERO;
 
     let progress_bar = if verbose_level.is_normal_or_more() {
         Some(indicatif::ProgressBar::new(global_counter.n_pages.into()))
     } else {
         None
     };
+    let builder = PageBuilder::new(slide_deck, output_cfg, progress_bar, global_counter.n_pages)?;
 
     for (slide_idx, slide) in slide_deck.slides.iter().enumerate() {
-        for (step_idx, result) in render_slide(
+        render_slide(
             resources,
-            output_cfg,
+            &builder,
             slide_idx as SlideId,
             slide,
             &slide_deck.default_font,
             &counter_values,
-        )?
-        .into_iter()
-        .enumerate()
-        {
-            let page_idx = global_counter
-                .indices
-                .get(&(slide_idx as u32, (step_idx + 1) as u32))
-                .unwrap()
-                .page_idx as usize;
+        )?;
+    }
 
-            match result {
-                RenderingResult::None => { /* Do nothing */ }
-                RenderingResult::Tree(tree) => {
-                    let s = std::time::Instant::now();
-                    pdf_builder
-                        .as_mut()
-                        .unwrap()
-                        .add_page_from_svg(page_idx, tree);
-                    pdf_compose_time += std::time::Instant::now() - s;
-                }
-                RenderingResult::BytesData(data) => {
-                    result_data[page_idx] = (slide_idx, step_idx, data);
-                }
-            }
-            if let Some(bar) = &progress_bar {
-                bar.inc(1);
-            }
-        }
-    }
-    if let Some(bar) = &progress_bar {
-        bar.finish();
-    }
-    if let Some(builder) = pdf_builder {
-        if let Some(path) = output_cfg.path {
-            builder.write(path).map_err(|e| {
-                NelsieError::Generic(format!("Writing PDF file {}: {}", path.display(), e))
-            })?;
-        } else {
-            // TODO: Introduce a public method for getting data without writing in svg2pdf
-            //result_data.push(builder.finish());
-        }
-    }
+    let result_data = builder.finish()?;
 
     if verbose_level.is_full() {
         let render_end_time = std::time::Instant::now();
@@ -192,7 +134,6 @@ pub(crate) fn render_slide_deck(
             "Total rendering time: {:.2}s",
             (render_end_time - start_time).as_secs_f32()
         );
-        println!("   |--- Pdf time: {:.2}s", pdf_compose_time.as_secs_f32());
     }
 
     Ok(result_data)

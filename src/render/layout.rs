@@ -1,3 +1,4 @@
+use crate::common::Rectangle;
 use crate::model::{
     InTextAnchorId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId,
     Slide, Step,
@@ -10,14 +11,6 @@ use taffy::prelude as tf;
 
 pub(crate) struct LayoutContext<'a> {
     config: &'a RenderConfig<'a>,
-}
-
-#[derive(Debug)]
-pub(crate) struct Rectangle {
-    pub x: f32,
-    pub y: f32,
-    pub width: f32,
-    pub height: f32,
 }
 
 #[derive(Debug)]

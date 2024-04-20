@@ -57,7 +57,7 @@ impl PathPart {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub(crate) struct Path {
     pub stroke: Option<Stroke>,
     pub fill_color: Option<Color>,

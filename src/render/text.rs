@@ -1,18 +1,19 @@
 use crate::model::{
-    InTextAnchor, InTextAnchorId, InTextAnchorPoint, Resources, Span, StyledLine, StyledText,
-    TextAlign, TextStyle,
+    InTextAnchor, InTextAnchorId, InTextAnchorPoint, Resources, StyledLine, StyledText, TextAlign,
+    TextStyle,
 };
 
+use resvg::usvg::FontStretch;
 use std::collections::HashMap;
 
-use crate::render::layout::{Rectangle, TextLayout};
-use crate::render::paths::stroke_to_usvg_stroke;
+use crate::common::Rectangle;
+use crate::parsers::SimpleXmlWriter;
+use crate::render::canvas::{Canvas, CanvasItem};
+use crate::render::layout::TextLayout;
+use crate::render::pathbuilder::stroke_and_fill_svg;
 use svg2pdf::usvg;
-use usvg::{
-    AlignmentBaseline, DominantBaseline, Fill, Font, FontStyle, LengthAdjust, NonZeroPositiveF32,
-    PaintOrder, PostProcessingSteps, Text, TextAnchor, TextChunk, TextDecoration, TextFlow,
-    TextRendering, TextSpan, Tree, TreePostProc, Visibility, WritingMode,
-};
+use svg2pdf::usvg::TreeParsing;
+use usvg::{PostProcessingSteps, Tree, TreePostProc};
 
 pub(crate) fn get_in_text_anchor_point(text: &StyledText, point: &InTextAnchorPoint) -> StyledText {
     let line = &text.styled_lines[point.line_idx as usize];
@@ -134,17 +135,19 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     if text.styled_lines[0].text.is_empty() {
         return 0f32;
     }
-    let text_node = render_text(text, 0.0, 0.0, TextAlign::Start);
-    let mut root_node = usvg::Group::default();
-    root_node.children.push(text_node);
-    let size = usvg::Size::from_wh(8000.0, 6000.0).unwrap();
-    let mut tree = Tree {
-        size,
-        view_box: usvg::ViewBox {
-            rect: size.to_non_zero_rect(0.0, 0.0),
-            aspect: usvg::AspectRatio::default(),
-        },
-        root: root_node,
+    let mut xml = SimpleXmlWriter::new();
+    xml.begin("svg");
+    xml.attr("xmlns", "http://www.w3.org/2000/svg");
+    render_text_to_svg(&mut xml, text, 0.0, 0.0, TextAlign::Start);
+    xml.end("svg");
+    let svg = xml.into_string();
+
+    let mut tree = match Tree::from_str(&svg, &usvg::Options::default()) {
+        Ok(tree) => tree,
+        Err(_) => {
+            log::debug!("Failed to parse SVG");
+            return 0.0;
+        }
     };
     let postprocessing = PostProcessingSteps {
         convert_text_into_paths: true,
@@ -177,141 +180,114 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     width
 }
 
-fn create_svg_span(text_styles: &[TextStyle], span: &Span, start: usize) -> (TextSpan, usize) {
-    let text_style = &text_styles[span.style_idx as usize];
-    let fill = text_style.color.as_ref().map(|color| Fill {
-        paint: usvg::Paint::Color(color.into()),
-        opacity: color.opacity(),
-        rule: Default::default(),
-    });
-    let font = Font {
-        families: vec![text_style.font.family_name.clone()],
-        style: if text_style.italic {
-            FontStyle::Italic
-        } else {
-            FontStyle::Normal
-        },
-        stretch: text_style.stretch,
-        weight: text_style.weight,
-    };
-    let decoration = TextDecoration {
-        underline: None,
-        overline: None,
-        line_through: None,
-    };
-    let stroke = text_style.stroke.as_ref().map(|s| stroke_to_usvg_stroke(s));
-    let end = start + span.length as usize;
-    (
-        TextSpan {
-            start,
-            end,
-            fill,
-            stroke,
-            paint_order: PaintOrder::FillAndStroke,
-            font,
-            font_size: NonZeroPositiveF32::new(text_style.size).unwrap(),
-            small_caps: false,
-            apply_kerning: text_style.kerning,
-            decoration,
-            dominant_baseline: DominantBaseline::Auto,
-            alignment_baseline: AlignmentBaseline::Auto,
-            baseline_shift: vec![],
-            visibility: Visibility::Visible,
-            letter_spacing: 0.0,
-            word_spacing: 0.0,
-            text_length: None,
-            length_adjust: LengthAdjust::default(),
-        },
-        end,
-    )
-}
-
-fn render_line(
-    text_styles: &[TextStyle],
-    styled_line: &StyledLine,
-    x: f32,
-    y: f32,
-    anchor: TextAnchor,
-) -> TextChunk {
-    let mut pos = 0;
-    TextChunk {
-        x: Some(x),
-        y: Some(y),
-        anchor,
-        spans: styled_line
-            .spans
-            .iter()
-            .filter(|span| span.length > 0)
-            .map(|span| {
-                let (span, new_pos) = create_svg_span(text_styles, span, pos);
-                pos = new_pos;
-                span
-            })
-            .collect(),
-        text_flow: TextFlow::Linear,
-        text: styled_line.text.clone(),
+fn stretch_to_svg(s: FontStretch) -> &'static str {
+    match s {
+        FontStretch::UltraCondensed => "ultra-condensed",
+        FontStretch::ExtraCondensed => "extra-condensed",
+        FontStretch::Condensed => "condensed",
+        FontStretch::SemiCondensed => "semi-condensed",
+        FontStretch::Normal => "normal",
+        FontStretch::SemiExpanded => "semi-expanded",
+        FontStretch::Expanded => "expanded",
+        FontStretch::ExtraExpanded => "extra-expanded",
+        FontStretch::UltraExpanded => "ultra-expanded",
     }
 }
 
-pub(crate) fn render_text(
+fn render_line_to_svg(
+    xml: &mut SimpleXmlWriter,
+    styles: &[TextStyle],
+    x: f32,
+    y: f32,
+    line: &StyledLine,
+    align: TextAlign,
+) {
+    let mut position = 0;
+
+    xml.begin("tspan");
+    xml.attr("x", x);
+    xml.attr("y", y);
+
+    match align {
+        TextAlign::Start => { /* Start is default */ }
+        TextAlign::Center => xml.attr("text-anchor", "middle"),
+        TextAlign::End => xml.attr("text-anchor", "end"),
+    };
+
+    for span in &line.spans {
+        let style = &styles[span.style_idx as usize];
+        xml.begin("tspan");
+        xml.attr("font-family", &style.font.family_name);
+        xml.attr("font-weight", style.weight);
+        if style.italic {
+            xml.attr("font-style", "italic");
+        }
+        xml.attr("font-size", style.size);
+        stroke_and_fill_svg(
+            xml,
+            &style.stroke.as_ref().map(|s| s.as_ref().clone()),
+            &style.color,
+        );
+        match style.stretch {
+            FontStretch::Normal => { /* do nothing */ }
+            s => xml.attr("font-stretch", stretch_to_svg(s)),
+        }
+        let text = &line.text[position..(position + span.length as usize)];
+        position += span.length as usize;
+        xml.text(text);
+        xml.end("tspan");
+    }
+    xml.end("tspan");
+}
+
+pub(crate) fn render_text_to_canvas(
+    styled_text: &StyledText,
+    rect: &Rectangle,
+    align: TextAlign,
+    canvas: &mut Canvas,
+) {
+    let x = match align {
+        TextAlign::Start => rect.x,
+        TextAlign::Center => rect.x + rect.width / 2.0,
+        TextAlign::End => rect.x + rect.width,
+    };
+    let mut xml = SimpleXmlWriter::new();
+    render_text_to_svg(&mut xml, styled_text, x, rect.y, align);
+    canvas.add(CanvasItem::SvgChunk(xml.into_string()));
+}
+
+pub(crate) fn render_text_to_svg(
+    xml: &mut SimpleXmlWriter,
     styled_text: &StyledText,
     x: f32,
     y: f32,
     align: TextAlign,
-) -> usvg::Node {
-    let anchor = match align {
-        TextAlign::Start => TextAnchor::Start,
-        TextAlign::Center => TextAnchor::Middle,
-        TextAlign::End => TextAnchor::End,
-    };
-    let n_chars = styled_text
-        .styled_lines
-        .iter()
-        .map(|sl| sl.text.len())
-        .sum();
-    let rot_list = vec![0.0; n_chars];
-
+) {
+    xml.begin("text");
+    xml.attr("xml:space", "preserve");
     let mut current_y = y;
-    // let last = styled_text.stlen() - 1;
-    let chunks: Vec<TextChunk> = styled_text
-        .styled_lines
-        .iter()
-        .enumerate()
-        .map(|(idx, styled_line)| {
-            let size = styled_line
-                .font_size(&styled_text.styles)
-                .unwrap_or(styled_text.default_font_size);
+    for (idx, styled_line) in styled_text.styled_lines.iter().enumerate() {
+        let size = styled_line
+            .font_size(&styled_text.styles)
+            .unwrap_or(styled_text.default_font_size);
 
-            let height = if idx != 0 {
-                size * styled_text.default_line_spacing
-            } else {
-                size
-            };
-            let descender = styled_line
-                .line_descender(&styled_text.styles)
-                .unwrap_or(0.0);
-            current_y += height;
-            render_line(
-                &styled_text.styles,
-                styled_line,
-                x,
-                current_y + descender,
-                anchor,
-            )
-        })
-        .collect();
-    let text = Text {
-        id: String::new(),
-        rendering_mode: TextRendering::GeometricPrecision,
-        dx: vec![],
-        dy: vec![],
-        rotate: rot_list,
-        writing_mode: WritingMode::LeftToRight,
-        chunks,
-        abs_transform: Default::default(),
-        bounding_box: None,
-        stroke_bounding_box: None,
-        flattened: None,
-    };
-    usvg::Node::Text(Box::new(text))
+        let height = if idx != 0 {
+            size * styled_text.default_line_spacing
+        } else {
+            size
+        };
+        let descender = styled_line
+            .line_descender(&styled_text.styles)
+            .unwrap_or(0.0);
+        current_y += height;
+        render_line_to_svg(
+            xml,
+            &styled_text.styles,
+            x,
+            current_y + descender,
+            styled_line,
+            align,
+        );
+    }
+    xml.end("text");
 }

@@ -20,22 +20,9 @@ impl From<crate::NelsieError> for PyErr {
     }
 }
 
-// #[derive(Debug, FromPyObject)]
-// enum StringOrInt {
-//     Int(u32),
-//     String(String),
-// }
-//
-// /// Formats the sum of two numbers as string.
-// #[pyfunction]
-// fn test_abc(a: ValueOrInSteps<StringOrInt>) -> PyResult<String> {
-//     Ok(format!("{:?}", a))
-// }
-
 /// A Python module implemented in Rust.
 #[pymodule]
 fn nelsie(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    //m.add_function(wrap_pyfunction!(test_abc, m)?)?;
     m.add_class::<Deck>()?;
     m.add_class::<Resources>()?;
     Ok(())
