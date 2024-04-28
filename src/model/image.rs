@@ -1,6 +1,7 @@
 use crate::model::{Step, StepValue};
 use crate::parsers::step_parser::parse_steps_from_label;
 use imagesize::blob_size;
+use resvg::usvg::fontdb;
 use std::cmp::max;
 use std::collections::HashMap;
 use std::fs::File;
@@ -9,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use svg2pdf::usvg;
-use usvg::{roxmltree, TreeParsing};
+use usvg::roxmltree;
 
 use crate::NelsieError;
 
@@ -74,11 +75,15 @@ pub(crate) struct ImageManager {
 }
 
 impl ImageManager {
-    pub fn load_image(&mut self, path: &Path) -> crate::Result<Arc<LoadedImage>> {
+    pub fn load_image(
+        &mut self,
+        path: &Path,
+        font_db: &fontdb::Database,
+    ) -> crate::Result<Arc<LoadedImage>> {
         if let Some(img) = self.loaded_images.get(path) {
             Ok(img.clone())
         } else {
-            let img = Arc::new(load_image(path)?);
+            let img = Arc::new(load_image(path, font_db)?);
             self.loaded_images.insert(path.to_path_buf(), img.clone());
             Ok(img)
         }
@@ -102,7 +107,7 @@ fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
     })
 }
 
-fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
+fn load_svg_image(raw_data: Vec<u8>, font_db: &fontdb::Database) -> crate::Result<LoadedImage> {
     let str_data = std::str::from_utf8(&raw_data)
         .map_err(|_e| NelsieError::Generic("Invalid utf-8 data".to_string()))?;
 
@@ -133,12 +138,12 @@ fn load_svg_image(raw_data: Vec<u8>) -> crate::Result<LoadedImage> {
         }
     }
 
-    let usvg_tree = usvg::Tree::from_xmltree(&xml_tree, &usvg::Options::default())?;
+    let usvg_tree = usvg::Tree::from_xmltree(&xml_tree, &usvg::Options::default(), font_db)?;
 
     //tree.convert_text(font_db);
     Ok(LoadedImage {
-        width: usvg_tree.size.width(),
-        height: usvg_tree.size.height(),
+        width: usvg_tree.size().width(),
+        height: usvg_tree.size().height(),
         data: LoadedImageData::Svg(SvgImageData { tree, n_steps }),
     })
 }
@@ -232,7 +237,7 @@ fn load_ora_image(path: &Path) -> crate::Result<LoadedImage> {
     })
 }
 
-fn load_image(path: &Path) -> crate::Result<LoadedImage> {
+fn load_image(path: &Path, font_db: &fontdb::Database) -> crate::Result<LoadedImage> {
     log::debug!("Loading image: {}", path.display());
     let extension = path
         .extension()
@@ -240,7 +245,7 @@ fn load_image(path: &Path) -> crate::Result<LoadedImage> {
         .unwrap_or("");
     if extension == "svg" {
         let raw_data = std::fs::read(path)?;
-        load_svg_image(raw_data).map_err(|e| {
+        load_svg_image(raw_data, font_db).map_err(|e| {
             NelsieError::Generic(format!("Image '{}' load error: {}", path.display(), e))
         })
     } else if extension == "ora" {

@@ -204,7 +204,10 @@ fn process_content(
             NodeContent::Text(node_content)
         }
         Content::Image(image) => {
-            let loaded_image = nc_env.resources.image_manager.load_image(&image.path)?;
+            let loaded_image = nc_env
+                .resources
+                .image_manager
+                .load_image(&image.path, &nc_env.resources.font_db)?;
             if image.enable_steps {
                 *n_steps = (*n_steps).max(loaded_image.n_steps() + image.shift_steps);
             }
