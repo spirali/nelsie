@@ -38,7 +38,6 @@ fn create_style(s_style: Style) -> PartialTextStyle {
         } else {
             None
         },
-        kerning: None,
     }
 }
 

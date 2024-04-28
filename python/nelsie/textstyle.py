@@ -27,7 +27,6 @@ class TextStyle:
     line_spacing: float | None = None
     italic: bool | None = None
     stretch: FontStretch | None = None
-    kerning: bool | None = None
 
     # 1-1000; 400 = Normal, 700 = Bold
     weight: int | None = None
