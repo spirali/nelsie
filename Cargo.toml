@@ -11,11 +11,11 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.21", features = ["abi3-py39"] }
 taffy = "0.4"
-resvg = "0.38.0"
-svg2pdf = "0.10" # !! Must be synchronized with resvg
+resvg = "0.41.0"
+svg2pdf = { git = "https://github.com/typst/svg2pdf.git", rev = "b9f1513" } # !! Must be synchronized with resvg
 ttf-parser = "0.20" # Not necessary same as resvg but nice to be a same as in resvg
 thiserror = "1"
-svgtypes = "0.13" # Not necessary same as resvg but nice to be a same as in resvg
+svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
 env_logger = "0.11"
 pdf-writer = "0.9"

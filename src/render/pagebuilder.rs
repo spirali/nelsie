@@ -6,10 +6,8 @@ use crate::render::canvas::Canvas;
 use crate::render::{OutputConfig, OutputFormat, PdfBuilder};
 use indicatif::ProgressBar;
 use pdf_writer::Finish;
-use resvg::usvg::{PostProcessingSteps, TreeParsing};
 use resvg::{tiny_skia, usvg};
 use std::cell::RefCell;
-use svg2pdf::usvg::TreePostProc;
 
 pub(crate) enum PageWriter {
     Pdf(RefCell<PdfBuilder>),
@@ -172,14 +170,8 @@ fn write_pdf_page(
     resources: &Resources,
 ) -> crate::Result<Option<Vec<u8>>> {
     let data = canvas.into_svg()?;
-    let mut tree = usvg::Tree::from_str(&data, &usvg::Options::default())?;
-    tree.postprocess(
-        PostProcessingSteps {
-            convert_text_into_paths: true,
-        },
-        &resources.font_db,
-    );
-    pdf_builder.add_page_from_svg(page_idx as usize, tree);
+    let tree = usvg::Tree::from_str(&data, &usvg::Options::default(), &resources.font_db)?;
+    pdf_builder.add_page_from_svg(page_idx as usize, tree, &resources.font_db);
     Ok(None)
 }
 
@@ -193,15 +185,9 @@ fn write_png_page(
     n_pages: u32,
 ) -> crate::Result<Option<Vec<u8>>> {
     let data = canvas.into_svg()?;
-    let mut tree = usvg::Tree::from_str(&data, &usvg::Options::default())?;
-    tree.postprocess(
-        PostProcessingSteps {
-            convert_text_into_paths: true,
-        },
-        &resources.font_db,
-    );
+    let tree = usvg::Tree::from_str(&data, &usvg::Options::default(), &resources.font_db)?;
     let zoom = 1.0;
-    let pixmap_size = tree.size.to_int_size().scale_by(zoom).unwrap();
+    let pixmap_size = tree.size().to_int_size().scale_by(zoom).unwrap();
     let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
     let render_ts = tiny_skia::Transform::from_scale(zoom, zoom);
     resvg::render(&tree, render_ts, &mut pixmap.as_mut());

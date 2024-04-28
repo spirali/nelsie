@@ -11,9 +11,7 @@ use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::layout::TextLayout;
 use crate::render::pathbuilder::stroke_and_fill_svg;
-use svg2pdf::usvg;
-use svg2pdf::usvg::TreeParsing;
-use usvg::{PostProcessingSteps, Tree, TreePostProc};
+use resvg::usvg;
 
 pub(crate) fn get_in_text_anchor_point(text: &StyledText, point: &InTextAnchorPoint) -> StyledText {
     let line = &text.styled_lines[point.line_idx as usize];
@@ -142,23 +140,15 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     xml.end("svg");
     let svg = xml.into_string();
 
-    let mut tree = match Tree::from_str(&svg, &usvg::Options::default()) {
+    let tree = match usvg::Tree::from_str(&svg, &usvg::Options::default(), &resources.font_db) {
         Ok(tree) => tree,
         Err(_) => {
             log::debug!("Failed to parse SVG");
             return 0.0;
         }
     };
-    let postprocessing = PostProcessingSteps {
-        convert_text_into_paths: true,
-    };
-    tree.postprocess(postprocessing, &resources.font_db);
 
-    let mut width = tree
-        .root
-        .abs_bounding_box()
-        .map(|bbox| bbox.right())
-        .unwrap_or(0.0);
+    let mut width = tree.root().abs_bounding_box().right();
 
     /* Because bounding box ignores span that contains only spaces, we have problem with trailing spaces if they are in separate style,
        we need to increase with for each trailing space

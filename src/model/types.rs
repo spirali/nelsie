@@ -4,8 +4,6 @@ use std::fmt::{Display, Formatter};
 use crate::model::InTextAnchorId;
 use std::str::FromStr;
 
-
-
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub(crate) struct NodeId(u32);
 
