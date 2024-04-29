@@ -21,7 +21,7 @@ fn render_ora_to_canvas(
             || layer
                 .visibility
                 .as_ref()
-                .map(|v| *v.at_step(step - image.shift_steps))
+                .map(|v| *v.at_step(step))
                 .unwrap_or(true)
         {
             canvas.add(CanvasItem::PngImage(

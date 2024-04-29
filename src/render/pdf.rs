@@ -1,4 +1,3 @@
-
 use pdf_writer::{Chunk, Finish};
 use pdf_writer::{Content, Name, Rect, Ref};
 use resvg::usvg::fontdb;
