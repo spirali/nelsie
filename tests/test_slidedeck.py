@@ -20,16 +20,12 @@ def test_render_outputs(tmp_path, deck):
 
     with open(out_svg / "0-0-1.svg", "rb") as f:
         data = f.read()
-        assert data.startswith(
-            b"<svg "
-        )
+        assert data.startswith(b"<svg ")
         assert svg_data[0] == (0, 1, data)
 
     with open(out_svg / "1-1-1.svg", "rb") as f:
         data = f.read()
-        assert data.startswith(
-            b"<svg "
-        )
+        assert data.startswith(b"<svg ")
         assert svg_data[1] == (1, 1, data)
 
     png_data = deck.render(None, "png")

@@ -155,18 +155,13 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     */
     let line = &text.styled_lines[0];
     let line_len = line.spans.iter().map(|s| s.length as usize).sum();
-    let mut line_chars = line.text.chars();
-    for _ in line_len..line.text.len() {
-        line_chars.next_back();
-    }
-    for span in line.spans.iter().rev() {
-        if (0..span.length).all(|_| line_chars.next_back() == Some(' ')) {
+    if line.text.chars().take(line_len).all(|x| x == ' ') {
+        for span in &line.spans {
             let style = &text.styles[span.style_idx as usize];
             width += style.font.space_size * style.size * span.length as f32;
-        } else {
-            break;
         }
     }
+
     width
 }
 
