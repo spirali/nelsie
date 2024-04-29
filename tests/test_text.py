@@ -38,9 +38,7 @@ def test_render_text_basic(deck):
 
     slide = deck.new_slide()
     slide.set_style("big", TextStyle(size=64))
-    slide.box(bg_color="#f88").text(
-        "Now follows: ~big{Big text}\nNext line\nNext line\nNext line"
-    )
+    slide.box(bg_color="#f88").text("Now follows: ~big{Big text}\nNext line\nNext line\nNext line")
 
 
 @check(n_slides=2)
@@ -59,9 +57,7 @@ def test_render_text_steps(deck):
 def test_render_text_unicode(deck):
     deck.set_style("x", TextStyle(color="yellow"))
     slide = deck.new_slide()
-    slide.box(bg_color="#f88").text(
-        "Příliš žluťoučký ~x{kůň} úpěl ďábelské ódy\n>>>y̆<<<"
-    )
+    slide.box(bg_color="#f88").text("Příliš žluťoučký ~x{kůň} úpěl ďábelské ódy\n>>>y̆<<<")
 
 
 def test_set_invalid_font(deck):
@@ -154,9 +150,7 @@ def test_text_stroke(deck):
     slide.text("Text 1", style=TextStyle(stroke=Stroke("green"), color="#909090"))
     slide.text(
         "Text 2",
-        style=TextStyle(
-            stroke=Stroke("blue", dash_array=[5, 2], width=0.2), color="empty"
-        ),
+        style=TextStyle(stroke=Stroke("blue", dash_array=[5, 2], width=0.2), color="empty"),
     )
 
 
@@ -167,9 +161,7 @@ def test_text_style_get_stroke(deck):
         TextStyle(stroke=Stroke("green", dash_array=[5, 2], width=10, dash_offset=2)),
     )
     assert slide.get_style("default").stroke == "empty"
-    assert slide.get_style("test").stroke == Stroke(
-        "#008000", dash_array=[5, 2], width=10, dash_offset=2
-    )
+    assert slide.get_style("test").stroke == Stroke("#008000", dash_array=[5, 2], width=10, dash_offset=2)
 
 
 @check()
@@ -228,9 +220,7 @@ def test_line_box(deck):
     deck.set_style("default", TextStyle(size=8))
     deck.set_style("big", TextStyle(size=18))
     slide = deck.new_slide(width=120, height=100)
-    t = slide.text(
-        "First line\n\n~big{Third} line\n4. line\nLooooooooong line", z_level=1
-    )
+    t = slide.text("First line\n\n~big{Third} line\n4. line\nLooooooooong line", z_level=1)
 
     slide.box(
         x=t.line_x(0),
