@@ -127,21 +127,14 @@ impl<'a> PageBuilder<'a> {
 }
 
 fn path_name(
-    slide_id: SlideId,
-    step: Step,
+    _slide_id: SlideId,
+    _step: Step,
     page_idx: u32,
     extension: &str,
     n_pages: u32,
 ) -> String {
     let padding = n_pages.to_string().len();
-    format!(
-        "{:0padding$}-{}-{}.{}",
-        page_idx,
-        slide_id,
-        step,
-        extension,
-        padding = padding,
-    )
+    format!("{:0padding$}.{}", page_idx, extension, padding = padding,)
 }
 
 fn write_svg_page(
