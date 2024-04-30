@@ -1,4 +1,6 @@
 mod canvas;
+mod canvas_pdf;
+mod canvas_svg;
 mod counters;
 mod image;
 mod layout;

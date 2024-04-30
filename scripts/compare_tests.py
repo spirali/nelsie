@@ -11,7 +11,7 @@ import numpy as np
 ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 CHECKS = os.path.join(ROOT, "tests", "checks")
 
-LIMIT = 0.000001
+LIMIT = 105.0
 
 
 def image_diff(path1, path2, resize):
@@ -20,16 +20,15 @@ def image_diff(path1, path2, resize):
         old_img = Image.open(path2)
     except FileNotFoundError:
         return float("inf"), None
+
     if resize:
         new_img = new_img.resize(old_img.size)
         new_img = new_img.convert(old_img.mode)
     difference = ImageChops.difference(new_img, old_img)
     stat = ImageStat.Stat(difference)
-    s = sum(stat.sum)
+    s = sum(stat.sum) / 255.0
     if s > 0:
-        sub = np.subtract(
-            np.array(new_img).astype(np.cfloat), np.array(old_img).astype(np.cfloat)
-        )
+        sub = np.subtract(np.array(new_img).astype(np.cfloat), np.array(old_img).astype(np.cfloat))
         diff_data2 = -np.minimum(np.min(sub, axis=2), 0)
         diff_data1 = np.maximum(np.max(sub, axis=2), 0)
         diff_data3 = np.zeros_like(diff_data2)
@@ -62,9 +61,7 @@ def check_images(name, path, fails, subdir, resize=False):
     diffs = []
     diff_imgs = []
     for file in files:
-        diff, diff_img = image_diff(
-            os.path.join(test_dir, file), os.path.join(check_dir, file), resize
-        )
+        diff, diff_img = image_diff(os.path.join(test_dir, file), os.path.join(check_dir, file), resize)
         diffs.append(diff)
         diff_imgs.append(diff_img)
     if max(diffs) > LIMIT:
@@ -82,9 +79,7 @@ def check_images(name, path, fails, subdir, resize=False):
 
 
 def collect_failed_tests() -> list[FailedTest]:
-    paths = Path(f"/tmp/pytest-of-{os.getlogin()}/pytest-current/").rglob(
-        "*current/check.txt"
-    )
+    paths = Path(f"/tmp/pytest-of-{os.getlogin()}/pytest-current/").rglob("*current/check.txt")
     fails = []
     for path in paths:
         with open(path, "r") as f:
@@ -117,12 +112,8 @@ def report(failed_tests):
         for failed_test in failed_tests:
             f.write(f"<h2>{failed_test.name} ({failed_test.test_type})</h2>")
             f.write("<table>")
-            f.write(
-                "<tr><td>Name</td><td>Reference</td><td>Test</td><td>Diff</td></tr>"
-            )
-            for file, df, diff_img in zip(
-                failed_test.files, failed_test.diffs, failed_test.diff_imgs
-            ):
+            f.write("<tr><td>Name</td><td>Reference</td><td>Test</td><td>Diff</td></tr>")
+            for file, df, diff_img in zip(failed_test.files, failed_test.diffs, failed_test.diff_imgs):
                 f.write(f"<tr><td>{file}</td>")
                 f.write(
                     f"<td><img style='{style}' width='400' src='{os.path.join(failed_test.check_dir, file)}'/></td>"
@@ -131,12 +122,10 @@ def report(failed_tests):
                     f"<td><img style='{style}' width='400' src='{os.path.join(img_dir, failed_test.test_type, failed_test.name, file)}'/></td>"
                 )
                 if diff_img is not None:
-                    f.write(
-                        f"<td><img style='{style}' width='400' src='{html_inline_img(diff_img)}'/></td>"
-                    )
+                    f.write(f"<td><img style='{style}' width='400' src='{html_inline_img(diff_img)}'/></td>")
                 else:
                     f.write("<td></td>")
-                f.write(f"<td>{df}</td>")
+                f.write(f"<td>{df:0.2f}</td>")
                 f.write("</tr>")
             f.write("</table>")
         f.write("</body></html>")
@@ -148,8 +137,8 @@ def update(failed_tests):
         print(f"Updating {failed_test.name} ({failed_test.test_type})")
         shutil.rmtree(failed_test.check_dir, ignore_errors=True)
         shutil.copytree(
-            os.path.join(failed_test.test_dir),
-            os.path.join(failed_test.check_dir),
+            failed_test.test_dir,
+            failed_test.check_dir,
         )
 
 

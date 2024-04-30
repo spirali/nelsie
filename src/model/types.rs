@@ -165,7 +165,7 @@ impl LayoutExpr {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) struct Color(svgtypes::Color);
 
 impl Color {
@@ -173,9 +173,13 @@ impl Color {
         Color(color)
     }
 
-    /*pub fn opacity(&self) -> NormalizedF32 {
-        NormalizedF32::new_u8(self.0.alpha)
-    }*/
+    pub fn as_3f32(&self) -> (f32, f32, f32) {
+        (
+            self.0.red as f32 / 255.0,
+            self.0.green as f32 / 255.0,
+            self.0.blue as f32 / 255.0,
+        )
+    }
 }
 
 impl From<&Color> for svgtypes::Color {

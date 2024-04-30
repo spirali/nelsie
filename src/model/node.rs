@@ -3,11 +3,13 @@ use crate::model::shapes::Drawing;
 use crate::model::text::NodeContentText;
 use crate::model::types::LengthOrAuto;
 use crate::model::{LayoutExpr, NodeId};
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 
+use by_address::ByAddress;
 use std::sync::Arc;
 
 use crate::common::Step;
+use crate::model::image::LoadedImage;
 use taffy::prelude::{AlignContent, AlignItems};
 use taffy::style::FlexWrap;
 
@@ -111,6 +113,15 @@ impl Node {
         out.extend(self.z_level.values());
         for child in self.child_nodes() {
             child.collect_z_levels(out);
+        }
+    }
+
+    pub fn collect_images(&self, out: &mut HashSet<ByAddress<Arc<LoadedImage>>>) {
+        if let Some(NodeContent::Image(image)) = &self.content {
+            out.insert(ByAddress::from(image.loaded_image.clone()));
+        };
+        for child in self.child_nodes() {
+            child.collect_images(out);
         }
     }
 }

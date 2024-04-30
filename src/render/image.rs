@@ -97,7 +97,19 @@ pub(crate) fn render_image_to_canvas(
         return;
     }
     let step = step - image.shift_steps;
-    let rect = rect.clone();
+    let width = image.loaded_image.width;
+    let height = image.loaded_image.height;
+    let scale = (rect.width / width).min(rect.height / height);
+    let target_width = image.loaded_image.width * scale;
+    let target_height = image.loaded_image.height * scale;
+
+    let rect = Rectangle::new(
+        rect.x + (rect.width - target_width) / 2.0,
+        rect.y + (rect.height - target_height) / 2.0,
+        target_width,
+        target_height,
+    );
+
     match &image.loaded_image.data {
         LoadedImageData::Png(data) => canvas.add(CanvasItem::PngImage(rect, data.clone())),
         LoadedImageData::Jpeg(data) => canvas.add(CanvasItem::JpegImage(rect, data.clone())),

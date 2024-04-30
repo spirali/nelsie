@@ -59,7 +59,7 @@ pub(crate) fn path_to_svg(
             &path.fill_color,
         );
     } else {
-        let mut builder = PathBuilder::new(path.stroke.clone(), path.fill_color.clone());
+        let mut builder = PathBuilder::new(path.stroke.clone(), path.fill_color);
         for (i, part) in path.parts.iter().enumerate() {
             let (sx, sy) = move_point_for_arrow(layout, parent_id, path, i).unwrap_or((0.0, 0.0));
             match part {
@@ -179,7 +179,7 @@ pub(crate) fn create_arrow(
     let (stroke, fill_color) = if let Some(width) = arrow.stroke_width {
         (
             Some(Stroke {
-                color: color.clone(),
+                color: *color,
                 width,
                 dash_array: None,
                 dash_offset: 0.0,
@@ -187,7 +187,7 @@ pub(crate) fn create_arrow(
             None,
         )
     } else {
-        (None, Some(color.clone()))
+        (None, Some(*color))
     };
     let mut builder = PathBuilder::new(stroke, fill_color);
     builder.move_to(x1, y1);
