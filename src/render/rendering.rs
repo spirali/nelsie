@@ -44,7 +44,7 @@ fn draw_debug_frame(
     let mut xml = SimpleXmlWriter::new();
     let mut path = PathBuilder::new(
         Some(Stroke {
-            color: color.clone(),
+            color: *color,
             width: 1.0,
             dash_array: Some(vec![5.0, 2.5]),
             dash_offset: 0.0,
@@ -75,7 +75,7 @@ fn draw_debug_frame(
         styles: vec![TextStyle {
             font: font.clone(),
             stroke: None,
-            color: Some(color.clone()),
+            color: Some(*color),
             size: 8.0,
             line_spacing: 0.0,
             italic: false,
@@ -132,7 +132,7 @@ impl<'a> RenderContext<'a> {
             if let Some(color) = &node.bg_color.at_step(step) {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 let border_radius = *node.border_radius.at_step(step);
-                let mut path = PathBuilder::new(None, Some(color.clone()));
+                let mut path = PathBuilder::new(None, Some(*color));
                 path_from_rect(&mut path, rect, border_radius);
                 let mut xml = SimpleXmlWriter::new();
                 path.write_svg(&mut xml);
@@ -217,7 +217,7 @@ pub(crate) fn render_to_canvas(render_cfg: &RenderConfig) -> Canvas {
 
     log::debug!("Rendering to canvas");
     let slide = &render_cfg.slide;
-    let mut canvas = Canvas::new(slide.width, slide.height, slide.bg_color.clone());
+    let mut canvas = Canvas::new(slide.width, slide.height, slide.bg_color);
 
     for z_level in z_levels {
         let render_ctx = RenderContext::new(render_cfg, z_level, &layout, &mut canvas);

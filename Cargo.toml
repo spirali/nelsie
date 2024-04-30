@@ -11,8 +11,8 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.21", features = ["abi3-py39"] }
 taffy = "0.4"
-resvg = "0.41.0"
-svg2pdf = { git = "https://github.com/typst/svg2pdf.git", rev = "b9f1513" } # !! Must be synchronized with resvg
+resvg = "0.41"
+svg2pdf = { git = "https://github.com/typst/svg2pdf.git", rev = "b9f1513" } # !!synchronized with resvg
 ttf-parser = "0.20" # Not necessary same as resvg but nice to be a same as in resvg
 thiserror = "1"
 svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
@@ -26,6 +26,9 @@ syntect = { version = "5", default-features = false, features = ["default-fancy"
 indicatif = "0.17"
 base64 = "0.21"# Nice to be synchronized with resvg
 xmltree = { version = "0.10", features = ["attribute-order"] }
+image = "0.24" # Nice to be sycnrhonized with svg2pdf
+miniz_oxide = "0.7" # Nice to be sycnrhonized with svg2pdf
+by_address = "1"
 
 [profile.release]
 lto = true

@@ -41,7 +41,7 @@ pub(crate) fn stroke_and_fill_svg(
         xml.attr("fill", "none");
     }
     if let Some(stroke) = stroke {
-        xml.attr("stroke", &stroke.color);
+        xml.attr("stroke", stroke.color);
         xml.attr("stroke-width", stroke.width);
         if let Some(array) = &stroke.dash_array {
             xml.attr_buf("stroke-dasharray", |s| {

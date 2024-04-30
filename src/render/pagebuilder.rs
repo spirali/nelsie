@@ -1,16 +1,22 @@
 use crate::common::error::NelsieError;
 use crate::common::fileutils::ensure_directory;
 use crate::common::Step;
-use crate::model::{Resources, SlideDeck, SlideId};
+use crate::model::{LoadedImageData, Resources, SlideDeck, SlideId};
 use crate::render::canvas::Canvas;
+use crate::render::canvas_pdf::PdfImageCache;
+use crate::render::pdf::image_to_pdf_chunk;
 use crate::render::{OutputConfig, OutputFormat, PdfBuilder};
+use by_address::ByAddress;
 use indicatif::ProgressBar;
+use itertools::Itertools;
+
 use pdf_writer::Finish;
 use resvg::{tiny_skia, usvg};
 use std::cell::RefCell;
+use std::collections::HashSet;
 
 pub(crate) enum PageWriter {
-    Pdf(RefCell<PdfBuilder>),
+    Pdf(RefCell<PdfBuilder>, PdfImageCache),
     Svg,
     Png,
 }
@@ -25,7 +31,7 @@ pub(crate) struct PageBuilder<'a> {
 
 impl<'a> PageBuilder<'a> {
     pub fn new(
-        _slide_deck: &SlideDeck,
+        slide_deck: &SlideDeck,
         output_config: &'a OutputConfig,
         progress_bar: Option<ProgressBar>,
         n_pages: u32,
@@ -33,7 +39,11 @@ impl<'a> PageBuilder<'a> {
         let mut result_data = Vec::new();
         Ok(PageBuilder {
             writer: match output_config.format {
-                OutputFormat::Pdf => PageWriter::Pdf(RefCell::new(PdfBuilder::new(n_pages))),
+                OutputFormat::Pdf => {
+                    let mut pdf_builder = PdfBuilder::new(n_pages);
+                    let cache = collect_image_cache(slide_deck, &mut pdf_builder);
+                    PageWriter::Pdf(RefCell::new(pdf_builder), cache)
+                }
                 OutputFormat::Svg => {
                     if output_config.path.is_none() {
                         result_data.resize(n_pages as usize, (0, 0, Vec::new()))
@@ -76,7 +86,7 @@ impl<'a> PageBuilder<'a> {
 
     pub fn finish(self) -> crate::Result<Vec<(usize, usize, Vec<u8>)>> {
         match (self.writer, self.output_path) {
-            (PageWriter::Pdf(builder), Some(path)) => builder.into_inner().write(path)?,
+            (PageWriter::Pdf(builder, _), Some(path)) => builder.into_inner().write(path)?,
             _ => { /* Do nothing */ }
         }
         if let Some(bar) = self.progress_bar {
@@ -94,8 +104,8 @@ impl<'a> PageBuilder<'a> {
         resources: &Resources,
     ) -> crate::Result<()> {
         let data = match &self.writer {
-            PageWriter::Pdf(writer) => {
-                write_pdf_page(&mut writer.borrow_mut(), page_id, canvas, resources)?
+            PageWriter::Pdf(writer, cache) => {
+                write_pdf_page(&mut writer.borrow_mut(), page_id, canvas, resources, cache)?
             }
             PageWriter::Svg => write_svg_page(
                 self.output_path,
@@ -161,10 +171,38 @@ fn write_pdf_page(
     page_idx: u32,
     canvas: Canvas,
     resources: &Resources,
+    cache: &PdfImageCache,
 ) -> crate::Result<Option<Vec<u8>>> {
-    let data = canvas.into_svg()?;
-    let tree = usvg::Tree::from_str(&data, &usvg::Options::default(), &resources.font_db)?;
-    pdf_builder.add_page_from_svg(page_idx as usize, tree, &resources.font_db);
+    let width = canvas.width();
+    let height = canvas.height();
+    let bg_color = canvas.bg_color;
+
+    let refs = canvas
+        .into_pdf_chunks(resources, cache)?
+        .into_iter()
+        .map(|(rect, chunk, id)| {
+            (
+                rect,
+                if let Some(chunk) = chunk {
+                    pdf_builder.add_chunk(chunk, id)
+                } else {
+                    id
+                },
+            )
+        })
+        .collect_vec();
+
+    // let data = canvas.into_svg()?;
+    //
+    // let tree = usvg::Tree::from_str(&data, &usvg::Options::default(), &resources.font_db)?;
+    // let (svg_chunk, svg_id) = svg2pdf::to_chunk(
+    //     &tree,
+    //     svg2pdf::ConversionOptions::default(),
+    //     &resources.font_db,
+    // );
+    // let svg_id = pdf_builder.add_chunk(svg_chunk, svg_id);
+    // let refs = vec![(Rectangle::new(0.0, 0.0, width, height), svg_id)];
+    pdf_builder.add_page_from_svg(page_idx as usize, width, height, bg_color, &refs);
     Ok(None)
 }
 
@@ -196,4 +234,56 @@ fn write_png_page(
     } else {
         Ok(Some(output))
     }
+}
+
+pub fn collect_image_cache(deck: &SlideDeck, pdf_builder: &mut PdfBuilder) -> PdfImageCache {
+    let mut image_set = HashSet::new();
+    for slide in &deck.slides {
+        slide.node.collect_images(&mut image_set);
+    }
+    let mut image_vec = image_set.into_iter().collect_vec();
+    image_vec.sort_unstable_by_key(|i| i.image_id);
+    let mut chunks = Vec::new();
+    for image in image_vec {
+        match &image.data {
+            LoadedImageData::Png(data) => {
+                let (chunk, id) = image_to_pdf_chunk(
+                    image::ImageFormat::Png,
+                    data,
+                    pdf_builder.ref_bump(),
+                    pdf_builder.ref_bump(),
+                );
+                chunks.push((ByAddress::from(data.clone()), chunk, id))
+            }
+            LoadedImageData::Gif(_) => {}
+            LoadedImageData::Jpeg(data) => {
+                let (chunk, id) = image_to_pdf_chunk(
+                    image::ImageFormat::Jpeg,
+                    data,
+                    pdf_builder.ref_bump(),
+                    pdf_builder.ref_bump(),
+                );
+                chunks.push((ByAddress::from(data.clone()), chunk, id))
+            }
+            LoadedImageData::Svg(_) => {}
+            LoadedImageData::Ora(ora) => {
+                for layer in &ora.layers {
+                    let (chunk, id) = image_to_pdf_chunk(
+                        image::ImageFormat::Png,
+                        &layer.data,
+                        pdf_builder.ref_bump(),
+                        pdf_builder.ref_bump(),
+                    );
+                    chunks.push((ByAddress::from(layer.data.clone()), chunk, id))
+                }
+            }
+        }
+    }
+
+    let mut cache = PdfImageCache::new();
+    for (key, chunk, id) in chunks {
+        pdf_builder.add_chunk_direct(chunk);
+        cache.insert(key, id);
+    }
+    cache
 }

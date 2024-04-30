@@ -54,6 +54,7 @@ pub(crate) enum LoadedImageData {
 
 #[derive(Debug)]
 pub(crate) struct LoadedImage {
+    pub image_id: u32,
     pub width: f32,
     pub height: f32,
     pub data: LoadedImageData,
@@ -83,9 +84,12 @@ impl ImageManager {
         if let Some(img) = self.loaded_images.get(path) {
             Ok(img.clone())
         } else {
-            let img = Arc::new(load_image(path, font_db)?);
-            self.loaded_images.insert(path.to_path_buf(), img.clone());
-            Ok(img)
+            let mut img = load_image(path, font_db)?;
+            img.image_id = self.loaded_images.len() as u32;
+            let img_ref = Arc::new(img);
+            self.loaded_images
+                .insert(path.to_path_buf(), img_ref.clone());
+            Ok(img_ref)
         }
     }
 }
@@ -101,6 +105,7 @@ fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
         _ => unreachable!(), // This is safe, otherwise it should already fail in blob_size
     };
     Some(LoadedImage {
+        image_id: 0,
         width: size.width as f32,
         height: size.height as f32,
         data,
@@ -142,6 +147,7 @@ fn load_svg_image(raw_data: Vec<u8>, font_db: &fontdb::Database) -> crate::Resul
 
     //tree.convert_text(font_db);
     Ok(LoadedImage {
+        image_id: 0,
         width: usvg_tree.size().width(),
         height: usvg_tree.size().height(),
         data: LoadedImageData::Svg(SvgImageData { tree, n_steps }),
@@ -231,6 +237,7 @@ fn load_ora_image(path: &Path) -> crate::Result<LoadedImage> {
     load_ora_stack(&image, &mut archive, &mut layers, &mut n_steps)?;
     layers.reverse();
     Ok(LoadedImage {
+        image_id: 0,
         width,
         height,
         data: LoadedImageData::Ora(OraImageData { layers, n_steps }),
