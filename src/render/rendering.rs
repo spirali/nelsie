@@ -200,7 +200,7 @@ impl<'a> RenderContext<'a> {
         self.canvas.add(CanvasItem::SvgChunk(xml.into_string()))
     }
 
-    pub(crate) fn render_to_svg(mut self, step: Step, node: &Node) {
+    pub(crate) fn render_to_canvas(mut self, step: Step, node: &Node) {
         self.render_helper(step, node);
     }
 }
@@ -221,7 +221,7 @@ pub(crate) fn render_to_canvas(render_cfg: &RenderConfig) -> Canvas {
 
     for z_level in z_levels {
         let render_ctx = RenderContext::new(render_cfg, z_level, &layout, &mut canvas);
-        render_ctx.render_to_svg(render_cfg.step, &render_cfg.slide.node);
+        render_ctx.render_to_canvas(render_cfg.step, &render_cfg.slide.node);
     }
     canvas
 }

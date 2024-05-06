@@ -622,6 +622,7 @@ dependencies = [
  "miniz_oxide",
  "pdf-writer",
  "pyo3",
+ "rayon",
  "resvg",
  "svg2pdf",
  "svgtypes",

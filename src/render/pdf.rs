@@ -11,6 +11,18 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::Path;
 
+pub(crate) enum PdfPageElement {
+    GlobalRef(Rectangle, Ref),
+    LocalRef(Rectangle, Chunk, Ref),
+}
+
+pub(crate) struct PdfPage {
+    pub elements: Vec<PdfPageElement>,
+    pub width: f32,
+    pub height: f32,
+    pub bg_color: Color,
+}
+
 pub(crate) struct PdfBuilder {
     pdf: pdf_writer::Pdf,
     page_ids: Vec<Ref>,
@@ -28,7 +40,6 @@ impl PdfBuilder {
         let page_tree_id = alloc_ref.bump();
 
         pdf.catalog(catalog_id).pages(page_tree_id);
-
         let page_ids: Vec<Ref> = (0..n_pages).map(|_| alloc_ref.bump()).collect();
         pdf.pages(page_tree_id)
             .kids(page_ids.iter().copied())
@@ -57,14 +68,22 @@ impl PdfBuilder {
         self.alloc_ref.bump()
     }
 
-    pub fn add_page_from_svg(
-        &mut self,
-        page_idx: usize,
-        width: f32,
-        height: f32,
-        bg_color: Color,
-        refs: &[(Rectangle, Ref)],
-    ) {
+    pub fn add_page(&mut self, page_idx: usize, pdf_page: PdfPage) {
+        let refs = pdf_page
+            .elements
+            .into_iter()
+            .enumerate()
+            .map(|(i, element)| {
+                let name = format!("o{}", i);
+                match element {
+                    PdfPageElement::GlobalRef(rect, id) => (name, rect, id),
+                    PdfPageElement::LocalRef(rect, chunk, id) => {
+                        (name, rect, self.add_chunk(chunk, id))
+                    }
+                }
+            })
+            .collect_vec();
+
         /*let (svg_chunk, svg_id) =
             svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default(), font_db);
         let svg_id = self.add_chunk(svg_chunk, svg_id);*/
@@ -73,21 +92,15 @@ impl PdfBuilder {
         /*let name_str = format!("S{}", page_idx);
         let svg_name = Name(name_str.as_bytes());*/
 
-        let names = refs
-            .iter()
-            .enumerate()
-            .map(|(i, _)| format!("o{}", i))
-            .collect_vec();
-
         let content_id = self.alloc_ref.bump();
         let mut page = self.pdf.page(page_id);
-        page.media_box(Rect::new(0.0, 0.0, width, height));
+        page.media_box(Rect::new(0.0, 0.0, pdf_page.width, pdf_page.height));
         page.parent(self.page_tree_id);
         page.contents(content_id);
 
         let mut resources = page.resources();
         let mut objects = resources.x_objects();
-        for (name, (_, rf)) in names.iter().zip(refs) {
+        for (name, _, rf) in &refs {
             objects.pair(Name(name.as_bytes()), rf);
         }
         objects.finish();
@@ -97,13 +110,13 @@ impl PdfBuilder {
         let mut content = Content::new();
 
         content.save_state();
-        let (r, g, b) = bg_color.as_3f32();
+        let (r, g, b) = pdf_page.bg_color.as_3f32();
         content.set_fill_rgb(r, g, b);
-        content.rect(0.0, 0.0, width, height);
+        content.rect(0.0, 0.0, pdf_page.width, pdf_page.height);
         content.fill_nonzero();
         content.restore_state();
         // content.transform([width, 0.0, 0.0, height, 0.0, 0.0]);
-        for (name, (rect, _)) in names.iter().zip(refs) {
+        for (name, rect, _) in refs {
             content
                 .save_state()
                 .transform([
@@ -112,7 +125,7 @@ impl PdfBuilder {
                     0.0,
                     rect.height,
                     rect.x,
-                    height - rect.height - rect.y,
+                    pdf_page.height - rect.height - rect.y,
                 ])
                 .x_object(Name(name.as_bytes()))
                 .restore_state();
