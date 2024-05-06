@@ -4,7 +4,7 @@ use crate::common::Step;
 use crate::model::{LoadedImageData, Resources, SlideDeck, SlideId};
 use crate::render::canvas::Canvas;
 use crate::render::canvas_pdf::PdfImageCache;
-use crate::render::pdf::image_to_pdf_chunk;
+use crate::render::pdf::{image_to_pdf_chunk, PdfPage};
 use crate::render::{OutputConfig, OutputFormat, PdfBuilder};
 use by_address::ByAddress;
 use indicatif::ProgressBar;
@@ -12,13 +12,20 @@ use itertools::Itertools;
 
 use pdf_writer::Finish;
 use resvg::{tiny_skia, usvg};
-use std::cell::RefCell;
+
 use std::collections::HashSet;
+use std::sync::Mutex;
+
+pub(crate) struct PdfWriterData {
+    pages: Mutex<Vec<Option<PdfPage>>>,
+    cache: PdfImageCache,
+    pdf_builder: PdfBuilder,
+}
 
 pub(crate) enum PageWriter {
-    Pdf(RefCell<PdfBuilder>, PdfImageCache),
-    Svg,
-    Png,
+    Pdf(PdfWriterData),
+    Svg(Mutex<Vec<(usize, usize, Vec<u8>)>>),
+    Png(Mutex<Vec<(usize, usize, Vec<u8>)>>),
 }
 
 pub(crate) struct PageBuilder<'a> {
@@ -26,7 +33,6 @@ pub(crate) struct PageBuilder<'a> {
     output_path: Option<&'a std::path::Path>,
     progress_bar: Option<ProgressBar>,
     n_pages: u32,
-    result_data: RefCell<Vec<(usize, usize, Vec<u8>)>>,
 }
 
 impl<'a> PageBuilder<'a> {
@@ -36,15 +42,23 @@ impl<'a> PageBuilder<'a> {
         progress_bar: Option<ProgressBar>,
         n_pages: u32,
     ) -> crate::Result<Self> {
-        let mut result_data = Vec::new();
         Ok(PageBuilder {
             writer: match output_config.format {
                 OutputFormat::Pdf => {
                     let mut pdf_builder = PdfBuilder::new(n_pages);
                     let cache = collect_image_cache(slide_deck, &mut pdf_builder);
-                    PageWriter::Pdf(RefCell::new(pdf_builder), cache)
+                    let mut pages = Vec::with_capacity(n_pages as usize);
+                    for _ in 0..n_pages {
+                        pages.push(None);
+                    }
+                    PageWriter::Pdf(PdfWriterData {
+                        pages: Mutex::new(pages),
+                        cache,
+                        pdf_builder,
+                    })
                 }
                 OutputFormat::Svg => {
+                    let mut result_data = Vec::new();
                     if output_config.path.is_none() {
                         result_data.resize(n_pages as usize, (0, 0, Vec::new()))
                     }
@@ -58,9 +72,10 @@ impl<'a> PageBuilder<'a> {
                             ))
                         })?;
                     }
-                    PageWriter::Svg
+                    PageWriter::Svg(Mutex::new(result_data))
                 }
                 OutputFormat::Png => {
+                    let mut result_data = Vec::new();
                     if output_config.path.is_none() {
                         result_data.resize(n_pages as usize, (0, 0, Vec::new()))
                     }
@@ -74,25 +89,35 @@ impl<'a> PageBuilder<'a> {
                             ))
                         })?;
                     }
-                    PageWriter::Png
+                    PageWriter::Png(Mutex::new(result_data))
                 }
             },
             output_path: output_config.path,
             progress_bar,
             n_pages,
-            result_data: RefCell::new(result_data),
         })
     }
 
     pub fn finish(self) -> crate::Result<Vec<(usize, usize, Vec<u8>)>> {
-        match (self.writer, self.output_path) {
-            (PageWriter::Pdf(builder, _), Some(path)) => builder.into_inner().write(path)?,
-            _ => { /* Do nothing */ }
-        }
+        let result = match (self.writer, self.output_path) {
+            (PageWriter::Pdf(mut data), Some(path)) => {
+                let pages = data.pages.into_inner().unwrap();
+                for (page_idx, page) in pages.into_iter().enumerate() {
+                    let page = page.unwrap();
+                    data.pdf_builder.add_page(page_idx, page);
+                }
+                data.pdf_builder.write(path)?;
+                Vec::new()
+            }
+            (PageWriter::Png(result), None) | (PageWriter::Svg(result), None) => {
+                result.into_inner().unwrap()
+            }
+            _ => Vec::new(),
+        };
         if let Some(bar) = self.progress_bar {
             bar.finish();
         }
-        Ok(self.result_data.into_inner())
+        Ok(result)
     }
 
     pub fn add_page(
@@ -103,32 +128,41 @@ impl<'a> PageBuilder<'a> {
         canvas: Canvas,
         resources: &Resources,
     ) -> crate::Result<()> {
-        let data = match &self.writer {
-            PageWriter::Pdf(writer, cache) => {
-                write_pdf_page(&mut writer.borrow_mut(), page_id, canvas, resources, cache)?
+        match &self.writer {
+            PageWriter::Pdf(data) => {
+                let page = canvas.into_pdf_page(resources, &data.cache)?;
+                data.pages.lock().unwrap()[page_id as usize] = Some(page);
             }
-            PageWriter::Svg => write_svg_page(
-                self.output_path,
-                slide_id,
-                step,
-                page_id,
-                canvas,
-                self.n_pages,
-            )?,
-            PageWriter::Png => write_png_page(
-                self.output_path,
-                slide_id,
-                step,
-                page_id,
-                canvas,
-                resources,
-                self.n_pages,
-            )?,
+            PageWriter::Svg(output) => {
+                let data = write_svg_page(
+                    self.output_path,
+                    slide_id,
+                    step,
+                    page_id,
+                    canvas,
+                    self.n_pages,
+                )?;
+                if let Some(data) = data {
+                    let mut result_data = output.lock().unwrap();
+                    result_data[page_id as usize] = (slide_id as usize, step as usize, data);
+                }
+            }
+            PageWriter::Png(output) => {
+                let data = write_png_page(
+                    self.output_path,
+                    slide_id,
+                    step,
+                    page_id,
+                    canvas,
+                    resources,
+                    self.n_pages,
+                )?;
+                if let Some(data) = data {
+                    let mut result_data = output.lock().unwrap();
+                    result_data[page_id as usize] = (slide_id as usize, step as usize, data);
+                }
+            }
         };
-        if let Some(data) = data {
-            self.result_data.borrow_mut()[page_id as usize] =
-                (slide_id as usize, step as usize, data);
-        }
         if let Some(bar) = &self.progress_bar {
             bar.inc(1);
         }
@@ -166,45 +200,31 @@ fn write_svg_page(
     }
 }
 
-fn write_pdf_page(
-    pdf_builder: &mut PdfBuilder,
-    page_idx: u32,
-    canvas: Canvas,
-    resources: &Resources,
-    cache: &PdfImageCache,
-) -> crate::Result<Option<Vec<u8>>> {
-    let width = canvas.width();
-    let height = canvas.height();
-    let bg_color = canvas.bg_color;
-
-    let refs = canvas
-        .into_pdf_chunks(resources, cache)?
-        .into_iter()
-        .map(|(rect, chunk, id)| {
-            (
-                rect,
-                if let Some(chunk) = chunk {
-                    pdf_builder.add_chunk(chunk, id)
-                } else {
-                    id
-                },
-            )
-        })
-        .collect_vec();
-
-    // let data = canvas.into_svg()?;
-    //
-    // let tree = usvg::Tree::from_str(&data, &usvg::Options::default(), &resources.font_db)?;
-    // let (svg_chunk, svg_id) = svg2pdf::to_chunk(
-    //     &tree,
-    //     svg2pdf::ConversionOptions::default(),
-    //     &resources.font_db,
-    // );
-    // let svg_id = pdf_builder.add_chunk(svg_chunk, svg_id);
-    // let refs = vec![(Rectangle::new(0.0, 0.0, width, height), svg_id)];
-    pdf_builder.add_page_from_svg(page_idx as usize, width, height, bg_color, &refs);
-    Ok(None)
-}
+// fn write_pdf_page(
+//     page_idx: u32,
+//     canvas: Canvas,
+//     resources: &Resources,
+//     cache: &PdfImageCache,
+// ) -> crate::Result<Option<Vec<u8>>> {
+//     let width = canvas.width();
+//     let height = canvas.height();
+//     let bg_color = canvas.bg_color;
+//
+//     canvas.into_pdf_page(resources, cache)?;
+//
+//     // let data = canvas.into_svg()?;
+//     //
+//     // let tree = usvg::Tree::from_str(&data, &usvg::Options::default(), &resources.font_db)?;
+//     // let (svg_chunk, svg_id) = svg2pdf::to_chunk(
+//     //     &tree,
+//     //     svg2pdf::ConversionOptions::default(),
+//     //     &resources.font_db,
+//     // );
+//     // let svg_id = pdf_builder.add_chunk(svg_chunk, svg_id);
+//     // let refs = vec![(Rectangle::new(0.0, 0.0, width, height), svg_id)];
+//     pdf_builder.add_page_from_svg(page_idx as usize, width, height, bg_color, &refs);
+//     Ok(None)
+// }
 
 fn write_png_page(
     path: Option<&std::path::Path>,

@@ -137,7 +137,9 @@ class SlideDeck:
         if image_directory is None:
             image_directory = self.image_directory
         debug_layout = parse_debug_layout(debug_layout)
-        slide_id = self._deck.new_slide(width, height, bg_color, name, counters, parent_slide)
+        slide_id = self._deck.new_slide(
+            width, height, bg_color, name, counters, parent_slide
+        )
         return Slide(self, slide_id, name, image_directory, debug_layout)
 
     def slide(
@@ -189,6 +191,7 @@ class SlideDeck:
         output_format: Literal["pdf"] | Literal["svg"] | Literal["png"] = "pdf",
         *,
         verbose: int = 1,
+        n_threads: int | None = None,
     ) -> None | list[bytes]:
         """
         Render slides
@@ -201,4 +204,6 @@ class SlideDeck:
         """
         if path:
             path = str(path)
-        return self._deck.render(self.resources, verbose, output_format, path)
+        return self._deck.render(
+            self.resources, verbose, output_format, path, n_threads
+        )

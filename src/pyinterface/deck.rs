@@ -274,6 +274,7 @@ impl Deck {
         verbose: u32,
         format: &str,
         path: Option<&str>,
+        n_threads: Option<usize>,
     ) -> PyResult<PyObject> {
         let verbose_level = match verbose {
             0 => VerboseLevel::Silent,
@@ -296,6 +297,7 @@ impl Deck {
                     format,
                 },
                 verbose_level,
+                n_threads,
             )
         })?;
         if result.is_empty() {

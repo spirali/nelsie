@@ -4,8 +4,9 @@ use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::canvas_svg::svg_begin;
 
+use crate::render::pdf::{PdfPage, PdfPageElement};
 use by_address::ByAddress;
-use pdf_writer::{Chunk, Ref};
+use pdf_writer::Ref;
 use std::collections::HashMap;
 use std::sync::Arc;
 use svg2pdf::usvg;
@@ -13,12 +14,12 @@ use svg2pdf::usvg;
 pub(crate) type PdfImageCache = HashMap<ByAddress<Arc<Vec<u8>>>, Ref>;
 
 impl Canvas {
-    pub fn into_pdf_chunks(
+    pub fn into_pdf_page(
         self,
         resources: &Resources,
         cache: &PdfImageCache,
-    ) -> crate::Result<Vec<(Rectangle, Option<Chunk>, Ref)>> {
-        let mut result = Vec::with_capacity(self.items.len());
+    ) -> crate::Result<PdfPage> {
+        let mut elements: Vec<PdfPageElement> = Vec::with_capacity(self.items.len());
 
         let close_xml =
             |xml_writer: &mut Option<SimpleXmlWriter>, result: &mut Vec<_>| -> crate::Result<()> {
@@ -34,9 +35,9 @@ impl Canvas {
                         svg2pdf::ConversionOptions::default(),
                         &resources.font_db,
                     );
-                    result.push((
+                    result.push(PdfPageElement::LocalRef(
                         Rectangle::new(0.0, 0.0, self.width, self.height),
-                        Some(svg_chunk),
+                        svg_chunk,
                         svg_id,
                     ));
                 }
@@ -56,16 +57,22 @@ impl Canvas {
                     xml.text_raw(&svg_chunk);
                 }
                 CanvasItem::PngImage(rect, data) => {
-                    close_xml(&mut xml_writer, &mut result)?;
-                    result.push((rect, None, *cache.get(&ByAddress(data)).unwrap()));
+                    close_xml(&mut xml_writer, &mut elements)?;
+                    elements.push(PdfPageElement::GlobalRef(
+                        rect,
+                        *cache.get(&ByAddress(data)).unwrap(),
+                    ));
                 }
                 CanvasItem::GifImage(_, _) => {}
                 CanvasItem::JpegImage(rect, data) => {
-                    close_xml(&mut xml_writer, &mut result)?;
-                    result.push((rect, None, *cache.get(&ByAddress(data)).unwrap()));
+                    close_xml(&mut xml_writer, &mut elements)?;
+                    elements.push(PdfPageElement::GlobalRef(
+                        rect,
+                        *cache.get(&ByAddress(data)).unwrap(),
+                    ));
                 }
                 CanvasItem::SvgImage(rect, svg_data, _, _) => {
-                    close_xml(&mut xml_writer, &mut result)?;
+                    close_xml(&mut xml_writer, &mut elements)?;
                     let tree = usvg::Tree::from_str(
                         &svg_data,
                         &usvg::Options::default(),
@@ -76,11 +83,16 @@ impl Canvas {
                         svg2pdf::ConversionOptions::default(),
                         &resources.font_db,
                     );
-                    result.push((rect, Some(svg_chunk), svg_id));
+                    elements.push(PdfPageElement::LocalRef(rect, svg_chunk, svg_id));
                 }
             }
         }
-        close_xml(&mut xml_writer, &mut result)?;
-        Ok(result)
+        close_xml(&mut xml_writer, &mut elements)?;
+        Ok(PdfPage {
+            elements,
+            width: self.width,
+            height: self.height,
+            bg_color: self.bg_color,
+        })
     }
 }
