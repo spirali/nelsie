@@ -143,8 +143,8 @@ pub fn image_to_pdf_chunk(
     image_format: image::ImageFormat,
     data: &[u8],
     image_ref: Ref,
-    mask_ref: Ref,
-) -> (Chunk, Ref) {
+    mask_ref: Option<Ref>,
+) -> Chunk {
     let dynamic = image::load_from_memory_with_format(data, image_format).unwrap();
 
     let (filter, encoded, mask) = match image_format {
@@ -176,12 +176,12 @@ pub fn image_to_pdf_chunk(
     image.color_space().device_rgb();
     image.bits_per_component(8);
     if mask.is_some() {
-        image.s_mask(mask_ref);
+        image.s_mask(mask_ref.unwrap());
     }
     image.finish();
 
     if let Some(encoded) = &mask {
-        let mut s_mask = chunk.image_xobject(mask_ref, encoded);
+        let mut s_mask = chunk.image_xobject(mask_ref.unwrap(), encoded);
         s_mask.filter(filter);
         s_mask.width(dynamic.width() as i32);
         s_mask.height(dynamic.height() as i32);
@@ -189,5 +189,5 @@ pub fn image_to_pdf_chunk(
         s_mask.bits_per_component(8);
         s_mask.finish();
     }
-    (chunk, image_ref)
+    chunk
 }
