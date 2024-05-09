@@ -3,6 +3,7 @@
 ## New features
 
 * New PDF renderer. Nelsie now produce smaller slides faster when raster images are used
+* Rendering slides & image preprocessing in parallel
 
 # 0.7
 

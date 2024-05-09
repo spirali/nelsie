@@ -9,7 +9,7 @@ mod textstyles;
 mod types;
 
 pub(crate) use self::image::{
-    ImageManager, LoadedImageData, NodeContentImage, OraImageData, SvgImageData,
+    ImageManager, LoadedImage, LoadedImageData, NodeContentImage, OraImageData, SvgImageData,
 };
 pub(crate) use self::node::{Node, NodeChild, NodeContent};
 pub(crate) use self::resources::Resources;

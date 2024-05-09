@@ -74,29 +74,25 @@ fn render_slide(
     default_font: &Arc<FontData>,
     counter_values: &CountersMap,
 ) -> crate::Result<()> {
-    log::debug!("Rendering slide {}", slide_id);
-    (1..=slide.n_steps)
-        .into_par_iter()
-        .map(|step| {
-            let render_cfg = RenderConfig {
-                resources,
-                slide,
-                slide_id,
-                step,
-                default_font,
-                counter_values,
-            };
-            let canvas = render_to_canvas(&render_cfg);
-            let counter = render_cfg.counter_values.get("global").unwrap();
-            let page_idx = counter
-                .indices
-                .get(&(render_cfg.slide_id, render_cfg.step))
-                .unwrap()
-                .page_idx;
-            builder.add_page(slide_id, step, page_idx, canvas, render_cfg.resources)
-        })
-        .collect::<crate::Result<Vec<()>>>()?;
-    Ok(())
+    (1..=slide.n_steps).into_par_iter().try_for_each(|step| {
+        log::debug!("Rendering slide {}/{}", slide_id, step);
+        let render_cfg = RenderConfig {
+            resources,
+            slide,
+            slide_id,
+            step,
+            default_font,
+            counter_values,
+        };
+        let canvas = render_to_canvas(&render_cfg);
+        let counter = render_cfg.counter_values.get("global").unwrap();
+        let page_idx = counter
+            .indices
+            .get(&(render_cfg.slide_id, render_cfg.step))
+            .unwrap()
+            .page_idx;
+        builder.add_page(slide_id, step, page_idx, canvas, render_cfg.resources)
+    })
 }
 
 pub(crate) fn render_slide_deck(
@@ -131,21 +127,27 @@ pub(crate) fn render_slide_deck(
         let builder =
             PageBuilder::new(slide_deck, output_cfg, progress_bar, global_counter.n_pages)?;
 
-        slide_deck
-            .slides
-            .par_iter()
-            .enumerate()
-            .map(|(slide_idx, slide)| {
-                render_slide(
-                    resources,
-                    &builder,
-                    slide_idx as SlideId,
-                    slide,
-                    &slide_deck.default_font,
-                    &counter_values,
-                )
-            })
-            .collect::<crate::Result<Vec<()>>>()?;
+        let (r1, r2) = rayon::join(
+            || {
+                slide_deck
+                    .slides
+                    .par_iter()
+                    .enumerate()
+                    .try_for_each(|(slide_idx, slide)| {
+                        render_slide(
+                            resources,
+                            &builder,
+                            slide_idx as SlideId,
+                            slide,
+                            &slide_deck.default_font,
+                            &counter_values,
+                        )
+                    })
+            },
+            || builder.other_tasks(),
+        );
+        r1?;
+        r2?;
 
         let result_data = builder.finish()?;
 

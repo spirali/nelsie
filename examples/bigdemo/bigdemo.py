@@ -26,9 +26,7 @@ deck.set_style("title", TextStyle(size=64))
 @deck.slide()
 def intro(slide):
     slide.image("../../docs/imgs/nelsie-logo.jpg", width="25%")
-    title_box = slide.box(
-        width="100%", p_top=20, p_bottom=30, m_top=50, m_bottom=50, bg_color=COLOR2
-    )
+    title_box = slide.box(width="100%", p_top=20, p_bottom=30, m_top=50, m_bottom=50, bg_color=COLOR2)
     title_box.text("Nelsie", style=TextStyle(size=64, weight=800), m_bottom=15)
     title_box.text("Framework for Creating Slides", style=TextStyle(size=44))
 
@@ -124,9 +122,7 @@ def header_and_footer(slide):
 
     footer = slide.box(row=True, width="100%", height="50", bg_color=COLOR2)
     footer.box(flex_grow=1).text("Hello!", TextStyle(size=24, color="gray"))
-    footer.box(flex_grow=1, height="100%", bg_color="#aa99aa").text(
-        "Footer", TextStyle(size=24)
-    )
+    footer.box(flex_grow=1, height="100%", bg_color="#aa99aa").text("Footer", TextStyle(size=24))
     footer.box(flex_grow=1).text("Hello!", TextStyle(size=24, color="gray"))
 
 
@@ -284,9 +280,7 @@ def hello_world(~1{slide}):
 
 @deck.slide()
 def console_demo(slide):
-    slide.set_style(
-        "shell", slide.get_style("code").merge(TextStyle(color="white", size=24))
-    )
+    slide.set_style("shell", slide.get_style("code").merge(TextStyle(color="white", size=24)))
     slide.set_style("prompt", TextStyle(color="#aaaaff"))
     slide.set_style("cmd", TextStyle(color="yellow"))
 
@@ -295,9 +289,7 @@ def console_demo(slide):
     # The 'console' is just text with a few styles
     # As we want to use "~" character in the text,
     # we are changing escape_char for styles from "~" to "!"
-    console = slide.box(
-        bg_color="black", p_left=20, p_right=20, p_top=10, p_bottom=10, border_radius=10
-    )
+    console = slide.box(bg_color="black", p_left=20, p_right=20, p_top=10, p_bottom=10, border_radius=10)
     console.text(
         "!prompt{~/nelsie/example/bigdemo$} !cmd{ls}\n"
         "bigdemo.py  imgs  karla_font\n\n"
@@ -323,9 +315,7 @@ def shapes(slide):
         .line_to(0, 100)
         .close()
     )
-    triangle = (
-        Path(fill_color="green").move_to(200, 100).line_to(250, 0).line_to(300, 100)
-    )
+    triangle = Path(fill_color="green").move_to(200, 100).line_to(250, 0).line_to(300, 100)
     circle = Path.oval(400, 0, 500, 100, fill_color="blue")
 
     rounded_box = (
@@ -342,19 +332,11 @@ def shapes(slide):
     box = slide.box(width=700, height=70, m_bottom=60)
     box.draw(
         [
-            Path(stroke=Stroke(color="black", width=10, dash_array=[10]))
-            .move_to(0, 0)
-            .line_to(700, 0),
-            Path(
-                stroke=Stroke(
-                    color="black", width=10, dash_array=[10, 20], dash_offset=15
-                )
-            )
+            Path(stroke=Stroke(color="black", width=10, dash_array=[10])).move_to(0, 0).line_to(700, 0),
+            Path(stroke=Stroke(color="black", width=10, dash_array=[10, 20], dash_offset=15))
             .move_to(0, 30)
             .line_to(700, 30),
-            Path(stroke=Stroke(color="black", width=10, dash_array=[30, 10, 5, 10]))
-            .move_to(0, 60)
-            .line_to(700, 60),
+            Path(stroke=Stroke(color="black", width=10, dash_array=[30, 10, 5, 10])).move_to(0, 60).line_to(700, 60),
         ]
     )
 
@@ -457,9 +439,7 @@ def path_demo(slide):
             Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
             .move_to(x0, y0)
             .cubic_to(x0 + 300, y0, x1 - 300, y1, x1, y1),
-            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
-            .move_to(x0, y0)
-            .quad_to(x2 - 100, y2, x2, y2),
+            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow).move_to(x0, y0).quad_to(x2 - 100, y2, x2, y2),
             Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
             .move_to(x1a, y1a)
             .quad_to(x1a + 50, y1a, x1a + 50, y1a - 50)
