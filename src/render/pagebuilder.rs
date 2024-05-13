@@ -292,7 +292,7 @@ pub fn collect_image_cache(
             LoadedImageData::Png(_) | LoadedImageData::Jpeg(_) | LoadedImageData::Ora(_) => {
                 Some(img.0)
             }
-            LoadedImageData::Gif(_) | LoadedImageData::Svg(_) => None,
+            LoadedImageData::Svg(_) => None,
         })
         .collect_vec();
     image_vec.sort_unstable_by_key(|i| i.image_id);
@@ -302,9 +302,6 @@ pub fn collect_image_cache(
             LoadedImageData::Png(data) => {
                 cache.insert(ByAddress(data.clone()), pdf_builder.ref_bump());
                 pdf_builder.ref_bump(); // Reserve ID for transparency layer
-            }
-            LoadedImageData::Gif(_) => {
-                unreachable!()
             }
             LoadedImageData::Jpeg(data) => {
                 cache.insert(ByAddress(data.clone()), pdf_builder.ref_bump());
@@ -335,9 +332,6 @@ pub fn precompute_image_cache(cache: &PdfImageCache, images: &[Arc<LoadedImage>]
                     id,
                     Some(pdf_writer::Ref::new(id.get() + 1)),
                 )]
-            }
-            LoadedImageData::Gif(_) => {
-                todo!()
             }
             LoadedImageData::Jpeg(data) => {
                 let id = cache.get(&ByAddress(data.clone())).unwrap();

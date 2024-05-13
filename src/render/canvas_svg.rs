@@ -23,9 +23,6 @@ impl Canvas {
                 CanvasItem::PngImage(rect, data) => {
                     write_raster_image_to_svg(&rect, "png", &data, &mut writer)
                 }
-                CanvasItem::GifImage(rect, data) => {
-                    write_raster_image_to_svg(&rect, "gif", &data, &mut writer)
-                }
                 CanvasItem::JpegImage(rect, data) => {
                     write_raster_image_to_svg(&rect, "jpeg", &data, &mut writer)
                 }

@@ -6,7 +6,6 @@ use std::sync::Arc;
 pub(crate) enum CanvasItem {
     SvgChunk(String),
     PngImage(Rectangle, Arc<Vec<u8>>),
-    GifImage(Rectangle, Arc<Vec<u8>>),
     JpegImage(Rectangle, Arc<Vec<u8>>),
     SvgImage(Rectangle, String, f32, f32),
 }

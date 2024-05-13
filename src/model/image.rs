@@ -46,7 +46,6 @@ pub(crate) struct OraImageData {
 #[derive(Debug)]
 pub(crate) enum LoadedImageData {
     Png(Arc<Vec<u8>>),
-    Gif(Arc<Vec<u8>>),
     Jpeg(Arc<Vec<u8>>),
     Svg(SvgImageData),
     Ora(OraImageData),
@@ -63,7 +62,7 @@ pub(crate) struct LoadedImage {
 impl LoadedImage {
     pub fn n_steps(&self) -> Step {
         match &self.data {
-            LoadedImageData::Png(_) | LoadedImageData::Gif(_) | LoadedImageData::Jpeg(_) => 1,
+            LoadedImageData::Png(_) | LoadedImageData::Jpeg(_) => 1,
             LoadedImageData::Svg(data) => data.n_steps,
             LoadedImageData::Ora(data) => data.n_steps,
         }
@@ -95,14 +94,11 @@ impl ImageManager {
 }
 
 fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
-    let size = imagesize::blob_size(&raw_data).ok()?;
-    let image_type = imagesize::image_type(&raw_data);
-    let data_arc = Arc::new(raw_data);
-    let data = match image_type {
-        Ok(imagesize::ImageType::Png) => LoadedImageData::Png(data_arc),
-        Ok(imagesize::ImageType::Jpeg) => LoadedImageData::Jpeg(data_arc),
-        Ok(imagesize::ImageType::Gif) => LoadedImageData::Gif(data_arc),
-        _ => unreachable!(), // This is safe, otherwise it should already fail in blob_size
+    let size = blob_size(&raw_data).ok()?;
+    let data = match imagesize::image_type(&raw_data) {
+        Ok(imagesize::ImageType::Png) => LoadedImageData::Png(Arc::new(raw_data)),
+        Ok(imagesize::ImageType::Jpeg) => LoadedImageData::Jpeg(Arc::new(raw_data)),
+        _ => return None,
     };
     Some(LoadedImage {
         image_id: 0,

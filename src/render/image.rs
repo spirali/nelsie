@@ -113,7 +113,6 @@ pub(crate) fn render_image_to_canvas(
     match &image.loaded_image.data {
         LoadedImageData::Png(data) => canvas.add(CanvasItem::PngImage(rect, data.clone())),
         LoadedImageData::Jpeg(data) => canvas.add(CanvasItem::JpegImage(rect, data.clone())),
-        LoadedImageData::Gif(data) => canvas.add(CanvasItem::GifImage(rect, data.clone())),
         LoadedImageData::Svg(svg) => canvas.add(CanvasItem::SvgImage(
             rect,
             prepare_svg_tree_for_step(step, image, svg),
