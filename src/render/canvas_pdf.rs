@@ -63,7 +63,6 @@ impl Canvas {
                         *cache.get(&ByAddress(data)).unwrap(),
                     ));
                 }
-                CanvasItem::GifImage(_, _) => {}
                 CanvasItem::JpegImage(rect, data) => {
                     close_xml(&mut xml_writer, &mut elements)?;
                     elements.push(PdfPageElement::GlobalRef(

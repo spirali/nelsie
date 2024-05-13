@@ -1,7 +1,7 @@
 # Images
 
 Images are put into the slides by calling `.image()` on a box. It creates a new box with an image.
-Nelsie supports the following formats: SVG, PNG, JPEG, GIF and OpenRaster.
+Nelsie supports the following formats: SVG, PNG, JPEG, and OpenRaster.
 
 ```nelsie
 @deck.slide()
@@ -53,7 +53,7 @@ def my_slide(slide):
 ## Image and steps
 
 Formats that supports layers (SVG and OpenRaster) may control revealing a part of image
-in steps by naming layers. JPEG, PNG, and GIF image does not have any impact on steps.
+in steps by naming layers. JPEG, and PNG image does not have any impact on steps.
 
 If a layer has a name that ends with `**EXPR` where `EXPR` is an expression allowed in box's `show` argument, except for last/next/last+/next+ keywords. Keywords are not allowed in an image step definitions.
 Example: A layer with name "My layer **2-4" will be shown only steps 2, 3, 4.
