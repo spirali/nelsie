@@ -258,7 +258,7 @@ fn gather_taffy_layout<'b>(
         node.node_id,
         (
             parent.map(|p| p.node_id),
-            &node,
+            node,
             Rectangle {
                 x: layout_rect.location.x,
                 y: layout_rect.location.y,
