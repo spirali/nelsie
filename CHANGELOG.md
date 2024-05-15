@@ -1,5 +1,9 @@
 # Unreleased
 
+## New features
+
+* Watching a slide file and automatic rebuild via `python3 -m nelsie watch SLIDES.PY`
+
 ## Removed features
 
 * GIF support was officially removed, as it was not working in the new renderer released in 0.8
