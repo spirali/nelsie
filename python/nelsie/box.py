@@ -16,6 +16,7 @@ from .insteps import InSteps, zip_in_steps
 from .layoutexpr import LayoutExpr
 from .shapes import Path
 from .textstyle import TextStyle, _data_to_text_style
+from .watch import watch_path
 
 
 @dataclass
@@ -95,11 +96,14 @@ class BoxBuilder:
         Create a box with an image. Supported formats: SVG, PNG, JPEG, GIF, ORA
         """
         assert shift_steps >= 0
+
         slide = self.get_box().slide
         if slide.image_directory is not None:
             path = os.path.join(slide.image_directory, path)
+        path = os.path.abspath(path)
+        watch_path(path)
         image = ImageContent(
-            path=os.path.abspath(path),
+            path=path,
             enable_steps=enable_steps,
             shift_steps=shift_steps,
         )

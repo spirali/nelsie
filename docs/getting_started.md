@@ -23,3 +23,5 @@
     ```
 
 * Run `python slides.py`. It creates file `slides.pdf`.
+
+If you do not want to build your script manually, you can use [Automatic slide rebuilding](guide/watch.md)
