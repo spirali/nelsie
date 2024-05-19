@@ -4,9 +4,11 @@ use crate::model::Color;
 use image::GenericImageView;
 use itertools::Itertools;
 use miniz_oxide::deflate::{compress_to_vec_zlib, CompressionLevel};
-use pdf_writer::{Chunk, Filter, Finish};
+use pdf_writer::{Chunk, Filter, Finish, Str, TextStr};
 use pdf_writer::{Content, Name, Rect, Ref};
 
+use crate::render::canvas::Link;
+use pdf_writer::types::{ActionType, AnnotationType, BorderType};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::Path;
@@ -21,6 +23,7 @@ pub(crate) struct PdfPage {
     pub width: f32,
     pub height: f32,
     pub bg_color: Color,
+    pub links: Vec<Link>,
 }
 
 pub(crate) struct PdfBuilder {
@@ -84,19 +87,34 @@ impl PdfBuilder {
             })
             .collect_vec();
 
-        /*let (svg_chunk, svg_id) =
-            svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default(), font_db);
-        let svg_id = self.add_chunk(svg_chunk, svg_id);*/
-
         let page_id = self.page_ids[page_idx];
-        /*let name_str = format!("S{}", page_idx);
-        let svg_name = Name(name_str.as_bytes());*/
-
         let content_id = self.alloc_ref.bump();
         let mut page = self.pdf.page(page_id);
         page.media_box(Rect::new(0.0, 0.0, pdf_page.width, pdf_page.height));
         page.parent(self.page_tree_id);
         page.contents(content_id);
+
+        if !pdf_page.links.is_empty() {
+            let mut annotations = page.annotations();
+            for link in pdf_page.links {
+                let rect = link.rect();
+                let mut annotation = annotations.push();
+                annotation.subtype(AnnotationType::Link);
+                annotation.border(0.0, 0.0, 0.0, None);
+                annotation.rect(Rect::new(
+                    rect.x,
+                    pdf_page.height - rect.y,
+                    rect.x + rect.width,
+                    pdf_page.height - (rect.y + rect.height),
+                ));
+                annotation
+                    .action()
+                    .action_type(ActionType::Uri)
+                    .uri(Str(link.url().as_bytes()));
+                annotation.finish();
+            }
+            annotations.finish();
+        }
 
         let mut resources = page.resources();
         let mut objects = resources.x_objects();

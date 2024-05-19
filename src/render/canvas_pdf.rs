@@ -92,6 +92,7 @@ impl Canvas {
             width: self.width,
             height: self.height,
             bg_color: self.bg_color,
+            links: self.links,
         })
     }
 }
