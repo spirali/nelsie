@@ -77,6 +77,7 @@ impl Slide {
                 m_right: StepValue::Const(LengthOrAuto::ZERO),
                 bg_color: StepValue::Const(None),
                 content: None,
+                url: StepValue::Const(None),
                 debug_layout: None,
             },
             n_steps: 1,

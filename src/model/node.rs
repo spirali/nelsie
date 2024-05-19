@@ -71,6 +71,8 @@ pub(crate) struct Node {
     pub bg_color: StepValue<Option<Color>>,
     pub content: Option<NodeContent>,
 
+    pub url: StepValue<Option<String>>,
+
     pub styles: Arc<StyleMap>,
 
     pub name: String,

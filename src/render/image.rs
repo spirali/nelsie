@@ -24,7 +24,7 @@ fn render_ora_to_canvas(
                 .map(|v| *v.at_step(step))
                 .unwrap_or(true)
         {
-            canvas.add(CanvasItem::PngImage(
+            canvas.add_item(CanvasItem::PngImage(
                 Rectangle {
                     x: layer.x * scale + rect.x,
                     y: layer.y * scale + rect.y,
@@ -111,9 +111,9 @@ pub(crate) fn render_image_to_canvas(
     );
 
     match &image.loaded_image.data {
-        LoadedImageData::Png(data) => canvas.add(CanvasItem::PngImage(rect, data.clone())),
-        LoadedImageData::Jpeg(data) => canvas.add(CanvasItem::JpegImage(rect, data.clone())),
-        LoadedImageData::Svg(svg) => canvas.add(CanvasItem::SvgImage(
+        LoadedImageData::Png(data) => canvas.add_item(CanvasItem::PngImage(rect, data.clone())),
+        LoadedImageData::Jpeg(data) => canvas.add_item(CanvasItem::JpegImage(rect, data.clone())),
+        LoadedImageData::Svg(svg) => canvas.add_item(CanvasItem::SvgImage(
             rect,
             prepare_svg_tree_for_step(step, image, svg),
             image.loaded_image.width,

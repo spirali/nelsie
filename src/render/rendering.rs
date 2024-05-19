@@ -15,7 +15,7 @@ use crate::render::paths::{create_arrow, path_from_rect, path_to_svg};
 
 use crate::common::Rectangle;
 use crate::parsers::SimpleXmlWriter;
-use crate::render::canvas::{Canvas, CanvasItem};
+use crate::render::canvas::{Canvas, CanvasItem, Link};
 use crate::render::pathbuilder::PathBuilder;
 use crate::render::text::{render_text_to_canvas, render_text_to_svg};
 use svg2pdf::usvg;
@@ -92,7 +92,7 @@ fn draw_debug_frame(
         rect.y + 3.0,
         TextAlign::Start,
     );
-    canvas.add(CanvasItem::SvgChunk(xml.into_string()));
+    canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
     /*svg_node.children.push(render_text(
         &styled_text,
         rect.x + 2.0,
@@ -136,7 +136,8 @@ impl<'a> RenderContext<'a> {
                 path_from_rect(&mut path, rect, border_radius);
                 let mut xml = SimpleXmlWriter::new();
                 path.write_svg(&mut xml);
-                self.canvas.add(CanvasItem::SvgChunk(xml.into_string()))
+                self.canvas
+                    .add_item(CanvasItem::SvgChunk(xml.into_string()))
             }
 
             if let Some(content) = &node.content {
@@ -160,6 +161,11 @@ impl<'a> RenderContext<'a> {
                         render_image_to_canvas(image, step, rect, self.canvas)
                     }
                 }
+            }
+
+            if let Some(url) = &node.url.at_step(step) {
+                let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
+                self.canvas.add_link(Link::new(rect.clone(), url.clone()));
             }
 
             if let Some(color) = &node.debug_layout {
@@ -197,7 +203,8 @@ impl<'a> RenderContext<'a> {
             create_arrow(&mut xml, self.layout, parent_id, path, true);
             create_arrow(&mut xml, self.layout, parent_id, path, false);
         }
-        self.canvas.add(CanvasItem::SvgChunk(xml.into_string()))
+        self.canvas
+            .add_item(CanvasItem::SvgChunk(xml.into_string()))
     }
 
     pub(crate) fn render_to_canvas(mut self, step: Step, node: &Node) {

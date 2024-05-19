@@ -238,7 +238,7 @@ pub(crate) fn render_text_to_canvas(
     };
     let mut xml = SimpleXmlWriter::new();
     render_text_to_svg(&mut xml, styled_text, x, rect.y, align);
-    canvas.add(CanvasItem::SvgChunk(xml.into_string()));
+    canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
 }
 
 pub(crate) fn render_text_to_svg(
