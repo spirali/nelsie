@@ -30,3 +30,15 @@ def test_list(deck):
     lst3 = lst2.list()
     lst3.text("Hello!")
     lst.text("Fourth item")
+
+
+@check(n_slides=4)
+def test_list_steps(deck):
+    slide = deck.new_slide(width=150, height=150)
+    slide.set_style("default", TextStyle(size=12))
+    lst = ListBox(slide)
+    lst.text("One")
+    lst.text(show="2+", text="Two1\nTwo2\nTwo3")
+    lst.text(show="3+", text="Long item three")
+    lst2 = lst.list()
+    lst2.text(show="4+", text="A")
