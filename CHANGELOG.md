@@ -8,6 +8,10 @@
 
 * GIF support was officially removed, as it was not working in the new renderer released in 0.8
 
+## Fixes
+
+* Fixed problem when ListBuilder is used together with steps
+
 
 # 0.8
 

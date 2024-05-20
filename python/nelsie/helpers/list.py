@@ -30,7 +30,9 @@ class ListBox(BoxBuilder):
 
     def create_item_boxes(self, box_args) -> (Box, Box):
         item_box = self.main_box.box(row=True, align_items="start")
-        box1 = item_box.box(row=True, width=self.indent_size, justify_content="start")
+        show = box_args.get("show", True)
+        active = box_args.get("active", True)
+        box1 = item_box.box(row=True, width=self.indent_size, justify_content="start", show=show, active=active)
         box2 = item_box.box(**box_args)
         return box1, box2
 
