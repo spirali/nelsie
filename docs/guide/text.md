@@ -40,7 +40,9 @@ The `TextStyle` constructor has the following parameters; each parameter can be 
 * `weight`: `int` - Weight of the font; values 1-1000
     * 400 = Normal
     * 700 = Bold
-* `kerning`: `bool` - Enables/Disables kerning
+* `underline`: `bool` - Draws a line under the text
+* `overline`: `bool` - Draws a line over the text
+* `line_through`: `bool` - Draws a line through a text
 * `stroke`: `Stroke | None` - If not `None`, font is drawn in stroked mode (see [Paths](paths.md) for documentation of `Stroke` class)
 * `stretch`: `FontStretch`:
     * `FontStretch.UltraCondensed`
@@ -193,8 +195,8 @@ def text_style_demo(slide):
 
 !!! note "Setting a default style"
 
-    There is an exception for style `"default"` as it always needs to define all attributes. 
-    Hence `.set_style()` for `"default"` style always behaves as `.update_style()`.  
+    There is an exception for style `"default"` as it always needs to define all attributes.
+    Hence `.set_style()` for `"default"` style always behaves as `.update_style()`.
 
 
 ## Text and `InSteps`
@@ -226,7 +228,7 @@ When a style is set through `set_style` an instance of `InSteps` can be used:
 @deck.slide()
 def text_style_demo(slide):
     slide.set_style("default", TextStyle(size=80))
-    slide.set_style("my-style", 
+    slide.set_style("my-style",
                     InSteps({1: TextStyle(color="red"), 2: TextStyle(color="green")}))
     slide.text("Hello world!", "my-style")
 ```

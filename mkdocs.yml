@@ -32,6 +32,7 @@ nav:
       - guide/colors.md
       - guide/list.md
       - guide/watch.md
+      - guide/links.md
 
 theme:
   name: material
