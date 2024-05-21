@@ -488,6 +488,14 @@ def chess_board(slide):
     tiles[(4, 2)].box(show="4", z_level=2).image("imgs/knight.svg")
 
 
+# Links
+
+
+@deck.slide()
+def links(slide):
+    slide.text("Clicable links in PDF", TextStyle(size=80, underline=True), url="https://github.com/spirali/nelsie")
+
+
 # Debugging frames ##########################################
 
 

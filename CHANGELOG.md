@@ -2,6 +2,8 @@
 
 ## New features
 
+* Clicable links in PDF output
+* Font decorations: underline, overline, line-through
 * Watching a slide file and automatic rebuild via `python3 -m nelsie watch SLIDES.PY`
 
 ## Removed features
