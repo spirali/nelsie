@@ -4,11 +4,11 @@ use crate::model::Color;
 use image::GenericImageView;
 use itertools::Itertools;
 use miniz_oxide::deflate::{compress_to_vec_zlib, CompressionLevel};
-use pdf_writer::{Chunk, Filter, Finish, Str, TextStr};
+use pdf_writer::{Chunk, Filter, Finish, Str};
 use pdf_writer::{Content, Name, Rect, Ref};
 
 use crate::render::canvas::Link;
-use pdf_writer::types::{ActionType, AnnotationType, BorderType};
+use pdf_writer::types::{ActionType, AnnotationType};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::Path;

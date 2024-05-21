@@ -38,6 +38,16 @@ fn create_style(s_style: Style) -> PartialTextStyle {
         } else {
             None
         },
+        underline: if s_style
+            .font_style
+            .contains(syntect::highlighting::FontStyle::UNDERLINE)
+        {
+            Some(true)
+        } else {
+            None
+        },
+        overline: None,
+        line_through: None,
     }
 }
 

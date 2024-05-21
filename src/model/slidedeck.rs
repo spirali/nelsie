@@ -144,6 +144,9 @@ impl SlideDeck {
             italic: Some(false),
             stretch: Some(FontStretch::Normal),
             weight: Some(400),
+            underline: Some(false),
+            overline: Some(false),
+            line_through: Some(false),
         };
         let monospace_style = PartialTextStyle {
             font: Some(Arc::new(default_monospace_font_family)),

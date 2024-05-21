@@ -1,7 +1,6 @@
 use crate::common::Rectangle;
 use crate::model::Color;
 use std::sync::Arc;
-use taffy::Rect;
 
 #[derive(Debug)]
 pub(crate) enum CanvasItem {

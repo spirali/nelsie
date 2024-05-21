@@ -208,6 +208,21 @@ fn render_line_to_svg(
             xml.attr("font-style", "italic");
         }
         xml.attr("font-size", style.size);
+
+        if style.underline || style.overline || style.line_through {
+            xml.attr_buf("text-decoration", |b| {
+                if style.underline {
+                    b.push_str("underline ")
+                }
+                if style.overline {
+                    b.push_str("overline ")
+                }
+                if style.line_through {
+                    b.push_str("line-through ")
+                }
+            });
+        }
+
         stroke_and_fill_svg(
             xml,
             &style.stroke.as_ref().map(|s| s.as_ref().clone()),
