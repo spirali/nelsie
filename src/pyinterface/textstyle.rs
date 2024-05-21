@@ -21,6 +21,9 @@ pub(crate) struct PyTextStyle {
     pub italic: Option<bool>,
     pub stretch: Option<FontStretch>,
     pub weight: Option<u16>,
+    pub underline: Option<bool>,
+    pub overline: Option<bool>,
+    pub line_through: Option<bool>,
 }
 
 impl PyTextStyle {
@@ -42,6 +45,9 @@ impl PyTextStyle {
             italic: self.italic,
             stretch: self.stretch,
             weight: self.weight,
+            underline: self.underline,
+            overline: self.overline,
+            line_through: self.line_through,
         })
     }
 }
@@ -100,6 +106,9 @@ impl<'py> FromPyObject<'py> for PyTextStyle {
             italic: ob.getattr("italic")?.extract()?,
             stretch,
             weight: ob.getattr("weight")?.extract()?,
+            underline: ob.getattr("underline")?.extract()?,
+            overline: ob.getattr("overline")?.extract()?,
+            line_through: ob.getattr("line_through")?.extract()?,
         })
     }
 }
@@ -163,6 +172,9 @@ pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Pytho
     map.insert("italic".into(), style.italic.to_object(py));
     map.insert("stretch".into(), stretch_idx.to_object(py));
     map.insert("weight".into(), style.weight.to_object(py));
+    map.insert("underline".into(), style.underline.to_object(py));
+    map.insert("overline".into(), style.overline.to_object(py));
+    map.insert("line_through".into(), style.line_through.to_object(py));
     map.to_object(py)
 }
 

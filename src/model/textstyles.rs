@@ -23,6 +23,9 @@ pub(crate) struct PartialTextStyle {
     pub italic: Option<bool>,
     pub stretch: Option<FontStretch>,
     pub weight: Option<u16>,
+    pub underline: Option<bool>,
+    pub overline: Option<bool>,
+    pub line_through: Option<bool>,
 }
 
 impl PartialTextStyle {
@@ -36,6 +39,9 @@ impl PartialTextStyle {
             italic: self.italic?,
             stretch: self.stretch?,
             weight: self.weight?,
+            underline: self.underline?,
+            overline: self.overline?,
+            line_through: self.line_through?,
         })
     }
 
@@ -49,6 +55,9 @@ impl PartialTextStyle {
             italic: other.italic.or(self.italic),
             stretch: other.stretch.or(self.stretch),
             weight: other.weight.or(self.weight),
+            underline: other.underline.or(self.underline),
+            overline: other.overline.or(self.overline),
+            line_through: other.line_through.or(self.line_through),
         }
     }
 }
@@ -63,6 +72,9 @@ pub(crate) struct TextStyle {
     pub italic: bool,
     pub stretch: FontStretch,
     pub weight: u16,
+    pub underline: bool,
+    pub overline: bool,
+    pub line_through: bool,
 }
 
 pub(crate) fn merge_stepped_styles(

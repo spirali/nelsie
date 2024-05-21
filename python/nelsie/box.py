@@ -68,9 +68,7 @@ class BoxBuilder:
         """
         box = self.get_box()
         deck = box.deck
-        deck._deck.set_style(
-            deck.resources, name, style, False, box.slide._slide_id, box._box_id
-        )
+        deck._deck.set_style(deck.resources, name, style, False, box.slide._slide_id, box._box_id)
 
     def update_style(self, name: str, style: TextStyle | InSteps[TextStyle]):
         """
@@ -79,9 +77,7 @@ class BoxBuilder:
         """
         box = self.get_box()
         deck = box.deck
-        deck._deck.set_style(
-            deck.resources, name, style, True, box.slide._slide_id, box._box_id
-        )
+        deck._deck.set_style(deck.resources, name, style, True, box.slide._slide_id, box._box_id)
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
         """
@@ -93,9 +89,7 @@ class BoxBuilder:
         """
 
         box = self.get_box()
-        return _data_to_text_style(
-            box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id)
-        )
+        return _data_to_text_style(box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id))
 
     def image(self, path: str, enable_steps=True, shift_steps=0, **box_args):
         """
@@ -425,9 +419,7 @@ class BoxBuilder:
         node_id = self.get_box().node_id
         return LayoutExpr.height(node_id, fraction)
 
-    def line_x(
-        self, line_idx: int, width_fraction: float | int | None = None
-    ) -> LayoutExpr:
+    def line_x(self, line_idx: int, width_fraction: float | int | None = None) -> LayoutExpr:
         """
         Get an expression with X coordinate of a given line of text in the box.
         """
@@ -437,9 +429,7 @@ class BoxBuilder:
             return expr
         return expr + LayoutExpr.line_width(node_id, line_idx, width_fraction)
 
-    def line_y(
-        self, line_idx: int, height_fraction: float | int | None = None
-    ) -> LayoutExpr:
+    def line_y(self, line_idx: int, height_fraction: float | int | None = None) -> LayoutExpr:
         """
         Get an expression with Y coordinate of a given line of text in the box.
         """
@@ -463,9 +453,7 @@ class BoxBuilder:
         node_id = self.get_box().node_id
         return LayoutExpr.line_height(node_id, line_idx, fraction)
 
-    def text_anchor_x(
-        self, anchor_id: int, width_fraction: float | int | None = None
-    ) -> LayoutExpr:
+    def text_anchor_x(self, anchor_id: int, width_fraction: float | int | None = None) -> LayoutExpr:
         """
         Get an expression with X coordinate of a given text anchor in the box.
         """
@@ -475,9 +463,7 @@ class BoxBuilder:
             return expr
         return expr + LayoutExpr.text_anchor_width(node_id, anchor_id, width_fraction)
 
-    def text_anchor_y(
-        self, anchor_id: int, height_fraction: float | int | None = None
-    ) -> LayoutExpr:
+    def text_anchor_y(self, anchor_id: int, height_fraction: float | int | None = None) -> LayoutExpr:
         """
         Get an expression with Y coordinate of a given text anchor in the box.
         """
@@ -487,18 +473,14 @@ class BoxBuilder:
             return expr
         return expr + LayoutExpr.text_anchor_height(node_id, anchor_id, height_fraction)
 
-    def text_anchor_width(
-        self, anchor_id: int, fraction: float | int = 1.0
-    ) -> LayoutExpr:
+    def text_anchor_width(self, anchor_id: int, fraction: float | int = 1.0) -> LayoutExpr:
         """
         Get an expression with a height of a given text anchor in the box.
         """
         node_id = self.get_box().node_id
         return LayoutExpr.text_anchor_width(node_id, anchor_id, fraction)
 
-    def text_anchor_height(
-        self, anchor_id: int, fraction: float | int = 1.0
-    ) -> LayoutExpr:
+    def text_anchor_height(self, anchor_id: int, fraction: float | int = 1.0) -> LayoutExpr:
         """
         Get an expression with a height of a given text anchor in the box.
         """

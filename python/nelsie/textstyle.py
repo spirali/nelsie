@@ -27,6 +27,9 @@ class TextStyle:
     line_spacing: float | None = None
     italic: bool | None = None
     stretch: FontStretch | None = None
+    underline: bool | None = None
+    overline: bool | None = None
+    line_through: bool | None = None
 
     # 1-1000; 400 = Normal, 700 = Bold
     weight: int | None = None

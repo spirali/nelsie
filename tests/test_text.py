@@ -86,6 +86,15 @@ def test_set_get_styles_deck(deck):
     assert s.size == pytest.approx(120.0)
 
 
+@check()
+def test_text_lines(deck):
+    slide = deck.new_slide(width=200, height=250)
+    slide.text("Test text", TextStyle(underline=True), m_bottom=10)
+    slide.text("Test text", TextStyle(overline=True), m_bottom=10)
+    slide.text("Test text", TextStyle(line_through=True), m_bottom=10)
+    slide.text("Test text", TextStyle(underline=True, overline=True, line_through=True))
+
+
 def test_set_get_styles_box(deck):
     slide = deck.new_slide()
     slide.set_style("one", TextStyle(color="red"))
@@ -359,16 +368,6 @@ def test_text_boxes(deck):
 
     t.line_box(1, bg_color="green", z_level=0)
     t.text_anchor_box(123, bg_color="orange", z_level=0)
-
-
-# @check()
-# def test_text_kerning(deck):
-#     deck.set_style("t1", TextStyle(size=12, kerning=True))
-#     deck.set_style("t2", TextStyle(size=12, kerning=False))
-#
-#     slide = deck.new_slide(width=50, height=50)
-#     slide.text("AVAVA", "t1")
-#     slide.text("AVAVA", "t2")
 
 
 @check()
