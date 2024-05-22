@@ -78,15 +78,19 @@ def check_images(name, path, fails, subdir, resize=False):
         )
 
 
-def collect_failed_tests() -> list[FailedTest]:
-    paths = Path(f"/tmp/pytest-of-{os.getlogin()}/pytest-current/").rglob("*current/check.txt")
+def collect_failed_tests(path, version) -> list[FailedTest]:
+    if path is None:
+        path = f"/tmp/pytest-of-{os.getlogin()}/pytest-current/"
+    paths = Path(path).rglob(f"*{version}/check.txt")
     fails = []
+    count = 0
     for path in paths:
+        count += 1
         with open(path, "r") as f:
             name = f.read()
         check_images(name, path, fails, "png")
         check_images(name, path, fails, "pdf2png", resize=True)
-    return fails
+    return fails, count
 
 
 def html_inline_img(img):
@@ -144,9 +148,13 @@ def update(failed_tests):
 
 @click.command()
 @click.option("--do-update/--do-not-update", default=False)
-def main(do_update):
-    failed_tests = collect_failed_tests()
-    if failed_tests:
+@click.option("--path", default=None)
+@click.option("--version", default="current")
+def main(do_update, path, version):
+    failed_tests, count = collect_failed_tests(path, version)
+    if count == 0:
+        print("No test found")
+    elif failed_tests:
         if not do_update:
             print("Failed tests:")
             for failed_test in failed_tests:
@@ -155,7 +163,7 @@ def main(do_update):
         else:
             update(failed_tests)
     else:
-        print("All tests are ok")
+        print(f"All tests ({count}) are ok")
 
 
 if __name__ == "__main__":
