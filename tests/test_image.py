@@ -66,3 +66,9 @@ def test_render_ora_image_scale(deck):
     slide = deck.new_slide(width=400, height=400)
     slide.image("test.ora", width="80%", enable_steps=False, bg_color="gray")
     slide.image("test.ora", height="20%", enable_steps=False, bg_color="gray")
+
+
+@check()
+def test_svg_image_dtd(deck):
+    slide = deck.new_slide(width=40, height=40)
+    slide.image("knight_with_dtd.svg")

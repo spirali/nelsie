@@ -115,7 +115,13 @@ fn load_svg_image(raw_data: Vec<u8>, font_db: &fontdb::Database) -> crate::Resul
     let tree = xmltree::Element::parse(raw_data.as_slice())
         .map_err(|e| NelsieError::Generic(format!("SVG parsing failed {e}")))?;
 
-    let xml_tree = roxmltree::Document::parse(str_data)?;
+    let xml_tree = roxmltree::Document::parse_with_options(
+        str_data,
+        roxmltree::ParsingOptions {
+            allow_dtd: true,
+            ..Default::default()
+        },
+    )?;
 
     // Parse label step definitions
     let mut n_steps = 1;
