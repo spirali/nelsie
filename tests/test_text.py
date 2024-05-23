@@ -86,7 +86,8 @@ def test_set_get_styles_deck(deck):
     assert s.size == pytest.approx(120.0)
 
 
-@check()
+# On windows, underline is drawn in slightly different place, I do not know why
+@check(windows_threshold=1800)
 def test_text_lines(deck):
     slide = deck.new_slide(width=200, height=250)
     slide.text("Test text", TextStyle(underline=True), m_bottom=10)
