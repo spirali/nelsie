@@ -1,12 +1,13 @@
 import contextlib
 import os
+import sys
 
 import pytest
 import fitz
 from conftest import CHECKS_DIR
 from PIL import Image, ImageChops, ImageStat
 
-LIMIT = 105.0
+DEFAULT_THRESHOLD = 105.0
 
 
 @contextlib.contextmanager
@@ -56,7 +57,13 @@ def compare_images(new_dir, old_dir, n_slides, threshold, resize=False):
             raise Exception(f"Slide {os.path.join(new_dir, name1)} difference is {diff} (limit is {threshold})")
 
 
-def check(n_slides: int = 1, error=None, error_match: str | None = None, deck_kwargs=None):
+def check(
+    n_slides: int = 1,
+    error=None,
+    error_match: str | None = None,
+    windows_threshold=None,
+    deck_kwargs=None,
+):
     def wrapper(fn):
         name = fn.__name__
         if name.startswith("test_"):
@@ -85,17 +92,20 @@ def check(n_slides: int = 1, error=None, error_match: str | None = None, deck_kw
                         img = pixmap.tobytes()
                         with open(os.path.join("pdf2png", f"{i}.png"), "wb") as f:
                             f.write(img)
+                    threshold = DEFAULT_THRESHOLD
+                    if windows_threshold is not None and sys.platform == "win32":
+                        threshold = windows_threshold
                     compare_images(
                         os.path.join(tmp_path, "png"),
                         os.path.join(CHECKS_DIR, "png", name),
                         n_slides,
-                        threshold=LIMIT,
+                        threshold=threshold,
                     )
                     compare_images(
                         os.path.join(tmp_path, "pdf2png"),
                         os.path.join(CHECKS_DIR, "pdf2png", name),
                         n_slides,
-                        threshold=LIMIT,
+                        threshold=threshold,
                     )
 
         return helper
