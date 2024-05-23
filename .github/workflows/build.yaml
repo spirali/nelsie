@@ -252,12 +252,6 @@ jobs:
       - uses: actions/download-artifact@v3
         with:
           name: wheels
-      - name: Create GitHub release
-        uses: ncipollo/release-action@v1
-        with:
-          body: "See [CHANGELOG](https://github.com/spirali/nelsie/blob/main/CHANGELOG.md)."
-          prerelease: true
-          artifacts: "*.whl"
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
         env:
@@ -265,4 +259,9 @@ jobs:
         with:
           command: upload
           args: --non-interactive --skip-existing *
-
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          body: "See [CHANGELOG](https://github.com/spirali/nelsie/blob/main/CHANGELOG.md)."
+          prerelease: false
+          artifacts: "*.whl"

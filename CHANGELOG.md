@@ -1,4 +1,8 @@
-# 0.9
+# 0.9.1
+
+* No actual changes, created to fix incomplete deployment to PyPI
+
+# 0.9.0
 
 ## New features
 
