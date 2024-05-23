@@ -1,4 +1,4 @@
-# Unreleased
+# 0.9
 
 ## New features
 
@@ -13,6 +13,7 @@
 ## Fixes
 
 * Fixed problem when ListBuilder is used together with steps
+* Fixed loading SVG files with DTD
 
 
 # 0.8

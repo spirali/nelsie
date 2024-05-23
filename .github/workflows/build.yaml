@@ -243,6 +243,8 @@ jobs:
 
   release:
     name: Release
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: [ test, sdist, deploy-docs ]
