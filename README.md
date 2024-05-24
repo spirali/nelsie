@@ -25,6 +25,14 @@ or simply manage which parts are highlighted.
 - Demonstration of features ([PDF](https://spirali.github.io/nelsie/pdf/bigdemo.pdf), [source code](examples/bigdemo/bigdemo.py))
 
 
+
+## Installation
+
+```commandline
+$ pip install nelsie
+```
+
+
 ## Hello world
 
 ```python
@@ -75,10 +83,3 @@ The code generates four  PDF pages:
   <kbd><img src="docs/imgs/steps/0-3.png" width="300" style="margin: 5px"/></kbd>
   <kbd><img src="docs/imgs/steps/0-4.png" width="300" style="margin: 5px"/></kbd>
 </p>
-
-
-# Installation
-
-```commandline
-$ pip install nelsie
-```
