@@ -31,11 +31,10 @@ miniz_oxide = "0.7" # Nice to be sycnrhonized with svg2pdf
 by_address = "1"
 rayon = "1.10"
 notify = "6.1"
+smallvec = "1"
+chumsky = "0.9"
 
 [profile.release]
 lto = true
 codegen-units = 1
 panic = "abort"
-
-[profile.dev]
-debug = 0

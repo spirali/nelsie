@@ -45,13 +45,13 @@ AlignContentSteps = AlignContent | None | InSteps[AlignContent | None]
 
 def _resolve_step_keywords(value, parent_box):
     if value == "last":
-        return parent_box.slide.get_n_steps()
+        return parent_box.slide.get_steps()[-1]
     if value == "last+":
-        return f"{parent_box.slide.get_n_steps()}+"
+        return f"{'.'.join(str(s) for s in parent_box.slide.get_steps()[-1])}+"
     if value == "next":
-        return parent_box.slide.get_n_steps() + 1
+        return parent_box.slide.get_steps()[-1][0] + 1
     if value == "next+":
-        return f"{parent_box.slide.get_n_steps() + 1}+"
+        return f"{parent_box.slide.get_steps()[-1][0] + 1}+"
     return value
 
 

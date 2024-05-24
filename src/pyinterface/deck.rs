@@ -1,5 +1,4 @@
-use crate::common::Step;
-use crate::model::{Color, Drawing, Node, NodeChild, Path, Slide, SlideDeck, StepValue};
+use crate::model::{Color, Drawing, Node, NodeChild, Path, Slide, SlideDeck, Step, StepValue};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use crate::pyinterface::path::PyPath;
 use crate::pyinterface::r#box::{make_node, Content, NodeCreationEnv, Show};
@@ -63,12 +62,13 @@ impl Deck {
         height: f32,
         bg_color: &str,
         name: String,
+        step_1: bool,
         counters: Option<Vec<String>>,
         parent: Option<(SlideId, Step)>,
     ) -> PyResult<SlideId> {
         let slide_id = self.deck.slides.len() as SlideId;
-        if let Some((_, step)) = parent {
-            if step == 0 {
+        if let Some((_, step)) = &parent {
+            if step < &Step::from_int(1) {
                 return Err(PyException::new_err("Invalid step"));
             }
         }
@@ -80,6 +80,7 @@ impl Deck {
             self.deck.global_styles.clone(),
             counters.unwrap_or_default(),
             parent,
+            step_1,
         ));
         Ok(slide_id)
     }
@@ -92,7 +93,7 @@ impl Deck {
     ) -> PyResult<()> {
         let slide = resolve_slide_id(&mut self.deck, slide_id)?;
         let node = resolve_box_id(&mut slide.node, &box_id)?;
-        let paths: StepValue<Vec<Path>> = paths.parse(&mut slide.n_steps, |paths| {
+        let paths: StepValue<Vec<Path>> = paths.parse(&mut slide.steps, |paths| {
             paths.into_iter().map(|p| p.into_path()).try_collect()
         })?;
         node.children.push(NodeChild::Draw(Drawing { paths }));
@@ -139,7 +140,7 @@ impl Deck {
         url: ValueOrInSteps<Option<String>>,
         name: String,
         debug_layout: Option<String>,
-        replace_steps: Option<BTreeMap<crate::model::Step, crate::model::Step>>,
+        replace_steps: Option<BTreeMap<Step, Step>>,
         content: Option<Content>,
     ) -> PyResult<(BoxId, u32)> {
         let slide = resolve_slide_id(&mut self.deck, slide_id)?;
@@ -149,7 +150,9 @@ impl Deck {
         let mut nce = NodeCreationEnv {
             resources: &mut resources.resources,
         };
-        let (node, n_steps) = make_node(
+
+        let node = make_node(
+            &mut slide.steps,
             node_id,
             &mut nce,
             parent_node.styles.clone(),
@@ -187,7 +190,6 @@ impl Deck {
             replace_steps,
             content,
         )?;
-        slide.n_steps = slide.n_steps.max(n_steps);
 
         let new_id = parent_node.children.len() as u32;
         let node_id = node.node_id;
@@ -211,7 +213,7 @@ impl Deck {
             let slide = resolve_slide_id(&mut self.deck, slide_id)?;
             if let Some(box_id) = box_id {
                 let node = resolve_box_id(&mut slide.node, &box_id)?;
-                let text_style = text_style.parse(&mut slide.n_steps, |s| {
+                let text_style = text_style.parse(&mut slide.steps, |s| {
                     s.into_partial_style(&resources.resources)
                 })?;
                 (&mut node.styles, text_style)
@@ -247,7 +249,7 @@ impl Deck {
                 let node = resolve_box_id(&mut slide.node, &box_id)?;
                 node.styles
                     .get_style(name)
-                    .map(|style| partial_text_style_to_pyobject(style.at_step(step), py))?
+                    .map(|style| partial_text_style_to_pyobject(style.at_step(&step), py))?
             } else {
                 return Err(PyException::new_err("Invalid box id"));
             }
@@ -255,18 +257,41 @@ impl Deck {
             self.deck
                 .global_styles
                 .get_style(name)
-                .map(|style| partial_text_style_to_pyobject(style.at_step(step), py))?
+                .map(|style| partial_text_style_to_pyobject(style.at_step(&step), py))?
         })
         .to_object(py))
     }
 
-    fn set_n_steps(&mut self, slide_id: SlideId, value: u32) -> PyResult<()> {
-        resolve_slide_id(&mut self.deck, slide_id)?.n_steps = value.max(1);
+    fn insert_step(&mut self, slide_id: SlideId, step: Step) -> PyResult<()> {
+        let slide = resolve_slide_id(&mut self.deck, slide_id)?;
+        slide.steps.insert(step);
         Ok(())
     }
 
-    fn get_n_steps(&mut self, slide_id: SlideId) -> PyResult<u32> {
-        Ok(resolve_slide_id(&mut self.deck, slide_id)?.n_steps)
+    fn remove_step(&mut self, slide_id: SlideId, step: Step) -> PyResult<()> {
+        let slide = resolve_slide_id(&mut self.deck, slide_id)?;
+        slide.steps.remove(&step);
+        Ok(())
+    }
+
+    fn remove_steps_below(&mut self, slide_id: SlideId, step: Step) -> PyResult<()> {
+        let slide = resolve_slide_id(&mut self.deck, slide_id)?;
+        slide.steps.retain(|s| s >= &step);
+        Ok(())
+    }
+
+    fn remove_steps_above(&mut self, slide_id: SlideId, step: Step) -> PyResult<()> {
+        let slide = resolve_slide_id(&mut self.deck, slide_id)?;
+        slide.steps.retain(|s| s <= &step);
+        Ok(())
+    }
+
+    fn get_steps(&mut self, py: Python<'_>, slide_id: SlideId) -> PyResult<Vec<PyObject>> {
+        Ok(resolve_slide_id(&mut self.deck, slide_id)?
+            .steps
+            .iter()
+            .map(|s| s.to_object(py))
+            .collect_vec())
     }
 
     fn render(

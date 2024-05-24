@@ -154,7 +154,7 @@ impl ComputedLayout {
     }
 }
 
-fn is_layout_managed(node: &Node, parent: Option<&Node>, step: Step) -> bool {
+fn is_layout_managed(node: &Node, parent: Option<&Node>, step: &Step) -> bool {
     parent
         .map(|p| {
             node.main_axis_position(*p.row.at_step(step))
@@ -218,7 +218,7 @@ fn compute_content_default_size(
     config: &RenderConfig,
     node: &Node,
     content: &NodeContent,
-    step: Step,
+    step: &Step,
     text_layouts: &mut HashMap<NodeId, TextLayout>,
 ) -> (f32, f32) {
     match content {
@@ -243,16 +243,14 @@ fn compute_content_default_size(
 }
 
 fn gather_taffy_layout<'b>(
-    mut step: Step,
+    step: &'b Step,
     node: &'b Node,
     parent: Option<&Node>,
     taffy: &tf::TaffyTree,
     tf_node: tf::NodeId,
     out: &mut BTreeMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>,
 ) {
-    if let Some(s) = node.replace_steps.get(&step) {
-        step = *s;
-    }
+    let step = node.replace_steps.get(step).unwrap_or(step);
     let layout_rect = taffy.layout(tf_node).unwrap();
     out.insert(
         node.node_id,
@@ -282,15 +280,13 @@ impl<'a> LayoutContext<'a> {
 
     fn compute_layout_helper(
         &self,
-        mut step: Step,
+        step: &Step,
         taffy: &mut tf::TaffyTree,
         node: &Node,
         parent: Option<&Node>,
         text_layouts: &mut HashMap<NodeId, TextLayout>,
     ) -> tf::NodeId {
-        if let Some(s) = node.replace_steps.get(&step) {
-            step = *s;
-        }
+        let step = node.replace_steps.get(step).unwrap_or(step);
         let tf_children: Vec<_> = node
             .child_nodes_at_step(step)
             .map(|child| self.compute_layout_helper(step, taffy, child, Some(node), text_layouts))
@@ -396,7 +392,7 @@ impl<'a> LayoutContext<'a> {
         taffy.new_with_children(style, &tf_children).unwrap()
     }
 
-    pub fn compute_layout(&self, slide: &Slide, step: Step) -> ComputedLayout {
+    pub fn compute_layout(&self, slide: &Slide, step: &Step) -> ComputedLayout {
         let mut taffy = tf::TaffyTree::new();
         taffy.disable_rounding();
         let mut text_layouts = HashMap::new();

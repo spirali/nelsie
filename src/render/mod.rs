@@ -11,16 +11,15 @@ mod pdf;
 mod rendering;
 mod text;
 
-use crate::model::{FontData, Resources, Slide, SlideDeck, SlideId};
+use crate::model::{FontData, Resources, Slide, SlideDeck, SlideId, Step};
 pub(crate) use pdf::PdfBuilder;
 
-use crate::common::Step;
 use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
-use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
+use rayon::iter::{IndexedParallelIterator};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -28,7 +27,7 @@ pub(crate) struct RenderConfig<'a> {
     pub resources: &'a Resources,
     pub slide: &'a Slide,
     pub slide_id: SlideId,
-    pub step: Step,
+    pub step: &'a Step,
     pub default_font: &'a Arc<FontData>,
     pub counter_values: &'a CountersMap<'a>,
 }
@@ -74,7 +73,7 @@ fn render_slide(
     default_font: &Arc<FontData>,
     counter_values: &CountersMap,
 ) -> crate::Result<()> {
-    (1..=slide.n_steps).into_par_iter().try_for_each(|step| {
+    slide.steps.par_iter().try_for_each(|step| {
         log::debug!("Rendering slide {}/{}", slide_id, step);
         let render_cfg = RenderConfig {
             resources,
@@ -88,7 +87,7 @@ fn render_slide(
         let counter = render_cfg.counter_values.get("global").unwrap();
         let page_idx = counter
             .indices
-            .get(&(render_cfg.slide_id, render_cfg.step))
+            .get(&(render_cfg.slide_id, render_cfg.step.clone()))
             .unwrap()
             .page_idx;
         builder.add_page(slide_id, step, page_idx, canvas, render_cfg.resources)
@@ -101,7 +100,7 @@ pub(crate) fn render_slide_deck(
     output_cfg: &OutputConfig,
     verbose_level: VerboseLevel,
     n_threads: Option<usize>,
-) -> crate::Result<Vec<(usize, usize, Vec<u8>)>> {
+) -> crate::Result<Vec<(usize, Step, Vec<u8>)>> {
     let start_time = std::time::Instant::now();
     let mut thread_pool_builder = rayon::ThreadPoolBuilder::new();
     if let Some(n_threads) = n_threads {

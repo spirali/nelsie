@@ -6,7 +6,6 @@ from nelsie import InSteps, TextStyle
 def test_step_values():
     def check(in_steps, values, n_steps):
         assert in_steps.in_step_values == values
-        assert in_steps.n_steps == n_steps
 
     check(InSteps(["red", "red", "blue"]), {1: "red", 3: "blue"}, 3)
 
@@ -24,6 +23,16 @@ def test_render_steps(deck):
         width=100,
         height=InSteps({1: "75%", 2: "25%"}),
         bg_color=InSteps(["red", "green", "blue"]),
+    )
+
+
+@check(n_slides=3)
+def test_render_substeps(deck):
+    slide = deck.new_slide(step_1=False)
+    slide.box(
+        width=100,
+        height=InSteps({(2, 3, 1): "75%", (2, 3, 2): "25%"}),
+        bg_color=InSteps({(2, 3, 1): "red", (2, 3, 2): "green", 4: "blue"}),
     )
 
 
@@ -56,13 +65,24 @@ def test_replace_steps(deck):
     slide.image("test.svg", width="50%", replace_steps={1: 3, 2: 1})
 
 
-def test_set_get_n_steps(deck):
+def test_set_get_steps(deck):
     slide = deck.new_slide()
-    assert slide.get_n_steps() == 1
+    assert slide.get_steps() == [(1,)]
     slide.box(width=InSteps({1: 100, 3: 200, 5: 600}))
-    assert slide.get_n_steps() == 5
-    slide.set_n_steps(3)
-    assert slide.get_n_steps() == 3
+    slide.box(width=InSteps({5: 600, (5, 3): 300}))
+    assert slide.get_steps() == [(1,), (3,), (5,), (5, 3)]
+    slide.insert_step(3)
+    slide.insert_step((6, 2))
+    assert slide.get_steps() == [(1,), (3,), (5,), (5, 3), (6, 2)]
+
+    slide.remove_step(5)
+    assert slide.get_steps() == [(1,), (3,), (5, 3), (6, 2)]
+
+    slide.remove_steps_above((5, 3))
+    assert slide.get_steps() == [(1,), (3,), (5, 3)]
+
+    slide.remove_steps_below((5, 3))
+    assert slide.get_steps() == [(5, 3)]
 
 
 @check(n_slides=4)
@@ -76,7 +96,7 @@ def test_step_global_counter(deck):
         parse_counters=True,
         bg_color="gray",
     )
-    slide.set_n_steps(2)
+    slide.insert_step(2)
     slide = deck.new_slide(width=400, height=100)
     slide.text(
         "$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)",
@@ -107,9 +127,10 @@ def test_step_other_counter(deck):
     create_slide(counters=["my"], color="red")
     create_slide(counters=["other"])
     slide = create_slide(counters=["my"], color="blue")
-    slide.set_n_steps(3)
+    slide.insert_step(2)
+    slide.insert_step(3)
     slide = create_slide()
-    slide.set_n_steps(2)
+    slide.insert_step(2)
 
 
 @check()
@@ -131,6 +152,7 @@ def test_show_next_last_keywords(deck):
     slide.box(show=3).text("Jump")
     slide.box(show="last").text("Last2")
     slide.box(show="next").text("Next2")
+    print(slide.get_steps())
 
 
 @check(n_slides=4)

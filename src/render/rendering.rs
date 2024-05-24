@@ -119,14 +119,13 @@ impl<'a> RenderContext<'a> {
         }
     }
 
-    fn render_helper(&mut self, mut step: Step, node: &Node) {
+    fn render_helper(&mut self, step: &Step, node: &Node) {
         // active is before step replacement!
         if !node.active.at_step(step) {
             return;
         }
-        if let Some(s) = node.replace_steps.get(&step) {
-            step = *s;
-        }
+        let step = node.replace_steps.get(step).unwrap_or(step);
+
         if !node.show.at_step(step) {
             return;
         }
@@ -195,7 +194,7 @@ impl<'a> RenderContext<'a> {
         }
     }
 
-    fn draw(&mut self, step: Step, parent_id: NodeId, drawing: &Drawing) {
+    fn draw(&mut self, step: &Step, parent_id: NodeId, drawing: &Drawing) {
         let paths = drawing.paths.at_step(step);
         if paths.is_empty() {
             return;
@@ -210,7 +209,7 @@ impl<'a> RenderContext<'a> {
             .add_item(CanvasItem::SvgChunk(xml.into_string()))
     }
 
-    pub(crate) fn render_to_canvas(mut self, step: Step, node: &Node) {
+    pub(crate) fn render_to_canvas(mut self, step: &Step, node: &Node) {
         self.render_helper(step, node);
     }
 }
