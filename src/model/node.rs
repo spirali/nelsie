@@ -1,4 +1,4 @@
-use super::{Color, Length, LengthOrExpr, NodeContentImage, StepValue, StyleMap};
+use super::{Color, Length, LengthOrExpr, NodeContentImage, Step, StepValue, StyleMap};
 use crate::model::shapes::Drawing;
 use crate::model::text::NodeContentText;
 use crate::model::types::LengthOrAuto;
@@ -8,7 +8,6 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 use by_address::ByAddress;
 use std::sync::Arc;
 
-use crate::common::Step;
 use crate::model::image::LoadedImage;
 use taffy::prelude::{AlignContent, AlignItems};
 use taffy::style::FlexWrap;
@@ -88,7 +87,10 @@ impl Node {
         }
     }
 
-    pub fn child_nodes_at_step(&self, step: Step) -> impl Iterator<Item = &Node> {
+    pub fn child_nodes_at_step<'a>(
+        &'a self,
+        step: &'a Step,
+    ) -> impl Iterator<Item = &'a Node> + 'a {
         self.children.iter().filter_map(move |child| match child {
             NodeChild::Node(node) if *node.active.at_step(step) => Some(node),
             _ => None,

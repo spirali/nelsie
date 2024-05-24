@@ -44,6 +44,8 @@ def test_render_svg_image_no_steps(deck):
 def test_render_svg_image_shift(deck):
     slide = deck.new_slide(width=100, height=100)
     box = slide.box(width="90%", height="80%", bg_color="gray")
+    slide.insert_step(2)
+    slide.insert_step(3)
     box.image("test.svg", width="80%", shift_steps=2)
 
 

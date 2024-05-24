@@ -3,6 +3,8 @@ from typing import Generic, Sequence, TypeVar
 T = TypeVar("T")
 S = TypeVar("S")
 
+Step = tuple[int]
+
 
 class InSteps(Generic[T]):
     """
@@ -24,8 +26,7 @@ class InSteps(Generic[T]):
 
     def __init__(
         self,
-        values: Sequence[T] | dict[int, T],
-        n_steps: int | None = None,
+        values: Sequence[T] | dict[Step | int, T],
     ):
         if isinstance(values, Sequence):
             tmp = {}
@@ -39,7 +40,6 @@ class InSteps(Generic[T]):
         elif not isinstance(values, dict):
             raise ValueError("Invalid type for values")
         self.in_step_values = values
-        self.n_steps = n_steps or (max(values.keys()) if values else 1)
 
     def get(self, step: int, default: S = None) -> T | None:
         v = self.in_step_values.get(step)
@@ -52,7 +52,6 @@ class InSteps(Generic[T]):
     def map(self, fn):
         return InSteps(
             {step: fn(v) for step, v in self.in_step_values.items()},
-            n_steps=self.n_steps,
         )
 
     def key_steps(self):
@@ -63,7 +62,6 @@ class InSteps(Generic[T]):
         keys.update(other.key_steps())
         return InSteps(
             {step: (self.get(step), other.get(step)) for step in keys},
-            n_steps=max(self.n_steps, other.n_steps),
         )
 
 
@@ -71,5 +69,4 @@ def zip_in_steps(values: list[S | InSteps[S]], default: S) -> InSteps[list[S]]:
     keys = set().union(*[x.key_steps() if isinstance(x, InSteps) else (1,) for x in values])
     return InSteps(
         {step: [x.get(step, default) if isinstance(x, InSteps) else x for x in values] for step in keys},
-        n_steps=max(x.n_steps if isinstance(x, InSteps) else 1 for x in values),
     )

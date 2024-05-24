@@ -4,6 +4,7 @@ from typing import Literal
 from . import nelsie as nelsie_rs
 from .basictypes import parse_debug_layout
 from .box import Box, BoxBuilder
+from .insteps import Step
 from .textstyle import TextStyle, _data_to_text_style
 
 Resources = nelsie_rs.Resources
@@ -40,12 +41,20 @@ class Slide(BoxBuilder):
         """
         return self.root_box
 
-    def set_n_steps(self, value: int):
-        assert value >= 1
-        self.deck._deck.set_n_steps(self._slide_id, value)
+    def insert_step(self, value: Step):
+        self.deck._deck.insert_step(self._slide_id, value)
 
-    def get_n_steps(self) -> int:
-        return self.deck._deck.get_n_steps(self._slide_id)
+    def remove_step(self, value: Step):
+        self.deck._deck.remove_step(self._slide_id, value)
+
+    def remove_steps_below(self, value: Step):
+        self.deck._deck.remove_steps_below(self._slide_id, value)
+
+    def remove_steps_above(self, value: Step):
+        self.deck._deck.remove_steps_above(self._slide_id, value)
+
+    def get_steps(self) -> list[Step]:
+        return self.deck._deck.get_steps(self._slide_id)
 
     def new_slide_at(self, step: int, **slide_kwargs):
         slide_kwargs["parent_slide"] = (self._slide_id, step)
@@ -124,6 +133,7 @@ class SlideDeck:
         debug_layout: bool | str = False,
         counters: list[str] | None = None,
         parent_slide: tuple[Slide, int] | None = None,
+        step_1: bool = True
     ) -> Slide:
         """
         Creates a new slide in the slide deck.
@@ -137,7 +147,7 @@ class SlideDeck:
         if image_directory is None:
             image_directory = self.image_directory
         debug_layout = parse_debug_layout(debug_layout)
-        slide_id = self._deck.new_slide(width, height, bg_color, name, counters, parent_slide)
+        slide_id = self._deck.new_slide(width, height, bg_color, name, step_1, counters, parent_slide)
         return Slide(self, slide_id, name, image_directory, debug_layout)
 
     def slide(

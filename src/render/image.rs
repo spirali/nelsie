@@ -21,7 +21,7 @@ fn render_ora_to_canvas(
             || layer
                 .visibility
                 .as_ref()
-                .map(|v| *v.at_step(step))
+                .map(|v| *v.at_step(&step))
                 .unwrap_or(true)
         {
             canvas.add_item(CanvasItem::PngImage(
@@ -50,12 +50,12 @@ fn tree_to_svg(tree: &xmltree::Element) -> String {
     String::from_utf8(s).unwrap()
 }
 
-fn crawl_svg_for_step(nodes: &mut Vec<xmltree::XMLNode>, step: Step) {
+fn crawl_svg_for_step(nodes: &mut Vec<xmltree::XMLNode>, step: &Step) {
     nodes.retain_mut(|node| match node {
         xmltree::XMLNode::Element(element) => {
             for (key, value) in &element.attributes {
                 if key == "label" && value.contains("**") {
-                    if let Some((s, _)) = parse_steps_from_label(value) {
+                    if let Some(s) = parse_steps_from_label(value, None) {
                         if !s.at_step(step) {
                             return false;
                         }
@@ -79,24 +79,24 @@ fn prepare_svg_tree_for_step(
     }
     let mut tree = svg_data.tree.clone();
 
-    crawl_svg_for_step(&mut tree.children, step);
+    crawl_svg_for_step(&mut tree.children, &step);
 
     tree_to_svg(&tree)
 }
 
 pub(crate) fn render_image_to_canvas(
     image: &NodeContentImage,
-    step: Step,
+    step: &Step,
     rect: &Rectangle,
     canvas: &mut Canvas,
 ) {
     if rect.width <= 0.00001 || rect.height <= 0.00001 {
         return;
     }
-    if step <= image.shift_steps {
+    if step <= &Step::from_int(image.shift_steps) {
         return;
     }
-    let step = step - image.shift_steps;
+    let step = step.subtract_first_index(image.shift_steps);
     let width = image.loaded_image.width;
     let height = image.loaded_image.height;
     let scale = (rect.width / width).min(rect.height / height);

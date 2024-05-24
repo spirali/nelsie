@@ -1,9 +1,8 @@
-use crate::model::{Step, StepValue};
+use crate::model::{StepIndex, StepSet, StepValue};
 use crate::parsers::step_parser::parse_steps_from_label;
 use imagesize::blob_size;
 use resvg::usvg::fontdb;
-use std::cmp::max;
-use std::collections::HashMap;
+use std::collections::{HashMap};
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -18,13 +17,13 @@ use crate::NelsieError;
 pub(crate) struct SvgImageData {
     /*
        Ideally we would preload SVG tree here, but it cannot be done because usvg:Tree internally
-       use Rc so it is not Send, that makes it is problem for Python binding and potential paralelization
+       use Rc, so it is not Send, that makes it is problem for Python binding and potential parallelization
        of rendering.
        On the other hand, it not as bad as it seems at first sight, since we would have to clone
        usvg::Tree for each step because of tree stripping, so recreating from data is not as bad.
     */
     pub tree: xmltree::Element,
-    pub n_steps: Step,
+    pub steps: StepSet,
 }
 
 #[derive(Debug)]
@@ -40,7 +39,7 @@ pub(crate) struct OraLayer {
 #[derive(Debug)]
 pub(crate) struct OraImageData {
     pub layers: Vec<OraLayer>,
-    pub n_steps: Step,
+    pub steps: StepSet,
 }
 
 #[derive(Debug)]
@@ -60,11 +59,15 @@ pub(crate) struct LoadedImage {
 }
 
 impl LoadedImage {
-    pub fn n_steps(&self) -> Step {
+    pub fn update_steps(&self, steps: &mut StepSet, shift_steps: StepIndex) {
         match &self.data {
-            LoadedImageData::Png(_) | LoadedImageData::Jpeg(_) => 1,
-            LoadedImageData::Svg(data) => data.n_steps,
-            LoadedImageData::Ora(data) => data.n_steps,
+            LoadedImageData::Png(_) | LoadedImageData::Jpeg(_) => {}
+            LoadedImageData::Svg(data) => data.steps.iter().for_each(|s| {
+                steps.insert(s.add_first_index(shift_steps));
+            }),
+            LoadedImageData::Ora(data) => data.steps.iter().for_each(|s| {
+                steps.insert(s.add_first_index(shift_steps));
+            }),
         }
     }
 }
@@ -124,24 +127,12 @@ fn load_svg_image(raw_data: Vec<u8>, font_db: &fontdb::Database) -> crate::Resul
     )?;
 
     // Parse label step definitions
-    let mut n_steps = 1;
-    let mut id_visibility = HashMap::new();
+    let mut steps = StepSet::new();
     for node in xml_tree.descendants() {
         if let Some(label) =
             node.attribute(("http://www.inkscape.org/namespaces/inkscape", "label"))
         {
-            let (steps, n) = if let Some(v) = parse_steps_from_label(label) {
-                v
-            } else {
-                continue;
-            };
-            let id = if let Some(id) = node.attribute("id") {
-                id
-            } else {
-                continue;
-            };
-            n_steps = max(n_steps, n);
-            id_visibility.insert(id.to_string(), steps);
+            parse_steps_from_label(label, Some(&mut steps));
         }
     }
 
@@ -152,7 +143,7 @@ fn load_svg_image(raw_data: Vec<u8>, font_db: &fontdb::Database) -> crate::Resul
         image_id: 0,
         width: usvg_tree.size().width(),
         height: usvg_tree.size().height(),
-        data: LoadedImageData::Svg(SvgImageData { tree, n_steps }),
+        data: LoadedImageData::Svg(SvgImageData { tree, steps }),
     })
 }
 
@@ -171,7 +162,7 @@ fn load_ora_stack<R: std::io::Seek + Read>(
     node: &roxmltree::Node,
     archive: &mut zip::ZipArchive<R>,
     layers: &mut Vec<OraLayer>,
-    n_steps: &mut Step,
+    steps: &mut StepSet,
 ) -> crate::Result<()> {
     for child in node.children() {
         let tag = child.tag_name().name();
@@ -184,10 +175,7 @@ fn load_ora_stack<R: std::io::Seek + Read>(
                 continue;
             }
             let visibility =
-                parse_steps_from_label(child.attribute("name").unwrap_or("")).map(|(v, n)| {
-                    *n_steps = max(*n_steps, n);
-                    v
-                });
+                parse_steps_from_label(child.attribute("name").unwrap_or(""), Some(steps));
             let src = option_unpack(child.attribute("src"))?;
             let mut file = archive.by_name(src)?;
             let mut image_data = Vec::new();
@@ -210,7 +198,7 @@ fn load_ora_stack<R: std::io::Seek + Read>(
                 data: Arc::new(image_data),
             });
         } else if tag == "stack" {
-            load_ora_stack(&child, archive, layers, n_steps)?;
+            load_ora_stack(&child, archive, layers, steps)?;
         }
     }
     Ok(())
@@ -235,14 +223,14 @@ fn load_ora_image(path: &Path) -> crate::Result<LoadedImage> {
         .unwrap_or(0.0);
 
     let mut layers = Vec::new();
-    let mut n_steps = 1;
-    load_ora_stack(&image, &mut archive, &mut layers, &mut n_steps)?;
+    let mut steps = StepSet::new();
+    load_ora_stack(&image, &mut archive, &mut layers, &mut steps)?;
     layers.reverse();
     Ok(LoadedImage {
         image_id: 0,
         width,
         height,
-        data: LoadedImageData::Ora(OraImageData { layers, n_steps }),
+        data: LoadedImageData::Ora(OraImageData { layers, steps }),
     })
 }
 
@@ -273,5 +261,5 @@ fn load_image(path: &Path, font_db: &fontdb::Database) -> crate::Result<LoadedIm
 pub(crate) struct NodeContentImage {
     pub loaded_image: Arc<LoadedImage>,
     pub enable_steps: bool,
-    pub shift_steps: Step,
+    pub shift_steps: StepIndex,
 }

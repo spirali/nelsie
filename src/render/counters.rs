@@ -1,5 +1,4 @@
-use crate::common::Step;
-use crate::model::{SlideDeck, SlideId, StyledText};
+use crate::model::{SlideDeck, SlideId, Step, StyledText};
 use itertools::Itertools;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
@@ -19,7 +18,7 @@ pub(crate) struct Counter {
 }
 
 impl Counter {
-    fn new(page_ordering: &[(bool, u32, u32)]) -> Counter {
+    fn new(page_ordering: &[(bool, u32, Step)]) -> Counter {
         let mut indices = BTreeMap::new();
         let mut slide_idx = 0;
         let mut page_idx = 0;
@@ -33,7 +32,7 @@ impl Counter {
                 }
             }
             indices.insert(
-                (*slide_id, *step),
+                (*slide_id, step.clone()),
                 Indices {
                     slide_idx: if slide_idx == 0 { 0 } else { slide_idx - 1 },
                     page_idx: if page_idx == 0 { 0 } else { page_idx - 1 },
@@ -52,13 +51,13 @@ pub(crate) fn replace_counters(
     counter_values: &CountersMap,
     styled_text: &mut StyledText,
     slide_id: u32,
-    step: Step,
+    step: &Step,
 ) {
     for (name, values) in counter_values {
         let Indices {
             slide_idx,
             page_idx,
-        } = values.indices.get(&(slide_id, step)).unwrap();
+        } = values.indices.get(&(slide_id, step.clone())).unwrap();
         styled_text.replace_text(&format!("$({name}_slide)"), &(slide_idx + 1).to_string());
         styled_text.replace_text(&format!("$({name}_page)"), &(page_idx + 1).to_string());
         styled_text.replace_text(&format!("$({name}_slides)"), &values.n_slides.to_string());
@@ -74,29 +73,29 @@ pub(crate) fn compute_counters(slide_deck: &SlideDeck) -> CountersMap {
         for name in &slide.counters {
             counter_names.insert(name);
         }
-        if let Some((parent_idx, parent_step)) = slide.parent {
+        let after_last = slide
+            .steps
+            .last()
+            .map(|s| s.first_substep())
+            .unwrap_or_default();
+
+        if let Some((parent_idx, parent_step)) = &slide.parent {
             let pos = global_pages
                 .iter()
                 .enumerate()
-                .filter(|(_, (_, id, step))| *id == parent_idx && *step <= parent_step)
+                .filter(|(_, (_, id, step))| id == parent_idx && step <= parent_step)
                 .max_by_key(|(_, (_, _, step))| step)
                 .unwrap()
-                .0
-                - 1;
-            for step in 1..=slide.n_steps {
-                global_pages.insert(pos + step as usize, (true, slide_idx, step))
+                .0;
+            for (i, step) in slide.steps.iter().enumerate() {
+                global_pages.insert(pos + i, (true, slide_idx, step.clone()))
             }
-            // Insert a dummy marker that will be removed later
-            global_pages.insert(
-                pos + slide.n_steps as usize,
-                (false, slide_idx, slide.n_steps + 1),
-            )
+            global_pages.insert(pos + slide.steps.len(), (false, slide_idx, after_last))
         } else {
-            for step in 1..=slide.n_steps {
-                global_pages.push((true, slide_idx, step))
+            for step in &slide.steps {
+                global_pages.push((true, slide_idx, step.clone()))
             }
-            // Insert a dummy marker that will be removed later
-            global_pages.push((false, slide_idx, slide.n_steps + 1))
+            global_pages.push((false, slide_idx, after_last))
         }
     }
 
@@ -114,7 +113,7 @@ pub(crate) fn compute_counters(slide_deck: &SlideDeck) -> CountersMap {
                         .counters
                         .contains(name),
                     *slide_idx,
-                    *step,
+                    step.clone(),
                 )
             })
             .collect_vec();

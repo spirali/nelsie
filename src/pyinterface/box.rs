@@ -1,9 +1,9 @@
 use crate::model::{
-    merge_stepped_styles, Color, LengthOrExpr, NodeContentText, ParsedText, PartialTextStyle,
-    StyleMap, TextAlign,
+    merge_stepped_styles, Color, LengthOrExpr, NodeContentText, ParsedText, PartialTextStyle, Step,
+    StepIndex, StepSet, StyleMap, TextAlign,
 };
 use crate::model::{
-    Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, Step, StepValue,
+    Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, StepValue,
 };
 use crate::parsers::step_parser::parse_steps;
 use crate::parsers::{
@@ -32,6 +32,7 @@ pub(crate) enum Show {
     Bool(bool),
     Int(u32),
     StringDef(String),
+    VecInt(Vec<u32>),
     InSteps(InSteps<bool>),
 }
 
@@ -39,7 +40,7 @@ pub(crate) enum Show {
 pub(crate) struct ImageContent {
     path: PathBuf,
     enable_steps: bool,
-    shift_steps: Step,
+    shift_steps: StepIndex,
 }
 
 #[derive(Debug, FromPyObject)]
@@ -93,13 +94,13 @@ fn resolve_style(
     original: &StepValue<PartialTextStyle>,
     style_or_name: PyTextStyleOrName,
     styles: &StyleMap,
-    n_steps: &mut Step,
+    steps: &mut StepSet,
 ) -> crate::Result<StepValue<PartialTextStyle>> {
     Ok(match style_or_name {
         PyTextStyleOrName::Name(name) => merge_stepped_styles(original, styles.get_style(&name)?),
         PyTextStyleOrName::Style(style) => merge_stepped_styles(
             original,
-            &style.parse(n_steps, |s| s.into_partial_style(resources))?,
+            &style.parse(steps, |s| s.into_partial_style(resources))?,
         ),
     })
 }
@@ -161,7 +162,7 @@ fn process_content(
     content: Content,
     nc_env: &mut NodeCreationEnv,
     styles: &StyleMap,
-    n_steps: &mut Step,
+    steps: &mut StepSet,
 ) -> PyResult<NodeContent> {
     Ok(match content {
         Content::Text(text) => {
@@ -173,15 +174,15 @@ fn process_content(
             };
             let default = styles.get_style("default")?;
             let mut main_style = if let Some(style) = text.style1 {
-                resolve_style(nc_env.resources, default, style, styles, n_steps)?
+                resolve_style(nc_env.resources, default, style, styles, steps)?
             } else {
                 default.clone()
             };
             if let Some(style) = text.style2 {
-                main_style = resolve_style(nc_env.resources, &main_style, style, styles, n_steps)?
+                main_style = resolve_style(nc_env.resources, &main_style, style, styles, steps)?
             };
 
-            let parsed_text = text.text.parse(n_steps, |txt| {
+            let parsed_text = text.text.parse(steps, |txt| {
                 process_text_parsing(
                     &txt,
                     nc_env.resources,
@@ -209,7 +210,8 @@ fn process_content(
                 .image_manager
                 .load_image(&image.path, &nc_env.resources.font_db)?;
             if image.enable_steps {
-                *n_steps = (*n_steps).max(loaded_image.n_steps() + image.shift_steps);
+                loaded_image.update_steps(steps, image.shift_steps);
+                //*n_steps = (*n_steps).max(loaded_image.n_steps() + image.shift_steps);
             }
             NodeContent::Image(NodeContentImage {
                 loaded_image,
@@ -254,28 +256,33 @@ fn parse_align_content(value: Option<PyBackedStr>) -> crate::Result<Option<Align
         .transpose()
 }
 
-fn show_to_bool_steps(show: Show, n_steps: &mut Step) -> PyResult<StepValue<bool>> {
+fn show_to_bool_steps(show: Show, steps: &mut StepSet) -> PyResult<StepValue<bool>> {
     Ok(match show {
         Show::Bool(value) => StepValue::new_const(value),
         Show::Int(value) => {
-            *n_steps = (*n_steps).max(value);
+            steps.insert(Step::from_int(value));
             let mut map = BTreeMap::new();
-            map.insert(value, true);
-            map.insert(value + 1, false);
+            map.insert(Step::from_int(value), true);
+            map.insert(Step::from_int(value + 1), false);
             StepValue::new_map(map)
         }
-        Show::StringDef(s) => {
-            let (steps, n) = parse_steps(&s)
-                .ok_or_else(|| PyValueError::new_err(format!("Invalid show definition: {s}")))?;
-            *n_steps = (*n_steps).max(n);
-            steps
+        Show::VecInt(value) => {
+            let s = Step::from_vec(value);
+            steps.insert(s.clone());
+            let mut map = BTreeMap::new();
+            map.insert(s.next(), false);
+            map.insert(s, true);
+            StepValue::new_map(map)
         }
-        Show::InSteps(in_steps) => in_steps.into_step_value(n_steps),
+        Show::StringDef(s) => parse_steps(&s, Some(steps))
+            .ok_or_else(|| PyValueError::new_err(format!("Invalid show definition: {s}")))?,
+        Show::InSteps(in_steps) => in_steps.into_step_value(steps),
     })
 }
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn make_node(
+    steps: &mut StepSet,
     new_node_id: NodeId,
     nc_env: &mut NodeCreationEnv,
     styles: Arc<StyleMap>,
@@ -314,69 +321,64 @@ pub(crate) fn make_node(
     debug_layout: Option<String>,
     replace_steps: Option<BTreeMap<Step, Step>>,
     content: Option<Content>,
-) -> PyResult<(Node, Step)> {
-    let mut n_steps = 1;
-    let mut n_steps2 = 1;
+) -> PyResult<Node> {
     let content = content
-        .map(|c| process_content(c, nc_env, &styles, &mut n_steps2))
+        .map(|c| process_content(c, nc_env, &styles, steps))
         .transpose()?;
-    n_steps = n_steps.max(n_steps2);
-    let flex_wrap = flex_wrap.parse(&mut n_steps, |f| match f.deref() {
+    let flex_wrap = flex_wrap.parse(steps, |f| match f.deref() {
         "nowrap" => Ok(FlexWrap::NoWrap),
         "wrap" => Ok(FlexWrap::Wrap),
         "wrap-reverse" => Ok(FlexWrap::WrapReverse),
         _ => Err(PyValueError::new_err("Invalid wrap value")),
     })?;
-    let bg_color = bg_color.parse(&mut n_steps, |v| {
-        v.as_deref().map(Color::from_str).transpose()
-    })?;
-    let x = x.parse(&mut n_steps, |v| {
+    let bg_color = bg_color.parse(steps, |v| v.as_deref().map(Color::from_str).transpose())?;
+    let x = x.parse(steps, |v| {
         v.map(|v| parse_position(v.into(), true)).transpose()
     })?;
-    let y = y.parse(&mut n_steps, |v| {
+    let y = y.parse(steps, |v| {
         v.map(|v| parse_position(v.into(), false)).transpose()
     })?;
-    let width = width.parse(&mut n_steps, pyparse_opt_length_or_expr)?;
-    let height = height.parse(&mut n_steps, pyparse_opt_length_or_expr)?;
+    let width = width.parse(steps, pyparse_opt_length_or_expr)?;
+    let height = height.parse(steps, pyparse_opt_length_or_expr)?;
     let node = Node {
         node_id: new_node_id,
         replace_steps: replace_steps.unwrap_or_default(),
         name,
-        active: show_to_bool_steps(active, &mut n_steps)?,
-        show: show_to_bool_steps(show, &mut n_steps)?,
-        z_level: z_level.into_step_value(&mut n_steps),
+        active: show_to_bool_steps(active, steps)?,
+        show: show_to_bool_steps(show, steps)?,
+        z_level: z_level.into_step_value(steps),
         x,
         y,
         width,
         height,
-        border_radius: border_radius.into_step_value(&mut n_steps),
-        row: row.into_step_value(&mut n_steps),
-        reverse: reverse.into_step_value(&mut n_steps),
+        border_radius: border_radius.into_step_value(steps),
+        row: row.into_step_value(steps),
+        reverse: reverse.into_step_value(steps),
         flex_wrap,
-        flex_grow: flex_grow.into_step_value(&mut n_steps),
-        flex_shrink: flex_shrink.into_step_value(&mut n_steps),
-        align_items: align_items.parse(&mut n_steps, parse_align_items)?,
-        align_self: align_self.parse(&mut n_steps, parse_align_items)?,
-        justify_self: justify_self.parse(&mut n_steps, parse_align_items)?,
-        align_content: align_content.parse(&mut n_steps, parse_align_content)?,
-        justify_content: justify_content.parse(&mut n_steps, parse_align_content)?,
-        gap: gap.parse(&mut n_steps, |(w, h)| {
+        flex_grow: flex_grow.into_step_value(steps),
+        flex_shrink: flex_shrink.into_step_value(steps),
+        align_items: align_items.parse(steps, parse_align_items)?,
+        align_self: align_self.parse(steps, parse_align_items)?,
+        justify_self: justify_self.parse(steps, parse_align_items)?,
+        align_content: align_content.parse(steps, parse_align_content)?,
+        justify_content: justify_content.parse(steps, parse_align_content)?,
+        gap: gap.parse(steps, |(w, h)| {
             crate::Result::Ok((parse_len(w)?, parse_len(h)?))
         })?,
-        p_top: p_top.parse(&mut n_steps, parse_len)?,
-        p_bottom: p_bottom.parse(&mut n_steps, parse_len)?,
-        p_left: p_left.parse(&mut n_steps, parse_len)?,
-        p_right: p_right.parse(&mut n_steps, parse_len)?,
-        m_top: m_top.parse(&mut n_steps, parse_len_auto)?,
-        m_bottom: m_bottom.parse(&mut n_steps, parse_len_auto)?,
-        m_left: m_left.parse(&mut n_steps, parse_len_auto)?,
-        m_right: m_right.parse(&mut n_steps, parse_len_auto)?,
+        p_top: p_top.parse(steps, parse_len)?,
+        p_bottom: p_bottom.parse(steps, parse_len)?,
+        p_left: p_left.parse(steps, parse_len)?,
+        p_right: p_right.parse(steps, parse_len)?,
+        m_top: m_top.parse(steps, parse_len_auto)?,
+        m_bottom: m_bottom.parse(steps, parse_len_auto)?,
+        m_left: m_left.parse(steps, parse_len_auto)?,
+        m_right: m_right.parse(steps, parse_len_auto)?,
         bg_color,
         content,
-        url: url.into_step_value(&mut n_steps),
+        url: url.into_step_value(steps),
         debug_layout: debug_layout.as_deref().map(Color::from_str).transpose()?,
         children: Vec::new(),
         styles,
     };
-    Ok((node, n_steps))
+    Ok(node)
 }

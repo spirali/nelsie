@@ -1,7 +1,6 @@
 use crate::common::error::NelsieError;
 use crate::common::fileutils::ensure_directory;
-use crate::common::Step;
-use crate::model::{LoadedImage, LoadedImageData, Resources, SlideDeck, SlideId};
+use crate::model::{LoadedImage, LoadedImageData, Resources, SlideDeck, SlideId, Step};
 use crate::render::canvas::Canvas;
 use crate::render::canvas_pdf::PdfImageCache;
 use crate::render::pdf::{image_to_pdf_chunk, PdfPage};
@@ -27,8 +26,8 @@ pub(crate) struct PdfWriterData {
 
 pub(crate) enum PageWriter {
     Pdf(PdfWriterData),
-    Svg(Mutex<Vec<(usize, usize, Vec<u8>)>>),
-    Png(Mutex<Vec<(usize, usize, Vec<u8>)>>),
+    Svg(Mutex<Vec<(usize, Step, Vec<u8>)>>),
+    Png(Mutex<Vec<(usize, Step, Vec<u8>)>>),
 }
 
 pub(crate) struct PageBuilder<'a> {
@@ -65,7 +64,7 @@ impl<'a> PageBuilder<'a> {
                 OutputFormat::Svg => {
                     let mut result_data = Vec::new();
                     if output_config.path.is_none() {
-                        result_data.resize(n_pages as usize, (0, 0, Vec::new()))
+                        result_data.resize(n_pages as usize, (0, Step::default(), Vec::new()))
                     }
                     if let Some(path) = output_config.path {
                         log::debug!("Ensuring output directory for SVG: {}", path.display());
@@ -82,7 +81,7 @@ impl<'a> PageBuilder<'a> {
                 OutputFormat::Png => {
                     let mut result_data = Vec::new();
                     if output_config.path.is_none() {
-                        result_data.resize(n_pages as usize, (0, 0, Vec::new()))
+                        result_data.resize(n_pages as usize, (0, Step::default(), Vec::new()))
                     }
                     if let Some(path) = output_config.path {
                         log::debug!("Ensuring output directory for PNG: {}", path.display());
@@ -114,7 +113,7 @@ impl<'a> PageBuilder<'a> {
         Ok(())
     }
 
-    pub fn finish(self) -> crate::Result<Vec<(usize, usize, Vec<u8>)>> {
+    pub fn finish(self) -> crate::Result<Vec<(usize, Step, Vec<u8>)>> {
         let result = match (self.writer, self.output_path) {
             (PageWriter::Pdf(mut data), Some(path)) => {
                 let image_chunks = data.image_chunks.into_inner().unwrap();
@@ -145,7 +144,7 @@ impl<'a> PageBuilder<'a> {
     pub fn add_page(
         &self,
         slide_id: SlideId,
-        step: Step,
+        step: &Step,
         page_id: u32,
         canvas: Canvas,
         resources: &Resources,
@@ -156,32 +155,18 @@ impl<'a> PageBuilder<'a> {
                 data.pages.lock().unwrap()[page_id as usize] = Some(page);
             }
             PageWriter::Svg(output) => {
-                let data = write_svg_page(
-                    self.output_path,
-                    slide_id,
-                    step,
-                    page_id,
-                    canvas,
-                    self.n_pages,
-                )?;
+                let data = write_svg_page(self.output_path, page_id, canvas, self.n_pages)?;
                 if let Some(data) = data {
                     let mut result_data = output.lock().unwrap();
-                    result_data[page_id as usize] = (slide_id as usize, step as usize, data);
+                    result_data[page_id as usize] = (slide_id as usize, step.clone(), data);
                 }
             }
             PageWriter::Png(output) => {
-                let data = write_png_page(
-                    self.output_path,
-                    slide_id,
-                    step,
-                    page_id,
-                    canvas,
-                    resources,
-                    self.n_pages,
-                )?;
+                let data =
+                    write_png_page(self.output_path, page_id, canvas, resources, self.n_pages)?;
                 if let Some(data) = data {
                     let mut result_data = output.lock().unwrap();
-                    result_data[page_id as usize] = (slide_id as usize, step as usize, data);
+                    result_data[page_id as usize] = (slide_id as usize, step.clone(), data);
                 }
             }
         };
@@ -192,21 +177,13 @@ impl<'a> PageBuilder<'a> {
     }
 }
 
-fn path_name(
-    _slide_id: SlideId,
-    _step: Step,
-    page_idx: u32,
-    extension: &str,
-    n_pages: u32,
-) -> String {
+fn path_name(page_idx: u32, extension: &str, n_pages: u32) -> String {
     let padding = n_pages.to_string().len();
     format!("{:0padding$}.{}", page_idx, extension, padding = padding,)
 }
 
 fn write_svg_page(
     path: Option<&std::path::Path>,
-    slide_id: SlideId,
-    step: Step,
     page_idx: u32,
     canvas: Canvas,
     n_pages: u32,
@@ -214,7 +191,7 @@ fn write_svg_page(
     let data = canvas.into_svg()?;
 
     if let Some(path) = path {
-        let final_path = path.join(path_name(slide_id, step, page_idx, "svg", n_pages));
+        let final_path = path.join(path_name(page_idx, "svg", n_pages));
         std::fs::write(final_path, data)?;
         Ok(None)
     } else {
@@ -250,8 +227,6 @@ fn write_svg_page(
 
 fn write_png_page(
     path: Option<&std::path::Path>,
-    slide_id: SlideId,
-    step: Step,
     page_idx: u32,
     canvas: Canvas,
     resources: &Resources,
@@ -270,7 +245,7 @@ fn write_png_page(
         .map_err(|e| NelsieError::Generic(e.to_string()))?;
 
     if let Some(path) = path {
-        let final_path = path.join(path_name(slide_id, step, page_idx, "png", n_pages));
+        let final_path = path.join(path_name(page_idx, "png", n_pages));
         std::fs::write(final_path, output)?;
         Ok(None)
     } else {

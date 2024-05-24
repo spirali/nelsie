@@ -26,7 +26,7 @@ def test_render_cubic(deck):
     slide.box(width="100%", height="100%").draw(path)
 
 
-@check(n_slides=4)
+@check(n_slides=3)
 def test_render_path_steps(deck):
     slide = deck.new_slide(width=200, height=200)
 

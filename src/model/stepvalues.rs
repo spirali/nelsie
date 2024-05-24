@@ -2,9 +2,8 @@ use std::collections::BTreeMap;
 use std::collections::Bound::Included;
 use std::fmt::Debug;
 
+use crate::model::step::Step;
 use std::ops::Bound::Unbounded;
-
-pub type Step = u32;
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum StepValue<T: Debug> {
@@ -12,15 +11,11 @@ pub(crate) enum StepValue<T: Debug> {
     Steps(BTreeMap<Step, T>),
 }
 
-impl<T: Debug> StepValue<T> {
-    pub fn from_btree(tree: BTreeMap<Step, T>) -> Self {
-        StepValue::Steps(tree)
-    }
-}
-
 impl<T: Debug + Default> StepValue<T> {
     pub fn new_map(mut value: BTreeMap<Step, T>) -> Self {
-        value.entry(1).or_insert_with(|| T::default());
+        value
+            .entry(Step::from_int(1))
+            .or_insert_with(|| T::default());
         StepValue::Steps(value)
     }
 }
@@ -30,15 +25,15 @@ impl<T: Debug> StepValue<T> {
         StepValue::Const(value)
     }
 
-    pub fn at_step(&self, step: Step) -> &T {
-        assert!(step > 0);
+    pub fn at_step(&self, step: &Step) -> &T {
+        debug_assert!(step >= &Step::from_int(1));
         match self {
             StepValue::Const(v) => v,
             StepValue::Steps(steps) => steps
-                .range((Unbounded, Included(&step)))
+                .range((Unbounded, Included(step)))
                 .next_back()
                 .map(|(_, v)| v)
-                .unwrap_or_else(|| panic!("Invalid step")),
+                .unwrap_or_else(|| panic!("Invalid step {}", step)),
         }
     }
 
@@ -50,10 +45,10 @@ impl<T: Debug> StepValue<T> {
     }
 
     #[cfg(test)]
-    pub fn key_values(&self) -> impl Iterator<Item = (&Step, &T)> + '_ {
+    pub fn key_values(self) -> impl Iterator<Item = (Step, T)> {
         match self {
             StepValue::Const(_) => itertools::Either::Left(std::iter::empty()),
-            StepValue::Steps(v) => itertools::Either::Right(v.iter()),
+            StepValue::Steps(v) => itertools::Either::Right(v.into_iter()),
         }
     }
 
@@ -69,7 +64,9 @@ impl<T: Debug> StepValue<T> {
     pub fn map_ref<S: Debug, F: FnMut(&T) -> S>(&self, mut f: F) -> StepValue<S> {
         match self {
             StepValue::Const(v) => StepValue::Const(f(v)),
-            StepValue::Steps(v) => StepValue::Steps(v.iter().map(|(k, v)| (*k, f(v))).collect()),
+            StepValue::Steps(v) => {
+                StepValue::Steps(v.iter().map(|(k, v)| (k.clone(), f(v))).collect())
+            }
         }
     }
 
@@ -81,10 +78,10 @@ impl<T: Debug> StepValue<T> {
         match (self, other) {
             (StepValue::Const(v1), StepValue::Const(v2)) => StepValue::Const(f(v1, v2)),
             (StepValue::Steps(v1), StepValue::Const(v2)) => {
-                StepValue::Steps(v1.iter().map(|(k, v)| (*k, f(v, v2))).collect())
+                StepValue::Steps(v1.iter().map(|(k, v)| (k.clone(), f(v, v2))).collect())
             }
             (StepValue::Const(v1), StepValue::Steps(v2)) => {
-                StepValue::Steps(v2.iter().map(|(k, v)| (*k, f(v1, v))).collect())
+                StepValue::Steps(v2.iter().map(|(k, v)| (k.clone(), f(v1, v))).collect())
             }
             (StepValue::Steps(_v1), StepValue::Steps(_v2)) => {
                 todo!()
@@ -92,28 +89,3 @@ impl<T: Debug> StepValue<T> {
         }
     }
 }
-//
-// pub(crate) fn zip_step_values<T: Debug + Clone>(
-//     mut values: Vec<StepValue<T>>,
-// ) -> StepValue<Vec<T>> {
-//     if values.len() == 1 {
-//         return values.pop().unwrap().map(|v| vec![v]);
-//     }
-//     let steps: BTreeSet<Step> = values.iter().map(|x| x.key_steps()).flatten().collect();
-//     if steps.is_empty() {
-//         return StepValue::new_const(values.into_iter().map(|v| v.into_value()).collect());
-//     }
-//     let map: BTreeMap<Step, Vec<T>> = steps
-//         .into_iter()
-//         .map(|step| {
-//             (
-//                 step,
-//                 values
-//                     .iter()
-//                     .map(|v| v.at_step(step).clone())
-//                     .collect::<Vec<T>>(),
-//             )
-//         })
-//         .collect();
-//     StepValue::new_map(map)
-// }

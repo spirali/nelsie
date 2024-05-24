@@ -2,7 +2,7 @@ use super::node::Node;
 use crate::common::error::NelsieError;
 use crate::model::textstyles::FontData;
 use crate::model::{
-    Color, Length, LengthOrAuto, LengthOrExpr, NodeId, PartialTextStyle, Resources, Step,
+    Color, Length, LengthOrAuto, LengthOrExpr, NodeId, PartialTextStyle, Resources, Step, StepSet,
     StepValue, StyleMap,
 };
 use std::collections::HashMap;
@@ -19,7 +19,7 @@ pub(crate) struct Slide {
     pub(crate) width: f32,
     pub(crate) height: f32,
     pub(crate) node: Node,
-    pub(crate) n_steps: Step,
+    pub(crate) steps: StepSet,
     pub(crate) bg_color: Color,
     pub(crate) counters: Vec<String>,
     pub(crate) parent: Option<(SlideId, Step)>,
@@ -35,7 +35,12 @@ impl Slide {
         styles: Arc<StyleMap>,
         counters: Vec<String>,
         parent: Option<(SlideId, Step)>,
+        step_1: bool,
     ) -> Self {
+        let mut steps = StepSet::new();
+        if step_1 {
+            steps.insert(Step::from_int(1));
+        }
         Slide {
             width,
             height,
@@ -80,7 +85,7 @@ impl Slide {
                 url: StepValue::Const(None),
                 debug_layout: None,
             },
-            n_steps: 1,
+            steps,
             node_id_counter: NodeId::new(0),
         }
     }

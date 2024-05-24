@@ -129,7 +129,7 @@ pub(crate) struct NodeContentText {
 }
 
 impl NodeContentText {
-    pub fn text_style_at_step(&self, step: Step) -> StyledText {
+    pub fn text_style_at_step(&self, step: &Step) -> StyledText {
         let parsed_text = &self.parsed_text.at_step(step);
         StyledText {
             styled_lines: parsed_text.styled_lines.clone(),
