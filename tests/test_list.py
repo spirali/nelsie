@@ -42,3 +42,13 @@ def test_list_steps(deck):
     lst.text(show="3+", text="Long item three")
     lst2 = lst.list()
     lst2.text(show="4+", text="A")
+
+
+@check()
+def test_list_initial_value(deck):
+    slide = deck.new_slide(width=100, height=50)
+    slide.set_style("default", TextStyle(size=12))
+    lst = ListBox(slide, list_type="1", initial_counter_value=4)
+    lst.text("One")
+    lst.text("Two")
+    lst.text("Three")
