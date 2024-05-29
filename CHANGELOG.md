@@ -1,3 +1,7 @@
+# Unreleased
+
+* `initial_counter_value` added into `ListBox`
+
 # 0.9.1
 
 * No actual changes, created to fix incomplete deployment to PyPI
