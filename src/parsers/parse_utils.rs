@@ -2,7 +2,7 @@ use crate::common::error::NelsieError;
 use chumsky::error::Simple;
 use chumsky::primitive::end;
 use chumsky::text::int;
-use chumsky::{Parser};
+use chumsky::Parser;
 
 pub(crate) type ParseError = Simple<char>;
 //
