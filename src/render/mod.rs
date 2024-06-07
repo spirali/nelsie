@@ -18,9 +18,9 @@ use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
 use itertools::Itertools;
-use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
+use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -66,34 +66,32 @@ impl VerboseLevel {
     }
 }
 
-fn render_slide(
+fn render_slide_step(
     resources: &Resources,
     builder: &PageBuilder,
     slide_id: SlideId,
     slide: &Slide,
+    step: &Step,
     default_font: &Arc<FontData>,
     counter_values: &CountersMap,
 ) -> crate::Result<()> {
-    let steps = slide.visible_steps().collect_vec();
-    steps.par_iter().try_for_each(|step| {
-        log::debug!("Rendering slide {}/{}", slide_id, step);
-        let render_cfg = RenderConfig {
-            resources,
-            slide,
-            slide_id,
-            step,
-            default_font,
-            counter_values,
-        };
-        let canvas = render_to_canvas(&render_cfg);
-        let counter = render_cfg.counter_values.get("global").unwrap();
-        let page_idx = counter
-            .indices
-            .get(&(render_cfg.slide_id, render_cfg.step.clone()))
-            .unwrap()
-            .page_idx;
-        builder.add_page(slide_id, step, page_idx, canvas, render_cfg.resources)
-    })
+    log::debug!("Rendering slide {}/{}", slide_id, step);
+    let render_cfg = RenderConfig {
+        resources,
+        slide,
+        slide_id,
+        step,
+        default_font,
+        counter_values,
+    };
+    let canvas = render_to_canvas(&render_cfg);
+    let counter = render_cfg.counter_values.get("global").unwrap();
+    let page_idx = counter
+        .indices
+        .get(&(render_cfg.slide_id, render_cfg.step.clone()))
+        .unwrap()
+        .page_idx;
+    builder.add_page(slide_id, step, page_idx, canvas, render_cfg.resources)
 }
 
 pub(crate) fn render_slide_deck(
@@ -130,16 +128,26 @@ pub(crate) fn render_slide_deck(
 
         let (r1, r2) = rayon::join(
             || {
-                slide_deck
+                let tasks = slide_deck
                     .slides
-                    .par_iter()
+                    .iter()
                     .enumerate()
-                    .try_for_each(|(slide_idx, slide)| {
-                        render_slide(
+                    .map(|(slide_idx, slide)| {
+                        slide
+                            .visible_steps()
+                            .map(move |step| (slide_idx, slide, step))
+                    })
+                    .flatten()
+                    .collect_vec();
+                tasks
+                    .into_par_iter()
+                    .try_for_each(|(slide_idx, slide, step)| {
+                        render_slide_step(
                             resources,
                             &builder,
                             slide_idx as SlideId,
                             slide,
+                            step,
                             &slide_deck.default_font,
                             &counter_values,
                         )
