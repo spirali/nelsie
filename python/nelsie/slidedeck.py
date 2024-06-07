@@ -133,7 +133,7 @@ class SlideDeck:
         debug_layout: bool | str = False,
         counters: list[str] | None = None,
         parent_slide: tuple[Slide, int] | None = None,
-        step_1: bool = True
+        step_1: bool = True,
     ) -> Slide:
         """
         Creates a new slide in the slide deck.
@@ -161,6 +161,7 @@ class SlideDeck:
         debug_layout: bool | str = False,
         counters: list[str] | None = None,
         parent_slide: tuple[Slide, int] | None = None,
+        step_1: bool = True,
     ):
         """
         Decorator for creating new slide.
@@ -187,6 +188,7 @@ class SlideDeck:
                 debug_layout=debug_layout,
                 counters=counters,
                 parent_slide=parent_slide,
+                step_1=step_1,
             )
             fn(slide)
             return slide

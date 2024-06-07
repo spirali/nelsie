@@ -13,9 +13,11 @@ pub(crate) enum StepValue<T: Debug> {
 
 impl<T: Debug + Default> StepValue<T> {
     pub fn new_map(mut value: BTreeMap<Step, T>) -> Self {
-        value
-            .entry(Step::from_int(1))
-            .or_insert_with(|| T::default());
+        if let Some((k, _)) = value.first_key_value() {
+            if k > &Step::from_int(1) {
+                value.insert(Step::from_int(0), T::default());
+            }
+        }
         StepValue::Steps(value)
     }
 }
