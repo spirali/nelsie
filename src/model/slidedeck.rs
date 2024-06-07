@@ -5,6 +5,7 @@ use crate::model::{
     Color, Length, LengthOrAuto, LengthOrExpr, NodeId, PartialTextStyle, Resources, Step, StepSet,
     StepValue, StyleMap,
 };
+use std::collections::Bound::{Included, Unbounded};
 use std::collections::HashMap;
 use std::sync::Arc;
 use svg2pdf::usvg;
@@ -91,6 +92,10 @@ impl Slide {
     }
     pub fn new_node_id(&mut self) -> NodeId {
         self.node_id_counter.bump()
+    }
+
+    pub fn visible_steps(&self) -> impl Iterator<Item = &Step> {
+        self.steps.range((Included(Step::from_int(1)), Unbounded))
     }
 }
 

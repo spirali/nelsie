@@ -74,7 +74,7 @@ pub(crate) fn compute_counters(slide_deck: &SlideDeck) -> CountersMap {
             counter_names.insert(name);
         }
         let after_last = slide
-            .steps
+            .visible_steps()
             .last()
             .map(|s| s.first_substep())
             .unwrap_or_default();
@@ -87,12 +87,15 @@ pub(crate) fn compute_counters(slide_deck: &SlideDeck) -> CountersMap {
                 .max_by_key(|(_, (_, _, step))| step)
                 .unwrap()
                 .0;
-            for (i, step) in slide.steps.iter().enumerate() {
+            for (i, step) in slide.visible_steps().enumerate() {
                 global_pages.insert(pos + i, (true, slide_idx, step.clone()))
             }
-            global_pages.insert(pos + slide.steps.len(), (false, slide_idx, after_last))
+            global_pages.insert(
+                pos + slide.visible_steps().count(),
+                (false, slide_idx, after_last),
+            )
         } else {
-            for step in &slide.steps {
+            for step in slide.visible_steps() {
                 global_pages.push((true, slide_idx, step.clone()))
             }
             global_pages.push((false, slide_idx, after_last))

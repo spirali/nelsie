@@ -213,3 +213,11 @@ def test_subslides_decorator(deck):
     @my_slide.slide_at(3, width=100, height=50)
     def inserted(slide):
         slide.text("Inserted")
+
+
+@check(n_slides=1)
+def test_invisible_steps(deck):
+    slide = deck.new_slide(step_1=False)
+    slide.insert_step(0)
+    slide = deck.new_slide(width=20, height=20)
+    slide.box(width=10, height=10, bg_color=InSteps({(0, 1): "green"}))

@@ -17,9 +17,10 @@ pub(crate) use pdf::PdfBuilder;
 use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
+use itertools::Itertools;
+use rayon::iter::IndexedParallelIterator;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
-use rayon::iter::{IndexedParallelIterator};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -73,7 +74,8 @@ fn render_slide(
     default_font: &Arc<FontData>,
     counter_values: &CountersMap,
 ) -> crate::Result<()> {
-    slide.steps.par_iter().try_for_each(|step| {
+    let steps = slide.visible_steps().collect_vec();
+    steps.par_iter().try_for_each(|step| {
         log::debug!("Rendering slide {}/{}", slide_id, step);
         let render_cfg = RenderConfig {
             resources,
