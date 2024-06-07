@@ -1,6 +1,16 @@
 # Unreleased
 
+# New features
+
+* Hierarchical steps (e.g. step 1.2.3 is allowed)
 * `initial_counter_value` added into `ListBox`
+
+# Changes
+
+* Semantics of steps are now different, but it should be backward compatible with resonable usecases.
+  The only real breaking change is removal of `.set_n_steps` and `.get_n_steps`. They has to be replaced by
+  `.insert_step`, `.remove_step`, and `.get_steps`.
+
 
 # 0.9.1
 

@@ -34,7 +34,7 @@ impl From<&Color> for usvg::Color {
     }
 }
 
-const DEBUG_STEP_FONT_SIZE: f32 = 30.0;
+const DEBUG_STEP_FONT_SIZE: f32 = 48.0;
 
 fn draw_debug_frame(
     rect: &Rectangle,
