@@ -34,6 +34,8 @@ impl From<&Color> for usvg::Color {
     }
 }
 
+const DEBUG_STEP_FONT_SIZE: f32 = 30.0;
+
 fn draw_debug_frame(
     rect: &Rectangle,
     name: &str,
@@ -96,12 +98,34 @@ fn draw_debug_frame(
         TextAlign::Start,
     );
     canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
-    /*svg_node.children.push(render_text(
-        &styled_text,
-        rect.x + 2.0,
-        rect.y + 3.0,
-        TextAlign::Start,
-    ));*/
+}
+
+fn draw_debug_step(
+    rect: &Rectangle,
+    step: &Step,
+    font_name: &str,
+    font_size: f32,
+    canvas: &mut Canvas,
+) {
+    let mut xml = SimpleXmlWriter::new();
+    xml.begin("rect");
+    xml.attr("x", rect.x);
+    xml.attr("y", rect.y);
+    xml.attr("width", rect.width);
+    xml.attr("height", rect.height);
+    xml.attr("fill", "black");
+    xml.end("rect");
+    xml.begin("text");
+    xml.begin("tspan");
+    xml.attr("x", 10);
+    xml.attr("y", rect.y + font_size);
+    xml.attr("fill", "white");
+    xml.attr("font-size", font_size);
+    xml.attr("font-family", font_name);
+    xml.text(&step.to_string());
+    xml.end("tspan");
+    xml.end("text");
+    canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
 }
 
 impl<'a> RenderContext<'a> {
@@ -226,11 +250,31 @@ pub(crate) fn render_to_canvas(render_cfg: &RenderConfig) -> Canvas {
 
     log::debug!("Rendering to canvas");
     let slide = &render_cfg.slide;
-    let mut canvas = Canvas::new(slide.width, slide.height, slide.bg_color);
+    let mut canvas = Canvas::new(
+        slide.width,
+        slide.height
+            + if slide.debug_steps {
+                DEBUG_STEP_FONT_SIZE * 1.25
+            } else {
+                0.0
+            },
+        slide.bg_color,
+    );
 
     for z_level in z_levels {
         let render_ctx = RenderContext::new(render_cfg, z_level, &layout, &mut canvas);
         render_ctx.render_to_canvas(render_cfg.step, &render_cfg.slide.node);
     }
+
+    if slide.debug_steps {
+        draw_debug_step(
+            &Rectangle::new(0.0, slide.height, slide.width, DEBUG_STEP_FONT_SIZE * 1.25),
+            render_cfg.step,
+            &render_cfg.default_font.family_name,
+            DEBUG_STEP_FONT_SIZE,
+            &mut canvas,
+        );
+    }
+
     canvas
 }

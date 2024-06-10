@@ -221,3 +221,10 @@ def test_invisible_steps(deck):
     slide.insert_step(0)
     slide = deck.new_slide(width=20, height=20)
     slide.box(width=10, height=10, bg_color=InSteps({(0, 1): "green"}))
+
+
+@check(n_slides=3)
+def test_debug_steps(deck):
+    slide = deck.new_slide(debug_steps=True, width=300, height=300)
+    slide.text("Hello", show="2+")
+    slide.text("World", show=(22, 3, 111))

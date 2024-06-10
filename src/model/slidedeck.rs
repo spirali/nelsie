@@ -22,17 +22,20 @@ pub(crate) struct Slide {
     pub(crate) node: Node,
     pub(crate) steps: StepSet,
     pub(crate) bg_color: Color,
+    pub(crate) debug_steps: bool,
     pub(crate) counters: Vec<String>,
     pub(crate) parent: Option<(SlideId, Step)>,
     node_id_counter: NodeId,
 }
 
 impl Slide {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         width: f32,
         height: f32,
         name: String,
         bg_color: Color,
+        debug_steps: bool,
         styles: Arc<StyleMap>,
         counters: Vec<String>,
         parent: Option<(SlideId, Step)>,
@@ -46,6 +49,7 @@ impl Slide {
             width,
             height,
             bg_color,
+            debug_steps,
             counters,
             parent,
             node: Node {
