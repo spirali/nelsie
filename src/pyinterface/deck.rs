@@ -56,6 +56,7 @@ impl Deck {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn new_slide(
         &mut self,
         width: f32,
@@ -63,6 +64,7 @@ impl Deck {
         bg_color: &str,
         name: String,
         step_1: bool,
+        debug_steps: bool,
         counters: Option<Vec<String>>,
         parent: Option<(SlideId, Step)>,
     ) -> PyResult<SlideId> {
@@ -77,6 +79,7 @@ impl Deck {
             height,
             name,
             Color::from_str(bg_color)?,
+            debug_steps,
             self.deck.global_styles.clone(),
             counters.unwrap_or_default(),
             parent,

@@ -130,6 +130,7 @@ class SlideDeck:
         bg_color: str | None = None,
         image_directory: str | None = None,
         name: str = "",
+        debug_steps: bool = False,
         debug_layout: bool | str = False,
         counters: list[str] | None = None,
         parent_slide: tuple[Slide, int] | None = None,
@@ -147,7 +148,7 @@ class SlideDeck:
         if image_directory is None:
             image_directory = self.image_directory
         debug_layout = parse_debug_layout(debug_layout)
-        slide_id = self._deck.new_slide(width, height, bg_color, name, step_1, counters, parent_slide)
+        slide_id = self._deck.new_slide(width, height, bg_color, name, step_1, debug_steps, counters, parent_slide)
         return Slide(self, slide_id, name, image_directory, debug_layout)
 
     def slide(

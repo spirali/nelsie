@@ -18,9 +18,8 @@ use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
 use itertools::Itertools;
-use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
-use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -132,12 +131,11 @@ pub(crate) fn render_slide_deck(
                     .slides
                     .iter()
                     .enumerate()
-                    .map(|(slide_idx, slide)| {
+                    .flat_map(|(slide_idx, slide)| {
                         slide
                             .visible_steps()
                             .map(move |step| (slide_idx, slide, step))
                     })
-                    .flatten()
                     .collect_vec();
                 tasks
                     .into_par_iter()
