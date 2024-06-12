@@ -227,7 +227,7 @@ mod test {
         assert_eq!(
             values
                 .key_values()
-                .filter(|(k, v)| *v && *k != Step::from_int(1))
+                .filter(|(k, v)| *v || *k != Step::from_int(0))
                 .collect_vec(),
             vals
         );
