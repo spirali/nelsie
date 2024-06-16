@@ -81,7 +81,7 @@ impl ImageManager {
     pub fn load_image(
         &mut self,
         path: &Path,
-        font_db: &fontdb::Database,
+        font_db: &Arc<fontdb::Database>,
     ) -> crate::Result<Arc<LoadedImage>> {
         if let Some(img) = self.loaded_images.get(path) {
             Ok(img.clone())
@@ -111,7 +111,10 @@ fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
     })
 }
 
-fn load_svg_image(raw_data: Vec<u8>, font_db: &fontdb::Database) -> crate::Result<LoadedImage> {
+fn load_svg_image(
+    raw_data: Vec<u8>,
+    font_db: &Arc<fontdb::Database>,
+) -> crate::Result<LoadedImage> {
     let str_data = std::str::from_utf8(&raw_data)
         .map_err(|_e| NelsieError::Generic("Invalid utf-8 data".to_string()))?;
 
@@ -136,7 +139,11 @@ fn load_svg_image(raw_data: Vec<u8>, font_db: &fontdb::Database) -> crate::Resul
         }
     }
 
-    let usvg_tree = usvg::Tree::from_xmltree(&xml_tree, &usvg::Options::default(), font_db)?;
+    let options = usvg::Options {
+        fontdb: font_db.clone(),
+        ..Default::default()
+    };
+    let usvg_tree = usvg::Tree::from_xmltree(&xml_tree, &options)?;
 
     //tree.convert_text(font_db);
     Ok(LoadedImage {
@@ -234,7 +241,7 @@ fn load_ora_image(path: &Path) -> crate::Result<LoadedImage> {
     })
 }
 
-fn load_image(path: &Path, font_db: &fontdb::Database) -> crate::Result<LoadedImage> {
+fn load_image(path: &Path, font_db: &Arc<fontdb::Database>) -> crate::Result<LoadedImage> {
     log::debug!("Loading image: {}", path.display());
     let extension = path
         .extension()

@@ -8,6 +8,7 @@ use crate::render::pdf::{PdfPage, PdfPageElement};
 use by_address::ByAddress;
 use pdf_writer::Ref;
 use std::collections::HashMap;
+use std::default::Default;
 use std::sync::Arc;
 use svg2pdf::usvg;
 
@@ -25,16 +26,13 @@ impl Canvas {
             |xml_writer: &mut Option<SimpleXmlWriter>, result: &mut Vec<_>| -> crate::Result<()> {
                 if let Some(mut xml) = std::mem::take(xml_writer) {
                     xml.end("svg");
-                    let tree = usvg::Tree::from_str(
-                        &xml.into_string(),
-                        &usvg::Options::default(),
-                        &resources.font_db,
-                    )?;
-                    let (svg_chunk, svg_id) = svg2pdf::to_chunk(
-                        &tree,
-                        svg2pdf::ConversionOptions::default(),
-                        &resources.font_db,
-                    );
+                    let options = usvg::Options {
+                        fontdb: resources.font_db_arc(),
+                        ..Default::default()
+                    };
+                    let tree = usvg::Tree::from_str(&xml.into_string(), &options)?;
+                    let (svg_chunk, svg_id) =
+                        svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default());
                     result.push(PdfPageElement::LocalRef(
                         Rectangle::new(0.0, 0.0, self.width, self.height),
                         svg_chunk,
@@ -72,16 +70,13 @@ impl Canvas {
                 }
                 CanvasItem::SvgImage(rect, svg_data, _, _) => {
                     close_xml(&mut xml_writer, &mut elements)?;
-                    let tree = usvg::Tree::from_str(
-                        &svg_data,
-                        &usvg::Options::default(),
-                        &resources.font_db,
-                    )?;
-                    let (svg_chunk, svg_id) = svg2pdf::to_chunk(
-                        &tree,
-                        svg2pdf::ConversionOptions::default(),
-                        &resources.font_db,
-                    );
+                    let options = usvg::Options {
+                        fontdb: resources.font_db.as_ref().unwrap().clone(),
+                        ..Default::default()
+                    };
+                    let tree = usvg::Tree::from_str(&svg_data, &options)?;
+                    let (svg_chunk, svg_id) =
+                        svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default());
                     elements.push(PdfPageElement::LocalRef(rect, svg_chunk, svg_id));
                 }
             }

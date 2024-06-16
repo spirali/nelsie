@@ -11,22 +11,22 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.21", features = ["abi3-py310", "extension-module"] }
 taffy = "0.4"
-resvg = "0.41"
-svg2pdf = { git = "https://github.com/typst/svg2pdf.git", rev = "b9f1513" } # !!synchronized with resvg
-ttf-parser = "0.20" # Not necessary same as resvg but nice to be a same as in resvg
+resvg = "0.42"
+svg2pdf = "0.11" # !!synchronized with resvg
+ttf-parser = "0.21" # Not necessary same as resvg but nice to be a same as in resvg
 thiserror = "1"
 svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
 env_logger = "0.11"
-pdf-writer = "0.9"
-itertools = "0.12"
+pdf-writer = "0.10"
+itertools = "0.13"
 imagesize = "0.12"
-zip = { version = "0.6", default-features = false, features = ["deflate"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
 syntect = { version = "5", default-features = false, features = ["default-fancy"] }
 indicatif = "0.17"
-base64 = "0.21"# Nice to be synchronized with resvg
+base64 = "0.22"# Nice to be synchronized with resvg
 xmltree = { version = "0.10", features = ["attribute-order"] }
-image = "0.24" # Nice to be sycnrhonized with svg2pdf
+image = "0.25" # Nice to be sycnrhonized with svg2pdf
 miniz_oxide = "0.7" # Nice to be sycnrhonized with svg2pdf
 by_address = "1"
 rayon = "1.10"
