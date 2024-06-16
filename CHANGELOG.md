@@ -1,16 +1,25 @@
+# Unreleased
+
+## New features
+
+* `path` in `.image()` accepts `InSteps`
+
+## Fixes
+
+* `.code()` type annotation fixed (`text` can be `InSteps`)
+
 # v0.10.0
 
-# New features
+## New features
 
 * Hierarchical steps (e.g. step 1.2.3 is allowed)
 * `initial_counter_value` added into `ListBox`
 
-# Changes
+## Changes
 
-* Semantics of steps are now different, but it should be backward compatible with resonable usecases.
-  The only real breaking change is removal of `.set_n_steps` and `.get_n_steps`. They has to be replaced by
+* Semantics of steps are now different, but it should be backward compatible with reasonable use cases.
+  The only real breaking change is removal of `.set_n_steps` and `.get_n_steps`. They have to be replaced by
   `.insert_step`, `.remove_step`, and `.get_steps`.
-
 
 # 0.9.1
 
@@ -20,7 +29,7 @@
 
 ## New features
 
-* Clicable links in PDF output
+* Clickable links in PDF output
 * Font decorations: underline, overline, line-through
 * Watching a slide file and automatic rebuild via `python3 -m nelsie watch SLIDES.PY`
 
@@ -33,7 +42,6 @@
 * Fixed problem when ListBuilder is used together with steps
 * Fixed loading SVG files with DTD
 
-
 # 0.8
 
 ## New features
@@ -41,13 +49,11 @@
 * New PDF renderer. Nelsie now produce smaller slides faster when raster images are used
 * Rendering slides & image preprocessing in parallel
 
-
 # 0.7
 
 ## Fixes
 
 * Fixed #19
-
 
 # 0.6
 
@@ -55,7 +61,6 @@
 
 * Subslides insertion (`.slide_at()`)
 * Custom code syntaxes and code color themes
-
 
 # 0.5
 
@@ -65,7 +70,6 @@
 * `ListBox` helper added
 * `default_code_language` added (by @fgelm01)
 * `default_theme` renamed to `default_code_theme`
-
 
 # 0.4
 

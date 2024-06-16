@@ -1,6 +1,6 @@
 use crate::model::{
-    merge_stepped_styles, Color, LengthOrExpr, NodeContentText, ParsedText, PartialTextStyle, Step,
-    StepIndex, StepSet, StyleMap, TextAlign,
+    merge_stepped_styles, Color, LengthOrExpr, LoadedImage, NodeContentText, ParsedText,
+    PartialTextStyle, Step, StepIndex, StepSet, StyleMap, TextAlign,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, StepValue,
@@ -38,7 +38,7 @@ pub(crate) enum Show {
 
 #[derive(Debug, FromPyObject)]
 pub(crate) struct ImageContent {
-    path: PathBuf,
+    path: ValueOrInSteps<Option<PathBuf>>,
     enable_steps: bool,
     shift_steps: StepIndex,
 }
@@ -205,13 +205,23 @@ fn process_content(
             NodeContent::Text(node_content)
         }
         Content::Image(image) => {
-            let loaded_image = nc_env
-                .resources
-                .image_manager
-                .load_image(&image.path, &nc_env.resources.font_db)?;
+            let loaded_image: StepValue<Option<Arc<LoadedImage>>> =
+                image.path.parse(steps, |path| {
+                    crate::Result::Ok(if let Some(path) = path {
+                        Some(
+                            nc_env
+                                .resources
+                                .image_manager
+                                .load_image(&path, &nc_env.resources.font_db)?,
+                        )
+                    } else {
+                        None
+                    })
+                })?;
             if image.enable_steps {
-                loaded_image.update_steps(steps, image.shift_steps);
-                //*n_steps = (*n_steps).max(loaded_image.n_steps() + image.shift_steps);
+                for img in loaded_image.values().flatten() {
+                    img.update_steps(steps, image.shift_steps);
+                }
             }
             NodeContent::Image(NodeContentImage {
                 loaded_image,

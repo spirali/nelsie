@@ -122,7 +122,9 @@ impl Node {
 
     pub fn collect_images(&self, out: &mut HashSet<ByAddress<Arc<LoadedImage>>>) {
         if let Some(NodeContent::Image(image)) = &self.content {
-            out.insert(ByAddress::from(image.loaded_image.clone()));
+            image.loaded_image.values().flatten().for_each(|img| {
+                out.insert(ByAddress::from(img.clone()));
+            });
         };
         for child in self.child_nodes() {
             child.collect_images(out);
