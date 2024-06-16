@@ -33,7 +33,7 @@ class TextContent:
 
 @dataclass
 class ImageContent:
-    path: str
+    path: str | None | InSteps[str | None]
     enable_steps: bool
     shift_steps: int
 
@@ -91,23 +91,31 @@ class BoxBuilder:
         box = self.get_box()
         return _data_to_text_style(box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id))
 
-    def image(self, path: str, enable_steps=True, shift_steps=0, **box_args):
+    def image(self, path: str | None | InSteps[str | None], enable_steps=True, shift_steps=0, **box_args):
         """
         Create a box with an image. Supported formats: SVG, PNG, JPEG, GIF, ORA
         """
         assert shift_steps >= 0
 
+        def process_path(p):
+            if p is None:
+                return None
+            if slide.image_directory is not None:
+                p = os.path.join(slide.image_directory, p)
+            p = os.path.abspath(p)
+            watch_path(p)
+            return p
+
         slide = self.get_box().slide
-        if slide.image_directory is not None:
-            path = os.path.join(slide.image_directory, path)
-        path = os.path.abspath(path)
-        watch_path(path)
+        if isinstance(path, InSteps):
+            path = path.map(process_path)
+        else:
+            path = process_path(path)
         image = ImageContent(
             path=path,
             enable_steps=enable_steps,
             shift_steps=shift_steps,
         )
-        box_args.setdefault("name", f"image: {path}")
         return self.box(_content=image, **box_args)
 
     def text(

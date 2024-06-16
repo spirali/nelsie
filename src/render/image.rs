@@ -1,4 +1,6 @@
-use crate::model::{LoadedImageData, NodeContentImage, OraImageData, Step, SvgImageData};
+use crate::model::{
+    LoadedImage, LoadedImageData, NodeContentImage, OraImageData, Step, SvgImageData,
+};
 
 use crate::common::Rectangle;
 
@@ -6,18 +8,19 @@ use crate::parsers::step_parser::parse_steps_from_label;
 use crate::render::canvas::{Canvas, CanvasItem};
 
 fn render_ora_to_canvas(
-    image: &NodeContentImage,
+    image: &LoadedImage,
     step: Step,
     ora_data: &OraImageData,
     rect: Rectangle,
+    enable_steps: bool,
     canvas: &mut Canvas,
 ) {
-    let width = image.loaded_image.width;
-    let height = image.loaded_image.height;
+    let width = image.width;
+    let height = image.height;
     let scale = (rect.width / width).min(rect.height / height);
 
     for layer in &ora_data.layers {
-        if !image.enable_steps
+        if !enable_steps
             || layer
                 .visibility
                 .as_ref()
@@ -97,28 +100,34 @@ pub(crate) fn render_image_to_canvas(
         return;
     }
     let step = step.subtract_first_index(image.shift_steps);
-    let width = image.loaded_image.width;
-    let height = image.loaded_image.height;
-    let scale = (rect.width / width).min(rect.height / height);
-    let target_width = image.loaded_image.width * scale;
-    let target_height = image.loaded_image.height * scale;
+    if let Some(loaded_image) = image.loaded_image.at_step(&step) {
+        let width = loaded_image.width;
+        let height = loaded_image.height;
+        let scale = (rect.width / width).min(rect.height / height);
+        let target_width = loaded_image.width * scale;
+        let target_height = loaded_image.height * scale;
 
-    let rect = Rectangle::new(
-        rect.x + (rect.width - target_width) / 2.0,
-        rect.y + (rect.height - target_height) / 2.0,
-        target_width,
-        target_height,
-    );
+        let rect = Rectangle::new(
+            rect.x + (rect.width - target_width) / 2.0,
+            rect.y + (rect.height - target_height) / 2.0,
+            target_width,
+            target_height,
+        );
 
-    match &image.loaded_image.data {
-        LoadedImageData::Png(data) => canvas.add_item(CanvasItem::PngImage(rect, data.clone())),
-        LoadedImageData::Jpeg(data) => canvas.add_item(CanvasItem::JpegImage(rect, data.clone())),
-        LoadedImageData::Svg(svg) => canvas.add_item(CanvasItem::SvgImage(
-            rect,
-            prepare_svg_tree_for_step(step, image, svg),
-            image.loaded_image.width,
-            image.loaded_image.height,
-        )),
-        LoadedImageData::Ora(ora) => render_ora_to_canvas(image, step, ora, rect, canvas),
+        match &loaded_image.data {
+            LoadedImageData::Png(data) => canvas.add_item(CanvasItem::PngImage(rect, data.clone())),
+            LoadedImageData::Jpeg(data) => {
+                canvas.add_item(CanvasItem::JpegImage(rect, data.clone()))
+            }
+            LoadedImageData::Svg(svg) => canvas.add_item(CanvasItem::SvgImage(
+                rect,
+                prepare_svg_tree_for_step(step, image, svg),
+                loaded_image.width,
+                loaded_image.height,
+            )),
+            LoadedImageData::Ora(ora) => {
+                render_ora_to_canvas(loaded_image, step, ora, rect, image.enable_steps, canvas)
+            }
+        }
     }
 }

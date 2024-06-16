@@ -238,7 +238,12 @@ fn compute_content_default_size(
             assert!(text_layouts.insert(node.node_id, text_layout).is_none());
             (width, height)
         }
-        NodeContent::Image(image) => (image.loaded_image.width, image.loaded_image.height),
+        NodeContent::Image(image) => image
+            .loaded_image
+            .at_step(step)
+            .as_ref()
+            .map(|img| (img.width, img.height))
+            .unwrap_or((0.0, 0.0)),
     }
 }
 

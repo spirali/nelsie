@@ -1,3 +1,4 @@
+from nelsie import InSteps
 from testutils import check
 
 
@@ -74,3 +75,11 @@ def test_render_ora_image_scale(deck):
 def test_svg_image_dtd(deck):
     slide = deck.new_slide(width=40, height=40)
     slide.image("knight_with_dtd.svg")
+
+
+@check(n_slides=5)
+def test_image_path_in_steps(deck):
+    slide = deck.new_slide(width=150, height=150)
+    slide.image(None)
+    slide.image(width=100, height=100, path=InSteps({1: "testimg.jpeg", 2: "testimg.png", 4: None, 5: "testimg.jpeg"}))
+    slide.insert_step(3)
