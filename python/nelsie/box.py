@@ -143,7 +143,7 @@ class BoxBuilder:
 
     def code(
         self,
-        text: str,
+        text: str | InSteps[str],
         language: str | None = "default",
         style: str | TextStyle | InSteps[TextStyle] | None = None,
         *,
