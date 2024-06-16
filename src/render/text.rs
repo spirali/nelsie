@@ -139,8 +139,11 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     render_text_to_svg(&mut xml, text, 0.0, 0.0, TextAlign::Start);
     xml.end("svg");
     let svg = xml.into_string();
-
-    let tree = match usvg::Tree::from_str(&svg, &usvg::Options::default(), &resources.font_db) {
+    let options = usvg::Options {
+        fontdb: resources.font_db.as_ref().unwrap().clone(),
+        ..Default::default()
+    };
+    let tree = match usvg::Tree::from_str(&svg, &options) {
         Ok(tree) => tree,
         Err(_) => {
             log::debug!("Failed to parse SVG");

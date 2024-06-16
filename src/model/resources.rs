@@ -1,6 +1,7 @@
 use crate::common::error::NelsieError;
 use crate::model::ImageManager;
 use std::path::Path;
+use std::sync::Arc;
 
 use svg2pdf::usvg::fontdb;
 
@@ -12,7 +13,8 @@ use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 
 pub(crate) struct Resources {
-    pub font_db: fontdb::Database,
+    // Because we need to fontdb::Database to usvg::Options, we need to wrap it in Arc
+    pub font_db: Option<Arc<fontdb::Database>>,
     pub image_manager: ImageManager,
     pub syntax_set: SyntaxSet,
     pub theme_set: ThemeSet,
@@ -41,11 +43,15 @@ impl Resources {
         };
 
         Resources {
-            font_db,
+            font_db: Some(Arc::new(font_db)),
             image_manager: ImageManager::default(),
             syntax_set,
             theme_set,
         }
+    }
+
+    pub fn font_db_arc(&self) -> Arc<fontdb::Database> {
+        self.font_db.as_ref().unwrap().clone()
     }
 
     pub fn load_code_syntax_dir(&mut self, path: &Path) -> crate::Result<()> {
@@ -69,17 +75,20 @@ impl Resources {
 
     pub fn load_fonts_dir(&mut self, path: &Path) {
         log::debug!("Adding font directory {}", path.display());
-        self.font_db.load_fonts_dir(path)
+        let font_db = std::mem::take(&mut self.font_db).unwrap();
+        let mut font_db = Arc::unwrap_or_clone(font_db);
+        font_db.load_fonts_dir(path);
+        self.font_db = Some(Arc::new(font_db));
     }
 
     pub fn check_font(&self, family_name: &str) -> crate::Result<FontData> {
-        if let Some(font_id) = self.font_db.query(&fontdb::Query {
+        if let Some(font_id) = self.font_db.as_ref().unwrap().query(&fontdb::Query {
             families: &[Name(family_name)],
             weight: Default::default(),
             stretch: Default::default(),
             style: Default::default(),
         }) {
-            let source = self.font_db.face_source(font_id).unwrap();
+            let source = self.font_db.as_ref().unwrap().face_source(font_id).unwrap();
             let (descender, space_size) = match source {
                 // Small code redundancy because of lifetimes
                 (Source::File(file), idx) => {

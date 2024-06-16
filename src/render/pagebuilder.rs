@@ -199,32 +199,6 @@ fn write_svg_page(
     }
 }
 
-// fn write_pdf_page(
-//     page_idx: u32,
-//     canvas: Canvas,
-//     resources: &Resources,
-//     cache: &PdfImageCache,
-// ) -> crate::Result<Option<Vec<u8>>> {
-//     let width = canvas.width();
-//     let height = canvas.height();
-//     let bg_color = canvas.bg_color;
-//
-//     canvas.into_pdf_page(resources, cache)?;
-//
-//     // let data = canvas.into_svg()?;
-//     //
-//     // let tree = usvg::Tree::from_str(&data, &usvg::Options::default(), &resources.font_db)?;
-//     // let (svg_chunk, svg_id) = svg2pdf::to_chunk(
-//     //     &tree,
-//     //     svg2pdf::ConversionOptions::default(),
-//     //     &resources.font_db,
-//     // );
-//     // let svg_id = pdf_builder.add_chunk(svg_chunk, svg_id);
-//     // let refs = vec![(Rectangle::new(0.0, 0.0, width, height), svg_id)];
-//     pdf_builder.add_page_from_svg(page_idx as usize, width, height, bg_color, &refs);
-//     Ok(None)
-// }
-
 fn write_png_page(
     path: Option<&std::path::Path>,
     page_idx: u32,
@@ -233,7 +207,11 @@ fn write_png_page(
     n_pages: u32,
 ) -> crate::Result<Option<Vec<u8>>> {
     let data = canvas.into_svg()?;
-    let tree = usvg::Tree::from_str(&data, &usvg::Options::default(), &resources.font_db)?;
+    let options = usvg::Options {
+        fontdb: resources.font_db.as_ref().unwrap().clone(),
+        ..Default::default()
+    };
+    let tree = usvg::Tree::from_str(&data, &options)?;
     let zoom = 1.0;
     let pixmap_size = tree.size().to_int_size().scale_by(zoom).unwrap();
     let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();

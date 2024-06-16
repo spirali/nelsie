@@ -212,7 +212,7 @@ fn process_content(
                             nc_env
                                 .resources
                                 .image_manager
-                                .load_image(&path, &nc_env.resources.font_db)?,
+                                .load_image(&path, nc_env.resources.font_db.as_ref().unwrap())?,
                         )
                     } else {
                         None

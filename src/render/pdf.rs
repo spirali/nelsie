@@ -87,33 +87,36 @@ impl PdfBuilder {
             })
             .collect_vec();
 
+        let mut annotation_ids = Vec::with_capacity(pdf_page.links.len());
+
+        for link in pdf_page.links {
+            let rect = link.rect();
+            let annotation_id = self.alloc_ref.bump();
+            let mut annotation = self.pdf.annotation(annotation_id);
+            annotation_ids.push(annotation_id);
+            annotation.subtype(AnnotationType::Link);
+            annotation.border(0.0, 0.0, 0.0, None);
+            annotation.rect(Rect::new(
+                rect.x,
+                pdf_page.height - rect.y,
+                rect.x + rect.width,
+                pdf_page.height - (rect.y + rect.height),
+            ));
+            annotation
+                .action()
+                .action_type(ActionType::Uri)
+                .uri(Str(link.url().as_bytes()));
+            annotation.finish();
+        }
+
         let page_id = self.page_ids[page_idx];
         let content_id = self.alloc_ref.bump();
         let mut page = self.pdf.page(page_id);
         page.media_box(Rect::new(0.0, 0.0, pdf_page.width, pdf_page.height));
         page.parent(self.page_tree_id);
         page.contents(content_id);
-
-        if !pdf_page.links.is_empty() {
-            let mut annotations = page.annotations();
-            for link in pdf_page.links {
-                let rect = link.rect();
-                let mut annotation = annotations.push();
-                annotation.subtype(AnnotationType::Link);
-                annotation.border(0.0, 0.0, 0.0, None);
-                annotation.rect(Rect::new(
-                    rect.x,
-                    pdf_page.height - rect.y,
-                    rect.x + rect.width,
-                    pdf_page.height - (rect.y + rect.height),
-                ));
-                annotation
-                    .action()
-                    .action_type(ActionType::Uri)
-                    .uri(Str(link.url().as_bytes()));
-                annotation.finish();
-            }
-            annotations.finish();
+        if !annotation_ids.is_empty() {
+            page.annotations(annotation_ids);
         }
 
         let mut resources = page.resources();
