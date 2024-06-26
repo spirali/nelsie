@@ -5,7 +5,7 @@ use crate::model::{
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, StepValue,
 };
-use crate::parsers::step_parser::parse_steps;
+use crate::parsers::step_parser::parse_steps_with_keywords;
 use crate::parsers::{
     parse_length, parse_length_auto, parse_length_or_expr, parse_position, parse_styled_text,
     parse_styled_text_from_plain_text, run_syntax_highlighting, StyleOrName,
@@ -284,7 +284,7 @@ fn show_to_bool_steps(show: Show, steps: &mut StepSet) -> PyResult<StepValue<boo
             map.insert(s, true);
             StepValue::new_map(map)
         }
-        Show::StringDef(s) => parse_steps(&s, Some(steps))
+        Show::StringDef(s) => parse_steps_with_keywords(&s, steps)
             .ok_or_else(|| PyValueError::new_err(format!("Invalid show definition: {s}")))?,
         Show::InSteps(in_steps) => in_steps.into_step_value(steps),
     })
