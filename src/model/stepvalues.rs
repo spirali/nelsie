@@ -20,6 +20,17 @@ impl<T: Debug + Default> StepValue<T> {
         }
         StepValue::Steps(value)
     }
+
+    pub fn new_single_value(step: Step, value: T) -> Self {
+        if step == Step::from_int(1) {
+            StepValue::Const(value)
+        } else {
+            let mut map = BTreeMap::new();
+            map.insert(Step::from_int(1), T::default());
+            map.insert(step, value);
+            StepValue::Steps(map)
+        }
+    }
 }
 
 impl<T: Debug> StepValue<T> {

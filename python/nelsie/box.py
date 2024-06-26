@@ -43,18 +43,6 @@ AlignItemsSteps = AlignItems | None | InSteps[AlignItems | None]
 AlignContentSteps = AlignContent | None | InSteps[AlignContent | None]
 
 
-def _resolve_step_keywords(value, parent_box):
-    if value == "last":
-        return parent_box.slide.get_steps()[-1]
-    if value == "last+":
-        return f"{'.'.join(str(s) for s in parent_box.slide.get_steps()[-1])}+"
-    if value == "next":
-        return parent_box.slide.get_steps()[-1][0] + 1
-    if value == "next+":
-        return f"{parent_box.slide.get_steps()[-1][0] + 1}+"
-    return value
-
-
 class BoxBuilder:
     def get_box(self):
         """
@@ -321,8 +309,8 @@ class BoxBuilder:
             deck.resources,
             parent_box.slide._slide_id,
             parent_box._box_id,
-            active=_resolve_step_keywords(active, parent_box),
-            show=_resolve_step_keywords(show, parent_box),
+            active=active,
+            show=show,
             z_level=z_level,
             x=x,
             y=y,

@@ -182,6 +182,40 @@ pub(crate) fn parse_steps(value: &str, steps: Option<&mut StepSet>) -> Option<St
     Some(step_value)
 }
 
+pub(crate) fn parse_steps_with_keywords(
+    value: &str,
+    steps: &mut StepSet,
+) -> Option<StepValue<bool>> {
+    let value = value.trim();
+    let last = |steps: &mut StepSet| steps.last().cloned().unwrap_or_else(|| Step::from_int(1));
+    match value {
+        "last" => {
+            let mut map = BTreeMap::new();
+            let step = last(steps);
+            map.insert(step.next(), false);
+            map.insert(step, true);
+            Some(StepValue::new_map(map))
+        }
+        "last+" => Some(StepValue::new_single_value(last(steps), true)),
+        "next" => {
+            let mut map = BTreeMap::new();
+            let step = last(steps).next();
+            steps.insert(step.clone());
+            map.insert(step.next(), false);
+            map.insert(step, true);
+            Some(StepValue::new_map(map))
+        }
+        "next+" => {
+            let mut map = BTreeMap::new();
+            let step = last(steps).next();
+            steps.insert(step.clone());
+            map.insert(step, true);
+            Some(StepValue::new_map(map))
+        }
+        _ => parse_steps(value, Some(steps)),
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::model::Step;
