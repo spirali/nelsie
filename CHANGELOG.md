@@ -1,4 +1,4 @@
-# Unreleased
+# v0.11.0
 
 ## New features
 
@@ -6,7 +6,12 @@
 
 ## Fixes
 
-* `.code()` type annotation fixed (`text` can be `InSteps`)
+* `.code()` type annotation fixed (`text` argument is allowed to be `InSteps`)
+
+## Internal
+
+* Migrated to new version of resvg and svg2pdf
+* Parsing of next/last keywords moved to Rust
 
 # v0.10.0
 
