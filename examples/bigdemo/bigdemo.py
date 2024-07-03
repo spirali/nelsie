@@ -493,7 +493,7 @@ def chess_board(slide):
 
 @deck.slide()
 def links(slide):
-    slide.text("Clicable links in PDF", TextStyle(size=80, underline=True), url="https://github.com/spirali/nelsie")
+    slide.text("Clickable links in PDF", TextStyle(size=80, underline=True), url="https://github.com/spirali/nelsie")
 
 
 # Debugging frames ##########################################
