@@ -218,3 +218,46 @@ def test_m_xy_p_xy(deck):
     slide = deck.new_slide(width=100, height=100)
     box = slide.box(bg_color="green", p_x=20, p_y=10)
     box.box(width=30, height=30, bg_color="red")
+
+
+@check()
+def test_layout_grid_in_pixels(deck):
+    slide = deck.new_slide(width=300, height=100)
+    box = slide.box(grid_template_rows=[20, 35, 20], grid_template_columns=[40, 100, 100], bg_color="gray")
+
+    box.box(grid_column=1, grid_row=2, bg_color="green")
+    box.box(grid_column=2, grid_row=1, bg_color="blue")
+    box.box(grid_column=-2, grid_row=(1, "span 3"), bg_color="orange")
+
+
+@check()
+def test_layout_simple_grid_fractions(deck):
+    slide = deck.new_slide(width=300, height=100)
+    box = slide.box(
+        grid_template_rows=["1 fr", "1fr"],
+        grid_template_columns=["1 fr", "1 fr"],
+        bg_color="gray",
+        width="250",
+        height="90",
+    )
+    box.box(grid_column=1, grid_row=1, bg_color="red")
+
+
+@check()
+def test_layout_grid_fractions(deck):
+    slide = deck.new_slide(width=300, height=100)
+    box = slide.box(
+        width="90%",
+        height="90%",
+        grid_template_rows=["1fr", "2 fr", "1 fr"],
+        grid_template_columns=["50%", "1fr", "1fr"],
+        bg_color="gray",
+    )
+
+    box.box(grid_column=2, grid_row=1, bg_color="green")
+    box.box(grid_column=3, grid_row=(1, 3), bg_color="blue")
+
+    box.box(grid_column=1, grid_row=2, bg_color="orange")
+    box.box(grid_column=2, grid_row=2, bg_color="black")
+
+    box.box(grid_column=(1, 4), grid_row=3, bg_color="red")

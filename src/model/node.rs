@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use by_address::ByAddress;
 use std::sync::Arc;
+use taffy::{GridPlacement, Line, NonRepeatedTrackSizingFunction};
 
 use crate::model::image::LoadedImage;
 use taffy::prelude::{AlignContent, AlignItems};
@@ -56,6 +57,11 @@ pub(crate) struct Node {
     pub align_content: StepValue<Option<AlignContent>>,
     pub justify_content: StepValue<Option<AlignContent>>,
     pub gap: StepValue<(Length, Length)>,
+
+    pub grid_template_rows: StepValue<Vec<NonRepeatedTrackSizingFunction>>,
+    pub grid_template_columns: StepValue<Vec<NonRepeatedTrackSizingFunction>>,
+    pub grid_row: StepValue<Line<GridPlacement>>,
+    pub grid_column: StepValue<Line<GridPlacement>>,
 
     pub p_top: StepValue<Length>,
     pub p_bottom: StepValue<Length>,

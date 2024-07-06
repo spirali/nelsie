@@ -6,8 +6,9 @@ use crate::model::{
 use crate::render::counters::replace_counters;
 use crate::render::text::get_text_layout;
 use crate::render::RenderConfig;
+use itertools::Itertools;
 use std::collections::{BTreeMap, HashMap};
-use taffy::prelude as tf;
+use taffy::{prelude as tf, AlignItems, Display, JustifyContent};
 
 pub(crate) struct LayoutContext<'a> {
     config: &'a RenderConfig<'a>,
@@ -372,7 +373,26 @@ impl<'a> LayoutContext<'a> {
         dbg!(node.align_content.at_step(self.step));
         dbg!(node.justify_content.at_step(self.step));*/
 
+        let grid_template_rows = node
+            .grid_template_rows
+            .at_step(step)
+            .iter()
+            .map(|x| tf::TrackSizingFunction::Single(*x))
+            .collect_vec();
+        let grid_template_columns = node
+            .grid_template_columns
+            .at_step(step)
+            .iter()
+            .map(|x| tf::TrackSizingFunction::Single(*x))
+            .collect_vec();
+        let is_grid = !grid_template_rows.is_empty() || !grid_template_columns.is_empty();
+
         let style = tf::Style {
+            display: if is_grid {
+                Display::Grid
+            } else {
+                Display::Flex
+            },
             position,
             size: tf::Size { width, height },
             flex_direction,
@@ -382,16 +402,31 @@ impl<'a> LayoutContext<'a> {
             flex_wrap: *node.flex_wrap.at_step(step),
             flex_grow: *node.flex_grow.at_step(step),
             flex_shrink: *node.flex_shrink.at_step(step),
-
-            align_items: *node.align_items.at_step(step),
+            align_items: node.align_items.at_step(step).or_else(|| {
+                if is_grid {
+                    None
+                } else {
+                    Some(AlignItems::Center)
+                }
+            }),
             align_self: *node.align_self.at_step(step),
             justify_self: *node.justify_self.at_step(step),
             align_content: *node.align_content.at_step(step),
-            justify_content: *node.justify_content.at_step(step),
+            justify_content: node.justify_content.at_step(step).or_else(|| {
+                if is_grid {
+                    None
+                } else {
+                    Some(JustifyContent::Center)
+                }
+            }),
             gap: tf::Size {
                 width: gap_w.into(),
                 height: gap_h.into(),
             },
+            grid_template_rows,
+            grid_template_columns,
+            grid_row: *node.grid_row.at_step(step),
+            grid_column: *node.grid_column.at_step(step),
             ..Default::default()
         };
         taffy.new_with_children(style, &tf_children).unwrap()
@@ -408,6 +443,7 @@ impl<'a> LayoutContext<'a> {
             height: tf::AvailableSpace::Definite(slide.height),
         };
         taffy.compute_layout(tf_node, size).unwrap();
+        // taffy.print_tree(tf_node);
         let mut node_entries = BTreeMap::new();
         gather_taffy_layout(step, &slide.node, None, &taffy, tf_node, &mut node_entries);
         let mut result = ComputedLayout::default();

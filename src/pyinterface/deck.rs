@@ -1,7 +1,7 @@
 use crate::model::{Color, Drawing, Node, NodeChild, Path, Slide, SlideDeck, Step, StepValue};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use crate::pyinterface::path::PyPath;
-use crate::pyinterface::r#box::{make_node, Content, NodeCreationEnv, Show};
+use crate::pyinterface::r#box::{make_node, Content, NodeCreationEnv, PyGridPosition, Show};
 use crate::pyinterface::resources::Resources;
 use crate::pyinterface::textstyle::{partial_text_style_to_pyobject, PyTextStyle};
 use crate::render::{render_slide_deck, OutputConfig, OutputFormat, VerboseLevel};
@@ -131,6 +131,11 @@ impl Deck {
         justify_content: ValueOrInSteps<Option<PyBackedStr>>,
         gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
 
+        grid_template_rows: ValueOrInSteps<Vec<PyStringOrFloat>>,
+        grid_template_columns: ValueOrInSteps<Vec<PyStringOrFloat>>,
+        grid_row: ValueOrInSteps<PyGridPosition>,
+        grid_column: ValueOrInSteps<PyGridPosition>,
+
         p_left: ValueOrInSteps<PyStringOrFloat>,
         p_right: ValueOrInSteps<PyStringOrFloat>,
         p_top: ValueOrInSteps<PyStringOrFloat>,
@@ -178,6 +183,10 @@ impl Deck {
             align_content,
             justify_content,
             gap,
+            grid_template_rows,
+            grid_template_columns,
+            grid_row,
+            grid_column,
             p_left,
             p_right,
             p_top,
