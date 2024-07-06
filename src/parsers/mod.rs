@@ -1,3 +1,4 @@
+mod grid_parser;
 mod parse_utils;
 mod size;
 pub(crate) mod step_parser;
@@ -6,6 +7,12 @@ mod syntaxhighlight;
 mod text;
 
 use crate::model::LayoutExpr;
+
+#[derive(Debug)]
+pub(crate) enum StringOrInt<T> {
+    Int(T),
+    String(String),
+}
 
 #[derive(Debug)]
 pub(crate) enum StringOrFloat {
@@ -20,6 +27,7 @@ pub(crate) enum StringOrFloatOrExpr {
     Expr(LayoutExpr),
 }
 
+pub(crate) use grid_parser::{parse_grid_position_item, parse_grid_template_item};
 pub(crate) use size::{parse_length, parse_length_auto, parse_length_or_expr, parse_position};
 pub(crate) use sxml::SimpleXmlWriter;
 pub(crate) use syntaxhighlight::run_syntax_highlighting;

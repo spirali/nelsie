@@ -1,6 +1,21 @@
-use crate::parsers::{StringOrFloat, StringOrFloatOrExpr};
+use crate::parsers::{StringOrFloat, StringOrFloatOrExpr, StringOrInt};
 use crate::pyinterface::layoutexpr::PyLayoutExpr;
 use pyo3::FromPyObject;
+
+#[derive(Debug, FromPyObject)]
+pub(crate) enum PyStringOrI16 {
+    Int(i16),
+    String(String),
+}
+
+impl From<PyStringOrI16> for StringOrInt<i16> {
+    fn from(value: PyStringOrI16) -> Self {
+        match value {
+            PyStringOrI16::Int(v) => StringOrInt::Int(v),
+            PyStringOrI16::String(v) => StringOrInt::String(v),
+        }
+    }
+}
 
 #[derive(Debug, FromPyObject)]
 pub(crate) enum PyStringOrFloat {

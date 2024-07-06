@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from typing import Sequence
 
 from .basictypes import (
     AlignItems,
@@ -41,6 +42,8 @@ class ImageContent:
 NodeContent = ImageContent | TextContent | None
 AlignItemsSteps = AlignItems | None | InSteps[AlignItems | None]
 AlignContentSteps = AlignContent | None | InSteps[AlignContent | None]
+GridTemplate = Sequence[float | str] | InSteps[Sequence[float | str]]
+GridPosition = int | str | tuple[int | str] | InSteps[int | str | tuple[int | str]]
 
 
 class BoxBuilder:
@@ -262,12 +265,16 @@ class BoxBuilder:
         flex_wrap: FlexWrap | InSteps[FlexWrap] = "nowrap",
         flex_grow: float | InSteps[float] = 0.0,
         flex_shrink: float | InSteps[float] = 1.0,
-        align_items: AlignItemsSteps = "center",
+        align_items: AlignItemsSteps = None,
         align_self: AlignItemsSteps = None,
         justify_self: AlignItemsSteps = None,
         align_content: AlignContentSteps = None,
-        justify_content: AlignContentSteps = "center",
+        justify_content: AlignContentSteps = None,
         gap: tuple[Length, Length] | InSteps[tuple[Length, Length]] = (0.0, 0.0),
+        grid_template_rows: GridTemplate = (),
+        grid_template_columns: GridTemplate = (),
+        grid_row: GridPosition = "auto",
+        grid_column: GridPosition = "auto",
         bg_color: str | None | InSteps[str | None] = None,
         url: None | str | InSteps[None | str] = None,
         name: str = "",
@@ -336,6 +343,10 @@ class BoxBuilder:
             align_content=align_content,
             justify_content=justify_content,
             gap=gap,
+            grid_template_rows=grid_template_rows,
+            grid_template_columns=grid_template_columns,
+            grid_row=grid_row,
+            grid_column=grid_column,
             bg_color=bg_color,
             url=url,
             name=name,

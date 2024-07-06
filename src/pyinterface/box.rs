@@ -7,10 +7,11 @@ use crate::model::{
 };
 use crate::parsers::step_parser::parse_steps_with_keywords;
 use crate::parsers::{
-    parse_length, parse_length_auto, parse_length_or_expr, parse_position, parse_styled_text,
-    parse_styled_text_from_plain_text, run_syntax_highlighting, StyleOrName,
+    parse_grid_position_item, parse_grid_template_item, parse_length, parse_length_auto,
+    parse_length_or_expr, parse_position, parse_styled_text, parse_styled_text_from_plain_text,
+    run_syntax_highlighting, StyleOrName,
 };
-use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
+use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr, PyStringOrI16};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
 use std::collections::BTreeMap;
@@ -26,6 +27,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use taffy::prelude::{AlignContent, AlignItems};
 use taffy::style::FlexWrap;
+use taffy::{GridPlacement, Line, NonRepeatedTrackSizingFunction};
 
 #[derive(Debug, FromPyObject)]
 pub(crate) enum Show {
@@ -59,6 +61,12 @@ pub(crate) struct TextContent {
 pub(crate) enum Content {
     Text(TextContent),
     Image(ImageContent),
+}
+
+#[derive(Debug, FromPyObject)]
+pub(crate) enum PyGridPosition {
+    Single(PyStringOrI16),
+    Pair((PyStringOrI16, PyStringOrI16)),
 }
 
 impl<'py> FromPyObject<'py> for Content {
@@ -232,6 +240,32 @@ fn process_content(
     })
 }
 
+fn parse_grid_template(
+    value: Vec<PyStringOrFloat>,
+) -> crate::Result<Vec<NonRepeatedTrackSizingFunction>> {
+    value
+        .into_iter()
+        .map(|x| parse_grid_template_item(x.into()))
+        .collect()
+}
+
+fn parse_grid_position(value: PyGridPosition) -> crate::Result<Line<GridPlacement>> {
+    match value {
+        PyGridPosition::Single(v) => {
+            let v = parse_grid_position_item(v.into())?;
+            Ok(Line {
+                start: v,
+                end: GridPlacement::Auto,
+            })
+        }
+        PyGridPosition::Pair((start, end)) => {
+            let start = parse_grid_position_item(start.into())?;
+            let end = parse_grid_position_item(end.into())?;
+            Ok(Line { start, end })
+        }
+    }
+}
+
 fn parse_align_items(value: Option<PyBackedStr>) -> crate::Result<Option<AlignItems>> {
     value
         .map(|v| match v.deref() {
@@ -317,6 +351,11 @@ pub(crate) fn make_node(
     justify_content: ValueOrInSteps<Option<PyBackedStr>>,
     gap: ValueOrInSteps<(PyStringOrFloat, PyStringOrFloat)>,
 
+    grid_template_rows: ValueOrInSteps<Vec<PyStringOrFloat>>,
+    grid_template_columns: ValueOrInSteps<Vec<PyStringOrFloat>>,
+    grid_row: ValueOrInSteps<PyGridPosition>,
+    grid_column: ValueOrInSteps<PyGridPosition>,
+
     p_left: ValueOrInSteps<PyStringOrFloat>,
     p_right: ValueOrInSteps<PyStringOrFloat>,
     p_top: ValueOrInSteps<PyStringOrFloat>,
@@ -375,6 +414,10 @@ pub(crate) fn make_node(
         gap: gap.parse(steps, |(w, h)| {
             crate::Result::Ok((parse_len(w)?, parse_len(h)?))
         })?,
+        grid_template_rows: grid_template_rows.parse(steps, parse_grid_template)?,
+        grid_template_columns: grid_template_columns.parse(steps, parse_grid_template)?,
+        grid_row: grid_row.parse(steps, parse_grid_position)?,
+        grid_column: grid_column.parse(steps, parse_grid_position)?,
         p_top: p_top.parse(steps, parse_len)?,
         p_bottom: p_bottom.parse(steps, parse_len)?,
         p_left: p_left.parse(steps, parse_len)?,
