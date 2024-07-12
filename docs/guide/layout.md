@@ -1,6 +1,6 @@
 # Layout
 
-Nelsie uses a layout system that is based on the Flexbox system and adds some extra features.
+Nelsie uses a layout system that is based on the Flexbox and Grid system and adds some extra features.
 
 The central element of the Nelsie layout system is the _Box_. A box is a rectangular area on a slide that has a position and size.
 A box can contain other boxes or content (a text or an image).
@@ -143,8 +143,11 @@ There are also the following parameters for setting more padding/margin paramete
 
 ## Arranging box children
 
-Nelsie provides a [flexbox layout system](https://css-tricks.com/snippets/css/a-guide-to-flexbox/).
+Nelsie provides a [flexbox layout system](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)
 See [Flexbox froggy](https://flexboxfroggy.com/) for a nice tutorial.
+
+Most of the layouts can be done via flexbox; however,
+also supports grid layout, see [Grid layout](#grid-layout).
 
 Nelsie supports from flexbox: `justify_content`, `align_items`, `align_self`, `align_items`, `align_self`, `justify_self`, `align_content`, `justify_content` and `gap`.
 
@@ -187,6 +190,70 @@ You can set parameters `x` and `y` to set a fix position of the box independantl
 * `str` in format `"XX%"` where `XX` is an integer -- A fixed position relative to the parent box, in percent (example value: `"50%"` means that `x` (resp. `y`) is set to the 50% of width (resp. height) of the parent box)
 * `LayoutExpr` - A fixed position defined by a [layout expression](#layout-expressions).
 
+## Grid layout
+
+Nelsie also supports [grid layout system](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout/Basic_concepts_of_grid_layout); see [Grid garden](https://cssgridgarden.com/) for a nice tutorial.
+
+```nelsie
+@deck.slide()
+def justify_content_start(slide):
+    b = slide.box(
+        width="100%", height="100%",
+        grid_template_columns=("1 fr", "1fr"),
+        grid_template_rows=("1 fr", "1fr"))
+    b.box(grid_column=2, grid_row=2, bg_color="orange").text("Grid 2-2")
+```
+
+Grid templates (`grid_template_rows` and `grid_template_columns`) may have values as follows:
+
+* `200` or `"200"` - size of row/column in pixels
+* `"50%"` - size of row/column in percents
+* `"1 fr"` - size of row/column in fractions
+
+Grid positions (`grid_row` and `grid_column`) may have values as follows:
+
+* `2` - box at row/column `2`
+* `(2, 5)` - box that spans from row/column 2 to row/column 5
+* `(2, "span 3")` - box that spans from row/column 2 over 3 row/column.
+
+
+### A rich table example
+
+```nelsie
+@deck.slide()
+def grid_demo(slide):
+    data = [
+        ("Name", "Time", "Type"),
+        ("Jane", 3.5, "A1"),
+        ("John", 4.1, "B7"),
+        ("Johanna", 12.0, "C1"),
+        ("Elise", 12.5, "D4"),
+        ("Max", 320.2, "E1")
+    ]
+
+    # Draw the table
+    table = slide.box(
+        width="70%",
+        grid_template_columns=["2fr", "1fr", 130],
+        grid_template_rows=[50] + [40] * (len(data) - 1),
+        bg_color="#ddd",
+    )
+    header_style = TextStyle(weight=800)
+    table.box(grid_column=(1, 4), grid_row=1, bg_color="#fbc")
+    for i in range(2, len(data) + 1, 2):
+        table.box(grid_column=(1, 4), grid_row=i, bg_color="#eee")
+    column1 = table.box(grid_column=2, grid_row=(1, len(data) + 1))
+    stroke = Stroke(color="#888", width=2)
+    column1.draw(Path(stroke=stroke).move_to(0, 0).line_to(0, "100%"))
+    column1.draw(Path(stroke=stroke).move_to("100%", 0).line_to("100%", "100%"))
+
+    # Fill the table with data
+    for i, row in enumerate(data, 1):
+        s = header_style if i == 1 else None
+        table.box(grid_column=1, grid_row=i).text(row[0], s)
+        table.box(grid_column=2, grid_row=i, row=True, justify_content="end", m_right=30).text(str(row[1]), s)
+        table.box(grid_column=3, grid_row=i, row=True, justify_content="start", m_left=30).text(row[2], s)
+```
 
 ## Method `.overlay()`
 
