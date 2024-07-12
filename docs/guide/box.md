@@ -39,7 +39,7 @@ A new box is created by calling the `.box()` method on an existing box or a slid
 * `width` -- Width of the box
     * `None` - (default) Automatic size. Minimum size around the content if `flex-grow` / `flex-shrink` is not set.
     * `int` or `float` or `str` containing digits -- A fixed size given in pixels (example: `20.5`, or `"1.5"`)
-    * `str` in format `"XX%"` where `XX` is an integer -- A relative size to the parent box, in percent (example: `"50%"`)
+    * `str` in format `"X%"` where `X` is an integer -- A relative size to the parent box, in percent (example: `"50%"`)
     * `LayoutExpr` -- A fixed size defined by a layout expression.
 * `height` - Height of the box
     * The paramter takes the same values as `width`.
@@ -56,6 +56,20 @@ A new box is created by calling the `.box()` method on an existing box or a slid
 * `align_content` -
 * `justify_content` -
 * `gap` -
+* `grid_template_rows` - Grid layout definition, see CSS grid for semantics
+    - `int` - Size of row in pixels
+    - `str` 
+      - `"X"` if X is integer -- size in pixels
+      - `"X%"` size in percent
+      - `"X fr"` size in fractions   
+* `grid_template_columns` - Same as `grid_template_rows`
+* `grid_row` - Grid layout definition, see CSS grid for semantics.
+    - `"auto"` - Automatic position
+    - `"span X"` - Span over more rows 
+    - `int` - Specific row, indexed from 1, negative allowed
+    - `(int, int)` - Spans over more rows; first number is start is starting row index, the second number is end row index
+    - `(int, "span X")` - Spans over more rows; first number is start is starting row index, X is how many rows it spans over
+* `grid_column` - Same as `grid_row`
 
 ### Padding parameters
 

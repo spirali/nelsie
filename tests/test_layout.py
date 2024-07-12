@@ -1,3 +1,4 @@
+from nelsie import Stroke, Path, TextStyle
 from testutils import check
 
 from nelsie.layoutexpr import LayoutExpr
@@ -261,3 +262,38 @@ def test_layout_grid_fractions(deck):
     box.box(grid_column=2, grid_row=2, bg_color="black")
 
     box.box(grid_column=(1, 4), grid_row=3, bg_color="red")
+
+
+@check()
+def test_layout_grid_table(deck):
+    data = [
+        ("Name", "Time", "Type"),
+        ("Jane", 3.5, "A1"),
+        ("John", 4.1, "B7"),
+        ("Johanna", 12.0, "C1"),
+        ("Elise", 12.5, "D4"),
+        ("Max", 320.2, "E1"),
+    ]
+
+    slide = deck.new_slide(width=1000, height=300)
+    table = slide.box(
+        width="70%",
+        grid_template_columns=["2fr", "1fr", 130],
+        grid_template_rows=[50] + [40] * (len(data) - 1),
+        bg_color="#ddd",
+    )
+    header_style = TextStyle(weight=800)
+    table.box(grid_column=(1, 4), grid_row=1, bg_color="#fbc")
+    for i in range(2, len(data) + 1, 2):
+        table.box(grid_column=(1, 4), grid_row=i, bg_color="#eee")
+    column1 = table.box(grid_column=2, grid_row=(1, len(data) + 1))
+    stroke = Stroke(color="#888", width=2)
+    column1.draw(Path(stroke=stroke).move_to(0, 0).line_to(0, "100%"))
+    column1.draw(Path(stroke=stroke).move_to("100%", 0).line_to("100%", "100%"))
+
+    # Fill the table with data
+    for i, row in enumerate(data, 1):
+        s = header_style if i == 1 else None
+        table.box(grid_column=1, grid_row=i).text(row[0], s)
+        table.box(grid_column=2, grid_row=i, row=True, justify_content="end", m_right=30).text(str(row[1]), s)
+        table.box(grid_column=3, grid_row=i, row=True, justify_content="start", m_left=30).text(row[2], s)
