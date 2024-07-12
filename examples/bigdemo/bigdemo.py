@@ -16,7 +16,7 @@ COLOR1 = "#333"
 COLOR2 = "#ddccdd"
 
 deck.update_style("default", TextStyle(font_family="Karla", color=COLOR1))
-deck.set_style("highlight", TextStyle(color="#cc99cc", weight=800))
+deck.set_style("highlight", TextStyle(color="#cc99cc", weight=700))
 deck.set_style("title", TextStyle(size=64))
 
 
