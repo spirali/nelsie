@@ -106,7 +106,7 @@ pub(crate) fn render_slide_deck(
         thread_pool_builder = thread_pool_builder.num_threads(n_threads);
     }
     let thread_pool = thread_pool_builder.build().unwrap();
-    let result = thread_pool.install(|| {
+    thread_pool.install(|| {
         if verbose_level.is_full() {
             println!(
                 "Slides construction: {:.2}s",
@@ -166,13 +166,5 @@ pub(crate) fn render_slide_deck(
             );
         }
         Ok(result_data)
-    });
-    if verbose_level.is_full() {
-        let render_end_time = std::time::Instant::now();
-        println!(
-            "Total rendering time: {:.2}s",
-            (render_end_time - start_time).as_secs_f32()
-        );
-    }
-    result
+    })
 }
