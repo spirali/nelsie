@@ -38,3 +38,4 @@ chumsky = "0.9"
 lto = true
 codegen-units = 1
 panic = "abort"
+debug = true
