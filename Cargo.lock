@@ -946,7 +946,7 @@ dependencies = [
 
 [[package]]
 name = "nelsie"
-version = "0.11.0"
+version = "0.12.0"
 dependencies = [
  "base64",
  "by_address",

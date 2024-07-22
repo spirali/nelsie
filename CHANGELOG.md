@@ -1,6 +1,7 @@
-# Unreleased
+# v0.12.0
 
 * Grid layout
+* Fixed printing "total time" twice when verbose mode is enabled
 
 # v0.11.0
 
