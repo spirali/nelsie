@@ -1,30 +1,31 @@
 use crate::model::{Step, StepValue, TextStyle};
 use itertools::Itertools;
+use serde::Serialize;
 use std::collections::HashMap;
 
 pub(crate) type InTextAnchorId = u32;
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, Serialize)]
 pub(crate) struct InTextAnchorPoint {
     pub line_idx: u32,
     pub span_idx: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 #[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct InTextAnchor {
     pub start: InTextAnchorPoint,
     pub end: InTextAnchorPoint,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 #[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct Span {
     pub length: u32,
     pub style_idx: u32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 #[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct StyledLine {
     pub spans: Vec<Span>,
@@ -105,21 +106,21 @@ impl StyledText {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Serialize)]
 pub(crate) enum TextAlign {
     Start,
     Center,
     End,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub(crate) struct ParsedText {
     pub styled_lines: Vec<StyledLine>,
     pub styles: Vec<StepValue<TextStyle>>,
     pub anchors: HashMap<InTextAnchorId, InTextAnchor>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(crate) struct NodeContentText {
     pub parsed_text: StepValue<ParsedText>,
     pub text_align: TextAlign,

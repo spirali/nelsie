@@ -113,6 +113,7 @@ pub(crate) struct SlideDeck {
     pub(crate) slides: Vec<Slide>,
     pub(crate) global_styles: Arc<StyleMap>,
     pub(crate) default_font: Arc<FontData>,
+    #[serde(skip_serializing)]
     pub(crate) creation_time: std::time::Instant,
 }
 

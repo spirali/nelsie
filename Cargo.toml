@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = { version = "0.21", features = ["abi3-py310", "extension-module"] }
-taffy = "0.5"
+taffy = { version = "0.5", features = ["serde"] }
 resvg = "0.42"
 svg2pdf = "0.11" # !!synchronized with resvg
 ttf-parser = "0.21" # Not necessary same as resvg but nice to be a same as in resvg

@@ -8,7 +8,7 @@ use std::ops::Bound::Unbounded;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(untagged)]
-pub(crate) enum StepValue<T: Debug + Serialize> {
+pub(crate) enum StepValue<T: Debug> {
     Const(T),
     Steps(BTreeMap<Step, T>),
 }
@@ -67,7 +67,7 @@ impl<T: Debug> StepValue<T> {
         }
     }
 
-    pub fn map<S: Debug, F: FnMut(T) -> S>(self, mut f: F) -> StepValue<S> {
+    pub fn map<S: Debug + Serialize, F: FnMut(T) -> S>(self, mut f: F) -> StepValue<S> {
         match self {
             StepValue::Const(v) => StepValue::Const(f(v)),
             StepValue::Steps(v) => {
@@ -76,7 +76,7 @@ impl<T: Debug> StepValue<T> {
         }
     }
 
-    pub fn map_ref<S: Debug, F: FnMut(&T) -> S>(&self, mut f: F) -> StepValue<S> {
+    pub fn map_ref<S: Debug + Serialize, F: FnMut(&T) -> S>(&self, mut f: F) -> StepValue<S> {
         match self {
             StepValue::Const(v) => StepValue::Const(f(v)),
             StepValue::Steps(v) => {
@@ -85,7 +85,7 @@ impl<T: Debug> StepValue<T> {
         }
     }
 
-    pub fn merge<S: Debug, R: Debug, F: FnMut(&T, &S) -> R>(
+    pub fn merge<S: Debug + Serialize, R: Debug + Serialize, F: FnMut(&T, &S) -> R>(
         &self,
         other: &StepValue<S>,
         mut f: F,

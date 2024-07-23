@@ -280,7 +280,7 @@ fn load_image(path: &Path, font_db: &Arc<fontdb::Database>) -> crate::Result<Loa
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(crate) struct NodeContentImage {
     pub loaded_image: StepValue<Option<Arc<LoadedImage>>>,
     pub enable_steps: bool,

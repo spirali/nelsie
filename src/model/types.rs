@@ -2,7 +2,7 @@ use crate::common::error::NelsieError;
 use std::fmt::{Display, Formatter};
 
 use crate::model::InTextAnchorId;
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 use std::str::FromStr;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq, Serialize)]
@@ -23,7 +23,7 @@ impl NodeId {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 #[cfg_attr(test, derive(PartialEq))]
 pub(crate) enum Length {
     Points { value: f32 },
@@ -40,7 +40,7 @@ impl Length {
     pub(crate) const ZERO: Length = Length::Points { value: 0.0 };
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub(crate) enum LengthOrAuto {
     Points { value: f32 },
     Fraction { value: f32 },
@@ -57,7 +57,7 @@ impl LengthOrAuto {
     pub(crate) const ZERO: LengthOrAuto = LengthOrAuto::Points { value: 0.0 };
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub(crate) enum LengthOrExpr {
     Points { value: f32 },
     Fraction { value: f32 },
@@ -86,7 +86,8 @@ impl LengthOrExpr {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(tag = "type")]
 pub(crate) enum LayoutExpr {
     ConstValue {
         value: f32,
@@ -183,6 +184,15 @@ impl Color {
     }
 }
 
+impl Serialize for Color {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
 impl From<&Color> for svgtypes::Color {
     fn from(value: &Color) -> Self {
         value.0
@@ -217,7 +227,7 @@ impl Display for Color {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub(crate) struct Stroke {
     pub color: Color,
     pub width: f32,

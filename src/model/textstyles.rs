@@ -1,19 +1,20 @@
 use crate::common::error::NelsieError;
 use crate::model::{Color, StepValue, Stroke};
 
+use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::Arc;
 use svg2pdf::usvg;
 use usvg::FontStretch;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize)]
 pub(crate) struct FontData {
     pub family_name: String,
     pub descender: f32,
     pub space_size: f32,
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Serialize)]
 pub(crate) struct PartialTextStyle {
     pub font: Option<Arc<FontData>>,
     pub stroke: Option<Option<Arc<Stroke>>>,
@@ -21,6 +22,7 @@ pub(crate) struct PartialTextStyle {
     pub size: Option<f32>,
     pub line_spacing: Option<f32>,
     pub italic: Option<bool>,
+    #[serde(skip_serializing)]
     pub stretch: Option<FontStretch>,
     pub weight: Option<u16>,
     pub underline: Option<bool>,
@@ -62,7 +64,7 @@ impl PartialTextStyle {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub(crate) struct TextStyle {
     pub font: Arc<FontData>,
     pub stroke: Option<Arc<Stroke>>,
@@ -70,6 +72,7 @@ pub(crate) struct TextStyle {
     pub size: f32,
     pub line_spacing: f32,
     pub italic: bool,
+    #[serde(skip_serializing)]
     pub stretch: FontStretch,
     pub weight: u16,
     pub underline: bool,
@@ -84,7 +87,7 @@ pub(crate) fn merge_stepped_styles(
     first.merge(second, |a, b| a.merge(b))
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub(crate) struct StyleMap(HashMap<String, StepValue<PartialTextStyle>>);
 
 impl StyleMap {

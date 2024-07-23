@@ -1,7 +1,7 @@
 use crate::model::{Color, LayoutExpr, StepValue, Stroke};
 use serde::Serialize;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(crate) struct Arrow {
     pub size: f32,
     pub angle: f32,
@@ -10,7 +10,8 @@ pub(crate) struct Arrow {
     pub inner_point: Option<f32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
+#[serde(tag = "type")]
 pub(crate) enum PathPart {
     Move {
         x: LayoutExpr,

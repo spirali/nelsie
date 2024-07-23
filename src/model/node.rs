@@ -14,7 +14,8 @@ use crate::model::image::LoadedImage;
 use taffy::prelude::{AlignContent, AlignItems};
 use taffy::style::FlexWrap;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
+#[serde(tag = "type")]
 pub(crate) enum NodeContent {
     Text(NodeContentText),
     Image(NodeContentImage),
@@ -80,6 +81,7 @@ pub(crate) struct Node {
 
     pub url: StepValue<Option<String>>,
 
+    #[serde(skip_serializing)]
     pub styles: Arc<StyleMap>,
 
     pub name: String,
