@@ -2,9 +2,10 @@ use crate::common::error::NelsieError;
 use std::fmt::{Display, Formatter};
 
 use crate::model::InTextAnchorId;
+use serde::Serialize;
 use std::str::FromStr;
 
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq, Serialize)]
 pub(crate) struct NodeId(u32);
 
 impl NodeId {

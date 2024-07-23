@@ -1,4 +1,5 @@
 use crate::common::error::NelsieError;
+use serde::{Serialize, Serializer};
 use smallvec::{smallvec, SmallVec};
 use std::cmp::Ordering;
 use std::collections::BTreeSet;
@@ -12,6 +13,19 @@ pub(crate) type StepSet = BTreeSet<Step>;
 #[derive(Eq, PartialEq, Clone, Default)]
 pub(crate) struct Step {
     indices: SmallVec<[StepIndex; 2]>,
+}
+
+impl Serialize for Step {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if self.indices.len() == 1 {
+            serializer.serialize_u32(self.indices[0])
+        } else {
+            self.indices.serialize(serializer)
+        }
+    }
 }
 
 impl Display for Step {

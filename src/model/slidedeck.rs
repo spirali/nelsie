@@ -5,6 +5,7 @@ use crate::model::{
     Color, Length, LengthOrAuto, LengthOrExpr, NodeId, PartialTextStyle, Resources, Step, StepSet,
     StepValue, StyleMap,
 };
+use serde::Serialize;
 use std::collections::Bound::{Included, Unbounded};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -15,7 +16,7 @@ use usvg::FontStretch;
 
 pub(crate) type SlideId = u32;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(crate) struct Slide {
     pub(crate) width: f32,
     pub(crate) height: f32,
@@ -107,7 +108,7 @@ impl Slide {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(crate) struct SlideDeck {
     pub(crate) slides: Vec<Slide>,
     pub(crate) global_styles: Arc<StyleMap>,

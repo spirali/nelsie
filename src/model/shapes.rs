@@ -1,4 +1,5 @@
 use crate::model::{Color, LayoutExpr, StepValue, Stroke};
+use serde::Serialize;
 
 #[derive(Debug)]
 pub(crate) struct Arrow {
@@ -57,7 +58,7 @@ impl PathPart {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize)]
 pub(crate) struct Path {
     pub stroke: Option<Stroke>,
     pub fill_color: Option<Color>,
@@ -66,7 +67,7 @@ pub(crate) struct Path {
     pub arrow_end: Option<Arrow>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(crate) struct Drawing {
     pub paths: StepValue<Vec<Path>>,
 }

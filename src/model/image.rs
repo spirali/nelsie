@@ -2,6 +2,9 @@ use crate::model::{StepIndex, StepSet, StepValue};
 use crate::parsers::step_parser::parse_steps_from_label;
 use imagesize::blob_size;
 use resvg::usvg::fontdb;
+use serde::ser::{SerializeMap, SerializeStruct};
+use serde::{Serialize, Serializer};
+use serde_json::json;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
@@ -56,6 +59,19 @@ pub(crate) struct LoadedImage {
     pub width: f32,
     pub height: f32,
     pub data: LoadedImageData,
+}
+
+impl Serialize for LoadedImage {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = serializer.serialize_struct("LoadedImage", 3)?;
+        s.serialize_field("image_id", &self.image_id)?;
+        s.serialize_field("width", &self.width)?;
+        s.serialize_field("height", &self.height)?;
+        s.end()
+    }
 }
 
 impl LoadedImage {

@@ -6,6 +6,7 @@ use crate::model::{LayoutExpr, NodeId};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 use by_address::ByAddress;
+use serde::Serialize;
 use std::sync::Arc;
 use taffy::{GridPlacement, Line, NonRepeatedTrackSizingFunction};
 
@@ -19,13 +20,14 @@ pub(crate) enum NodeContent {
     Image(NodeContentImage),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
+#[serde(tag = "type")]
 pub(crate) enum NodeChild {
     Node(Node),
     Draw(Drawing),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub(crate) struct Node {
     pub node_id: NodeId,
     pub children: Vec<NodeChild>,

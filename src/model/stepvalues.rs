@@ -3,10 +3,12 @@ use std::collections::Bound::Included;
 use std::fmt::Debug;
 
 use crate::model::step::Step;
+use serde::Serialize;
 use std::ops::Bound::Unbounded;
 
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) enum StepValue<T: Debug> {
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(untagged)]
+pub(crate) enum StepValue<T: Debug + Serialize> {
     Const(T),
     Steps(BTreeMap<Step, T>),
 }

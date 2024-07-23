@@ -963,6 +963,8 @@ dependencies = [
  "pyo3",
  "rayon",
  "resvg",
+ "serde",
+ "serde_json",
  "smallvec",
  "svg2pdf",
  "svgtypes",
