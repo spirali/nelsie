@@ -218,3 +218,6 @@ class SlideDeck:
         if path:
             path = str(path)
         return self._deck.render(self.resources, verbose, output_format, path, n_threads)
+
+    def json_dump(self) -> str:
+        return self._deck.json_dump()

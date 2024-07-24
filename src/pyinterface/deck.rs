@@ -306,6 +306,10 @@ impl Deck {
             .collect_vec())
     }
 
+    fn json_dump(&self) -> PyResult<String> {
+        serde_json::to_string(&self.deck).map_err(|_| PyException::new_err("Serialization failed"))
+    }
+
     fn render(
         &self,
         py: Python<'_>,
