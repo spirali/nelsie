@@ -23,7 +23,7 @@ or simply manage which parts are highlighted.
 
 - [Documentation](https://spirali.github.io/nelsie/)
 - Demonstration of features ([PDF](https://spirali.github.io/nelsie/pdf/bigdemo.pdf), [source code](examples/bigdemo/bigdemo.py))
-
+- [Blog post why Nelsie was created](https://spirali.github.io/blog/nelsie/)
 
 
 ## Installation
