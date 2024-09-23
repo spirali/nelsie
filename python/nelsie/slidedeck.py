@@ -53,6 +53,9 @@ class Slide(BoxBuilder):
     def remove_steps_above(self, value: Step):
         self.deck._deck.remove_steps_above(self._slide_id, value)
 
+    def set_steps(self, values: set[Step] | frozenset[Step]):
+        self.deck._deck.set_steps(self._slide_id, values)
+
     def get_steps(self) -> list[Step]:
         return self.deck._deck.get_steps(self._slide_id)
 

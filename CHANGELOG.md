@@ -1,3 +1,7 @@
+# Unreleased
+
+* `set_steps` method
+
 # v0.12.0
 
 * Grid layout

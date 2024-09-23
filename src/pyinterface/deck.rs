@@ -1,4 +1,6 @@
-use crate::model::{Color, Drawing, Node, NodeChild, Path, Slide, SlideDeck, Step, StepValue};
+use crate::model::{
+    Color, Drawing, Node, NodeChild, Path, Slide, SlideDeck, Step, StepSet, StepValue,
+};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use crate::pyinterface::path::PyPath;
 use crate::pyinterface::r#box::{make_node, Content, NodeCreationEnv, PyGridPosition, Show};
@@ -295,6 +297,12 @@ impl Deck {
     fn remove_steps_above(&mut self, slide_id: SlideId, step: Step) -> PyResult<()> {
         let slide = resolve_slide_id(&mut self.deck, slide_id)?;
         slide.steps.retain(|s| s <= &step);
+        Ok(())
+    }
+
+    fn set_steps(&mut self, slide_id: SlideId, steps: StepSet) -> PyResult<()> {
+        let slide = resolve_slide_id(&mut self.deck, slide_id)?;
+        slide.steps = steps;
         Ok(())
     }
 
