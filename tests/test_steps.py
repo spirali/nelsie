@@ -84,6 +84,9 @@ def test_set_get_steps(deck):
     slide.remove_steps_below((5, 3))
     assert slide.get_steps() == [(5, 3)]
 
+    slide.set_steps({1, (3, 2), 2})
+    assert slide.get_steps() == [(1,), (2,), (3, 2)]
+
 
 @check(n_slides=4)
 def test_step_global_counter(deck):
