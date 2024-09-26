@@ -74,9 +74,9 @@ jobs:
           sccache: 'true'
           manylinux: auto
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-linux-${{ matrix.target }}
           path: dist
 
   windows:
@@ -103,9 +103,9 @@ jobs:
           args: --release --out dist
           sccache: 'true'
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-windows-${{ matrix.target }}
           path: dist
 
   macos:
@@ -130,9 +130,9 @@ jobs:
           args: --release --out dist
           sccache: 'true'
       - name: Upload wheels
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-macos-${{ matrix.target }}
           path: dist
 
   sdist:
@@ -146,9 +146,9 @@ jobs:
           command: sdist
           args: --out dist
       - name: Upload sdist
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-sdist
           path: dist
 
   test:
@@ -160,9 +160,10 @@ jobs:
     needs: [ linux, macos, windows ]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          pattern: wheels-*
+          merge-multiple: true
           path: wheels
       - uses: actions/setup-python@v4
         with:
@@ -182,10 +183,10 @@ jobs:
         run: tar -cvf ${{ matrix.os }}-tests.tar testdir
 
       - name: Upload test artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         if: always() && steps.python_test.outcome == 'failure'
         with:
-          name: pytest artifacts
+          name: pytest-artifacts-${{ matrix.os }}
           path: ${{ matrix.os }}-tests.tar
 
 
@@ -194,9 +195,10 @@ jobs:
     needs: [ linux ]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          pattern: wheels-*
+          merge-multiple: true
           path: wheels
       - uses: actions/setup-python@v4
         with:
@@ -219,7 +221,7 @@ jobs:
       - name: Archive docs artifacts
         run: tar -cvf docs.tar site
       - name: Upload docs artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: docs
           path: docs.tar
@@ -232,7 +234,7 @@ jobs:
     if: github.event_name != 'pull_request'
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: docs
       - name: Unpack tar
@@ -250,9 +252,11 @@ jobs:
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: [ test, sdist, deploy-docs ]
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          pattern: wheels-*
+          merge-multiple: true
+          path: wheels
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
         env:
