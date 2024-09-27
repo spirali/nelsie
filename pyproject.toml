@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "nelsie"
 authors = [{name = "Ada Böhm", email = "ada@kreatrix.org"}]
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
