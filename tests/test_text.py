@@ -146,6 +146,11 @@ def test_text_styling(deck):
     slide.text("Hi are you?", TextStyle(stretch=FontStretch.UltraExpanded, size=10))
 
 
+def test_text_bold_init(deck):
+    style = TextStyle(bold=True)
+    assert style.weight == 700
+
+
 def test_text_style_get_stretch(deck):
     slide = deck.new_slide(width=220, height=150)
     slide.set_style("test", TextStyle(stretch=FontStretch.Expanded))
