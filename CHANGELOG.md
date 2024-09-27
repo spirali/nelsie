@@ -1,6 +1,10 @@
-# Unreleased
+# v0.13.0
 
 * `set_steps` method
+* TextStyle(bold=True) added
+* Smaller binaries (debug info stripped)
+* `.move_by` and `.line_by` in Path
+* Watching on more Python files
 
 # v0.12.0
 
