@@ -1,5 +1,5 @@
 import pathlib
-from typing import Literal
+from typing import Literal, List
 
 from . import nelsie as nelsie_rs
 from .basictypes import parse_debug_layout
@@ -115,6 +115,7 @@ class SlideDeck:
         self.default_code_theme = default_code_theme
         self.default_code_language = default_code_language
         self._deck = nelsie_rs.Deck(resources, default_font, default_monospace_font)
+        self._slides: List[Slide] = []
 
     def set_style(self, name: str, style: TextStyle):
         self._deck.set_style(self.resources, name, style, False, None, None)
@@ -152,7 +153,10 @@ class SlideDeck:
             image_directory = self.image_directory
         debug_layout = parse_debug_layout(debug_layout)
         slide_id = self._deck.new_slide(width, height, bg_color, name, step_1, debug_steps, counters, parent_slide)
-        return Slide(self, slide_id, name, image_directory, debug_layout)
+
+        slide = Slide(self, slide_id, name, image_directory, debug_layout)
+        self._slides.append(slide)
+        return slide
 
     def slide(
         self,
