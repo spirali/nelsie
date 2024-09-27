@@ -40,6 +40,7 @@ The `TextStyle` constructor has the following parameters; each parameter can be 
 * `weight`: `int` - Weight of the font; values 1-1000
     * 400 = Normal
     * 700 = Bold
+* `bold`: `bool` - Shortcut that sets `weight=700`
 * `underline`: `bool` - Draws a line under the text
 * `overline`: `bool` - Draws a line over the text
 * `line_through`: `bool` - Draws a line through a text
