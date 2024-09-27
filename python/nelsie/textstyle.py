@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, InitVar
 from enum import IntEnum
 from typing import Literal
 
@@ -34,13 +34,23 @@ class TextStyle:
     # 1-1000; 400 = Normal, 700 = Bold
     weight: int | None = None
 
-    def __post_init__(self):
+    # Init only fields
+    # These are used as helpers for initializing
+    # commonly used attributes
+    bold: InitVar[bool | None] = None
+
+    def __post_init__(self, bold: bool | None):
         if self.size is not None:
             assert self.size >= 0
         if self.line_spacing is not None:
             assert self.line_spacing >= 0
         if self.weight is not None:
             assert 1 <= self.weight <= 1000
+            if bold is not None:
+                raise Exception("Cannot set both `weight` and `bold` when creating a TextStyle")
+        if bold is not None:
+            # Workaround to set frozen attribute
+            super().__setattr__("weight", 700)
 
     def merge(self, other: "TextStyle") -> "TextStyle":
         assert isinstance(other, TextStyle)
