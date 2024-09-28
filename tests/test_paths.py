@@ -1,3 +1,5 @@
+import pytest
+
 from testutils import check
 
 from nelsie import Arrow, InSteps, Path, Stroke, TextStyle
@@ -16,6 +18,32 @@ def test_render_paths(deck):
         .cubic_to(180, 190, 150, 190, 50, 150)
     )
     slide.box(width="90%", height="90%").draw(path)
+
+
+@check()
+def test_render_paths_relative(deck):
+    slide = deck.new_slide(width=200, height=200)
+
+    path = (
+        Path(stroke=Stroke(color="orange", width=10.0))
+        .move_to(0, 0)
+        .move_by(10, 5)
+        .line_to(50, 50)
+        .line_by(10, -20)
+        .move_by(-10, 80)
+        .line_to(150, 150)
+    )
+    slide.box(width="90%", height="90%").draw(path)
+
+
+def test_relative_move_no_last_position(deck):
+    with pytest.raises(Exception, match="No last position was recorded"):
+        Path().move_by(0, 0)
+
+
+def test_relative_line_no_last_position(deck):
+    with pytest.raises(Exception, match="No last position was recorded"):
+        Path().line_by(0, 0)
 
 
 @check()

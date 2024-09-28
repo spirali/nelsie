@@ -24,7 +24,9 @@ def path_demo(slide):
 You can create line segments or Bezeier curves by calling the following methods:
 
 * `.move_to(x, y)` -- move the cursor to a given position without visible effect
+* `.move_by(x, y)` -- move the cursor by a given `(x, y)` offset, relative to the last position set by any `*_to` method
 * `.line_to(x, y)` -- create a line segment
+* `.line_by(x, y)` -- create a line segment that ends at the given `(x, y)` offset, relative to the last position set by any `*_to` method 
 * `.quad_to(x1, y1, x, y)` -- create a quadratic bezier curve
 * `.cubic_to(x1, y1, x2, y2, x, y)` -- create a cubic bezier curve
 * `.close()` -- create a line segment to the initial point of the path
