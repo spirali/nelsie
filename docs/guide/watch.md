@@ -11,3 +11,6 @@ $ python3 -m nelsie watch slides.py
 Nelsie builds the slides and starts to watch `slides.py` and used images and rebuilds the slides when relevant files are
 changed.
 Note that if the first build fails, the watch is not started.
+
+You can also watch multiple files. In that case, the first watched Python script will get re-executed when any of these
+watched filepaths change.
