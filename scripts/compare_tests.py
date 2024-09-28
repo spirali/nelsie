@@ -1,4 +1,5 @@
 import base64
+import getpass
 import shutil
 from dataclasses import dataclass
 from io import BytesIO
@@ -80,7 +81,7 @@ def check_images(name, path, fails, subdir, resize=False):
 
 def collect_failed_tests(path, version) -> list[FailedTest]:
     if path is None:
-        path = f"/tmp/pytest-of-{os.getlogin()}/pytest-current/"
+        path = f"/tmp/pytest-of-{getpass.getuser()}/pytest-current/"
     paths = Path(path).rglob(f"*{version}/check.txt")
     fails = []
     count = 0
