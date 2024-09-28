@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Tuple, Optional
 
 from .basictypes import Stroke
 from .layoutexpr import LayoutExpr
@@ -48,6 +49,7 @@ class Path:
         self.points = []
         self.arrow_start = arrow_start
         self.arrow_end = arrow_end
+        self.last_position: Optional[Tuple[PathValue, PathValue]] = None
 
     @staticmethod
     def oval(
@@ -72,13 +74,41 @@ class Path:
         self.commands.append("move")
         self.points.append(x)
         self.points.append(y)
+        self.last_position = (x, y)
         return self
+
+    def move_by(self, x: PathValue, y: PathValue) -> "Path":
+        """
+        Perform a move relative to the last position.
+        If no last position was recorded, raises an Exception.
+        """
+        if self.last_position is None:
+            raise Exception("No last position was recorded, cannot use `move_by`")
+
+        x_old, y_old = self.last_position
+
+        return self.move_to(x_old + x, y_old + y)
 
     def line_to(self, x: PathValue, y: PathValue):
         self.commands.append("line")
         self.points.append(x)
         self.points.append(y)
+
+        self.last_position = (x, y)
+
         return self
+
+    def line_by(self, x: PathValue, y: PathValue):
+        """
+        Draw a line relative to the last position.
+        If no last position was recorded, raises an Exception.
+        """
+        if self.last_position is None:
+            raise Exception("No last position was recorded for, cannot use `line_by`")
+
+        x_old, y_old = self.last_position
+
+        return self.line_to(x_old + x, y_old + y)
 
     def quad_to(self, x1: PathValue, y1: PathValue, x: PathValue, y: PathValue):
         self.commands.append("quad")
@@ -86,6 +116,9 @@ class Path:
         self.points.append(y1)
         self.points.append(x)
         self.points.append(y)
+
+        self.last_position = (x, y)
+
         return self
 
     def cubic_to(
@@ -104,4 +137,7 @@ class Path:
         self.points.append(y2)
         self.points.append(x)
         self.points.append(y)
+
+        self.last_position = (x, y)
+
         return self
