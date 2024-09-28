@@ -8,6 +8,7 @@ from . import watch
 def parse_args():
     parser = argparse.ArgumentParser()
     subparser = parser.add_subparsers()
+    subparser.required = True
     watch_parser = subparser.add_parser("watch")
     watch_parser.add_argument("source_filename")
     return parser.parse_args()
