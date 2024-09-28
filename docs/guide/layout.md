@@ -104,7 +104,7 @@ Weight/height parameters:
 * `None` - (default) Automatic size. Minimum size around the content if `flex-grow` / `flex-shrink` is not set.
 * `int` or `float` or `str` containing digits -- A fixed size given in pixels (example values: `20.5`, or `"1.5"`)
 * `str` in format `"XX%"` where `XX` is an integer -- A relative size to the parent box, in percent (example: `"50%"`)
-* `LayoutExpr` - A fixed size defined by a [layout expression](#layout-expressions).
+* `LayoutExpr` - A fixed size defined by a [layout expression](./layoutexpr.md).
 
 
 ### Flex grow
@@ -188,7 +188,7 @@ You can set parameters `x` and `y` to set a fix position of the box independantl
 * `None` - (default) Coordianes are set by the layout engine.
 * `int` or `float` or `str` containing digits -- A fixed position given relative to the parent box in pixels (example values: `20.5`, or `"1.5"`)
 * `str` in format `"XX%"` where `XX` is an integer -- A fixed position relative to the parent box, in percent (example value: `"50%"` means that `x` (resp. `y`) is set to the 50% of width (resp. height) of the parent box)
-* `LayoutExpr` - A fixed position defined by a [layout expression](#layout-expressions).
+* `LayoutExpr` - A fixed position defined by a [layout expression](./layoutexpr.md).
 
 ## Grid layout
 
