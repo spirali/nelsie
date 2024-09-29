@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Tuple, Optional
 
 from .basictypes import Stroke
 from .layoutexpr import LayoutExpr
@@ -49,7 +48,6 @@ class Path:
         self.points = []
         self.arrow_start = arrow_start
         self.arrow_end = arrow_end
-        self.last_position: Optional[Tuple[PathValue, PathValue]] = None
 
     @staticmethod
     def oval(
@@ -66,6 +64,17 @@ class Path:
         path.points = [x1, y1, x2, y2]
         return path
 
+    @property
+    def last_point(self):
+        """
+        Returns a last point in the path, if path is empty, returns 0,0
+        :return: A tuple (x, y)
+        """
+        if len(self.points) < 2:
+            return 0, 0
+        else:
+            return self.points[-2], self.points[-1]
+
     def close(self):
         self.commands.append("close")
         return self
@@ -74,18 +83,14 @@ class Path:
         self.commands.append("move")
         self.points.append(x)
         self.points.append(y)
-        self.last_position = (x, y)
         return self
 
     def move_by(self, x: PathValue, y: PathValue) -> "Path":
         """
-        Perform a move relative to the last position.
-        If no last position was recorded, raises an Exception.
+        Perform a move relative to the last point of the path.
+        If path is empty, it starts from 0,0
         """
-        if self.last_position is None:
-            raise Exception("No last position was recorded, cannot use `move_by`")
-
-        x_old, y_old = self.last_position
+        x_old, y_old = self.last_point
 
         return self.move_to(x_old + x, y_old + y)
 
@@ -93,21 +98,14 @@ class Path:
         self.commands.append("line")
         self.points.append(x)
         self.points.append(y)
-
-        self.last_position = (x, y)
-
         return self
 
     def line_by(self, x: PathValue, y: PathValue):
         """
-        Draw a line relative to the last position.
-        If no last position was recorded, raises an Exception.
+        Draw a line relative to the last point of the path.
+        If path is empty, it starts from 0,0
         """
-        if self.last_position is None:
-            raise Exception("No last position was recorded for, cannot use `line_by`")
-
-        x_old, y_old = self.last_position
-
+        x_old, y_old = self.last_point
         return self.line_to(x_old + x, y_old + y)
 
     def quad_to(self, x1: PathValue, y1: PathValue, x: PathValue, y: PathValue):
@@ -116,9 +114,6 @@ class Path:
         self.points.append(y1)
         self.points.append(x)
         self.points.append(y)
-
-        self.last_position = (x, y)
-
         return self
 
     def cubic_to(
@@ -137,7 +132,4 @@ class Path:
         self.points.append(y2)
         self.points.append(x)
         self.points.append(y)
-
-        self.last_position = (x, y)
-
         return self
