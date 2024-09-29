@@ -1,5 +1,3 @@
-import pytest
-
 from testutils import check
 
 from nelsie import Arrow, InSteps, Path, Stroke, TextStyle
@@ -37,13 +35,13 @@ def test_render_paths_relative(deck):
 
 
 def test_relative_move_no_last_position(deck):
-    with pytest.raises(Exception, match="No last position was recorded"):
-        Path().move_by(0, 0)
+    p = Path().move_by(10, 20)
+    assert p.last_point == (10, 20)
 
 
 def test_relative_line_no_last_position(deck):
-    with pytest.raises(Exception, match="No last position was recorded"):
-        Path().line_by(0, 0)
+    p = Path().line_by(10, 20)
+    assert p.last_point == (10, 20)
 
 
 @check()
