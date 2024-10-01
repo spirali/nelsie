@@ -263,7 +263,7 @@ jobs:
           MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
         with:
           command: upload
-          args: --non-interactive --skip-existing *
+          args: --non-interactive --skip-existing wheels/*
       - name: Create GitHub release
         uses: ncipollo/release-action@v1
         with:
