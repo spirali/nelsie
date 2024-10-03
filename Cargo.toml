@@ -9,7 +9,7 @@ name = "nelsie"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.21", features = ["abi3-py310", "extension-module"] }
+pyo3 = { version = "0.22", features = ["abi3-py310", "extension-module"] }
 taffy = "0.5"
 resvg = "0.43"
 svg2pdf = "0.12" # !!synchronized with resvg

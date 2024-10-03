@@ -44,6 +44,7 @@ fn resolve_slide_id(deck: &mut SlideDeck, slide_id: SlideId) -> PyResult<&mut Sl
 #[pymethods]
 impl Deck {
     #[new]
+    #[pyo3(signature = (resources, default_font, default_monospace_font))]
     fn new(
         resources: &mut Resources,
         default_font: Option<&str>,
@@ -59,6 +60,7 @@ impl Deck {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (width, height, bg_color, name, step_1, debug_steps, counters, parent))]
     fn new_slide(
         &mut self,
         width: f32,
@@ -106,6 +108,7 @@ impl Deck {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[pyo3(signature = (resources, slide_id, box_id, active, show, bg_color, x, y, width, height, border_radius, row, reverse, flex_wrap, flex_grow, flex_shrink, align_items, align_self, justify_self, align_content, justify_content, gap, grid_template_rows, grid_template_columns, grid_row, grid_column, p_left, p_right, p_top, p_bottom, m_left, m_right, m_top, m_bottom, z_level, url, name, debug_layout, replace_steps, content))]
     fn new_box(
         &mut self,
         resources: &mut Resources,
@@ -214,6 +217,7 @@ impl Deck {
         Ok((new_box_id, node_id.as_u32()))
     }
 
+    #[pyo3(signature = (resources, name, text_style, update, slide_id, box_id))]
     fn set_style(
         &mut self,
         resources: &mut Resources,
@@ -249,6 +253,7 @@ impl Deck {
         Ok(())
     }
 
+    #[pyo3(signature = (name, step, slide_id, box_id))]
     fn get_style(
         &mut self,
         py: Python<'_>,
@@ -314,6 +319,7 @@ impl Deck {
             .collect_vec())
     }
 
+    #[pyo3(signature = (resources, verbose, format, path, n_threads))]
     fn render(
         &self,
         py: Python<'_>,

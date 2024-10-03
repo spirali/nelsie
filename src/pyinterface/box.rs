@@ -18,7 +18,8 @@ use std::collections::BTreeMap;
 use std::ops::Deref;
 
 use pyo3::exceptions::PyValueError;
-use pyo3::{FromPyObject, PyAny, PyResult};
+use pyo3::types::PyAnyMethods;
+use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 
 use crate::common::error::NelsieError;
 use pyo3::pybacked::PyBackedStr;
@@ -70,7 +71,7 @@ pub(crate) enum PyGridPosition {
 }
 
 impl<'py> FromPyObject<'py> for Content {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         Ok(if ob.hasattr("text")? {
             Content::Text(ob.extract()?)
         } else {

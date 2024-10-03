@@ -3,7 +3,8 @@ use crate::model::{Color, PartialTextStyle, Resources, Stroke};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
 use pyo3::pybacked::PyBackedStr;
-use pyo3::{FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
+use pyo3::types::PyAnyMethods;
+use pyo3::{Bound, FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::str::FromStr;
@@ -53,14 +54,14 @@ impl PyTextStyle {
 }
 
 impl<'py> FromPyObject<'py> for Color {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         let s: PyBackedStr = ob.extract()?;
         Ok(Color::from_str(s.deref())?)
     }
 }
 
 impl<'py> FromPyObject<'py> for PyTextStyle {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         let stretch_idx: Option<u32> = ob.getattr("stretch")?.extract()?;
         let stretch = stretch_idx
             .map(|s| match s {

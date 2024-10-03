@@ -1,7 +1,9 @@
 use crate::model::{LayoutExpr, NodeId};
 use pyo3::exceptions::PyValueError;
 use pyo3::pybacked::PyBackedStr;
-use pyo3::{FromPyObject, PyAny, PyResult};
+use pyo3::types::PyAnyMethods;
+use pyo3::{Bound, FromPyObject, PyAny, PyResult};
+
 use std::ops::Deref;
 
 #[derive(Debug)]
@@ -14,12 +16,12 @@ impl From<PyLayoutExpr> for LayoutExpr {
 }
 
 impl<'py> FromPyObject<'py> for PyLayoutExpr {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         extract_layout_expr(ob.getattr("_expr")?).map(PyLayoutExpr)
     }
 }
 
-fn extract_layout_expr(obj: &PyAny) -> PyResult<LayoutExpr> {
+fn extract_layout_expr(obj: Bound<PyAny>) -> PyResult<LayoutExpr> {
     if let Ok(value) = obj.extract() {
         return Ok(LayoutExpr::ConstValue { value });
     }

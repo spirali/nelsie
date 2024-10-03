@@ -1,14 +1,15 @@
 use crate::model::{Step, StepSet, StepValue};
 
 use pyo3::exceptions::PyException;
+use pyo3::types::PyAnyMethods;
 use pyo3::types::PyTuple;
-use pyo3::{FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
+use pyo3::{Bound, FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::fmt::Debug;
 
 impl<'py> FromPyObject<'py> for Step {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         if let Ok(v) = ob.extract::<u32>() {
             return Ok(Step::from_int(v));
         }
@@ -34,7 +35,7 @@ pub(crate) struct InSteps<T> {
 }
 
 impl<'py, T: FromPyObject<'py>> FromPyObject<'py> for InSteps<T> {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         Ok(InSteps {
             in_step_values: ob.getattr("in_step_values")?.extract()?,
         })
@@ -79,7 +80,7 @@ pub(crate) enum ValueOrInSteps<T> {
 }
 
 impl<'py, T: FromPyObject<'py>> FromPyObject<'py> for ValueOrInSteps<T> {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         Ok(if ob.hasattr("in_step_values")? {
             ValueOrInSteps::InSteps(ob.extract()?)
         } else {
