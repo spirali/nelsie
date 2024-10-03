@@ -11,23 +11,23 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.21", features = ["abi3-py310", "extension-module"] }
 taffy = "0.5"
-resvg = "0.42"
-svg2pdf = "0.11" # !!synchronized with resvg
-ttf-parser = "0.21" # Not necessary same as resvg but nice to be a same as in resvg
+resvg = "0.43"
+svg2pdf = "0.12" # !!synchronized with resvg
+ttf-parser = "0.24" # Not necessary same as resvg but nice to be a same as in resvg
 thiserror = "1"
 svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
 env_logger = "0.11"
-pdf-writer = "0.10"
+pdf-writer = "0.12"
 itertools = "0.13"
-imagesize = "0.12"
+imagesize = "0.13"
 zip = { version = "2", default-features = false, features = ["deflate"] }
 syntect = { version = "5", default-features = false, features = ["default-fancy"] }
 indicatif = "0.17"
 base64 = "0.22"# Nice to be synchronized with resvg
-xmltree = { version = "0.10", features = ["attribute-order"] }
+xmltree = { version = "0.11", features = ["attribute-order"] }
 image = "0.25" # Nice to be sycnrhonized with svg2pdf
-miniz_oxide = "0.7" # Nice to be sycnrhonized with svg2pdf
+miniz_oxide = "0.8" # Nice to be sycnrhonized with svg2pdf
 by_address = "1"
 rayon = "1.10"
 notify = "6.1"
