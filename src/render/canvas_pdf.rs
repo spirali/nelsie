@@ -4,6 +4,7 @@ use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::canvas_svg::svg_begin;
 
+use crate::common::error::NelsieError;
 use crate::render::pdf::{PdfPage, PdfPageElement};
 use by_address::ByAddress;
 use pdf_writer::Ref;
@@ -32,7 +33,9 @@ impl Canvas {
                     };
                     let tree = usvg::Tree::from_str(&xml.into_string(), &options)?;
                     let (svg_chunk, svg_id) =
-                        svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default());
+                        svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default()).map_err(
+                            |e| NelsieError::generic_err(format!("PDF conversion error: {}", e)),
+                        )?;
                     result.push(PdfPageElement::LocalRef(
                         Rectangle::new(0.0, 0.0, self.width, self.height),
                         svg_chunk,
@@ -76,7 +79,9 @@ impl Canvas {
                     };
                     let tree = usvg::Tree::from_str(&svg_data, &options)?;
                     let (svg_chunk, svg_id) =
-                        svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default());
+                        svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default()).map_err(
+                            |e| NelsieError::generic_err(format!("PDF conversion error: {}", e)),
+                        )?;
                     elements.push(PdfPageElement::LocalRef(rect, svg_chunk, svg_id));
                 }
             }
