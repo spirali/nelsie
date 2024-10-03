@@ -12,7 +12,7 @@ mod watch;
 use crate::pyinterface::resources::Resources;
 use deck::Deck;
 use pyo3::exceptions::PyException;
-use pyo3::types::PyModule;
+use pyo3::types::{PyModule, PyModuleMethods};
 use pyo3::{pymodule, wrap_pyfunction, Bound, PyErr, PyResult, Python};
 
 impl From<crate::NelsieError> for PyErr {

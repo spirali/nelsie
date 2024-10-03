@@ -5,13 +5,14 @@ use crate::pyinterface::basictypes::PyStringOrFloatOrExpr;
 
 use itertools::Itertools;
 
-use pyo3::{FromPyObject, PyAny, PyResult};
+use pyo3::types::PyAnyMethods;
+use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 
 #[derive(Debug)]
 pub(crate) struct PyArrow(Arrow);
 
 impl<'py> FromPyObject<'py> for PyArrow {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         Ok(PyArrow(Arrow {
             size: ob.getattr("size")?.extract()?,
             angle: ob.getattr("angle")?.extract()?,
@@ -100,7 +101,7 @@ impl PyPath {
 }
 
 impl<'py> FromPyObject<'py> for Stroke {
-    fn extract(ob: &'py PyAny) -> PyResult<Self> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         Ok(Stroke {
             color: ob.getattr("color")?.extract()?,
             width: ob.getattr("width")?.extract()?,
