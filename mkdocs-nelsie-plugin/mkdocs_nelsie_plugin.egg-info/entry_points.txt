@@ -1,0 +1,2 @@
+[mkdocs.plugins]
+nelsie = mkdocs_nelsie_plugin:NelsiePlugin

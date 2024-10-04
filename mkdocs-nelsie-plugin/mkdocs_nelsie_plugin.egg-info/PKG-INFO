@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: mkdocs-nelsie-plugin
+Version: 0.0.1
+Summary: MkDocs plugin for building Nelsie examples in documentation
+Home-page: https://github.com/spirali/nelsie
+Author: Ada Böhm
+Author-email: ada@kreatrix.org
