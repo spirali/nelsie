@@ -1,6 +1,7 @@
 use crate::common::error::NelsieError;
-use crate::model::{Color, StepValue, Stroke};
+use crate::model::StepValue;
 
+use crate::common::{Color, Stroke};
 use std::collections::HashMap;
 use std::sync::Arc;
 use svg2pdf::usvg;
@@ -9,8 +10,6 @@ use usvg::FontStretch;
 #[derive(Debug, PartialEq)]
 pub(crate) struct FontData {
     pub family_name: String,
-    pub descender: f32,
-    pub space_size: f32,
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -75,6 +74,26 @@ pub(crate) struct TextStyle {
     pub underline: bool,
     pub overline: bool,
     pub line_through: bool,
+}
+
+impl Default for TextStyle {
+    fn default() -> Self {
+        TextStyle {
+            font: Arc::new(FontData {
+                family_name: "".to_string(),
+            }),
+            stroke: None,
+            color: None,
+            size: 0.0,
+            line_spacing: 0.0,
+            italic: false,
+            stretch: Default::default(),
+            weight: 0,
+            underline: false,
+            overline: false,
+            line_through: false,
+        }
+    }
 }
 
 pub(crate) fn merge_stepped_styles(

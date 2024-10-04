@@ -38,6 +38,13 @@ impl<T: Debug> StepValue<T> {
         StepValue::Const(value)
     }
 
+    pub fn get_const(self) -> Option<T> {
+        match self {
+            StepValue::Const(v) => Some(v),
+            StepValue::Steps(_) => None,
+        }
+    }
+
     pub fn at_step(&self, step: &Step) -> &T {
         debug_assert!(step >= &Step::from_int(1));
         match self {
@@ -47,6 +54,13 @@ impl<T: Debug> StepValue<T> {
                 .next_back()
                 .map(|(_, v)| v)
                 .unwrap_or_else(|| panic!("Invalid step {}", step)),
+        }
+    }
+
+    pub fn steps(&self) -> impl Iterator<Item = &Step> {
+        match self {
+            StepValue::Const(_) => itertools::Either::Left(std::iter::empty()),
+            StepValue::Steps(v) => itertools::Either::Right(v.keys()),
         }
     }
 
@@ -62,6 +76,20 @@ impl<T: Debug> StepValue<T> {
         match self {
             StepValue::Const(_) => itertools::Either::Left(std::iter::empty()),
             StepValue::Steps(v) => itertools::Either::Right(v.into_iter()),
+        }
+    }
+
+    pub fn try_map_ref<E, S: Debug, F: FnMut(&T) -> Result<S, E>>(
+        &self,
+        mut f: F,
+    ) -> Result<StepValue<S>, E> {
+        match self {
+            StepValue::Const(v) => f(v).map(StepValue::Const),
+            StepValue::Steps(v) => v
+                .iter()
+                .map(|(k, v)| Ok((k.clone(), f(v)?)))
+                .collect::<Result<_, E>>()
+                .map(StepValue::Steps),
         }
     }
 

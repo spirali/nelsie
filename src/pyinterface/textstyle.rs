@@ -1,5 +1,6 @@
-use crate::model::{Color, PartialTextStyle, Resources, Stroke};
+use crate::model::{PartialTextStyle, Resources};
 
+use crate::common::{Color, Stroke};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
 use pyo3::pybacked::PyBackedStr;
@@ -28,11 +29,7 @@ pub(crate) struct PyTextStyle {
 }
 
 impl PyTextStyle {
-    // pub fn new(style: PartialTextStyle) -> Self {
-    //     PyTextStyle({
-    //                 }
-    // }
-    pub fn into_partial_style(self, resources: &Resources) -> crate::Result<PartialTextStyle> {
+    pub fn into_partial_style(self, resources: &mut Resources) -> crate::Result<PartialTextStyle> {
         let font = self
             .font_family
             .map(|name| resources.check_font(&name).map(Arc::new))

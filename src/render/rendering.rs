@@ -1,23 +1,20 @@
 use crate::model::{
-    Color, Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, Stroke, StyledLine,
-    StyledText, TextAlign, TextStyle,
+    Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText, TextStyle,
 };
-use crate::render::layout::{ComputedLayout, LayoutContext};
+use crate::render::layout::{compute_layout, ComputedLayout};
 use crate::render::RenderConfig;
 
 use std::collections::BTreeSet;
 
 use std::sync::Arc;
 
-use crate::render::counters::replace_counters;
 use crate::render::image::render_image_to_canvas;
 use crate::render::paths::{create_arrow, path_from_rect, path_to_svg};
 
-use crate::common::Rectangle;
+use crate::common::{Color, PathBuilder, Rectangle, Stroke};
 use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem, Link};
-use crate::render::pathbuilder::PathBuilder;
-use crate::render::text::{render_text_to_canvas, render_text_to_svg};
+use crate::render::text::render_text_to_canvas;
 use svg2pdf::usvg;
 
 pub(crate) struct RenderContext<'a> {
@@ -59,7 +56,7 @@ fn draw_debug_frame(
         width: rect.width.max(1.0),
         height: rect.height.max(1.0),
     });
-    path.write_svg(&mut xml);
+    path.build().write_svg(&mut xml);
 
     let text = if name.is_empty() {
         format!("[{}x{}]", rect.width, rect.height)
@@ -70,11 +67,11 @@ fn draw_debug_frame(
         styled_lines: vec![StyledLine {
             spans: vec![Span {
                 length: text.len() as u32,
-                style_idx: 0,
+                style_idx: None,
             }],
             text,
         }],
-        styles: vec![TextStyle {
+        main_style: TextStyle {
             font: font.clone(),
             stroke: None,
             color: Some(*color),
@@ -86,17 +83,18 @@ fn draw_debug_frame(
             underline: false,
             overline: false,
             line_through: false,
-        }],
-        default_font_size: 8.0,
-        default_line_spacing: 0.0,
+        },
+        styles: Vec::new(),
+        anchors: Default::default(),
     };
-    render_text_to_svg(
+    todo!();
+    /* TODO render_text_to_svg(
         &mut xml,
         &styled_text,
         rect.x + 2.0,
         rect.y + 3.0,
         TextAlign::Start,
-    );
+    );*/
     canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
 }
 
@@ -161,7 +159,7 @@ impl<'a> RenderContext<'a> {
                 let mut path = PathBuilder::new(None, Some(*color));
                 path_from_rect(&mut path, rect, border_radius);
                 let mut xml = SimpleXmlWriter::new();
-                path.write_svg(&mut xml);
+                path.build().write_svg(&mut xml);
                 self.canvas
                     .add_item(CanvasItem::SvgChunk(xml.into_string()))
             }
@@ -169,19 +167,12 @@ impl<'a> RenderContext<'a> {
             if let Some(content) = &node.content {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 match content {
-                    NodeContent::Text(text) => {
-                        let mut t = text.text_style_at_step(step);
-                        if text.parse_counters {
-                            // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
-                            // for counters
-                            replace_counters(
-                                self.config.counter_values,
-                                &mut t,
-                                self.config.slide_id,
-                                self.config.step,
-                            );
-                        }
-                        render_text_to_canvas(&t, rect, text.text_align, self.canvas);
+                    NodeContent::Text(_) => {
+                        render_text_to_canvas(
+                            self.config.text_cache.get(node.node_id).unwrap(),
+                            rect,
+                            self.canvas,
+                        );
                     }
                     NodeContent::Image(image) => {
                         render_image_to_canvas(image, step, rect, self.canvas)
@@ -238,10 +229,9 @@ impl<'a> RenderContext<'a> {
     }
 }
 
-pub(crate) fn render_to_canvas(render_cfg: &RenderConfig) -> Canvas {
+pub(crate) fn render_to_canvas(render_cfg: &mut RenderConfig) -> Canvas {
     log::debug!("Creating layout");
-    let layout_builder = LayoutContext::new(render_cfg);
-    let layout = layout_builder.compute_layout(render_cfg.slide, render_cfg.step);
+    let layout = compute_layout(render_cfg, render_cfg.step);
 
     log::debug!("Layout {:?}", layout);
 

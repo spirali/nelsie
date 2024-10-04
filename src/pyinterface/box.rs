@@ -1,6 +1,6 @@
 use crate::model::{
-    merge_stepped_styles, Color, LengthOrExpr, LoadedImage, NodeContentText, ParsedText,
-    PartialTextStyle, Step, StepIndex, StepSet, StyleMap, TextAlign,
+    merge_stepped_styles, LengthOrExpr, LoadedImage, NodeContentText, PartialTextStyle, Step,
+    StepIndex, StepSet, StyleMap, StyledText, TextAlign,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, StepValue,
@@ -14,7 +14,7 @@ use crate::parsers::{
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr, PyStringOrI16};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
 
 use pyo3::exceptions::PyValueError;
@@ -22,6 +22,8 @@ use pyo3::types::PyAnyMethods;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 
 use crate::common::error::NelsieError;
+use crate::common::Color;
+use itertools::Itertools;
 use pyo3::pybacked::PyBackedStr;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -99,7 +101,7 @@ pub(crate) struct NodeCreationEnv<'a> {
 }
 
 fn resolve_style(
-    resources: &Resources,
+    resources: &mut Resources,
     original: &StepValue<PartialTextStyle>,
     style_or_name: PyTextStyleOrName,
     styles: &StyleMap,
@@ -115,55 +117,101 @@ fn resolve_style(
 }
 
 fn process_text_parsing(
-    text: &str,
+    text: StepValue<String>,
     resources: &Resources,
     formatting_delimiters: Option<&str>,
     syntax_language: Option<&str>,
     syntax_theme: Option<&str>,
     main_style: &StepValue<PartialTextStyle>,
     styles: &StyleMap,
-) -> PyResult<ParsedText> {
-    let mut parsed = if let Some(delimiters) = formatting_delimiters {
-        if delimiters.chars().count() != 3 {
-            return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
+) -> PyResult<StepValue<StyledText>> {
+    let parsed = text.try_map_ref(|s| {
+        let mut parsed = if let Some(delimiters) = formatting_delimiters {
+            if delimiters.chars().count() != 3 {
+                return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
+            }
+            let mut f = delimiters.chars();
+            let esc_char = f.next().unwrap();
+            let start_block = f.next().unwrap();
+            let end_block = f.next().unwrap();
+            parse_styled_text(s, esc_char, start_block, end_block)?
+        } else {
+            parse_styled_text_from_plain_text(s)
+        };
+        if let Some(language) = &syntax_language {
+            let theme = syntax_theme
+                .as_ref()
+                .ok_or_else(|| PyValueError::new_err("Invalid syntax highlight theme"))?;
+            run_syntax_highlighting(resources, &mut parsed, language, theme)?;
         }
-        let mut f = delimiters.chars();
-        let esc_char = f.next().unwrap();
-        let start_block = f.next().unwrap();
-        let end_block = f.next().unwrap();
-        parse_styled_text(text, esc_char, start_block, end_block)?
-    } else {
-        parse_styled_text_from_plain_text(text)
-    };
 
-    if let Some(language) = &syntax_language {
-        let theme = syntax_theme
-            .as_ref()
-            .ok_or_else(|| PyValueError::new_err("Invalid theme"))?;
-        run_syntax_highlighting(resources, &mut parsed, language, theme)?;
-    }
-
-    let styles = parsed
-        .styles
-        .into_iter()
-        .map(|names| {
-            names
-                .into_iter()
-                .try_fold(main_style.clone(), |s, style_or_name| {
-                    Ok(match style_or_name {
-                        StyleOrName::Name(name) => {
-                            merge_stepped_styles(&s, styles.get_style(name)?)
-                        }
-                        StyleOrName::Style(style) => s.map(|x| x.merge(&style)),
+        let styles = parsed
+            .styles
+            .into_iter()
+            .map(|names| {
+                names
+                    .into_iter()
+                    .try_fold(StepValue::Const(PartialTextStyle::default()), |s, style_or_name| {
+                        Ok(match style_or_name {
+                            StyleOrName::Name(name) => {
+                                merge_stepped_styles(&s, styles.get_style(name)?)
+                            }
+                            StyleOrName::Style(style) => s.map(|x| x.merge(&style)),
+                        })
                     })
-                })
-                .map(|s| s.map(|v| v.into_text_style().unwrap()))
+            })
+            .collect::<crate::Result<Vec<_>>>()?;
+        Ok((parsed.styled_lines, styles, parsed.anchors))
+    }
+    )?;
+
+    let mut steps: BTreeSet<&Step> = parsed.steps().collect();
+    steps.extend(
+        parsed
+            .values()
+            .flat_map(|v| v.1.iter().flat_map(|s| s.steps())),
+    );
+    steps.extend(main_style.steps());
+
+    Ok(if steps.is_empty() {
+        let (styled_lines, styles, anchors) = parsed.get_const().unwrap();
+        let main_style = main_style
+            .clone()
+            .get_const()
+            .unwrap()
+            .into_text_style()
+            .unwrap();
+        let styles = styles
+            .into_iter()
+            .map(|s| s.get_const().unwrap())
+            .collect_vec();
+        StepValue::Const(StyledText {
+            styled_lines,
+            main_style,
+            styles,
+            anchors,
         })
-        .collect::<crate::Result<Vec<_>>>()?;
-    Ok(ParsedText {
-        styled_lines: parsed.styled_lines,
-        styles,
-        anchors: parsed.anchors,
+    } else {
+        let mut map = BTreeMap::new();
+        for step in steps {
+            let (styled_lines, styles, anchors) = parsed.at_step(step);
+            let main_style = main_style.at_step(step).clone().into_text_style().unwrap();
+            let styles = styles
+                .iter()
+                .map(|s| s.at_step(step))
+                .cloned()
+                .collect_vec();
+            map.insert(
+                step.clone(),
+                StyledText {
+                    styled_lines: styled_lines.clone(),
+                    main_style: main_style.clone(),
+                    styles,
+                    anchors: anchors.clone(),
+                },
+            );
+        }
+        StepValue::new_map(map)
     })
 }
 
@@ -190,24 +238,20 @@ fn process_content(
             if let Some(style) = text.style2 {
                 main_style = resolve_style(nc_env.resources, &main_style, style, styles, steps)?
             };
-
-            let parsed_text = text.text.parse(steps, |txt| {
-                process_text_parsing(
-                    &txt,
-                    nc_env.resources,
-                    text.formatting_delimiters.as_deref(),
-                    text.syntax_language.as_deref(),
-                    text.syntax_theme.as_deref(),
-                    &main_style,
-                    styles,
-                )
-            })?;
+            let text_str = text.text.into_step_value(steps);
+            let styled_text = process_text_parsing(
+                text_str,
+                nc_env.resources,
+                text.formatting_delimiters.as_deref(),
+                text.syntax_language.as_deref(),
+                text.syntax_theme.as_deref(),
+                &main_style,
+                styles,
+            )?;
 
             let node_content = NodeContentText {
-                parsed_text,
+                styled_text,
                 text_align,
-                default_font_size: main_style.map_ref(|s| s.size.unwrap()),
-                default_line_spacing: main_style.map_ref(|s| s.line_spacing.unwrap()),
                 parse_counters: text.parse_counters,
             };
 

@@ -1,6 +1,6 @@
 use crate::common::error::NelsieError;
 use crate::model::{
-    InTextAnchor, InTextAnchorId, InTextAnchorPoint, PartialTextStyle, Span, StyledLine,
+    InTextAnchor, InTextAnchorPoint, InTextBoxId, PartialTextStyle, Span, StyledLine,
 };
 
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ pub(crate) enum StyleOrName<'a> {
 pub(crate) struct ParsedStyledText<'a> {
     pub styled_lines: Vec<StyledLine>,
     pub styles: Vec<Vec<StyleOrName<'a>>>,
-    pub anchors: HashMap<InTextAnchorId, InTextAnchor>,
+    pub anchors: HashMap<InTextBoxId, InTextAnchor>,
 }
 
 fn find_first(text: &str, c1: char, c2: Option<char>) -> Option<(usize, char)> {
@@ -34,12 +34,12 @@ pub(crate) fn parse_styled_text_from_plain_text(text: &str) -> ParsedStyledText 
             .map(|line| StyledLine {
                 spans: vec![Span {
                     length: line.len() as u32,
-                    style_idx: 0,
+                    style_idx: None,
                 }],
                 text: line.to_string(),
             })
             .collect(),
-        styles: vec![vec![]],
+        styles: Vec::new(),
         anchors: Default::default(),
     }
 }
@@ -51,17 +51,20 @@ pub(crate) fn parse_styled_text<'a>(
     end_block: char,
 ) -> crate::Result<ParsedStyledText> {
     let mut style_stack: Vec<StyleOrName<'a>> = Vec::new();
-    let mut anchor_stack: Vec<Option<(InTextAnchorId, InTextAnchorPoint)>> = Vec::new();
+    let mut anchor_stack: Vec<Option<(InTextBoxId, InTextAnchorPoint)>> = Vec::new();
 
     let mut result_styles = Vec::new();
-    let mut result_anchors = HashMap::<InTextAnchorId, InTextAnchor>::new();
+    let mut result_anchors = HashMap::<InTextBoxId, InTextAnchor>::new();
 
     let get_style = |stack: &[StyleOrName<'a>], styles: &mut Vec<Vec<StyleOrName<'a>>>| {
-        styles.iter().position(|s| s == stack).unwrap_or_else(|| {
+        if stack.is_empty() {
+            return None;
+        }
+        Some(styles.iter().position(|s| s == stack).unwrap_or_else(|| {
             let idx = styles.len();
             styles.push(stack.to_vec());
             idx
-        })
+        }) as u32)
     };
 
     let mut out_lines: Vec<StyledLine> = Vec::new();
@@ -82,7 +85,7 @@ pub(crate) fn parse_styled_text<'a>(
                     result_text.push_str(&line[..idx]);
                     spans.push(Span {
                         length: idx as u32,
-                        style_idx: get_style(&style_stack, &mut result_styles) as u32,
+                        style_idx: get_style(&style_stack, &mut result_styles),
                     });
                 }
                 line = &line[idx + 1..];
@@ -95,7 +98,7 @@ pub(crate) fn parse_styled_text<'a>(
                     })?;
                     let style_name = &line[..idx];
                     if style_name.chars().all(|x| x.is_ascii_digit()) {
-                        let anchor_id: InTextAnchorId = style_name
+                        let anchor_id: InTextBoxId = style_name
                             .parse()
                             .map_err(|_| NelsieError::parsing_err("Invalid anchor id"))?;
                         anchor_stack.push(Some((
@@ -128,7 +131,7 @@ pub(crate) fn parse_styled_text<'a>(
                 if !line.is_empty() {
                     spans.push(Span {
                         length: line.len() as u32,
-                        style_idx: get_style(&style_stack, &mut result_styles) as u32,
+                        style_idx: get_style(&style_stack, &mut result_styles),
                     });
                     result_text.push_str(line);
                 }

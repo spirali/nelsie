@@ -5,10 +5,11 @@ mod counters;
 mod image;
 mod layout;
 mod pagebuilder;
-mod pathbuilder;
 mod paths;
 mod pdf;
 mod rendering;
+mod rtext;
+mod svgpath;
 mod text;
 
 use crate::model::{FontData, Resources, Slide, SlideDeck, SlideId, Step};
@@ -17,17 +18,36 @@ pub(crate) use pdf::PdfBuilder;
 use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
+use crate::render::rtext::{TextCache, TextContext};
 use itertools::Itertools;
+use parley::{FontContext, LayoutContext};
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use std::path::Path;
 use std::sync::Arc;
 
+pub(crate) struct ThreadLocalResources {
+    pub text_context: TextContext,
+}
+
+impl ThreadLocalResources {
+    pub fn new(resources: Resources) -> Self {
+        ThreadLocalResources {
+            text_context: TextContext {
+                layout_cx: Default::default(),
+                font_cx: Default::default(),
+            },
+        }
+    }
+}
+
 pub(crate) struct RenderConfig<'a> {
     pub resources: &'a Resources,
+    pub thread_resources: &'a mut ThreadLocalResources,
     pub slide: &'a Slide,
     pub slide_id: SlideId,
     pub step: &'a Step,
+    pub text_cache: TextCache,
     pub default_font: &'a Arc<FontData>,
     pub counter_values: &'a CountersMap<'a>,
 }
@@ -67,6 +87,7 @@ impl VerboseLevel {
 
 fn render_slide_step(
     resources: &Resources,
+    thread_resources: &mut ThreadLocalResources,
     builder: &PageBuilder,
     slide_id: SlideId,
     slide: &Slide,
@@ -75,15 +96,17 @@ fn render_slide_step(
     counter_values: &CountersMap,
 ) -> crate::Result<()> {
     log::debug!("Rendering slide {}/{}", slide_id, step);
-    let render_cfg = RenderConfig {
+    let mut render_cfg = RenderConfig {
         resources,
+        thread_resources,
         slide,
         slide_id,
         step,
         default_font,
         counter_values,
+        text_cache: TextCache::default(),
     };
-    let canvas = render_to_canvas(&render_cfg);
+    let canvas = render_to_canvas(&mut render_cfg);
     let counter = render_cfg.counter_values.get("global").unwrap();
     let page_idx = counter
         .indices
@@ -137,11 +160,20 @@ pub(crate) fn render_slide_deck(
                             .map(move |step| (slide_idx, slide, step))
                     })
                     .collect_vec();
-                tasks
-                    .into_par_iter()
-                    .try_for_each(|(slide_idx, slide, step)| {
+                tasks.into_par_iter().try_for_each_init(
+                    || ThreadLocalResources {
+                        text_context: TextContext {
+                            layout_cx: LayoutContext::new(),
+                            font_cx: FontContext {
+                                collection: resources.font_context.collection.clone(),
+                                source_cache: resources.font_context.source_cache.clone(),
+                            },
+                        },
+                    },
+                    |thread_resources, (slide_idx, slide, step)| {
                         render_slide_step(
                             resources,
+                            thread_resources,
                             &builder,
                             slide_idx as SlideId,
                             slide,
@@ -149,7 +181,8 @@ pub(crate) fn render_slide_deck(
                             &slide_deck.default_font,
                             &counter_values,
                         )
-                    })
+                    },
+                )
             },
             || builder.other_tasks(),
         );

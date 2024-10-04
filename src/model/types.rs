@@ -1,8 +1,5 @@
-use crate::common::error::NelsieError;
-use std::fmt::{Display, Formatter};
 
-use crate::model::InTextAnchorId;
-use std::str::FromStr;
+use crate::model::InTextBoxId;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub(crate) struct NodeId(u32);
@@ -136,20 +133,20 @@ pub(crate) enum LayoutExpr {
     },
     InTextAnchorX {
         node_id: NodeId,
-        anchor_id: InTextAnchorId,
+        anchor_id: InTextBoxId,
     },
     InTextAnchorY {
         node_id: NodeId,
-        anchor_id: InTextAnchorId,
+        anchor_id: InTextBoxId,
     },
     InTextAnchorWidth {
         node_id: NodeId,
-        anchor_id: InTextAnchorId,
+        anchor_id: InTextBoxId,
         fraction: f32,
     },
     InTextAnchorHeight {
         node_id: NodeId,
-        anchor_id: InTextAnchorId,
+        anchor_id: InTextBoxId,
         fraction: f32,
     },
     Sum {
@@ -163,63 +160,4 @@ impl LayoutExpr {
             expressions: vec![self, other],
         }
     }
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub(crate) struct Color(svgtypes::Color);
-
-impl Color {
-    pub fn new(color: svgtypes::Color) -> Self {
-        Color(color)
-    }
-
-    pub fn as_3f32(&self) -> (f32, f32, f32) {
-        (
-            self.0.red as f32 / 255.0,
-            self.0.green as f32 / 255.0,
-            self.0.blue as f32 / 255.0,
-        )
-    }
-}
-
-impl From<&Color> for svgtypes::Color {
-    fn from(value: &Color) -> Self {
-        value.0
-    }
-}
-
-impl FromStr for Color {
-    type Err = NelsieError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Color::new(svgtypes::Color::from_str(s).map_err(|_| {
-            NelsieError::Parsing(format!("Invalid color: '{s}'"))
-        })?))
-    }
-}
-
-impl Display for Color {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        if self.0.alpha == 255 {
-            write!(
-                f,
-                "#{:02x}{:02x}{:02x}",
-                self.0.red, self.0.green, self.0.blue
-            )
-        } else {
-            write!(
-                f,
-                "#{:02x}{:02x}{:02x}{:02x}",
-                self.0.red, self.0.green, self.0.blue, self.0.alpha
-            )
-        }
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Stroke {
-    pub color: Color,
-    pub width: f32,
-    pub dash_array: Option<Vec<f32>>,
-    pub dash_offset: f32,
 }

@@ -1,6 +1,7 @@
 use crate::common::error::NelsieError;
-use crate::model::{Color, PartialTextStyle, Resources, Span};
+use crate::model::{PartialTextStyle, Resources, Span};
 
+use crate::common::Color;
 use crate::parsers::text::ParsedStyledText;
 use crate::parsers::StyleOrName;
 use syntect::easy::HighlightLines;
@@ -83,7 +84,10 @@ pub fn run_syntax_highlighting(
             let mut len = word.len() as u32;
             while len > 0 {
                 let last = line.spans.last_mut().unwrap();
-                let mut new_style = text.styles[last.style_idx as usize].clone();
+                let mut new_style = last
+                    .style_idx
+                    .map(|idx| text.styles[idx as usize].clone())
+                    .unwrap_or_else(Vec::new);
                 new_style.insert(0, StyleOrName::Style(create_style(style)));
                 let style_idx = styles
                     .iter()
@@ -96,7 +100,7 @@ pub fn run_syntax_highlighting(
 
                 spans.push(Span {
                     length: len.min(last.length),
-                    style_idx,
+                    style_idx: Some(style_idx),
                 });
 
                 if last.length <= len {
