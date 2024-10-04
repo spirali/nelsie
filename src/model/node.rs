@@ -1,4 +1,4 @@
-use super::{Color, Length, LengthOrExpr, NodeContentImage, Step, StepValue, StyleMap};
+use super::{Length, LengthOrExpr, NodeContentImage, Step, StepValue, StyleMap};
 use crate::model::shapes::Drawing;
 use crate::model::text::NodeContentText;
 use crate::model::types::LengthOrAuto;
@@ -9,6 +9,7 @@ use by_address::ByAddress;
 use std::sync::Arc;
 use taffy::{GridPlacement, Line, NonRepeatedTrackSizingFunction};
 
+use crate::common::Color;
 use crate::model::image::LoadedImage;
 use taffy::prelude::{AlignContent, AlignItems};
 use taffy::style::FlexWrap;

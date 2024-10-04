@@ -1,5 +1,4 @@
-use crate::common::Rectangle;
-use crate::model::Color;
+use crate::common::{Color, Rectangle};
 use std::sync::Arc;
 
 #[derive(Debug)]

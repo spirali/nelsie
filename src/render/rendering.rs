@@ -1,6 +1,6 @@
 use crate::model::{
-    Color, Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, Stroke, StyledLine,
-    StyledText, TextAlign, TextStyle,
+    Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText,
+    TextAlign, TextStyle,
 };
 use crate::render::layout::{ComputedLayout, LayoutContext};
 use crate::render::RenderConfig;
@@ -13,10 +13,9 @@ use crate::render::counters::replace_counters;
 use crate::render::image::render_image_to_canvas;
 use crate::render::paths::{create_arrow, path_from_rect, path_to_svg};
 
-use crate::common::Rectangle;
+use crate::common::{Color, PathBuilder, Rectangle, Stroke};
 use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem, Link};
-use crate::render::pathbuilder::PathBuilder;
 use crate::render::text::{render_text_to_canvas, render_text_to_svg};
 use svg2pdf::usvg;
 
@@ -59,7 +58,7 @@ fn draw_debug_frame(
         width: rect.width.max(1.0),
         height: rect.height.max(1.0),
     });
-    path.write_svg(&mut xml);
+    path.build().write_svg(&mut xml);
 
     let text = if name.is_empty() {
         format!("[{}x{}]", rect.width, rect.height)
@@ -161,7 +160,7 @@ impl<'a> RenderContext<'a> {
                 let mut path = PathBuilder::new(None, Some(*color));
                 path_from_rect(&mut path, rect, border_radius);
                 let mut xml = SimpleXmlWriter::new();
-                path.write_svg(&mut xml);
+                path.build().write_svg(&mut xml);
                 self.canvas
                     .add_item(CanvasItem::SvgChunk(xml.into_string()))
             }

@@ -1,6 +1,6 @@
 use crate::model::{
-    merge_stepped_styles, Color, LengthOrExpr, LoadedImage, NodeContentText, ParsedText,
-    PartialTextStyle, Step, StepIndex, StepSet, StyleMap, TextAlign,
+    merge_stepped_styles, LengthOrExpr, LoadedImage, NodeContentText, ParsedText, PartialTextStyle,
+    Step, StepIndex, StepSet, StyleMap, TextAlign,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, StepValue,
@@ -22,6 +22,7 @@ use pyo3::types::PyAnyMethods;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 
 use crate::common::error::NelsieError;
+use crate::common::Color;
 use pyo3::pybacked::PyBackedStr;
 use std::path::PathBuf;
 use std::str::FromStr;

@@ -1,13 +1,13 @@
-use crate::common::Rectangle;
-use crate::model::{NodeId, Path, PathPart, Stroke};
+use crate::common::{PathBuilder, Rectangle, Stroke};
+use crate::model::{DrawingPath, NodeId, PathPart};
 use crate::parsers::SimpleXmlWriter;
 use crate::render::layout::ComputedLayout;
-use crate::render::pathbuilder::{svg_ellipse, PathBuilder};
+use crate::render::svgpath::svg_ellipse;
 
 fn move_point_for_arrow(
     layout: &ComputedLayout,
     parent_id: NodeId,
-    path: &Path,
+    path: &DrawingPath,
     index: usize,
 ) -> Option<(f32, f32)> {
     if path.arrow_end.is_some() && index == path.parts.len() - 1 {
@@ -45,7 +45,7 @@ pub(crate) fn path_to_svg(
     xml: &mut SimpleXmlWriter,
     layout: &ComputedLayout,
     parent_id: NodeId,
-    path: &Path,
+    path: &DrawingPath,
 ) {
     if let Some(PathPart::Oval { x1, y1, x2, y2 }) = path.parts.first() {
         let x1 = layout.eval(x1, parent_id);
@@ -100,7 +100,7 @@ pub(crate) fn path_to_svg(
                 PathPart::Oval { .. } => { /* Ignoring Oval, it has to be first if it used */ }
             }
         }
-        builder.write_svg(xml);
+        builder.build().write_svg(xml);
     }
 }
 
@@ -149,7 +149,7 @@ pub(crate) fn create_arrow(
     xml: &mut SimpleXmlWriter,
     layout: &ComputedLayout,
     parent_id: NodeId,
-    path: &Path,
+    path: &DrawingPath,
     is_end_arrow: bool,
 ) -> Option<()> {
     let arrow = if is_end_arrow {
@@ -201,7 +201,7 @@ pub(crate) fn create_arrow(
         }
         builder.close();
     }
-    builder.write_svg(xml);
+    builder.build().write_svg(xml);
     Some(())
 }
 

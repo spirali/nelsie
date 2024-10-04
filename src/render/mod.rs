@@ -5,10 +5,11 @@ mod counters;
 mod image;
 mod layout;
 mod pagebuilder;
-mod pathbuilder;
 mod paths;
 mod pdf;
 mod rendering;
+mod rtext;
+mod svgpath;
 mod text;
 
 use crate::model::{FontData, Resources, Slide, SlideDeck, SlideId, Step};

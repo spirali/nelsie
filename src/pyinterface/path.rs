@@ -1,10 +1,11 @@
 use crate::common::error::NelsieError;
-use crate::model::{Arrow, Color, Path, PathPart, Stroke};
+use crate::model::{Arrow, DrawingPath, PathPart};
 use crate::parsers::{parse_position, StringOrFloatOrExpr};
 use crate::pyinterface::basictypes::PyStringOrFloatOrExpr;
 
 use itertools::Itertools;
 
+use crate::common::{Color, Stroke};
 use pyo3::types::PyAnyMethods;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 
@@ -84,9 +85,9 @@ fn command_to_part(
 }
 
 impl PyPath {
-    pub fn into_path(self) -> crate::Result<Path> {
+    pub fn into_path(self) -> crate::Result<DrawingPath> {
         let mut points_iter = self.points.into_iter();
-        Ok(Path {
+        Ok(DrawingPath {
             stroke: self.stroke,
             fill_color: self.fill_color,
             parts: self

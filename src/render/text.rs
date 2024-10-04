@@ -10,7 +10,7 @@ use crate::common::Rectangle;
 use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::layout::TextLayout;
-use crate::render::pathbuilder::stroke_and_fill_svg;
+use crate::render::svgpath::stroke_and_fill_svg;
 use resvg::usvg;
 
 pub(crate) fn get_in_text_anchor_point(text: &StyledText, point: &InTextAnchorPoint) -> StyledText {

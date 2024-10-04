@@ -1,5 +1,6 @@
-use crate::model::{Color, PartialTextStyle, Resources, Stroke};
+use crate::model::{PartialTextStyle, Resources};
 
+use crate::common::{Color, Stroke};
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
 use pyo3::pybacked::PyBackedStr;

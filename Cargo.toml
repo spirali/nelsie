@@ -33,6 +33,11 @@ rayon = "1.10"
 notify = "6.1"
 smallvec = "1"
 chumsky = "0.9"
+parley = { git = "https://github.com/linebender/parley.git", rev = "41821d4068e35b826208bd6073f856fae620c36f" }
+swash = { version = "0.1", default-features = true }
+peniko = "0.1"
+skrifa = "0.19"
+
 
 [profile.release]
 lto = true

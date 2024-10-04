@@ -1,6 +1,7 @@
 use crate::common::error::NelsieError;
-use crate::model::{Color, PartialTextStyle, Resources, Span};
+use crate::model::{PartialTextStyle, Resources, Span};
 
+use crate::common::Color;
 use crate::parsers::text::ParsedStyledText;
 use crate::parsers::StyleOrName;
 use syntect::easy::HighlightLines;

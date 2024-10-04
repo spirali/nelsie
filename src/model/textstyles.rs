@@ -1,6 +1,7 @@
 use crate::common::error::NelsieError;
-use crate::model::{Color, StepValue, Stroke};
+use crate::model::StepValue;
 
+use crate::common::{Color, Stroke};
 use std::collections::HashMap;
 use std::sync::Arc;
 use svg2pdf::usvg;

@@ -1,5 +1,5 @@
+use crate::common::Color;
 use crate::common::Rectangle;
-use crate::model::Color;
 
 use image::GenericImageView;
 use itertools::Itertools;
