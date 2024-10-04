@@ -33,7 +33,7 @@ pub(crate) fn stroke_and_fill_svg(
 }
 
 impl Path {
-    pub fn write_svg(self, xml: &mut SimpleXmlWriter) {
+    pub fn write_svg(&self, xml: &mut SimpleXmlWriter) {
         xml.begin("path");
 
         xml.attr_buf("d", |s| {
@@ -66,7 +66,7 @@ impl Path {
     }
 }
 
-pub fn svg_ellipse(
+pub(crate) fn svg_ellipse(
     xml: &mut SimpleXmlWriter,
     rect: &Rectangle,
     stroke: &Option<Stroke>,

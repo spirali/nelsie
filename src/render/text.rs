@@ -10,6 +10,7 @@ use crate::common::Rectangle;
 use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::layout::TextLayout;
+use crate::render::rtext::RenderedText;
 use crate::render::svgpath::stroke_and_fill_svg;
 use resvg::usvg;
 
@@ -266,7 +267,11 @@ pub(crate) fn render_text_to_svg(
     y: f32,
     align: TextAlign,
 ) {
-    xml.begin("text");
+    let rtext = RenderedText::render(styled_text);
+    for path in rtext.paths() {
+        path.write_svg(xml);
+    }
+    /*xml.begin("text");
     xml.attr("xml:space", "preserve");
     let mut current_y = y;
     for (idx, styled_line) in styled_text.styled_lines.iter().enumerate() {
@@ -292,5 +297,5 @@ pub(crate) fn render_text_to_svg(
             align,
         );
     }
-    xml.end("text");
+    xml.end("text");*/
 }

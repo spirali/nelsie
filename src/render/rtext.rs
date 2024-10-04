@@ -1,4 +1,4 @@
-use crate::common::{Color, PathBuilder};
+use crate::common::{Color, Path, PathBuilder};
 use crate::model::{DrawingPath, StyledText};
 use image::{Pixel, Rgba, RgbaImage};
 use parley::layout::{Alignment, Glyph, GlyphRun, PositionedLayoutItem};
@@ -12,10 +12,16 @@ use skrifa::raw::FontRef as ReadFontsRef;
 use skrifa::{GlyphId, MetadataProvider};
 use std::str::FromStr;
 
-pub(crate) struct RenderedText {}
+pub(crate) struct RenderedText {
+    paths: Vec<Path>,
+}
 
 impl RenderedText {
-    pub fn render(text: StyledText) -> Self {
+    pub fn paths(&self) -> &[Path] {
+        &self.paths
+    }
+
+    pub fn render(text: &StyledText) -> Self {
         // TODO Create just once
         let mut font_cx = FontContext::default();
         let mut layout_cx = LayoutContext::new();
@@ -36,11 +42,12 @@ impl RenderedText {
         layout.break_all_lines(None);
         layout.align(None, Alignment::Start);
 
+        let mut paths = Vec::new();
         for line in layout.lines() {
             for item in line.items() {
                 match item {
                     PositionedLayoutItem::GlyphRun(glyph_run) => {
-                        render_glyph_run(&glyph_run);
+                        paths.push(render_glyph_run(&glyph_run));
                     }
                     PositionedLayoutItem::InlineBox(inline_box) => {
                         todo!()
@@ -48,11 +55,11 @@ impl RenderedText {
                 };
             }
         }
-        todo!()
+        RenderedText { paths }
     }
 }
 
-fn render_glyph_run(glyph_run: &GlyphRun<Color>) {
+fn render_glyph_run(glyph_run: &GlyphRun<Color>) -> Path {
     // Resolve properties of the GlyphRun
     let mut run_x = glyph_run.offset();
     let run_y = glyph_run.baseline();
@@ -96,6 +103,7 @@ fn render_glyph_run(glyph_run: &GlyphRun<Color>) {
         let settings = DrawSettings::unhinted(Size::new(font_size), location_ref);
         glyph_outline.draw(settings, &mut pen).unwrap();
     }
+    pen.path_builder.build()
 }
 
 struct NelsiePathPen {
