@@ -1,8 +1,9 @@
 use super::node::Node;
 use crate::common::error::NelsieError;
+use crate::common::Color;
 use crate::model::textstyles::FontData;
 use crate::model::{
-    Color, Length, LengthOrAuto, LengthOrExpr, NodeId, PartialTextStyle, Resources, Step, StepSet,
+    Length, LengthOrAuto, LengthOrExpr, NodeId, PartialTextStyle, Resources, Step, StepSet,
     StepValue, StyleMap,
 };
 use std::collections::Bound::{Included, Unbounded};

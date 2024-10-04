@@ -1,34 +1,6 @@
-use crate::common::Rectangle;
-use crate::model::{Color, Stroke};
+use crate::common::{Color, Path, PathPart, Rectangle, Stroke};
 use crate::parsers::SimpleXmlWriter;
 use std::fmt::Write;
-
-#[derive(Debug)]
-enum PathPart {
-    Move {
-        x: f32,
-        y: f32,
-    },
-    Line {
-        x: f32,
-        y: f32,
-    },
-    Quad {
-        x1: f32,
-        y1: f32,
-        x: f32,
-        y: f32,
-    },
-    Cubic {
-        x1: f32,
-        y1: f32,
-        x2: f32,
-        y2: f32,
-        x: f32,
-        y: f32,
-    },
-    Close,
-}
 
 pub(crate) fn stroke_and_fill_svg(
     xml: &mut SimpleXmlWriter,
@@ -60,61 +32,12 @@ pub(crate) fn stroke_and_fill_svg(
     }
 }
 
-#[derive(Debug)]
-pub(crate) struct PathBuilder {
-    stroke: Option<Stroke>,
-    fill_color: Option<Color>,
-    parts: Vec<PathPart>,
-}
-
-impl PathBuilder {
-    pub fn new(stroke: Option<Stroke>, fill_color: Option<Color>) -> Self {
-        PathBuilder {
-            stroke,
-            fill_color,
-            parts: Vec::new(),
-        }
-    }
-
-    pub fn rect(&mut self, rect: &Rectangle) {
-        let x2 = rect.x + rect.width;
-        let y2 = rect.y + rect.height;
-        self.move_to(rect.x, rect.y);
-        self.line_to(x2, rect.y);
-        self.line_to(x2, y2);
-        self.line_to(rect.x, y2);
-        self.close();
-    }
-
-    pub fn move_to(&mut self, x: f32, y: f32) {
-        self.parts.push(PathPart::Move { x, y })
-    }
-    pub fn line_to(&mut self, x: f32, y: f32) {
-        self.parts.push(PathPart::Line { x, y })
-    }
-    pub fn quad_to(&mut self, x1: f32, y1: f32, x: f32, y: f32) {
-        self.parts.push(PathPart::Quad { x1, y1, x, y })
-    }
-    pub fn cubic_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) {
-        self.parts.push(PathPart::Cubic {
-            x1,
-            y1,
-            x2,
-            y2,
-            x,
-            y,
-        })
-    }
-
-    pub fn close(&mut self) {
-        self.parts.push(PathPart::Close);
-    }
-
-    pub fn write_svg(self, xml: &mut SimpleXmlWriter) {
+impl Path {
+    pub fn write_svg(&self, xml: &mut SimpleXmlWriter) {
         xml.begin("path");
 
         xml.attr_buf("d", |s| {
-            for (i, part) in self.parts.iter().enumerate() {
+            for (i, part) in self.parts().iter().enumerate() {
                 if i != 0 {
                     s.push(' ');
                 }
@@ -138,12 +61,12 @@ impl PathBuilder {
                 }
             }
         });
-        stroke_and_fill_svg(xml, &self.stroke, &self.fill_color);
+        stroke_and_fill_svg(xml, self.stroke(), self.fill_color());
         xml.end("path");
     }
 }
 
-pub fn svg_ellipse(
+pub(crate) fn svg_ellipse(
     xml: &mut SimpleXmlWriter,
     rect: &Rectangle,
     stroke: &Option<Stroke>,

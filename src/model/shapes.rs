@@ -1,4 +1,5 @@
-use crate::model::{Color, LayoutExpr, StepValue, Stroke};
+use crate::common::{Color, Stroke};
+use crate::model::{LayoutExpr, StepValue};
 
 #[derive(Debug)]
 pub(crate) struct Arrow {
@@ -58,7 +59,7 @@ impl PathPart {
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct Path {
+pub(crate) struct DrawingPath {
     pub stroke: Option<Stroke>,
     pub fill_color: Option<Color>,
     pub parts: Vec<PathPart>,
@@ -68,5 +69,5 @@ pub(crate) struct Path {
 
 #[derive(Debug)]
 pub(crate) struct Drawing {
-    pub paths: StepValue<Vec<Path>>,
+    pub paths: StepValue<Vec<DrawingPath>>,
 }

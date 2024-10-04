@@ -14,17 +14,15 @@ pub(crate) use self::image::{
 };
 pub(crate) use self::node::{Node, NodeChild, NodeContent};
 pub(crate) use self::resources::Resources;
-pub(crate) use self::shapes::{Arrow, Drawing, Path, PathPart};
+pub(crate) use self::shapes::{Arrow, Drawing, DrawingPath, PathPart};
 pub(crate) use self::slidedeck::{Slide, SlideDeck, SlideId};
 pub(crate) use self::step::{Step, StepIndex, StepSet};
 pub(crate) use self::stepvalues::StepValue;
 pub(crate) use self::text::{
-    InTextAnchor, InTextAnchorId, InTextAnchorPoint, NodeContentText, ParsedText, Span, StyledLine,
-    StyledText, TextAlign,
+    InTextAnchor, InTextAnchorPoint, InTextBoxId, NodeContentText, Span, StyledLine, StyledText,
+    TextAlign,
 };
 pub(crate) use self::textstyles::{
     merge_stepped_styles, FontData, PartialTextStyle, StyleMap, TextStyle,
 };
-pub(crate) use self::types::{
-    Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId, Stroke,
-};
+pub(crate) use self::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId};

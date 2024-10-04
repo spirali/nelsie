@@ -13,7 +13,6 @@ pyo3 = { version = "0.22", features = ["abi3-py310", "extension-module"] }
 taffy = "0.5"
 resvg = "0.43"
 svg2pdf = "0.12" # !!synchronized with resvg
-ttf-parser = "0.24" # Not necessary same as resvg but nice to be a same as in resvg
 thiserror = "1"
 svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
@@ -33,6 +32,9 @@ rayon = "1.10"
 notify = "6.1"
 smallvec = "1"
 chumsky = "0.9"
+parley = { version = "0.2" }
+skrifa = "0.19"
+
 
 [profile.release]
 lto = true
