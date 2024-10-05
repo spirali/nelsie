@@ -89,13 +89,14 @@ fn draw_debug_frame(
         default_font_size: 8.0,
         default_line_spacing: 0.0,
     };
-    render_text_to_svg(
+    todo!();
+    /* TODO render_text_to_svg(
         &mut xml,
         &styled_text,
         rect.x + 2.0,
         rect.y + 3.0,
         TextAlign::Start,
-    );
+    );*/
     canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
 }
 
@@ -180,7 +181,11 @@ impl<'a> RenderContext<'a> {
                                 self.config.step,
                             );
                         }
-                        render_text_to_canvas(&t, rect, text.text_align, self.canvas);
+                        render_text_to_canvas(
+                            &self.config.text_cache.get(node.node_id).unwrap(),
+                            rect,
+                            self.canvas,
+                        );
                     }
                     NodeContent::Image(image) => {
                         render_image_to_canvas(image, step, rect, self.canvas)

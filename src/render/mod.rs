@@ -14,10 +14,12 @@ mod text;
 
 use crate::model::{FontData, Resources, Slide, SlideDeck, SlideId, Step};
 pub(crate) use pdf::PdfBuilder;
+use std::cell::RefCell;
 
 use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
+use crate::render::rtext::{TextCache, TextContext};
 use itertools::Itertools;
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
@@ -29,6 +31,8 @@ pub(crate) struct RenderConfig<'a> {
     pub slide: &'a Slide,
     pub slide_id: SlideId,
     pub step: &'a Step,
+    pub text_context: &'a mut TextContext,
+    pub text_cache: &'a mut TextCache,
     pub default_font: &'a Arc<FontData>,
     pub counter_values: &'a CountersMap<'a>,
 }

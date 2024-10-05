@@ -28,7 +28,7 @@ pub(crate) fn get_in_text_anchor_point(text: &StyledText, point: &InTextAnchorPo
     }
 }
 
-pub(crate) fn get_text_layout(
+/*pub(crate) fn get_text_layout(
     resources: &Resources,
     text: &StyledText,
     align: TextAlign,
@@ -128,9 +128,9 @@ pub(crate) fn get_text_layout(
     };
 
     (width, text.height(), result)
-}
+}*/
 
-fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
+/*fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     assert_eq!(text.styled_lines.len(), 1);
     if text.styled_lines[0].text.is_empty() {
         return 0f32;
@@ -168,7 +168,7 @@ fn get_text_width(resources: &Resources, text: &StyledText) -> f32 {
     }
 
     width
-}
+}*/
 
 fn stretch_to_svg(s: FontStretch) -> &'static str {
     match s {
@@ -246,32 +246,29 @@ fn render_line_to_svg(
 }
 
 pub(crate) fn render_text_to_canvas(
-    styled_text: &StyledText,
+    rendered_text: &RenderedText,
     rect: &Rectangle,
-    align: TextAlign,
     canvas: &mut Canvas,
 ) {
-    let x = match align {
-        TextAlign::Start => rect.x,
-        TextAlign::Center => rect.x + rect.width / 2.0,
-        TextAlign::End => rect.x + rect.width,
-    };
+    // let x = match align {
+    //     TextAlign::Start => rect.x,
+    //     TextAlign::Center => rect.x + rect.width / 2.0,
+    //     TextAlign::End => rect.x + rect.width,
+    // };
     let mut xml = SimpleXmlWriter::new();
-    render_text_to_svg(&mut xml, styled_text, x, rect.y, align);
+    render_text_to_svg(&mut xml, rendered_text, rect.x, rect.y);
     canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
 }
 
 pub(crate) fn render_text_to_svg(
     xml: &mut SimpleXmlWriter,
-    styled_text: &StyledText,
+    rendered_text: &RenderedText,
     x: f32,
     y: f32,
-    align: TextAlign,
 ) {
-    let rtext = RenderedText::render(styled_text);
     xml.begin("g");
     xml.attr_buf("transform", |s| write!(s, "translate({x}, {y})").unwrap());
-    for path in rtext.paths() {
+    for path in rendered_text.paths() {
         path.write_svg(xml);
     }
     xml.end("g")

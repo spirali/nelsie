@@ -1,5 +1,5 @@
 use crate::common::{Color, Path, PathBuilder};
-use crate::model::{DrawingPath, StyledText, TextStyle};
+use crate::model::{DrawingPath, NodeId, Resources, StyledText, TextStyle};
 use image::{Pixel, Rgba, RgbaImage};
 use parley::builder::RangedBuilder;
 use parley::layout::{Alignment, Glyph, GlyphRun, PositionedLayoutItem};
@@ -11,29 +11,32 @@ use skrifa::instance::{LocationRef, NormalizedCoord, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
 use skrifa::raw::FontRef as ReadFontsRef;
 use skrifa::{GlyphId, MetadataProvider};
+use std::collections::BTreeMap;
+use std::rc::Rc;
 use std::str::FromStr;
 
+pub(crate) struct TextContext {
+    layout_cx: LayoutContext<Color>,
+    font_cx: FontContext,
+}
+
+#[derive(Debug)]
 pub(crate) struct RenderedText {
     paths: Vec<Path>,
+    width: f32,
+    height: f32,
 }
 
 impl RenderedText {
+    pub fn size(&self) -> (f32, f32) {
+        (self.width, self.height)
+    }
     pub fn paths(&self) -> &[Path] {
         &self.paths
     }
 
-    pub fn render(text: &StyledText) -> Self {
-        let mut font_cx = FontContext::default();
-        let mut layout_cx: LayoutContext<Color> = LayoutContext::new();
-
-        // let font_stack = FontStack::Source("system-ui");
-        //
-        // let text_color = Color::from_str("black").unwrap();
-        // let brush_style = StyleProperty::Brush(text_color);
-        // builder.push(&brush_style, 0..text.len());
-        // let font_stack_style: StyleProperty<Color> = StyleProperty::FontStack(font_stack);
-        // builder.push(&font_stack_style, 0..text.len());
-        let mut layout = styled_text_to_parley(&mut layout_cx, &mut font_cx, text);
+    pub fn render(text_context: &mut TextContext, text: &StyledText) -> Self {
+        let mut layout = styled_text_to_parley(text_context, text);
 
         layout.break_all_lines(None);
         layout.align(None, Alignment::Start);
@@ -51,7 +54,37 @@ impl RenderedText {
                 };
             }
         }
-        RenderedText { paths }
+        RenderedText {
+            paths,
+            width: layout.width(),
+            height: layout.height(),
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub(crate) struct TextCache {
+    cache: BTreeMap<NodeId, RenderedText>,
+}
+
+impl TextCache {
+    pub fn get_or_create(
+        &mut self,
+        node_id: NodeId,
+        text_context: &mut TextContext,
+        styled_text: &StyledText,
+    ) -> &RenderedText {
+        if let Some(rtext) = self.cache.get(&node_id) {
+            &rtext
+        } else {
+            let rtext = RenderedText::render(text_context, styled_text);
+            self.cache.insert(node_id, rtext);
+            self.cache.get(&node_id).unwrap()
+        }
+    }
+
+    pub fn get(&self, node_id: NodeId) -> Option<&RenderedText> {
+        self.cache.get(&node_id)
     }
 }
 
@@ -91,8 +124,7 @@ fn set_text_style_to_parley(
 }
 
 fn styled_text_to_parley(
-    layout_cx: &mut LayoutContext<Color>,
-    font_cx: &mut FontContext,
+    text_context: &mut TextContext,
     styled_text: &StyledText,
 ) -> Layout<Color> {
     let mut text = String::new();
@@ -101,7 +133,9 @@ fn styled_text_to_parley(
         text.push('\n')
     }
     text.pop();
-    let mut builder = layout_cx.ranged_builder(font_cx, &text, 1.0);
+    let mut builder = text_context
+        .layout_cx
+        .ranged_builder(&mut text_context.font_cx, &text, 1.0);
     let mut offset: usize = 0;
     for line in &styled_text.styled_lines {
         let mut o = offset;

@@ -4,7 +4,6 @@ use crate::model::{
     Slide, Step,
 };
 use crate::render::counters::replace_counters;
-use crate::render::text::get_text_layout;
 use crate::render::RenderConfig;
 use itertools::Itertools;
 use std::collections::{BTreeMap, HashMap};
@@ -230,14 +229,10 @@ fn compute_content_default_size(
                 // for counters
                 replace_counters(config.counter_values, &mut t, config.slide_id, config.step);
             }
-            let (width, height, text_layout) = get_text_layout(
-                config.resources,
-                &t,
-                text.text_align,
-                &text.parsed_text.at_step(step).anchors,
-            );
-            assert!(text_layouts.insert(node.node_id, text_layout).is_none());
-            (width, height)
+            let rtext = config
+                .text_cache
+                .get_or_create(node.node_id, config.text_context, &t);
+            rtext.size()
         }
         NodeContent::Image(image) => image
             .loaded_image
