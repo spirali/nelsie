@@ -1,10 +1,11 @@
 use crate::common::{Color, Path, PathBuilder};
-use crate::model::{DrawingPath, StyledText};
+use crate::model::{DrawingPath, StyledText, TextStyle};
 use image::{Pixel, Rgba, RgbaImage};
+use parley::builder::RangedBuilder;
 use parley::layout::{Alignment, Glyph, GlyphRun, PositionedLayoutItem};
 use parley::style::{Brush, FontStack, StyleProperty};
 use parley::swash::scale::ScaleContext;
-use parley::{FontContext, LayoutContext};
+use parley::{FontContext, Layout, LayoutContext};
 use resvg::tiny_skia::{FillRule, Transform};
 use skrifa::instance::{LocationRef, NormalizedCoord, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
@@ -22,22 +23,17 @@ impl RenderedText {
     }
 
     pub fn render(text: &StyledText) -> Self {
-        // TODO Create just once
         let mut font_cx = FontContext::default();
-        let mut layout_cx = LayoutContext::new();
-        let mut scale_cx = ScaleContext::new();
+        let mut layout_cx: LayoutContext<Color> = LayoutContext::new();
 
-        let font_stack = FontStack::Source("system-ui");
-
-        let text = "Testing text\nLine2";
-        let mut builder = layout_cx.ranged_builder(&mut font_cx, &text, 1.0);
-
-        let text_color = Color::from_str("black").unwrap();
-        let brush_style = StyleProperty::Brush(text_color);
-        builder.push(&brush_style, 0..text.len());
-        let font_stack_style: StyleProperty<Color> = StyleProperty::FontStack(font_stack);
-        builder.push(&font_stack_style, 0..text.len());
-        let mut layout = builder.build(&text);
+        // let font_stack = FontStack::Source("system-ui");
+        //
+        // let text_color = Color::from_str("black").unwrap();
+        // let brush_style = StyleProperty::Brush(text_color);
+        // builder.push(&brush_style, 0..text.len());
+        // let font_stack_style: StyleProperty<Color> = StyleProperty::FontStack(font_stack);
+        // builder.push(&font_stack_style, 0..text.len());
+        let mut layout = styled_text_to_parley(&mut layout_cx, &mut font_cx, text);
 
         layout.break_all_lines(None);
         layout.align(None, Alignment::Start);
@@ -57,6 +53,66 @@ impl RenderedText {
         }
         RenderedText { paths }
     }
+}
+
+fn set_text_style_to_parley(
+    text_style: &TextStyle,
+    builder: &mut RangedBuilder<Color>,
+    start: usize,
+    end: usize,
+) {
+    let TextStyle {
+        font,
+        stroke,
+        color,
+        size,
+        line_spacing,
+        italic,
+        stretch,
+        weight,
+        underline,
+        overline,
+        line_through,
+    } = text_style;
+    let font_stack = FontStack::Source(&font.family_name);
+    let font_stack_style: StyleProperty<Color> = StyleProperty::FontStack(font_stack);
+    builder.push(&font_stack_style, start..end);
+
+    if let Some(color) = *color {
+        builder.push(&StyleProperty::Brush(color), start..end);
+    }
+    builder.push(&StyleProperty::FontSize(*size), start..end);
+
+    //
+    // let text_color = Color::from_str("black").unwrap();
+    // builder.push(&brush_style, 0..text.len());
+    // let font_stack_style: StyleProperty<Color> = StyleProperty::FontStack(font_stack);
+    // builder.push(&font_stack_style, 0..text.len());
+}
+
+fn styled_text_to_parley(
+    layout_cx: &mut LayoutContext<Color>,
+    font_cx: &mut FontContext,
+    styled_text: &StyledText,
+) -> Layout<Color> {
+    let mut text = String::new();
+    for line in &styled_text.styled_lines {
+        text.push_str(&line.text);
+        text.push('\n')
+    }
+    text.pop();
+    let mut builder = layout_cx.ranged_builder(font_cx, &text, 1.0);
+    let mut offset: usize = 0;
+    for line in &styled_text.styled_lines {
+        let mut o = offset;
+        for span in &line.spans {
+            let style = &styled_text.styles[span.style_idx as usize];
+            set_text_style_to_parley(style, &mut builder, o, o + span.length as usize);
+            o += span.length as usize;
+        }
+        offset += line.text.len() + 1;
+    }
+    builder.build(&text)
 }
 
 fn render_glyph_run(glyph_run: &GlyphRun<Color>) -> Path {

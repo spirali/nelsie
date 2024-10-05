@@ -5,6 +5,7 @@ use crate::model::{
 
 use resvg::usvg::FontStretch;
 use std::collections::HashMap;
+use std::fmt::Write;
 
 use crate::common::Rectangle;
 use crate::parsers::SimpleXmlWriter;
@@ -268,9 +269,12 @@ pub(crate) fn render_text_to_svg(
     align: TextAlign,
 ) {
     let rtext = RenderedText::render(styled_text);
+    xml.begin("g");
+    xml.attr_buf("transform", |s| write!(s, "translate({x}, {y})").unwrap());
     for path in rtext.paths() {
         path.write_svg(xml);
     }
+    xml.end("g")
     /*xml.begin("text");
     xml.attr("xml:space", "preserve");
     let mut current_y = y;
