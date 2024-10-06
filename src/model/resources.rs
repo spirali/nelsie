@@ -1,5 +1,7 @@
 use crate::common::error::NelsieError;
 use crate::model::ImageManager;
+use parley::fontique::{Collection, CollectionOptions, SourceCache};
+use parley::{FontContext, LayoutContext};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -9,10 +11,14 @@ use crate::model::textstyles::FontData;
 use svg2pdf::usvg::fontdb::Family::Name;
 use svg2pdf::usvg::fontdb::Source;
 
+use crate::common::Color;
 use syntect::highlighting::ThemeSet;
 use syntect::parsing::SyntaxSet;
 
 pub(crate) struct Resources {
+    // FontContext is needed for parley (normal text rendering)
+    pub font_context: FontContext,
+    // FontDB is needed for rendering SVG
     // Because we need to fontdb::Database to usvg::Options, we need to wrap it in Arc
     pub font_db: Option<Arc<fontdb::Database>>,
     pub image_manager: ImageManager,
@@ -43,6 +49,13 @@ impl Resources {
         };
 
         Resources {
+            font_context: FontContext {
+                collection: Collection::new(CollectionOptions {
+                    shared: true,
+                    system_fonts,
+                }),
+                source_cache: SourceCache::new_shared(),
+            },
             font_db: Some(Arc::new(font_db)),
             image_manager: ImageManager::default(),
             syntax_set,

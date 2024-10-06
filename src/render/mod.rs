@@ -26,13 +26,28 @@ use rayon::iter::ParallelIterator;
 use std::path::Path;
 use std::sync::Arc;
 
+pub(crate) struct ThreadLocalResources {
+    pub text_context: TextContext,
+}
+
+impl ThreadLocalResources {
+    pub fn new(resources: Resources) -> Self {
+        ThreadLocalResources {
+            text_context: TextContext {
+                layout_cx: Default::default(),
+                font_cx: Default::default(),
+            },
+        }
+    }
+}
+
 pub(crate) struct RenderConfig<'a> {
     pub resources: &'a Resources,
+    pub thread_resources: &'a mut ThreadLocalResources,
     pub slide: &'a Slide,
     pub slide_id: SlideId,
     pub step: &'a Step,
-    pub text_context: &'a mut TextContext,
-    pub text_cache: &'a mut TextCache,
+    pub text_cache: TextCache,
     pub default_font: &'a Arc<FontData>,
     pub counter_values: &'a CountersMap<'a>,
 }
@@ -72,6 +87,7 @@ impl VerboseLevel {
 
 fn render_slide_step(
     resources: &Resources,
+    thread_resources: &mut ThreadLocalResources,
     builder: &PageBuilder,
     slide_id: SlideId,
     slide: &Slide,
@@ -82,11 +98,13 @@ fn render_slide_step(
     log::debug!("Rendering slide {}/{}", slide_id, step);
     let render_cfg = RenderConfig {
         resources,
+        thread_resources,
         slide,
         slide_id,
         step,
         default_font,
         counter_values,
+        text_cache: TextCache::default(),
     };
     let canvas = render_to_canvas(&render_cfg);
     let counter = render_cfg.counter_values.get("global").unwrap();
@@ -142,11 +160,12 @@ pub(crate) fn render_slide_deck(
                             .map(move |step| (slide_idx, slide, step))
                     })
                     .collect_vec();
-                tasks
-                    .into_par_iter()
-                    .try_for_each(|(slide_idx, slide, step)| {
+                tasks.into_par_iter().try_for_each_init(
+                    || todo!(),
+                    |thread_resources, (slide_idx, slide, step)| {
                         render_slide_step(
                             resources,
+                            thread_resources,
                             &builder,
                             slide_idx as SlideId,
                             slide,
@@ -154,7 +173,8 @@ pub(crate) fn render_slide_deck(
                             &slide_deck.default_font,
                             &counter_values,
                         )
-                    })
+                    },
+                )
             },
             || builder.other_tasks(),
         );

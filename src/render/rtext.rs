@@ -16,8 +16,8 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 pub(crate) struct TextContext {
-    layout_cx: LayoutContext<Color>,
-    font_cx: FontContext,
+    pub layout_cx: LayoutContext<Color>,
+    pub font_cx: FontContext,
 }
 
 #[derive(Debug)]

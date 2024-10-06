@@ -215,11 +215,10 @@ impl From<&LengthOrExpr> for tf::Dimension {
 }
 
 fn compute_content_default_size(
-    config: &RenderConfig,
+    config: &mut RenderConfig,
     node: &Node,
     content: &NodeContent,
     step: &Step,
-    text_layouts: &mut HashMap<NodeId, TextLayout>,
 ) -> (f32, f32) {
     match content {
         NodeContent::Text(text) => {
@@ -229,9 +228,11 @@ fn compute_content_default_size(
                 // for counters
                 replace_counters(config.counter_values, &mut t, config.slide_id, config.step);
             }
-            let rtext = config
-                .text_cache
-                .get_or_create(node.node_id, config.text_context, &t);
+            let rtext = config.text_cache.get_or_create(
+                node.node_id,
+                &mut config.thread_resources.text_context,
+                &t,
+            );
             rtext.size()
         }
         NodeContent::Image(image) => image
@@ -280,7 +281,7 @@ impl<'a> LayoutContext<'a> {
     }
 
     fn compute_layout_helper(
-        &self,
+        &mut self,
         step: &Step,
         taffy: &mut tf::TaffyTree,
         node: &Node,
@@ -297,27 +298,22 @@ impl<'a> LayoutContext<'a> {
         let h = node.height.at_step(step);
 
         let (content_w, content_h, content_aspect_ratio) = if w.is_none() || h.is_none() {
-            node.content
-                .as_ref()
-                .map(|content| {
-                    let (content_w, content_h) = compute_content_default_size(
-                        self.config,
-                        node,
-                        content,
-                        step,
-                        text_layouts,
-                    );
-                    if w.is_none() && h.is_none() {
-                        (
-                            Some(tf::Dimension::Length(content_w)),
-                            Some(tf::Dimension::Length(content_h)),
-                            None,
-                        )
-                    } else {
-                        (None, None, Some(content_w / content_h))
-                    }
-                })
-                .unwrap_or((None, None, None))
+            let config = &mut self.config;
+            if let Some(content) = node.content.as_ref() {
+                let (content_w, content_h) =
+                    compute_content_default_size(config, node, content, step);
+                if w.is_none() && h.is_none() {
+                    (
+                        Some(tf::Dimension::Length(content_w)),
+                        Some(tf::Dimension::Length(content_h)),
+                        None,
+                    )
+                } else {
+                    (None, None, Some(content_w / content_h))
+                }
+            } else {
+                (None, None, None)
+            }
         } else {
             (None, None, None)
         };
