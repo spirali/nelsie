@@ -298,10 +298,9 @@ impl<'a> LayoutContext<'a> {
         let h = node.height.at_step(step);
 
         let (content_w, content_h, content_aspect_ratio) = if w.is_none() || h.is_none() {
-            let config = &mut self.config;
             if let Some(content) = node.content.as_ref() {
                 let (content_w, content_h) =
-                    compute_content_default_size(config, node, content, step);
+                    compute_content_default_size(&mut self.config, node, content, step);
                 if w.is_none() && h.is_none() {
                     (
                         Some(tf::Dimension::Length(content_w)),
