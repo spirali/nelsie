@@ -2,7 +2,7 @@ use crate::model::{
     Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText,
     TextAlign, TextStyle,
 };
-use crate::render::layout::{ComputedLayout, LayoutContext};
+use crate::render::layout::{compute_layout, ComputedLayout, LayoutContext};
 use crate::render::RenderConfig;
 
 use std::collections::BTreeSet;
@@ -242,10 +242,9 @@ impl<'a> RenderContext<'a> {
     }
 }
 
-pub(crate) fn render_to_canvas(render_cfg: &RenderConfig) -> Canvas {
+pub(crate) fn render_to_canvas(render_cfg: &mut RenderConfig) -> Canvas {
     log::debug!("Creating layout");
-    let layout_builder = LayoutContext::new(render_cfg);
-    let layout = layout_builder.compute_layout(render_cfg.slide, render_cfg.step);
+    let layout = compute_layout(render_cfg, render_cfg.step);
 
     log::debug!("Layout {:?}", layout);
 

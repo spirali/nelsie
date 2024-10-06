@@ -96,7 +96,7 @@ fn render_slide_step(
     counter_values: &CountersMap,
 ) -> crate::Result<()> {
     log::debug!("Rendering slide {}/{}", slide_id, step);
-    let render_cfg = RenderConfig {
+    let mut render_cfg = RenderConfig {
         resources,
         thread_resources,
         slide,
@@ -106,7 +106,7 @@ fn render_slide_step(
         counter_values,
         text_cache: TextCache::default(),
     };
-    let canvas = render_to_canvas(&render_cfg);
+    let canvas = render_to_canvas(&mut render_cfg);
     let counter = render_cfg.counter_values.get("global").unwrap();
     let page_idx = counter
         .indices

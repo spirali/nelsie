@@ -75,12 +75,11 @@ impl TextCache {
         styled_text: &StyledText,
     ) -> &RenderedText {
         if let Some(rtext) = self.cache.get(&node_id) {
-            &rtext
-        } else {
-            let rtext = RenderedText::render(text_context, styled_text);
-            self.cache.insert(node_id, rtext);
-            self.cache.get(&node_id).unwrap()
+            return &rtext;
         }
+        let rtext = RenderedText::render(text_context, styled_text);
+        self.cache.insert(node_id, rtext);
+        self.cache.get(&node_id).unwrap()
     }
 
     pub fn get(&self, node_id: NodeId) -> Option<&RenderedText> {
