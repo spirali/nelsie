@@ -21,6 +21,7 @@ use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
 use crate::render::rtext::{TextCache, TextContext};
 use itertools::Itertools;
+use parley::{FontContext, LayoutContext};
 use rayon::iter::IntoParallelIterator;
 use rayon::iter::ParallelIterator;
 use std::path::Path;
@@ -161,7 +162,15 @@ pub(crate) fn render_slide_deck(
                     })
                     .collect_vec();
                 tasks.into_par_iter().try_for_each_init(
-                    || todo!(),
+                    || ThreadLocalResources {
+                        text_context: TextContext {
+                            layout_cx: LayoutContext::new(),
+                            font_cx: FontContext {
+                                collection: resources.font_context.collection.clone(),
+                                source_cache: resources.font_context.source_cache.clone(),
+                            },
+                        },
+                    },
                     |thread_resources, (slide_idx, slide, step)| {
                         render_slide_step(
                             resources,
