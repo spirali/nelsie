@@ -110,6 +110,7 @@ fn set_text_style_to_parley(
         line_through,
     } = text_style;
     let font_stack = FontStack::Source(&font.family_name);
+    //let font_stack = FontStack::Source("serif");
     let font_stack_style: StyleProperty<Color> = StyleProperty::FontStack(font_stack);
     builder.push(&font_stack_style, start..end);
 
