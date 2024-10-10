@@ -87,6 +87,8 @@ impl Resources {
     }
 
     pub fn load_fonts_dir(&mut self, path: &Path) {
+        self.font_context.collection.register_fonts(path);
+
         log::debug!("Adding font directory {}", path.display());
         let font_db = std::mem::take(&mut self.font_db).unwrap();
         let mut font_db = Arc::unwrap_or_clone(font_db);
