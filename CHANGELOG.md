@@ -1,3 +1,7 @@
+# v0.14.0
+
+* Dependencies updated; slightly faster rendering and smaller PDFs
+
 # v0.13.0
 
 * `set_steps` method
