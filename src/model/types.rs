@@ -1,7 +1,7 @@
 use crate::common::error::NelsieError;
 use std::fmt::{Display, Formatter};
 
-use crate::model::InTextAnchorId;
+use crate::model::InTextBoxId;
 use std::str::FromStr;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
@@ -136,20 +136,20 @@ pub(crate) enum LayoutExpr {
     },
     InTextAnchorX {
         node_id: NodeId,
-        anchor_id: InTextAnchorId,
+        anchor_id: InTextBoxId,
     },
     InTextAnchorY {
         node_id: NodeId,
-        anchor_id: InTextAnchorId,
+        anchor_id: InTextBoxId,
     },
     InTextAnchorWidth {
         node_id: NodeId,
-        anchor_id: InTextAnchorId,
+        anchor_id: InTextBoxId,
         fraction: f32,
     },
     InTextAnchorHeight {
         node_id: NodeId,
-        anchor_id: InTextAnchorId,
+        anchor_id: InTextBoxId,
         fraction: f32,
     },
     Sum {

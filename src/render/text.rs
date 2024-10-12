@@ -1,5 +1,5 @@
 use crate::model::{
-    InTextAnchor, InTextAnchorId, InTextAnchorPoint, Resources, StyledLine, StyledText, TextAlign,
+    InTextAnchor, InTextAnchorPoint, InTextBoxId, Resources, StyledLine, StyledText, TextAlign,
     TextStyle,
 };
 

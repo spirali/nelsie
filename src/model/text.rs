@@ -2,7 +2,7 @@ use crate::model::{Step, StepValue, TextStyle};
 use itertools::Itertools;
 use std::collections::HashMap;
 
-pub(crate) type InTextAnchorId = u32;
+pub(crate) type InTextBoxId = u32;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub(crate) struct InTextAnchorPoint {
@@ -32,16 +32,6 @@ pub(crate) struct StyledLine {
 }
 
 impl StyledLine {
-    pub fn line_descender(&self, text_styles: &[TextStyle]) -> Option<f32> {
-        self.spans
-            .iter()
-            .map(|span| {
-                let style = &text_styles[span.style_idx as usize];
-                style.size * style.font.descender
-            })
-            .min_by(|x, y| x.partial_cmp(y).unwrap())
-    }
-
     pub fn font_size(&self, text_styles: &[TextStyle]) -> Option<f32> {
         self.spans
             .iter()
@@ -57,6 +47,7 @@ impl StyledLine {
 pub(crate) struct StyledText {
     pub styled_lines: Vec<StyledLine>,
     pub styles: Vec<TextStyle>,
+    pub anchors: HashMap<InTextBoxId, InTextAnchor>,
     pub default_font_size: f32,
     pub default_line_spacing: f32,
 }
@@ -112,34 +103,15 @@ pub(crate) enum TextAlign {
     End,
 }
 
-#[derive(Debug, Default)]
-pub(crate) struct ParsedText {
-    pub styled_lines: Vec<StyledLine>,
-    pub styles: Vec<StepValue<TextStyle>>,
-    pub anchors: HashMap<InTextAnchorId, InTextAnchor>,
-}
-
 #[derive(Debug)]
 pub(crate) struct NodeContentText {
-    pub parsed_text: StepValue<ParsedText>,
+    pub text_styles: StepValue<StyledText>,
     pub text_align: TextAlign,
-    pub default_font_size: StepValue<f32>,
-    pub default_line_spacing: StepValue<f32>,
     pub parse_counters: bool,
 }
 
 impl NodeContentText {
-    pub fn text_style_at_step(&self, step: &Step) -> StyledText {
-        let parsed_text = &self.parsed_text.at_step(step);
-        StyledText {
-            styled_lines: parsed_text.styled_lines.clone(),
-            styles: parsed_text
-                .styles
-                .iter()
-                .map(|s| s.at_step(step).clone())
-                .collect_vec(),
-            default_font_size: *self.default_font_size.at_step(step),
-            default_line_spacing: *self.default_line_spacing.at_step(step),
-        }
+    pub fn text_style_at_step(&self, step: &Step) -> &StyledText {
+        self.text_styles.at_step(step)
     }
 }

@@ -10,8 +10,6 @@ use usvg::FontStretch;
 #[derive(Debug, PartialEq)]
 pub(crate) struct FontData {
     pub family_name: String,
-    pub descender: f32,
-    pub space_size: f32,
 }
 
 #[derive(Debug, Default, Clone, PartialEq)]

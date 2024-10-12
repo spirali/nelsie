@@ -1,6 +1,6 @@
 use crate::common::error::NelsieError;
 use crate::model::{
-    InTextAnchor, InTextAnchorId, InTextAnchorPoint, PartialTextStyle, Span, StyledLine,
+    InTextAnchor, InTextAnchorPoint, InTextBoxId, PartialTextStyle, Span, StyledLine,
 };
 
 use std::collections::HashMap;
@@ -15,7 +15,7 @@ pub(crate) enum StyleOrName<'a> {
 pub(crate) struct ParsedStyledText<'a> {
     pub styled_lines: Vec<StyledLine>,
     pub styles: Vec<Vec<StyleOrName<'a>>>,
-    pub anchors: HashMap<InTextAnchorId, InTextAnchor>,
+    pub anchors: HashMap<InTextBoxId, InTextAnchor>,
 }
 
 fn find_first(text: &str, c1: char, c2: Option<char>) -> Option<(usize, char)> {
@@ -51,10 +51,10 @@ pub(crate) fn parse_styled_text<'a>(
     end_block: char,
 ) -> crate::Result<ParsedStyledText> {
     let mut style_stack: Vec<StyleOrName<'a>> = Vec::new();
-    let mut anchor_stack: Vec<Option<(InTextAnchorId, InTextAnchorPoint)>> = Vec::new();
+    let mut anchor_stack: Vec<Option<(InTextBoxId, InTextAnchorPoint)>> = Vec::new();
 
     let mut result_styles = Vec::new();
-    let mut result_anchors = HashMap::<InTextAnchorId, InTextAnchor>::new();
+    let mut result_anchors = HashMap::<InTextBoxId, InTextAnchor>::new();
 
     let get_style = |stack: &[StyleOrName<'a>], styles: &mut Vec<Vec<StyleOrName<'a>>>| {
         styles.iter().position(|s| s == stack).unwrap_or_else(|| {
@@ -95,7 +95,7 @@ pub(crate) fn parse_styled_text<'a>(
                     })?;
                     let style_name = &line[..idx];
                     if style_name.chars().all(|x| x.is_ascii_digit()) {
-                        let anchor_id: InTextAnchorId = style_name
+                        let anchor_id: InTextBoxId = style_name
                             .parse()
                             .map_err(|_| NelsieError::parsing_err("Invalid anchor id"))?;
                         anchor_stack.push(Some((

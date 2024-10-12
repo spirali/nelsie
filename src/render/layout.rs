@@ -1,7 +1,7 @@
 use crate::common::Rectangle;
 use crate::model::{
-    InTextAnchorId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId,
-    Slide, Step,
+    InTextBoxId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId, Slide,
+    Step,
 };
 use crate::render::counters::replace_counters;
 use crate::render::RenderConfig;
@@ -16,7 +16,7 @@ pub(crate) struct LayoutContext<'a> {
 #[derive(Debug)]
 pub(crate) struct TextLayout {
     pub lines: Vec<Rectangle>,
-    pub anchor_points: HashMap<InTextAnchorId, Rectangle>,
+    pub anchor_points: HashMap<InTextBoxId, Rectangle>,
 }
 
 #[derive(Debug)]

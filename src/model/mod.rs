@@ -19,8 +19,8 @@ pub(crate) use self::slidedeck::{Slide, SlideDeck, SlideId};
 pub(crate) use self::step::{Step, StepIndex, StepSet};
 pub(crate) use self::stepvalues::StepValue;
 pub(crate) use self::text::{
-    InTextAnchor, InTextAnchorId, InTextAnchorPoint, NodeContentText, ParsedText, Span, StyledLine,
-    StyledText, TextAlign,
+    InTextAnchor, InTextAnchorPoint, InTextBoxId, NodeContentText, Span, StyledLine, StyledText,
+    TextAlign,
 };
 pub(crate) use self::textstyles::{
     merge_stepped_styles, FontData, PartialTextStyle, StyleMap, TextStyle,

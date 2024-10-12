@@ -1,6 +1,6 @@
 use crate::model::{
-    merge_stepped_styles, LengthOrExpr, LoadedImage, NodeContentText, ParsedText, PartialTextStyle,
-    Step, StepIndex, StepSet, StyleMap, TextAlign,
+    merge_stepped_styles, LengthOrExpr, LoadedImage, NodeContentText, PartialTextStyle, Step,
+    StepIndex, StepSet, StyleMap, StyledText, TextAlign,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, StepValue,
@@ -100,7 +100,7 @@ pub(crate) struct NodeCreationEnv<'a> {
 }
 
 fn resolve_style(
-    resources: &Resources,
+    resources: &mut Resources,
     original: &StepValue<PartialTextStyle>,
     style_or_name: PyTextStyleOrName,
     styles: &StyleMap,
@@ -123,7 +123,7 @@ fn process_text_parsing(
     syntax_theme: Option<&str>,
     main_style: &StepValue<PartialTextStyle>,
     styles: &StyleMap,
-) -> PyResult<ParsedText> {
+) -> PyResult<StyledText> {
     let mut parsed = if let Some(delimiters) = formatting_delimiters {
         if delimiters.chars().count() != 3 {
             return Err(PyValueError::new_err("Invalid delimiters, it has to be 3 char string (escape character, start of block, end of block)"));
@@ -205,7 +205,7 @@ fn process_content(
             })?;
 
             let node_content = NodeContentText {
-                parsed_text,
+                text_styles: parsed_text,
                 text_align,
                 default_font_size: main_style.map_ref(|s| s.size.unwrap()),
                 default_line_spacing: main_style.map_ref(|s| s.line_spacing.unwrap()),

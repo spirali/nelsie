@@ -29,19 +29,7 @@ pub(crate) struct PyTextStyle {
 }
 
 impl PyTextStyle {
-    // pub fn new(style: PartialTextStyle) -> Self {
-    //     PyTextStyle({
-    //                 }
-    // }
-    pub fn into_partial_style(self, resources: &Resources) -> crate::Result<PartialTextStyle> {
-        // if let Some(name) = self.font_family.as_ref() {
-        //     resources
-        //         .font_context
-        //         .collection
-        //         .clone()
-        //         .family_id(name)
-        //         .unwrap();
-        // }
+    pub fn into_partial_style(self, resources: &mut Resources) -> crate::Result<PartialTextStyle> {
         let font = self
             .font_family
             .map(|name| resources.check_font(&name).map(Arc::new))

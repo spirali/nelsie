@@ -2,8 +2,9 @@ use crate::common::{Color, Path, PathBuilder};
 use crate::model::{DrawingPath, NodeId, Resources, StyledText, TextStyle};
 use image::{Pixel, Rgba, RgbaImage};
 use parley::builder::RangedBuilder;
+use parley::fontique::Weight;
 use parley::layout::{Alignment, Glyph, GlyphRun, PositionedLayoutItem};
-use parley::style::{Brush, FontStack, StyleProperty};
+use parley::style::{Brush, FontStack, FontStyle, StyleProperty};
 use parley::swash::scale::ScaleContext;
 use parley::{FontContext, Layout, LayoutContext};
 use resvg::tiny_skia::{FillRule, Transform};
@@ -118,7 +119,15 @@ fn set_text_style_to_parley(
         builder.push(&StyleProperty::Brush(color), start..end);
     }
     builder.push(&StyleProperty::FontSize(*size), start..end);
-
+    if *weight != 400 {
+        builder.push(
+            &StyleProperty::FontWeight(Weight::new(*weight as f32)),
+            start..end,
+        );
+    }
+    if *italic {
+        builder.push(&StyleProperty::FontStyle(FontStyle::Italic), start..end);
+    }
     //
     // let text_color = Color::from_str("black").unwrap();
     // builder.push(&brush_style, 0..text.len());
@@ -140,6 +149,7 @@ fn styled_text_to_parley(
         .layout_cx
         .ranged_builder(&mut text_context.font_cx, &text, 1.0);
     let mut offset: usize = 0;
+    builder.push_default(&StyleProperty::FontWeight(Weight::new(400.0)));
     for line in &styled_text.styled_lines {
         let mut o = offset;
         for span in &line.spans {
