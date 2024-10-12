@@ -222,11 +222,21 @@ fn compute_content_default_size(
 ) -> (f32, f32) {
     match content {
         NodeContent::Text(text) => {
-            let mut t = text.text_style_at_step(step);
+            let mut t = text.styled_text_at_step(step);
+            let mut tmp = None;
+
             if text.parse_counters {
                 // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
                 // for counters
-                replace_counters(config.counter_values, &mut t, config.slide_id, config.step);
+                let mut text = t.clone();
+                replace_counters(
+                    config.counter_values,
+                    &mut text,
+                    config.slide_id,
+                    config.step,
+                );
+                tmp = Some(text);
+                t = tmp.as_ref().unwrap();
             }
             let rtext = config.text_cache.get_or_create(
                 node.node_id,

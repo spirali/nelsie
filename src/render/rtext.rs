@@ -1,5 +1,5 @@
 use crate::common::{Color, Path, PathBuilder};
-use crate::model::{DrawingPath, NodeId, Resources, StyledText, TextStyle};
+use crate::model::{DrawingPath, NodeId, PartialTextStyle, Resources, StyledText, TextStyle};
 use image::{Pixel, Rgba, RgbaImage};
 use parley::builder::RangedBuilder;
 use parley::fontique::Weight;
@@ -92,12 +92,12 @@ impl TextCache {
 }
 
 fn set_text_style_to_parley(
-    text_style: &TextStyle,
+    text_style: &PartialTextStyle,
     builder: &mut RangedBuilder<Color>,
     start: usize,
     end: usize,
 ) {
-    let TextStyle {
+    let PartialTextStyle {
         font,
         stroke,
         color,
@@ -110,29 +110,39 @@ fn set_text_style_to_parley(
         overline,
         line_through,
     } = text_style;
-    let font_stack = FontStack::Source(&font.family_name);
-    //let font_stack = FontStack::Source("serif");
-    let font_stack_style: StyleProperty<Color> = StyleProperty::FontStack(font_stack);
-    builder.push(&font_stack_style, start..end);
 
-    if let Some(color) = *color {
+    if let Some(font) = font {
+        builder.push(
+            &StyleProperty::FontStack(FontStack::Source(&font.family_name)),
+            start..end,
+        );
+    }
+
+    if let Some(Some(color)) = *color {
         builder.push(&StyleProperty::Brush(color), start..end);
     }
-    builder.push(&StyleProperty::FontSize(*size), start..end);
-    if *weight != 400 {
+
+    if let Some(size) = size {
+        builder.push(&StyleProperty::FontSize(*size), start..end);
+    }
+
+    if let Some(weight) = weight {
         builder.push(
             &StyleProperty::FontWeight(Weight::new(*weight as f32)),
             start..end,
         );
     }
-    if *italic {
-        builder.push(&StyleProperty::FontStyle(FontStyle::Italic), start..end);
-    }
-    //
-    // let text_color = Color::from_str("black").unwrap();
-    // builder.push(&brush_style, 0..text.len());
-    // let font_stack_style: StyleProperty<Color> = StyleProperty::FontStack(font_stack);
-    // builder.push(&font_stack_style, 0..text.len());
+
+    if let Some(italic) = italic {
+        builder.push(
+            &StyleProperty::FontStyle(if *italic {
+                FontStyle::Italic
+            } else {
+                FontStyle::Normal
+            }),
+            start..end,
+        );
+    };
 }
 
 fn styled_text_to_parley(
@@ -149,12 +159,38 @@ fn styled_text_to_parley(
         .layout_cx
         .ranged_builder(&mut text_context.font_cx, &text, 1.0);
     let mut offset: usize = 0;
-    builder.push_default(&StyleProperty::FontWeight(Weight::new(400.0)));
+
+    let TextStyle {
+        font,
+        stroke,
+        color,
+        size,
+        line_spacing,
+        italic,
+        stretch,
+        weight,
+        underline,
+        overline,
+        line_through,
+    } = &styled_text.main_style;
+    builder.push_default(&StyleProperty::FontStack(FontStack::Source(
+        &font.family_name,
+    )));
+    builder.push_default(&StyleProperty::FontWeight(Weight::new(*weight as f32)));
+    builder.push_default(&StyleProperty::Brush(color.unwrap()));
+    builder.push_default(&StyleProperty::FontSize(*size));
+    builder.push_default(&StyleProperty::FontWeight(Weight::new(*weight as f32)));
+    if *italic {
+        builder.push_default(&StyleProperty::FontStyle(FontStyle::Italic));
+    }
+
     for line in &styled_text.styled_lines {
         let mut o = offset;
         for span in &line.spans {
-            let style = &styled_text.styles[span.style_idx as usize];
-            set_text_style_to_parley(style, &mut builder, o, o + span.length as usize);
+            if let Some(style_idx) = span.style_idx {
+                let style = &styled_text.styles[style_idx as usize];
+                set_text_style_to_parley(style, &mut builder, o, o + span.length as usize);
+            }
             o += span.length as usize;
         }
         offset += line.text.len() + 1;

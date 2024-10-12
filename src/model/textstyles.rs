@@ -76,6 +76,26 @@ pub(crate) struct TextStyle {
     pub line_through: bool,
 }
 
+impl Default for TextStyle {
+    fn default() -> Self {
+        TextStyle {
+            font: Arc::new(FontData {
+                family_name: "".to_string(),
+            }),
+            stroke: None,
+            color: None,
+            size: 0.0,
+            line_spacing: 0.0,
+            italic: false,
+            stretch: Default::default(),
+            weight: 0,
+            underline: false,
+            overline: false,
+            line_through: false,
+        }
+    }
+}
+
 pub(crate) fn merge_stepped_styles(
     first: &StepValue<PartialTextStyle>,
     second: &StepValue<PartialTextStyle>,

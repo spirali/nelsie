@@ -69,11 +69,11 @@ fn draw_debug_frame(
         styled_lines: vec![StyledLine {
             spans: vec![Span {
                 length: text.len() as u32,
-                style_idx: 0,
+                style_idx: None,
             }],
             text,
         }],
-        styles: vec![TextStyle {
+        main_style: TextStyle {
             font: font.clone(),
             stroke: None,
             color: Some(*color),
@@ -85,9 +85,9 @@ fn draw_debug_frame(
             underline: false,
             overline: false,
             line_through: false,
-        }],
-        default_font_size: 8.0,
-        default_line_spacing: 0.0,
+        },
+        styles: Vec::new(),
+        anchors: Default::default(),
     };
     todo!();
     /* TODO render_text_to_svg(
@@ -169,18 +169,7 @@ impl<'a> RenderContext<'a> {
             if let Some(content) = &node.content {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 match content {
-                    NodeContent::Text(text) => {
-                        let mut t = text.text_style_at_step(step);
-                        if text.parse_counters {
-                            // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
-                            // for counters
-                            replace_counters(
-                                self.config.counter_values,
-                                &mut t,
-                                self.config.slide_id,
-                                self.config.step,
-                            );
-                        }
+                    NodeContent::Text(_) => {
                         render_text_to_canvas(
                             &self.config.text_cache.get(node.node_id).unwrap(),
                             rect,

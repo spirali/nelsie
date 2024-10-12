@@ -16,7 +16,8 @@ use crate::render::svgpath::stroke_and_fill_svg;
 use resvg::usvg;
 
 pub(crate) fn get_in_text_anchor_point(text: &StyledText, point: &InTextAnchorPoint) -> StyledText {
-    let line = &text.styled_lines[point.line_idx as usize];
+    todo!()
+    /*let line = &text.styled_lines[point.line_idx as usize];
     StyledText {
         styled_lines: vec![StyledLine {
             spans: line.spans[..point.span_idx as usize].to_vec(),
@@ -25,7 +26,7 @@ pub(crate) fn get_in_text_anchor_point(text: &StyledText, point: &InTextAnchorPo
         styles: text.styles.clone(),
         default_font_size: text.default_font_size,
         default_line_spacing: text.default_line_spacing,
-    }
+    }*/
 }
 
 /*pub(crate) fn get_text_layout(
@@ -192,57 +193,58 @@ fn render_line_to_svg(
     line: &StyledLine,
     align: TextAlign,
 ) {
-    let mut position = 0;
-
-    xml.begin("tspan");
-    xml.attr("x", x);
-    xml.attr("y", y);
-
-    match align {
-        TextAlign::Start => { /* Start is default */ }
-        TextAlign::Center => xml.attr("text-anchor", "middle"),
-        TextAlign::End => xml.attr("text-anchor", "end"),
-    };
-
-    for span in &line.spans {
-        let style = &styles[span.style_idx as usize];
-        xml.begin("tspan");
-        xml.attr("font-family", &style.font.family_name);
-        xml.attr("font-weight", style.weight);
-        if style.italic {
-            xml.attr("font-style", "italic");
-        }
-        xml.attr("font-size", style.size);
-
-        if style.underline || style.overline || style.line_through {
-            xml.attr_buf("text-decoration", |b| {
-                if style.underline {
-                    b.push_str("underline ")
-                }
-                if style.overline {
-                    b.push_str("overline ")
-                }
-                if style.line_through {
-                    b.push_str("line-through ")
-                }
-            });
-        }
-
-        stroke_and_fill_svg(
-            xml,
-            &style.stroke.as_ref().map(|s| s.as_ref().clone()),
-            &style.color,
-        );
-        match style.stretch {
-            FontStretch::Normal => { /* do nothing */ }
-            s => xml.attr("font-stretch", stretch_to_svg(s)),
-        }
-        let text = &line.text[position..(position + span.length as usize)];
-        position += span.length as usize;
-        xml.text(text);
-        xml.end("tspan");
-    }
-    xml.end("tspan");
+    todo!()
+    // let mut position = 0;
+    //
+    // xml.begin("tspan");
+    // xml.attr("x", x);
+    // xml.attr("y", y);
+    //
+    // match align {
+    //     TextAlign::Start => { /* Start is default */ }
+    //     TextAlign::Center => xml.attr("text-anchor", "middle"),
+    //     TextAlign::End => xml.attr("text-anchor", "end"),
+    // };
+    //
+    // for span in &line.spans {
+    //     let style = &styles[span.style_idx as usize];
+    //     xml.begin("tspan");
+    //     xml.attr("font-family", &style.font.family_name);
+    //     xml.attr("font-weight", style.weight);
+    //     if style.italic {
+    //         xml.attr("font-style", "italic");
+    //     }
+    //     xml.attr("font-size", style.size);
+    //
+    //     if style.underline || style.overline || style.line_through {
+    //         xml.attr_buf("text-decoration", |b| {
+    //             if style.underline {
+    //                 b.push_str("underline ")
+    //             }
+    //             if style.overline {
+    //                 b.push_str("overline ")
+    //             }
+    //             if style.line_through {
+    //                 b.push_str("line-through ")
+    //             }
+    //         });
+    //     }
+    //
+    //     stroke_and_fill_svg(
+    //         xml,
+    //         &style.stroke.as_ref().map(|s| s.as_ref().clone()),
+    //         &style.color,
+    //     );
+    //     match style.stretch {
+    //         FontStretch::Normal => { /* do nothing */ }
+    //         s => xml.attr("font-stretch", stretch_to_svg(s)),
+    //     }
+    //     let text = &line.text[position..(position + span.length as usize)];
+    //     position += span.length as usize;
+    //     xml.text(text);
+    //     xml.end("tspan");
+    // }
+    // xml.end("tspan");
 }
 
 pub(crate) fn render_text_to_canvas(
