@@ -4,9 +4,11 @@ use crate::model::{
     Step,
 };
 use crate::render::counters::replace_counters;
+use crate::render::rtext::RenderedText;
 use crate::render::RenderConfig;
 use itertools::Itertools;
 use std::collections::{BTreeMap, HashMap};
+use std::rc::Rc;
 use taffy::{prelude as tf, AlignItems, Display, JustifyContent};
 
 pub(crate) struct LayoutContext<'a> {
@@ -22,7 +24,7 @@ pub(crate) struct TextLayout {
 #[derive(Debug)]
 pub(crate) struct LayoutData {
     pub(crate) rect: Rectangle,
-    pub(crate) text_layout: Option<TextLayout>,
+    pub(crate) text: Option<Rc<RenderedText>>,
 }
 
 #[derive(Default, Debug)]
@@ -57,18 +59,18 @@ impl ComputedLayout {
             LayoutExpr::LineX { node_id, line_idx } => {
                 let layout = self._layout(*node_id);
                 layout
-                    .text_layout
+                    .text
                     .as_ref()
-                    .and_then(|tl| tl.lines.get(*line_idx as usize).map(|line| line.x))
+                    .and_then(|tl| tl.line_layouts().get(*line_idx as usize).map(|line| line.x))
                     .unwrap_or(0.0)
                     + layout.rect.x
             }
             LayoutExpr::LineY { node_id, line_idx } => {
                 let layout = self._layout(*node_id);
                 layout
-                    .text_layout
+                    .text
                     .as_ref()
-                    .and_then(|tl| tl.lines.get(*line_idx as usize).map(|line| line.y))
+                    .and_then(|tl| tl.line_layouts().get(*line_idx as usize).map(|line| line.y))
                     .unwrap_or(0.0)
                     + layout.rect.y
             }
@@ -79,9 +81,13 @@ impl ComputedLayout {
             } => {
                 let layout = self._layout(*node_id);
                 layout
-                    .text_layout
+                    .text
                     .as_ref()
-                    .and_then(|tl| tl.lines.get(*line_idx as usize).map(|line| line.width))
+                    .and_then(|tl| {
+                        tl.line_layouts()
+                            .get(*line_idx as usize)
+                            .map(|line| line.width)
+                    })
                     .unwrap_or(0.0)
                     * fraction
             }
@@ -92,27 +98,31 @@ impl ComputedLayout {
             } => {
                 let layout = self._layout(*node_id);
                 layout
-                    .text_layout
+                    .text
                     .as_ref()
-                    .and_then(|tl| tl.lines.get(*line_idx as usize).map(|line| line.height))
+                    .and_then(|tl| {
+                        tl.line_layouts()
+                            .get(*line_idx as usize)
+                            .map(|line| line.height)
+                    })
                     .unwrap_or(0.0)
                     * fraction
             }
             LayoutExpr::InTextAnchorX { node_id, anchor_id } => {
                 let layout = self._layout(*node_id);
                 layout
-                    .text_layout
+                    .text
                     .as_ref()
-                    .and_then(|tl| tl.anchor_points.get(anchor_id).map(|a| a.x))
+                    .and_then(|tl| tl.anchor_points().get(anchor_id).map(|a| a.x))
                     .unwrap_or(0.0)
                     + layout.rect.x
             }
             LayoutExpr::InTextAnchorY { node_id, anchor_id } => {
                 let layout = self._layout(*node_id);
                 layout
-                    .text_layout
+                    .text
                     .as_ref()
-                    .and_then(|tl| tl.anchor_points.get(anchor_id).map(|a| a.y))
+                    .and_then(|tl| tl.anchor_points().get(anchor_id).map(|a| a.y))
                     .unwrap_or(0.0)
                     + layout.rect.y
             }
@@ -123,9 +133,9 @@ impl ComputedLayout {
             } => {
                 let layout = self._layout(*node_id);
                 layout
-                    .text_layout
+                    .text
                     .as_ref()
-                    .and_then(|tl| tl.anchor_points.get(anchor_id).map(|a| a.width))
+                    .and_then(|tl| tl.anchor_points().get(anchor_id).map(|a| a.width))
                     .unwrap_or(0.0)
                     * fraction
             }
@@ -136,9 +146,9 @@ impl ComputedLayout {
             } => {
                 let layout = self._layout(*node_id);
                 layout
-                    .text_layout
+                    .text
                     .as_ref()
-                    .and_then(|tl| tl.anchor_points.get(anchor_id).map(|a| a.height))
+                    .and_then(|tl| tl.anchor_points().get(anchor_id).map(|a| a.height))
                     .unwrap_or(0.0)
                     * fraction
             }
@@ -483,7 +493,7 @@ pub fn compute_layout(config: &mut RenderConfig, step: &Step) -> ComputedLayout 
                         .unwrap_or(rect.height),
                 },
                 //text_layout: text_layouts.remove(&node.node_id),
-                text_layout: None,
+                text: config.text_cache.get(node.node_id).cloned(),
             },
         );
     }

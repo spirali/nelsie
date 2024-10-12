@@ -1,5 +1,7 @@
-use crate::common::{Color, Path, PathBuilder};
-use crate::model::{DrawingPath, NodeId, PartialTextStyle, Resources, StyledText, TextStyle};
+use crate::common::{Color, Path, PathBuilder, Rectangle};
+use crate::model::{
+    DrawingPath, InTextBoxId, NodeId, PartialTextStyle, Resources, StyledText, TextStyle,
+};
 use image::{Pixel, Rgba, RgbaImage};
 use parley::builder::RangedBuilder;
 use parley::fontique::Weight;
@@ -12,7 +14,7 @@ use skrifa::instance::{LocationRef, NormalizedCoord, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
 use skrifa::raw::FontRef as ReadFontsRef;
 use skrifa::{GlyphId, MetadataProvider};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 use std::str::FromStr;
 
@@ -26,6 +28,8 @@ pub(crate) struct RenderedText {
     paths: Vec<Path>,
     width: f32,
     height: f32,
+
+    line_layouts: Vec<Rectangle>,
 }
 
 impl RenderedText {
@@ -36,6 +40,14 @@ impl RenderedText {
         &self.paths
     }
 
+    pub fn line_layouts(&self) -> &[Rectangle] {
+        &self.line_layouts
+    }
+
+    pub fn anchor_points(&self) -> &HashMap<InTextBoxId, Rectangle> {
+        todo!()
+    }
+
     pub fn render(text_context: &mut TextContext, text: &StyledText) -> Self {
         let mut layout = styled_text_to_parley(text_context, text);
 
@@ -43,7 +55,15 @@ impl RenderedText {
         layout.align(None, Alignment::Start);
 
         let mut paths = Vec::new();
+        let mut line_layouts = Vec::with_capacity(layout.len());
         for line in layout.lines() {
+            let metrics = line.metrics();
+            line_layouts.push(Rectangle::new(
+                0.0,
+                metrics.min_coord,
+                100.0,
+                metrics.max_coord - metrics.min_coord,
+            ));
             for item in line.items() {
                 match item {
                     PositionedLayoutItem::GlyphRun(glyph_run) => {
@@ -59,13 +79,14 @@ impl RenderedText {
             paths,
             width: layout.width(),
             height: layout.height(),
+            line_layouts,
         }
     }
 }
 
 #[derive(Debug, Default)]
 pub(crate) struct TextCache {
-    cache: BTreeMap<NodeId, RenderedText>,
+    cache: BTreeMap<NodeId, Rc<RenderedText>>,
 }
 
 impl TextCache {
@@ -83,10 +104,10 @@ impl TextCache {
         // self.cache.get(&node_id).unwrap()
         self.cache
             .entry(node_id)
-            .or_insert_with(|| RenderedText::render(text_context, styled_text))
+            .or_insert_with(|| Rc::new(RenderedText::render(text_context, styled_text)))
     }
 
-    pub fn get(&self, node_id: NodeId) -> Option<&RenderedText> {
+    pub fn get(&self, node_id: NodeId) -> Option<&Rc<RenderedText>> {
         self.cache.get(&node_id)
     }
 }
