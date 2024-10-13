@@ -3,17 +3,17 @@ use crate::model::{
     DrawingPath, InTextBoxId, NodeId, PartialTextStyle, Resources, StyledText, TextStyle,
 };
 use image::{Pixel, Rgba, RgbaImage};
-use parley::builder::RangedBuilder;
 use parley::fontique::Weight;
 use parley::layout::{Alignment, Glyph, GlyphRun, PositionedLayoutItem};
 use parley::style::{Brush, FontStack, FontStyle, StyleProperty};
 use parley::swash::scale::ScaleContext;
-use parley::{FontContext, Layout, LayoutContext};
+use parley::{FontContext, Layout, LayoutContext, RangedBuilder};
 use resvg::tiny_skia::{FillRule, Transform};
 use skrifa::instance::{LocationRef, NormalizedCoord, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
 use skrifa::raw::FontRef as ReadFontsRef;
 use skrifa::{GlyphId, MetadataProvider};
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 use std::str::FromStr;
@@ -57,23 +57,32 @@ impl RenderedText {
         let mut paths = Vec::new();
         let mut line_layouts = Vec::with_capacity(layout.len());
         for line in layout.lines() {
-            let metrics = line.metrics();
-            line_layouts.push(Rectangle::new(
-                0.0,
-                metrics.min_coord,
-                100.0,
-                metrics.max_coord - metrics.min_coord,
-            ));
+            let mut min_x: f32 = f32::INFINITY;
+            let mut max_x: f32 = 0.0;
             for item in line.items() {
                 match item {
                     PositionedLayoutItem::GlyphRun(glyph_run) => {
-                        paths.push(render_glyph_run(&glyph_run));
+                        let (path, start, end) = render_glyph_run(&glyph_run);
+                        paths.push(path);
+                        min_x = min_x.min(start);
+                        max_x = max_x.max(end);
                     }
                     PositionedLayoutItem::InlineBox(inline_box) => {
                         todo!()
                     }
                 };
             }
+            let metrics = line.metrics();
+            if min_x.is_infinite() {
+                min_x = 0.0;
+                max_x = 0.0;
+            }
+            line_layouts.push(Rectangle::new(
+                min_x,
+                metrics.min_coord,
+                max_x,
+                metrics.max_coord - metrics.min_coord,
+            ));
         }
         RenderedText {
             paths,
@@ -134,29 +143,29 @@ fn set_text_style_to_parley(
 
     if let Some(font) = font {
         builder.push(
-            &StyleProperty::FontStack(FontStack::Source(&font.family_name)),
+            StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(&font.family_name))),
             start..end,
         );
     }
 
     if let Some(Some(color)) = *color {
-        builder.push(&StyleProperty::Brush(color), start..end);
+        builder.push(StyleProperty::Brush(color), start..end);
     }
 
     if let Some(size) = size {
-        builder.push(&StyleProperty::FontSize(*size), start..end);
+        builder.push(StyleProperty::FontSize(*size), start..end);
     }
 
     if let Some(weight) = weight {
         builder.push(
-            &StyleProperty::FontWeight(Weight::new(*weight as f32)),
+            StyleProperty::FontWeight(Weight::new(*weight as f32)),
             start..end,
         );
     }
 
     if let Some(italic) = italic {
         builder.push(
-            &StyleProperty::FontStyle(if *italic {
+            StyleProperty::FontStyle(if *italic {
                 FontStyle::Italic
             } else {
                 FontStyle::Normal
@@ -194,15 +203,15 @@ fn styled_text_to_parley(
         overline,
         line_through,
     } = &styled_text.main_style;
-    builder.push_default(&StyleProperty::FontStack(FontStack::Source(
+    builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(
         &font.family_name,
-    )));
-    builder.push_default(&StyleProperty::FontWeight(Weight::new(*weight as f32)));
-    builder.push_default(&StyleProperty::Brush(color.unwrap()));
-    builder.push_default(&StyleProperty::FontSize(*size));
-    builder.push_default(&StyleProperty::FontWeight(Weight::new(*weight as f32)));
+    ))));
+    builder.push_default(StyleProperty::FontWeight(Weight::new(*weight as f32)));
+    builder.push_default(StyleProperty::Brush(color.unwrap()));
+    builder.push_default(StyleProperty::FontSize(*size));
+    builder.push_default(StyleProperty::FontWeight(Weight::new(*weight as f32)));
     if *italic {
-        builder.push_default(&StyleProperty::FontStyle(FontStyle::Italic));
+        builder.push_default(StyleProperty::FontStyle(FontStyle::Italic));
     }
 
     for line in &styled_text.styled_lines {
@@ -219,9 +228,10 @@ fn styled_text_to_parley(
     builder.build(&text)
 }
 
-fn render_glyph_run(glyph_run: &GlyphRun<Color>) -> Path {
+fn render_glyph_run(glyph_run: &GlyphRun<Color>) -> (Path, f32, f32) {
     // Resolve properties of the GlyphRun
     let mut run_x = glyph_run.offset();
+    let start = run_x;
     let run_y = glyph_run.baseline();
     let style = glyph_run.style();
     let color = style.brush;
@@ -263,7 +273,7 @@ fn render_glyph_run(glyph_run: &GlyphRun<Color>) -> Path {
         let settings = DrawSettings::unhinted(Size::new(font_size), location_ref);
         glyph_outline.draw(settings, &mut pen).unwrap();
     }
-    pen.path_builder.build()
+    (pen.path_builder.build(), start, run_x)
 }
 
 struct NelsiePathPen {
