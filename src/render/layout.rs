@@ -1,7 +1,7 @@
 use crate::common::Rectangle;
 use crate::model::{
     InTextBoxId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId, Slide,
-    Step,
+    Step, TextAlign,
 };
 use crate::render::counters::replace_counters;
 use crate::render::rtext::RenderedText;
@@ -113,7 +113,7 @@ impl ComputedLayout {
                 layout
                     .text
                     .as_ref()
-                    .and_then(|tl| tl.anchor_points().get(anchor_id).map(|a| a.x))
+                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.x))
                     .unwrap_or(0.0)
                     + layout.rect.x
             }
@@ -122,7 +122,7 @@ impl ComputedLayout {
                 layout
                     .text
                     .as_ref()
-                    .and_then(|tl| tl.anchor_points().get(anchor_id).map(|a| a.y))
+                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.y))
                     .unwrap_or(0.0)
                     + layout.rect.y
             }
@@ -135,7 +135,7 @@ impl ComputedLayout {
                 layout
                     .text
                     .as_ref()
-                    .and_then(|tl| tl.anchor_points().get(anchor_id).map(|a| a.width))
+                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.width))
                     .unwrap_or(0.0)
                     * fraction
             }
@@ -148,7 +148,7 @@ impl ComputedLayout {
                 layout
                     .text
                     .as_ref()
-                    .and_then(|tl| tl.anchor_points().get(anchor_id).map(|a| a.height))
+                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.height))
                     .unwrap_or(0.0)
                     * fraction
             }
@@ -252,6 +252,7 @@ fn compute_content_default_size(
                 node.node_id,
                 &mut config.thread_resources.text_context,
                 &t,
+                text.text_align,
             );
             rtext.size()
         }

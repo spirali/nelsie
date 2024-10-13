@@ -1,13 +1,14 @@
 use crate::common::{Color, Path, PathBuilder, Rectangle};
 use crate::model::{
-    DrawingPath, InTextBoxId, NodeId, PartialTextStyle, Resources, StyledText, TextStyle,
+    DrawingPath, InTextAnchor, InTextAnchorPoint, InTextBoxId, NodeId, PartialTextStyle, Resources,
+    StyledText, TextAlign, TextStyle,
 };
 use image::{Pixel, Rgba, RgbaImage};
 use parley::fontique::Weight;
 use parley::layout::{Alignment, Glyph, GlyphRun, PositionedLayoutItem};
 use parley::style::{Brush, FontStack, FontStyle, StyleProperty};
 use parley::swash::scale::ScaleContext;
-use parley::{FontContext, Layout, LayoutContext, RangedBuilder};
+use parley::{FontContext, InlineBox, Layout, LayoutContext, RangedBuilder};
 use resvg::tiny_skia::{FillRule, Transform};
 use skrifa::instance::{LocationRef, NormalizedCoord, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
@@ -30,6 +31,7 @@ pub(crate) struct RenderedText {
     height: f32,
 
     line_layouts: Vec<Rectangle>,
+    intext_rects: HashMap<InTextBoxId, Rectangle>,
 }
 
 impl RenderedText {
@@ -44,21 +46,36 @@ impl RenderedText {
         &self.line_layouts
     }
 
-    pub fn anchor_points(&self) -> &HashMap<InTextBoxId, Rectangle> {
-        todo!()
+    pub fn intext_rects(&self) -> &HashMap<InTextBoxId, Rectangle> {
+        &self.intext_rects
     }
 
-    pub fn render(text_context: &mut TextContext, text: &StyledText) -> Self {
+    pub fn render(
+        text_context: &mut TextContext,
+        text: &StyledText,
+        text_align: TextAlign,
+    ) -> Self {
         let mut layout = styled_text_to_parley(text_context, text);
 
         layout.break_all_lines(None);
-        layout.align(None, Alignment::Start);
+        layout.align(
+            None,
+            match text_align {
+                TextAlign::Start => Alignment::Start,
+                TextAlign::Center => Alignment::Middle,
+                TextAlign::End => Alignment::End,
+            },
+        );
 
+        let mut intext_rects = HashMap::new();
         let mut paths = Vec::new();
         let mut line_layouts = Vec::with_capacity(layout.len());
         for line in layout.lines() {
             let mut min_x: f32 = f32::INFINITY;
             let mut max_x: f32 = 0.0;
+            let metrics = line.metrics();
+            let line_y = metrics.min_coord;
+            let line_height = metrics.max_coord - metrics.min_coord;
             for item in line.items() {
                 match item {
                     PositionedLayoutItem::GlyphRun(glyph_run) => {
@@ -68,27 +85,31 @@ impl RenderedText {
                         max_x = max_x.max(end);
                     }
                     PositionedLayoutItem::InlineBox(inline_box) => {
-                        todo!()
+                        let id = (inline_box.id / 2) as u32;
+                        if inline_box.id % 2 == 0 {
+                            intext_rects.insert(
+                                id,
+                                Rectangle::new(inline_box.x, metrics.min_coord, 0.0, line_height),
+                            );
+                        } else {
+                            let r = intext_rects.get_mut(&id).unwrap();
+                            r.width = inline_box.x - r.x;
+                        }
                     }
                 };
             }
-            let metrics = line.metrics();
             if min_x.is_infinite() {
                 min_x = 0.0;
                 max_x = 0.0;
             }
-            line_layouts.push(Rectangle::new(
-                min_x,
-                metrics.min_coord,
-                max_x,
-                metrics.max_coord - metrics.min_coord,
-            ));
+            line_layouts.push(Rectangle::new(min_x, line_y, max_x - min_x, line_height));
         }
         RenderedText {
             paths,
             width: layout.width(),
             height: layout.height(),
             line_layouts,
+            intext_rects,
         }
     }
 }
@@ -104,7 +125,8 @@ impl TextCache {
         node_id: NodeId,
         text_context: &mut TextContext,
         styled_text: &StyledText,
-    ) -> &RenderedText {
+        text_align: TextAlign,
+    ) -> &Rc<RenderedText> {
         // if let Some(rtext) = self.cache.get(&node_id) {
         //     return &rtext;
         // }
@@ -113,7 +135,7 @@ impl TextCache {
         // self.cache.get(&node_id).unwrap()
         self.cache
             .entry(node_id)
-            .or_insert_with(|| Rc::new(RenderedText::render(text_context, styled_text)))
+            .or_insert_with(|| Rc::new(RenderedText::render(text_context, styled_text, text_align)))
     }
 
     pub fn get(&self, node_id: NodeId) -> Option<&Rc<RenderedText>> {
@@ -213,19 +235,48 @@ fn styled_text_to_parley(
     if *italic {
         builder.push_default(StyleProperty::FontStyle(FontStyle::Italic));
     }
-
-    for line in &styled_text.styled_lines {
+    let anchors = &styled_text.anchors;
+    for (l_idx, line) in styled_text.styled_lines.iter().enumerate() {
         let mut o = offset;
-        for span in &line.spans {
+        for (s_idx, span) in line.spans.iter().enumerate() {
+            try_insert_ibox(&mut builder, o, l_idx, s_idx, &anchors);
             if let Some(style_idx) = span.style_idx {
                 let style = &styled_text.styles[style_idx as usize];
                 set_text_style_to_parley(style, &mut builder, o, o + span.length as usize);
             }
             o += span.length as usize;
         }
+        try_insert_ibox(&mut builder, o, l_idx, line.spans.len(), &anchors);
         offset += line.text.len() + 1;
     }
     builder.build(&text)
+}
+
+fn try_insert_ibox(
+    builder: &mut RangedBuilder<Color>,
+    offset: usize,
+    line_idx: usize,
+    span_idx: usize,
+    anchors: &HashMap<InTextBoxId, InTextAnchor>,
+) {
+    for (id, anchor) in anchors {
+        if anchor.start.line_idx == line_idx as u32 && anchor.start.span_idx == span_idx as u32 {
+            builder.push_inline_box(InlineBox {
+                id: (*id as u64) * 2,
+                index: offset,
+                width: 0.0,
+                height: 0.0,
+            })
+        }
+        if anchor.end.line_idx == line_idx as u32 && anchor.end.span_idx == span_idx as u32 {
+            builder.push_inline_box(InlineBox {
+                id: (*id as u64) * 2 + 1,
+                index: offset,
+                width: 0.0,
+                height: 0.0,
+            })
+        }
+    }
 }
 
 fn render_glyph_run(glyph_run: &GlyphRun<Color>) -> (Path, f32, f32) {
