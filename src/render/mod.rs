@@ -8,7 +8,6 @@ mod pagebuilder;
 mod paths;
 mod pdf;
 mod rendering;
-mod rtext;
 mod svgpath;
 mod text;
 
@@ -18,7 +17,7 @@ pub(crate) use pdf::PdfBuilder;
 use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
-use crate::render::rtext::{TextCache, TextContext};
+use crate::render::text::{TextCache, TextContext};
 use itertools::Itertools;
 use parley::{FontContext, LayoutContext};
 use rayon::iter::IntoParallelIterator;

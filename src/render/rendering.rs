@@ -15,7 +15,6 @@ use crate::render::paths::{create_arrow, path_from_rect, path_to_svg};
 use crate::common::{Color, PathBuilder, Rectangle, Stroke};
 use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem, Link};
-use crate::render::text::render_text_to_canvas;
 use svg2pdf::usvg;
 
 pub(crate) struct RenderContext<'a> {
@@ -167,11 +166,11 @@ impl<'a> RenderContext<'a> {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 match content {
                     NodeContent::Text(_) => {
-                        render_text_to_canvas(
-                            self.config.text_cache.get(node.node_id).unwrap(),
-                            rect,
-                            self.canvas,
-                        );
+                        self.canvas.add_item(CanvasItem::Text {
+                            text: self.config.text_cache.get(node.node_id).unwrap().clone(),
+                            x: rect.x,
+                            y: rect.y,
+                        });
                     }
                     NodeContent::Image(image) => {
                         render_image_to_canvas(image, step, rect, self.canvas)

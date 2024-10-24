@@ -8,14 +8,22 @@ use pdf_writer::{Chunk, Filter, Finish, Str};
 use pdf_writer::{Content, Name, Rect, Ref};
 
 use crate::render::canvas::Link;
+use crate::render::text::RenderedText;
 use pdf_writer::types::{ActionType, AnnotationType};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::Path;
+use std::rc::Rc;
+use std::sync::Arc;
 
 pub(crate) enum PdfPageElement {
     GlobalRef(Rectangle, Ref),
     LocalRef(Rectangle, Chunk, Ref),
+    Text {
+        text: Arc<RenderedText>,
+        x: f32,
+        y: f32,
+    },
 }
 
 pub(crate) struct PdfPage {
@@ -83,6 +91,7 @@ impl PdfBuilder {
                     PdfPageElement::LocalRef(rect, chunk, id) => {
                         (name, rect, self.add_chunk(chunk, id))
                     }
+                    PdfPageElement::Text { .. } => {}
                 }
             })
             .collect_vec();
@@ -133,6 +142,7 @@ impl PdfBuilder {
         content.save_state();
         let (r, g, b) = pdf_page.bg_color.as_3f32();
         content.set_fill_rgb(r, g, b);
+        content._to
         content.rect(0.0, 0.0, pdf_page.width, pdf_page.height);
         content.fill_nonzero();
         content.restore_state();

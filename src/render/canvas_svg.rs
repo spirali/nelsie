@@ -1,6 +1,7 @@
 use crate::common::Rectangle;
 use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem};
+use crate::render::text::RenderedText;
 use std::io::Write;
 
 impl Canvas {
@@ -27,22 +28,9 @@ impl Canvas {
                     write_raster_image_to_svg(&rect, "jpeg", &data, &mut writer)
                 }
                 CanvasItem::SvgImage(rect, data, width, height) => {
-                    use std::fmt::Write;
-                    writer.begin("g");
-                    writer.attr_buf("transform", |s| {
-                        writeln!(
-                            s,
-                            "translate({}, {}),scale({}, {})",
-                            rect.x,
-                            rect.y,
-                            rect.width / width,
-                            rect.height / height
-                        )
-                        .unwrap();
-                    });
-                    writer.text_raw(data.as_str());
-                    writer.end("g");
+                    render_svg_image_into_svg(&mut writer, data.as_str(), &rect, width, height)
                 }
+                CanvasItem::Text { text, x, y } => render_text_into_svg(&mut writer, &text, x, y),
             }
         }
 
@@ -85,4 +73,43 @@ pub(crate) fn svg_begin(xml: &mut SimpleXmlWriter, width: f32, height: f32) {
     xml.attr_buf("viewBox", |s| {
         write!(s, "0 0 {} {}", width, height).unwrap()
     });
+}
+
+fn render_text_into_svg(
+    writer: &mut SimpleXmlWriter,
+    rendered_text: &RenderedText,
+    x: f32,
+    y: f32,
+) {
+    use std::fmt::Write;
+    writer.begin("g");
+    writer.attr_buf("transform", |s| write!(s, "translate({x}, {y})").unwrap());
+    for path in rendered_text.paths() {
+        path.write_svg(writer);
+    }
+    writer.end("g")
+}
+
+fn render_svg_image_into_svg(
+    writer: &mut SimpleXmlWriter,
+    data: &str,
+    rect: &Rectangle,
+    width: f32,
+    height: f32,
+) {
+    use std::fmt::Write;
+    writer.begin("g");
+    writer.attr_buf("transform", |s| {
+        writeln!(
+            s,
+            "translate({}, {}),scale({}, {})",
+            rect.x,
+            rect.y,
+            rect.width / width,
+            rect.height / height
+        )
+        .unwrap();
+    });
+    writer.text_raw(data);
+    writer.end("g");
 }

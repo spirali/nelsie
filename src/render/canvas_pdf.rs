@@ -7,7 +7,7 @@ use crate::render::canvas_svg::svg_begin;
 use crate::common::error::NelsieError;
 use crate::render::pdf::{PdfPage, PdfPageElement};
 use by_address::ByAddress;
-use pdf_writer::Ref;
+use pdf_writer::{Chunk, Ref};
 use std::collections::HashMap;
 use std::default::Default;
 use std::sync::Arc;
@@ -46,6 +46,7 @@ impl Canvas {
             };
 
         let mut xml_writer: Option<SimpleXmlWriter> = None;
+
         for item in self.items {
             match item {
                 CanvasItem::SvgChunk(svg_chunk) => {
@@ -83,6 +84,9 @@ impl Canvas {
                             |e| NelsieError::generic_err(format!("PDF conversion error: {}", e)),
                         )?;
                     elements.push(PdfPageElement::LocalRef(rect, svg_chunk, svg_id));
+                }
+                CanvasItem::Text { text, x, y } => {
+                    elements.push(PdfPageElement::Text { text, x, y })
                 }
             }
         }

@@ -1,4 +1,6 @@
-use crate::common::{Color, Rectangle};
+use crate::common::{Color, Path, Rectangle, Shape};
+use crate::render::text::RenderedText;
+use std::rc::Rc;
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -7,6 +9,11 @@ pub(crate) enum CanvasItem {
     PngImage(Rectangle, Arc<Vec<u8>>),
     JpegImage(Rectangle, Arc<Vec<u8>>),
     SvgImage(Rectangle, String, f32, f32),
+    Text {
+        text: Arc<RenderedText>,
+        x: f32,
+        y: f32,
+    },
 }
 
 #[derive(Debug)]
