@@ -71,7 +71,7 @@ impl<'a> SimpleXmlWriter<'a> {
         self.buffer.push('\'');
     }
 
-    pub fn text(&mut self, value: &str) {
+    /*pub fn text(&mut self, value: &str) {
         self.close();
         for c in value.chars() {
             match c {
@@ -83,7 +83,7 @@ impl<'a> SimpleXmlWriter<'a> {
                 c => self.buffer.push(c),
             }
         }
-    }
+    }*/
 
     pub fn text_raw(&mut self, value: &str) {
         self.close();

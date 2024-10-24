@@ -1,36 +1,33 @@
-use crate::common::Color;
-use crate::common::Rectangle;
-
 use image::GenericImageView;
-use itertools::Itertools;
 use miniz_oxide::deflate::{compress_to_vec_zlib, CompressionLevel};
-use pdf_writer::{Chunk, Filter, Finish, Str};
-use pdf_writer::{Content, Name, Rect, Ref};
+use pdf_writer::Ref;
+use pdf_writer::{Chunk, Filter, Finish};
 
-use crate::render::canvas::Link;
-use pdf_writer::types::{ActionType, AnnotationType};
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::path::Path;
-
-pub(crate) enum PdfPageElement {
-    GlobalRef(Rectangle, Ref),
-    LocalRef(Rectangle, Chunk, Ref),
-}
-
-pub(crate) struct PdfPage {
-    pub elements: Vec<PdfPageElement>,
-    pub width: f32,
-    pub height: f32,
-    pub bg_color: Color,
-    pub links: Vec<Link>,
-}
+use std::sync::atomic::{AtomicI32, Ordering};
 
 pub(crate) struct PdfBuilder {
     pdf: pdf_writer::Pdf,
-    page_ids: Vec<Ref>,
-    alloc_ref: Ref,
-    page_tree_id: Ref,
+    page_refs: Vec<Ref>,
+    alloc_ref: PdfRefAllocator,
+    page_tree_ref: Ref,
+}
+
+pub(crate) struct PdfRefAllocator {
+    counter: AtomicI32,
+}
+
+impl PdfRefAllocator {
+    pub fn new(rf: Ref) -> Self {
+        PdfRefAllocator {
+            counter: AtomicI32::new(rf.get()),
+        }
+    }
+
+    pub fn bump(&self) -> Ref {
+        Ref::new(self.counter.fetch_add(1, Ordering::Relaxed))
+    }
 }
 
 impl PdfBuilder {
@@ -47,111 +44,32 @@ impl PdfBuilder {
         pdf.pages(page_tree_id)
             .kids(page_ids.iter().copied())
             .count(page_ids.len() as i32);
-
         PdfBuilder {
             pdf,
-            page_ids,
-            alloc_ref,
-            page_tree_id,
+            page_refs: page_ids,
+            alloc_ref: PdfRefAllocator::new(alloc_ref),
+            page_tree_ref: page_tree_id,
         }
     }
 
-    pub fn add_chunk(&mut self, chunk: Chunk, chunk_ref: Ref) -> Ref {
-        let mut map = HashMap::<Ref, Ref>::new();
-        let chunk = chunk.renumber(|r| *map.entry(r).or_insert_with(|| self.alloc_ref.bump()));
-        self.pdf.extend(&chunk);
-        *map.get(&chunk_ref).unwrap()
+    pub fn page_ref(&self, page_idx: u32) -> Ref {
+        self.page_refs[page_idx as usize]
     }
 
-    pub fn add_chunk_direct(&mut self, chunk: Chunk) {
+    pub fn page_tree_ref(&self) -> Ref {
+        self.page_tree_ref
+    }
+
+    pub fn add_chunk(&mut self, chunk: Chunk) {
         self.pdf.extend(&chunk);
+    }
+
+    pub fn alloc_ref(&self) -> &PdfRefAllocator {
+        &self.alloc_ref
     }
 
     pub fn ref_bump(&mut self) -> Ref {
         self.alloc_ref.bump()
-    }
-
-    pub fn add_page(&mut self, page_idx: usize, pdf_page: PdfPage) {
-        let refs = pdf_page
-            .elements
-            .into_iter()
-            .enumerate()
-            .map(|(i, element)| {
-                let name = format!("o{}", i);
-                match element {
-                    PdfPageElement::GlobalRef(rect, id) => (name, rect, id),
-                    PdfPageElement::LocalRef(rect, chunk, id) => {
-                        (name, rect, self.add_chunk(chunk, id))
-                    }
-                }
-            })
-            .collect_vec();
-
-        let mut annotation_ids = Vec::with_capacity(pdf_page.links.len());
-
-        for link in pdf_page.links {
-            let rect = link.rect();
-            let annotation_id = self.alloc_ref.bump();
-            let mut annotation = self.pdf.annotation(annotation_id);
-            annotation_ids.push(annotation_id);
-            annotation.subtype(AnnotationType::Link);
-            annotation.border(0.0, 0.0, 0.0, None);
-            annotation.rect(Rect::new(
-                rect.x,
-                pdf_page.height - rect.y,
-                rect.x + rect.width,
-                pdf_page.height - (rect.y + rect.height),
-            ));
-            annotation
-                .action()
-                .action_type(ActionType::Uri)
-                .uri(Str(link.url().as_bytes()));
-            annotation.finish();
-        }
-
-        let page_id = self.page_ids[page_idx];
-        let content_id = self.alloc_ref.bump();
-        let mut page = self.pdf.page(page_id);
-        page.media_box(Rect::new(0.0, 0.0, pdf_page.width, pdf_page.height));
-        page.parent(self.page_tree_id);
-        page.contents(content_id);
-        if !annotation_ids.is_empty() {
-            page.annotations(annotation_ids);
-        }
-
-        let mut resources = page.resources();
-        let mut objects = resources.x_objects();
-        for (name, _, rf) in &refs {
-            objects.pair(Name(name.as_bytes()), rf);
-        }
-        objects.finish();
-        resources.finish();
-        page.finish();
-
-        let mut content = Content::new();
-
-        content.save_state();
-        let (r, g, b) = pdf_page.bg_color.as_3f32();
-        content.set_fill_rgb(r, g, b);
-        content.rect(0.0, 0.0, pdf_page.width, pdf_page.height);
-        content.fill_nonzero();
-        content.restore_state();
-        // content.transform([width, 0.0, 0.0, height, 0.0, 0.0]);
-        for (name, rect, _) in refs {
-            content
-                .save_state()
-                .transform([
-                    rect.width,
-                    0.0,
-                    0.0,
-                    rect.height,
-                    rect.x,
-                    pdf_page.height - rect.height - rect.y,
-                ])
-                .x_object(Name(name.as_bytes()))
-                .restore_state();
-        }
-        self.pdf.stream(content_id, &content.finish());
     }
 
     pub fn write(self, path: &Path) -> crate::Result<()> {

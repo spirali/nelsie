@@ -1,4 +1,4 @@
-use crate::common::{Color, Path, PathPart, Rectangle, Stroke};
+use crate::common::{Color, DrawRect, Path, PathPart, Stroke};
 use crate::parsers::SimpleXmlWriter;
 use std::fmt::Write;
 
@@ -32,53 +32,56 @@ pub(crate) fn stroke_and_fill_svg(
     }
 }
 
-impl Path {
-    pub fn write_svg(&self, xml: &mut SimpleXmlWriter) {
-        xml.begin("path");
+pub fn svg_path(xml: &mut SimpleXmlWriter, path: &Path) {
+    xml.begin("path");
 
-        xml.attr_buf("d", |s| {
-            for (i, part) in self.parts().iter().enumerate() {
-                if i != 0 {
-                    s.push(' ');
-                }
-                match part {
-                    PathPart::Move { x, y } => {
-                        write!(s, "M {x} {y}").unwrap();
-                    }
-                    PathPart::Line { x, y } => {
-                        write!(s, "L {x} {y}").unwrap();
-                    }
-                    PathPart::Quad { x1, y1, x, y } => write!(s, "Q {x1} {y1},{x} {y}").unwrap(),
-                    PathPart::Cubic {
-                        x1,
-                        y1,
-                        x2,
-                        y2,
-                        x,
-                        y,
-                    } => write!(s, "C {x1} {y1},{x2} {y2},{x} {y}").unwrap(),
-                    PathPart::Close => s.push('Z'),
-                }
+    xml.attr_buf("d", |s| {
+        for (i, part) in path.parts().iter().enumerate() {
+            if i != 0 {
+                s.push(' ');
             }
-        });
-        stroke_and_fill_svg(xml, self.stroke(), self.fill_color());
-        xml.end("path");
-    }
+            match part {
+                PathPart::Move { x, y } => {
+                    write!(s, "M {x} {y}").unwrap();
+                }
+                PathPart::Line { x, y } => {
+                    write!(s, "L {x} {y}").unwrap();
+                }
+                PathPart::Quad { x1, y1, x, y } => write!(s, "Q {x1} {y1},{x} {y}").unwrap(),
+                PathPart::Cubic {
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    x,
+                    y,
+                } => write!(s, "C {x1} {y1},{x2} {y2},{x} {y}").unwrap(),
+                PathPart::Close => s.push('Z'),
+            }
+        }
+    });
+    stroke_and_fill_svg(xml, path.stroke(), path.fill_color());
+    xml.end("path");
 }
 
-pub(crate) fn svg_ellipse(
-    xml: &mut SimpleXmlWriter,
-    rect: &Rectangle,
-    stroke: &Option<Stroke>,
-    fill_color: &Option<Color>,
-) {
-    let wh = rect.width / 2.0;
-    let hh = rect.height / 2.0;
+pub(crate) fn svg_rect(xml: &mut SimpleXmlWriter, rect: &DrawRect) {
+    xml.begin("rect");
+    xml.attr("x", rect.rectangle.x);
+    xml.attr("y", rect.rectangle.y);
+    xml.attr("width", rect.rectangle.width);
+    xml.attr("height", rect.rectangle.height);
+    stroke_and_fill_svg(xml, &rect.stroke, &rect.fill_color);
+    xml.end("rect");
+}
+
+pub(crate) fn svg_ellipse(xml: &mut SimpleXmlWriter, rect: &DrawRect) {
+    let wh = rect.rectangle.width / 2.0;
+    let hh = rect.rectangle.height / 2.0;
     xml.begin("ellipse");
-    xml.attr("cx", rect.x + wh);
-    xml.attr("cy", rect.y + hh);
+    xml.attr("cx", rect.rectangle.x + wh);
+    xml.attr("cy", rect.rectangle.y + hh);
     xml.attr("rx", wh);
     xml.attr("ry", hh);
-    stroke_and_fill_svg(xml, stroke, fill_color);
+    stroke_and_fill_svg(xml, &rect.stroke, &rect.fill_color);
     xml.end("ellipse");
 }

@@ -1,6 +1,6 @@
 use crate::model::{
     Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText,
-    TextStyle,
+    TextAlign, TextStyle,
 };
 use crate::render::layout::{compute_layout, ComputedLayout};
 use crate::render::RenderConfig;
@@ -10,16 +10,14 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use crate::render::image::render_image_to_canvas;
-use crate::render::paths::{create_arrow, path_from_rect, path_to_svg};
+use crate::render::paths::{draw_item_from_rect, eval_path};
 
-use crate::common::{Color, PathBuilder, Rectangle, Stroke};
-use crate::parsers::SimpleXmlWriter;
-use crate::render::canvas::{Canvas, CanvasItem, Link};
-use crate::render::text::render_text_to_canvas;
+use crate::common::{Color, DrawItem, DrawRect, Rectangle, Stroke};
+use crate::render::canvas::{Canvas, Link};
+use crate::render::text::{RenderedText, TextContext};
 use svg2pdf::usvg;
 
 pub(crate) struct RenderContext<'a> {
-    config: &'a RenderConfig<'a>,
     z_level: i32,
     layout: &'a ComputedLayout,
     canvas: &'a mut Canvas,
@@ -35,29 +33,29 @@ impl From<&Color> for usvg::Color {
 const DEBUG_STEP_FONT_SIZE: f32 = 48.0;
 
 fn draw_debug_frame(
+    text_context: &mut TextContext,
     rect: &Rectangle,
     name: &str,
     font: &Arc<FontData>,
     color: &Color,
     canvas: &mut Canvas,
 ) {
-    let mut xml = SimpleXmlWriter::new();
-    let mut path = PathBuilder::new(
-        Some(Stroke {
+    let draw_item = DrawItem::Rect(DrawRect {
+        rectangle: Rectangle {
+            x: rect.x,
+            y: rect.y,
+            width: rect.width.max(1.0),
+            height: rect.height.max(1.0),
+        },
+        fill_color: None,
+        stroke: Some(Stroke {
             color: *color,
             width: 1.0,
             dash_array: Some(vec![5.0, 2.5]),
             dash_offset: 0.0,
         }),
-        None,
-    );
-    path.rect(&Rectangle {
-        x: rect.x,
-        y: rect.y,
-        width: rect.width.max(1.0),
-        height: rect.height.max(1.0),
     });
-    path.build().write_svg(&mut xml);
+    canvas.add_draw_item(draw_item);
 
     let text = if name.is_empty() {
         format!("[{}x{}]", rect.width, rect.height)
@@ -86,15 +84,15 @@ fn draw_debug_frame(
         styles: Vec::new(),
         anchors: Default::default(),
     };
-    todo!();
-    /* TODO render_text_to_svg(
-        &mut xml,
-        &styled_text,
+    canvas.add_text(
+        Arc::new(RenderedText::render(
+            text_context,
+            &styled_text,
+            TextAlign::Start,
+        )),
         rect.x + 2.0,
         rect.y + 3.0,
-        TextAlign::Start,
-    );*/
-    canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
+    );
 }
 
 fn draw_debug_step(
@@ -104,7 +102,8 @@ fn draw_debug_step(
     font_size: f32,
     canvas: &mut Canvas,
 ) {
-    let mut xml = SimpleXmlWriter::new();
+    todo!()
+    /*let mut xml = SimpleXmlWriter::new();
     xml.begin("rect");
     xml.attr("x", rect.x);
     xml.attr("y", rect.y);
@@ -122,25 +121,23 @@ fn draw_debug_step(
     xml.text(&step.to_string());
     xml.end("tspan");
     xml.end("text");
-    canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));
+    canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));*/
 }
 
 impl<'a> RenderContext<'a> {
     pub fn new(
-        config: &'a RenderConfig<'a>,
         z_level: i32,
         layout: &'a ComputedLayout,
         canvas: &'a mut Canvas,
     ) -> RenderContext<'a> {
         RenderContext {
-            config,
             z_level,
             layout,
             canvas,
         }
     }
 
-    fn render_helper(&mut self, step: &Step, node: &Node) {
+    fn render_helper(&mut self, config: &mut RenderConfig, step: &Step, node: &Node) {
         // active is before step replacement!
         if !node.active.at_step(step) {
             return;
@@ -155,22 +152,18 @@ impl<'a> RenderContext<'a> {
             if let Some(color) = &node.bg_color.at_step(step) {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 let border_radius = *node.border_radius.at_step(step);
-                let mut path = PathBuilder::new(None, Some(*color));
-                path_from_rect(&mut path, rect, border_radius);
-                let mut xml = SimpleXmlWriter::new();
-                path.build().write_svg(&mut xml);
-                self.canvas
-                    .add_item(CanvasItem::SvgChunk(xml.into_string()))
+                let item = draw_item_from_rect(rect, border_radius, None, Some(*color));
+                self.canvas.add_draw_item(item);
             }
 
             if let Some(content) = &node.content {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 match content {
                     NodeContent::Text(_) => {
-                        render_text_to_canvas(
-                            self.config.text_cache.get(node.node_id).unwrap(),
-                            rect,
-                            self.canvas,
+                        self.canvas.add_text(
+                            config.text_cache.get(node.node_id).unwrap().clone(),
+                            rect.x,
+                            rect.y,
                         );
                     }
                     NodeContent::Image(image) => {
@@ -187,9 +180,10 @@ impl<'a> RenderContext<'a> {
             if let Some(color) = &node.debug_layout {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 draw_debug_frame(
+                    &mut config.thread_resources.text_context,
                     rect,
                     &node.name,
-                    self.config.default_font,
+                    config.default_font,
                     color,
                     self.canvas,
                 );
@@ -198,7 +192,7 @@ impl<'a> RenderContext<'a> {
 
         for child in &node.children {
             match child {
-                NodeChild::Node(node) => self.render_helper(step, node),
+                NodeChild::Node(node) => self.render_helper(config, step, node),
                 NodeChild::Draw(draw) => {
                     if is_current_z_level {
                         self.draw(step, node.node_id, draw)
@@ -209,22 +203,13 @@ impl<'a> RenderContext<'a> {
     }
 
     fn draw(&mut self, step: &Step, parent_id: NodeId, drawing: &Drawing) {
-        let paths = drawing.paths.at_step(step);
-        if paths.is_empty() {
-            return;
-        }
-        let mut xml = SimpleXmlWriter::new();
         for path in drawing.paths.at_step(step) {
-            path_to_svg(&mut xml, self.layout, parent_id, path);
-            create_arrow(&mut xml, self.layout, parent_id, path, true);
-            create_arrow(&mut xml, self.layout, parent_id, path, false);
+            eval_path(self.canvas, path, self.layout, parent_id)
         }
-        self.canvas
-            .add_item(CanvasItem::SvgChunk(xml.into_string()))
     }
 
-    pub(crate) fn render_to_canvas(mut self, step: &Step, node: &Node) {
-        self.render_helper(step, node);
+    pub(crate) fn render_to_canvas(mut self, config: &mut RenderConfig) {
+        self.render_helper(config, config.step, &config.slide.node);
     }
 }
 
@@ -238,26 +223,30 @@ pub(crate) fn render_to_canvas(render_cfg: &mut RenderConfig) -> Canvas {
     render_cfg.slide.node.collect_z_levels(&mut z_levels);
 
     log::debug!("Rendering to canvas");
-    let slide = &render_cfg.slide;
     let mut canvas = Canvas::new(
-        slide.width,
-        slide.height
-            + if slide.debug_steps {
+        render_cfg.slide.width,
+        render_cfg.slide.height
+            + if render_cfg.slide.debug_steps {
                 DEBUG_STEP_FONT_SIZE * 1.25
             } else {
                 0.0
             },
-        slide.bg_color,
+        render_cfg.slide.bg_color,
     );
 
     for z_level in z_levels {
-        let render_ctx = RenderContext::new(render_cfg, z_level, &layout, &mut canvas);
-        render_ctx.render_to_canvas(render_cfg.step, &render_cfg.slide.node);
+        let render_ctx = RenderContext::new(z_level, &layout, &mut canvas);
+        render_ctx.render_to_canvas(render_cfg);
     }
 
-    if slide.debug_steps {
+    if render_cfg.slide.debug_steps {
         draw_debug_step(
-            &Rectangle::new(0.0, slide.height, slide.width, DEBUG_STEP_FONT_SIZE * 1.25),
+            &Rectangle::new(
+                0.0,
+                render_cfg.slide.height,
+                render_cfg.slide.width,
+                DEBUG_STEP_FONT_SIZE * 1.25,
+            ),
             render_cfg.step,
             &render_cfg.default_font.family_name,
             DEBUG_STEP_FONT_SIZE,

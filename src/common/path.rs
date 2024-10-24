@@ -68,16 +68,6 @@ impl PathBuilder {
         })
     }
 
-    pub fn rect(&mut self, rect: &Rectangle) {
-        let x2 = rect.x + rect.width;
-        let y2 = rect.y + rect.height;
-        self.move_to(rect.x, rect.y);
-        self.line_to(x2, rect.y);
-        self.line_to(x2, y2);
-        self.line_to(rect.x, y2);
-        self.close();
-    }
-
     pub fn move_to(&mut self, x: f32, y: f32) {
         self.0.parts.push(PathPart::Move { x, y })
     }

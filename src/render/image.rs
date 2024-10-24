@@ -5,7 +5,7 @@ use crate::model::{
 use crate::common::Rectangle;
 
 use crate::parsers::step_parser::parse_steps_from_label;
-use crate::render::canvas::{Canvas, CanvasItem};
+use crate::render::canvas::Canvas;
 
 fn render_ora_to_canvas(
     image: &LoadedImage,
@@ -27,7 +27,7 @@ fn render_ora_to_canvas(
                 .map(|v| *v.at_step(&step))
                 .unwrap_or(true)
         {
-            canvas.add_item(CanvasItem::PngImage(
+            canvas.add_png_image(
                 Rectangle {
                     x: layer.x * scale + rect.x,
                     y: layer.y * scale + rect.y,
@@ -35,7 +35,7 @@ fn render_ora_to_canvas(
                     height: layer.height * scale,
                 },
                 layer.data.clone(),
-            ));
+            );
         }
     }
 }
@@ -115,16 +115,14 @@ pub(crate) fn render_image_to_canvas(
         );
 
         match &loaded_image.data {
-            LoadedImageData::Png(data) => canvas.add_item(CanvasItem::PngImage(rect, data.clone())),
-            LoadedImageData::Jpeg(data) => {
-                canvas.add_item(CanvasItem::JpegImage(rect, data.clone()))
-            }
-            LoadedImageData::Svg(svg) => canvas.add_item(CanvasItem::SvgImage(
+            LoadedImageData::Png(data) => canvas.add_png_image(rect, data.clone()),
+            LoadedImageData::Jpeg(data) => canvas.add_jpeg_image(rect, data.clone()),
+            LoadedImageData::Svg(svg) => canvas.add_svg_image(
                 rect,
                 prepare_svg_tree_for_step(step, image, svg),
                 loaded_image.width,
                 loaded_image.height,
-            )),
+            ),
             LoadedImageData::Ora(ora) => {
                 render_ora_to_canvas(loaded_image, step, ora, rect, image.enable_steps, canvas)
             }

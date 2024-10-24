@@ -1,8 +1,7 @@
-use crate::common::{PathBuilder, Rectangle, Stroke};
+use crate::common::{Color, DrawItem, DrawRect, PathBuilder, Rectangle, Stroke};
 use crate::model::{DrawingPath, NodeId, PathPart};
-use crate::parsers::SimpleXmlWriter;
+use crate::render::canvas::Canvas;
 use crate::render::layout::ComputedLayout;
-use crate::render::svgpath::svg_ellipse;
 
 fn move_point_for_arrow(
     layout: &ComputedLayout,
@@ -41,23 +40,22 @@ fn move_point_for_arrow(
     None
 }
 
-pub(crate) fn path_to_svg(
-    xml: &mut SimpleXmlWriter,
+pub(crate) fn eval_path(
+    canvas: &mut Canvas,
+    path: &DrawingPath,
     layout: &ComputedLayout,
     parent_id: NodeId,
-    path: &DrawingPath,
 ) {
     if let Some(PathPart::Oval { x1, y1, x2, y2 }) = path.parts.first() {
         let x1 = layout.eval(x1, parent_id);
         let y1 = layout.eval(y1, parent_id);
         let x2 = layout.eval(x2, parent_id);
         let y2 = layout.eval(y2, parent_id);
-        svg_ellipse(
-            xml,
-            &Rectangle::new(x1, y1, x2 - x1, y2 - y1),
-            &path.stroke,
-            &path.fill_color,
-        );
+        canvas.add_draw_item(DrawItem::Oval(DrawRect {
+            rectangle: Rectangle::new(x1, y1, x2 - x1, y2 - y1),
+            fill_color: path.fill_color,
+            stroke: path.stroke.clone(),
+        }))
     } else {
         let mut builder = PathBuilder::new(path.stroke.clone(), path.fill_color);
         for (i, part) in path.parts.iter().enumerate() {
@@ -100,7 +98,9 @@ pub(crate) fn path_to_svg(
                 PathPart::Oval { .. } => { /* Ignoring Oval, it has to be first if it used */ }
             }
         }
-        builder.build().write_svg(xml);
+        canvas.add_draw_item(DrawItem::Path(builder.build()));
+        create_arrow(canvas, path, layout, parent_id, true);
+        create_arrow(canvas, path, layout, parent_id, false);
     }
 }
 
@@ -146,10 +146,10 @@ fn arrow_direction(
 }
 
 pub(crate) fn create_arrow(
-    xml: &mut SimpleXmlWriter,
+    canvas: &mut Canvas,
+    path: &DrawingPath,
     layout: &ComputedLayout,
     parent_id: NodeId,
-    path: &DrawingPath,
     is_end_arrow: bool,
 ) -> Option<()> {
     let arrow = if is_end_arrow {
@@ -201,24 +201,35 @@ pub(crate) fn create_arrow(
         }
         builder.close();
     }
-    builder.build().write_svg(xml);
+    canvas.add_draw_item(DrawItem::Path(builder.build()));
     Some(())
 }
 
-pub(crate) fn path_from_rect(path: &mut PathBuilder, rect: &Rectangle, border_radius: f32) {
+pub(crate) fn draw_item_from_rect(
+    rect: &Rectangle,
+    border_radius: f32,
+    stroke: Option<Stroke>,
+    fill_color: Option<Color>,
+) -> DrawItem {
     if border_radius < 0.001 {
-        path.rect(rect)
+        DrawItem::Rect(DrawRect {
+            rectangle: rect.clone(),
+            stroke,
+            fill_color,
+        })
     } else {
+        let mut builder = PathBuilder::new(stroke, fill_color);
         let x2 = rect.x + rect.width;
         let y2 = rect.y + rect.height;
-        path.move_to(rect.x + border_radius, rect.y);
-        path.line_to(x2 - border_radius, rect.y);
-        path.quad_to(x2, rect.y, x2, rect.y + border_radius);
-        path.line_to(x2, y2 - border_radius);
-        path.quad_to(x2, y2, x2 - border_radius, y2);
-        path.line_to(rect.x + border_radius, y2);
-        path.quad_to(rect.x, y2, rect.x, y2 - border_radius);
-        path.line_to(rect.x, rect.y + border_radius);
-        path.quad_to(rect.x, rect.y, rect.x + border_radius, rect.y);
+        builder.move_to(rect.x + border_radius, rect.y);
+        builder.line_to(x2 - border_radius, rect.y);
+        builder.quad_to(x2, rect.y, x2, rect.y + border_radius);
+        builder.line_to(x2, y2 - border_radius);
+        builder.quad_to(x2, y2, x2 - border_radius, y2);
+        builder.line_to(rect.x + border_radius, y2);
+        builder.quad_to(rect.x, y2, rect.x, y2 - border_radius);
+        builder.line_to(rect.x, rect.y + border_radius);
+        builder.quad_to(rect.x, rect.y, rect.x + border_radius, rect.y);
+        DrawItem::Path(builder.build())
     }
 }

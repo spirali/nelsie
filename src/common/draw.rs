@@ -1,3 +1,5 @@
+use crate::common::{Color, Path, Stroke};
+
 #[derive(Debug, Clone)]
 pub(crate) struct Rectangle {
     pub x: f32,
@@ -15,4 +17,18 @@ impl Rectangle {
             height,
         }
     }
+}
+
+#[derive(Debug)]
+pub(crate) struct DrawRect {
+    pub rectangle: Rectangle,
+    pub fill_color: Option<Color>,
+    pub stroke: Option<Stroke>,
+}
+
+#[derive(Debug)]
+pub(crate) enum DrawItem {
+    Rect(DrawRect),
+    Oval(DrawRect),
+    Path(Path),
 }
