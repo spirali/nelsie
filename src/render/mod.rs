@@ -30,17 +30,6 @@ pub(crate) struct ThreadLocalResources {
     pub text_context: TextContext,
 }
 
-impl ThreadLocalResources {
-    pub fn new(resources: Resources) -> Self {
-        ThreadLocalResources {
-            text_context: TextContext {
-                layout_cx: Default::default(),
-                font_cx: Default::default(),
-            },
-        }
-    }
-}
-
 pub(crate) struct RenderConfig<'a> {
     pub resources: &'a Resources,
     pub thread_resources: &'a mut ThreadLocalResources,

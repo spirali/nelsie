@@ -1,5 +1,6 @@
 use crate::model::{
-    Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText, TextStyle,
+    Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText,
+    TextStyle,
 };
 use crate::render::layout::{compute_layout, ComputedLayout};
 use crate::render::RenderConfig;
@@ -73,15 +74,13 @@ fn draw_debug_frame(
         }],
         main_style: TextStyle {
             font: font.clone(),
-            stroke: None,
-            color: Some(*color),
+            color: *color,
             size: 8.0,
             line_spacing: 0.0,
             italic: false,
             stretch: Default::default(),
             weight: 700,
             underline: false,
-            overline: false,
             line_through: false,
         },
         styles: Vec::new(),

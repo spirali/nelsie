@@ -1,7 +1,7 @@
 use crate::common::error::NelsieError;
 use crate::model::StepValue;
 
-use crate::common::{Color, Stroke};
+use crate::common::Color;
 use std::collections::HashMap;
 use std::sync::Arc;
 use svg2pdf::usvg;
@@ -15,15 +15,13 @@ pub(crate) struct FontData {
 #[derive(Debug, Default, Clone, PartialEq)]
 pub(crate) struct PartialTextStyle {
     pub font: Option<Arc<FontData>>,
-    pub stroke: Option<Option<Arc<Stroke>>>,
-    pub color: Option<Option<Color>>,
+    pub color: Option<Color>,
     pub size: Option<f32>,
     pub line_spacing: Option<f32>,
     pub italic: Option<bool>,
     pub stretch: Option<FontStretch>,
     pub weight: Option<u16>,
     pub underline: Option<bool>,
-    pub overline: Option<bool>,
     pub line_through: Option<bool>,
 }
 
@@ -31,7 +29,6 @@ impl PartialTextStyle {
     pub fn into_text_style(self) -> Option<TextStyle> {
         Some(TextStyle {
             font: self.font?,
-            stroke: self.stroke?,
             color: self.color?,
             size: self.size?,
             line_spacing: self.line_spacing?,
@@ -39,7 +36,6 @@ impl PartialTextStyle {
             stretch: self.stretch?,
             weight: self.weight?,
             underline: self.underline?,
-            overline: self.overline?,
             line_through: self.line_through?,
         })
     }
@@ -47,15 +43,13 @@ impl PartialTextStyle {
     pub fn merge(&self, other: &PartialTextStyle) -> PartialTextStyle {
         PartialTextStyle {
             font: other.font.as_ref().or(self.font.as_ref()).cloned(),
-            stroke: other.stroke.as_ref().or(self.stroke.as_ref()).cloned(),
-            color: other.color.as_ref().or(self.color.as_ref()).cloned(),
+            color: other.color.or(self.color),
             size: other.size.or(self.size),
             line_spacing: other.line_spacing.or(self.line_spacing),
             italic: other.italic.or(self.italic),
             stretch: other.stretch.or(self.stretch),
             weight: other.weight.or(self.weight),
             underline: other.underline.or(self.underline),
-            overline: other.overline.or(self.overline),
             line_through: other.line_through.or(self.line_through),
         }
     }
@@ -64,15 +58,13 @@ impl PartialTextStyle {
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct TextStyle {
     pub font: Arc<FontData>,
-    pub stroke: Option<Arc<Stroke>>,
-    pub color: Option<Color>,
+    pub color: Color,
     pub size: f32,
     pub line_spacing: f32,
     pub italic: bool,
     pub stretch: FontStretch,
     pub weight: u16,
     pub underline: bool,
-    pub overline: bool,
     pub line_through: bool,
 }
 
@@ -82,15 +74,13 @@ impl Default for TextStyle {
             font: Arc::new(FontData {
                 family_name: "".to_string(),
             }),
-            stroke: None,
-            color: None,
+            color: Color::default(),
             size: 0.0,
             line_spacing: 0.0,
             italic: false,
             stretch: Default::default(),
             weight: 0,
             underline: false,
-            overline: false,
             line_through: false,
         }
     }
