@@ -1,12 +1,29 @@
-use crate::common::{Color, Rectangle};
+use crate::common::{Color, DrawItem, Rectangle};
+use crate::render::text::RenderedText;
 use std::sync::Arc;
 
 #[derive(Debug)]
 pub(crate) enum CanvasItem {
-    SvgChunk(String),
-    PngImage(Rectangle, Arc<Vec<u8>>),
-    JpegImage(Rectangle, Arc<Vec<u8>>),
-    SvgImage(Rectangle, String, f32, f32),
+    PngImage {
+        rect: Rectangle,
+        data: Arc<Vec<u8>>,
+    },
+    JpegImage {
+        rect: Rectangle,
+        data: Arc<Vec<u8>>,
+    },
+    SvgImage {
+        rect: Rectangle,
+        data: String,
+        width: f32,
+        height: f32,
+    },
+    DrawItems(Vec<DrawItem>),
+    Text {
+        text: Arc<RenderedText>,
+        x: f32,
+        y: f32,
+    },
 }
 
 #[derive(Debug)]
@@ -49,8 +66,33 @@ impl Canvas {
         }
     }
 
-    pub fn add_item(&mut self, item: CanvasItem) {
-        self.items.push(item)
+    pub fn add_jpeg_image(&mut self, rect: Rectangle, data: Arc<Vec<u8>>) {
+        self.items.push(CanvasItem::JpegImage { rect, data });
+    }
+
+    pub fn add_png_image(&mut self, rect: Rectangle, data: Arc<Vec<u8>>) {
+        self.items.push(CanvasItem::PngImage { rect, data });
+    }
+
+    pub fn add_text(&mut self, text: Arc<RenderedText>, x: f32, y: f32) {
+        self.items.push(CanvasItem::Text { text, x, y })
+    }
+
+    pub fn add_svg_image(&mut self, rect: Rectangle, data: String, width: f32, height: f32) {
+        self.items.push(CanvasItem::SvgImage {
+            rect,
+            data,
+            width,
+            height,
+        })
+    }
+
+    pub fn add_draw_item(&mut self, item: DrawItem) {
+        if let Some(CanvasItem::DrawItems(ref mut items)) = self.items.last_mut() {
+            items.push(item)
+        } else {
+            self.items.push(CanvasItem::DrawItems(vec![item]))
+        }
     }
 
     pub fn add_link(&mut self, link: Link) {

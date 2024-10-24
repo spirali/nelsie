@@ -3,17 +3,17 @@ use crate::model::{
     LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId, Step,
 };
 use crate::render::counters::replace_counters;
-use crate::render::rtext::RenderedText;
+use crate::render::text::RenderedText;
 use crate::render::RenderConfig;
 use itertools::Itertools;
 use std::collections::{BTreeMap, HashMap};
-use std::rc::Rc;
+use std::sync::Arc;
 use taffy::{prelude as tf, AlignItems, Display, JustifyContent};
 
 #[derive(Debug)]
 pub(crate) struct LayoutData {
     pub(crate) rect: Rectangle,
-    pub(crate) text: Option<Rc<RenderedText>>,
+    pub(crate) text: Option<Arc<RenderedText>>,
 }
 
 #[derive(Default, Debug)]

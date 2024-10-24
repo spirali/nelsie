@@ -3,7 +3,7 @@ use crate::common::fileutils::ensure_directory;
 use crate::model::{LoadedImage, LoadedImageData, Resources, SlideDeck, SlideId, Step};
 use crate::render::canvas::Canvas;
 use crate::render::canvas_pdf::PdfImageCache;
-use crate::render::pdf::{image_to_pdf_chunk, PdfPage};
+use crate::render::pdf::image_to_pdf_chunk;
 use crate::render::{OutputConfig, OutputFormat, PdfBuilder};
 use by_address::ByAddress;
 use indicatif::ProgressBar;
@@ -17,7 +17,7 @@ use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
 pub(crate) struct PdfWriterData {
-    pages: Mutex<Vec<Option<PdfPage>>>,
+    pages: Mutex<Vec<Option<Chunk>>>,
     cache: PdfImageCache,
     pdf_builder: PdfBuilder,
     images: Vec<Arc<LoadedImage>>,
@@ -120,12 +120,11 @@ impl<'a> PageBuilder<'a> {
                 let pages = data.pages.into_inner().unwrap();
 
                 for chunk in image_chunks {
-                    data.pdf_builder.add_chunk_direct(chunk);
+                    data.pdf_builder.add_chunk(chunk);
                 }
 
-                for (page_idx, page) in pages.into_iter().enumerate() {
-                    let page = page.unwrap();
-                    data.pdf_builder.add_page(page_idx, page);
+                for chunk in pages.into_iter() {
+                    data.pdf_builder.add_chunk(chunk.unwrap());
                 }
                 data.pdf_builder.write(path)?;
                 Vec::new()
@@ -145,28 +144,34 @@ impl<'a> PageBuilder<'a> {
         &self,
         slide_id: SlideId,
         step: &Step,
-        page_id: u32,
+        page_idx: u32,
         canvas: Canvas,
         resources: &Resources,
     ) -> crate::Result<()> {
         match &self.writer {
             PageWriter::Pdf(data) => {
-                let page = canvas.into_pdf_page(resources, &data.cache)?;
-                data.pages.lock().unwrap()[page_id as usize] = Some(page);
+                let page = canvas.into_pdf_page(
+                    resources,
+                    data.pdf_builder.page_ref(page_idx),
+                    data.pdf_builder.page_tree_ref(),
+                    data.pdf_builder.alloc_ref(),
+                    &data.cache,
+                )?;
+                data.pages.lock().unwrap()[page_idx as usize] = Some(page);
             }
             PageWriter::Svg(output) => {
-                let data = write_svg_page(self.output_path, page_id, canvas, self.n_pages)?;
+                let data = write_svg_page(self.output_path, page_idx, canvas, self.n_pages)?;
                 if let Some(data) = data {
                     let mut result_data = output.lock().unwrap();
-                    result_data[page_id as usize] = (slide_id as usize, step.clone(), data);
+                    result_data[page_idx as usize] = (slide_id as usize, step.clone(), data);
                 }
             }
             PageWriter::Png(output) => {
                 let data =
-                    write_png_page(self.output_path, page_id, canvas, resources, self.n_pages)?;
+                    write_png_page(self.output_path, page_idx, canvas, resources, self.n_pages)?;
                 if let Some(data) = data {
                     let mut result_data = output.lock().unwrap();
-                    result_data[page_id as usize] = (slide_id as usize, step.clone(), data);
+                    result_data[page_idx as usize] = (slide_id as usize, step.clone(), data);
                 }
             }
         };

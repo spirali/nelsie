@@ -60,10 +60,6 @@ impl Resources {
         }
     }
 
-    pub fn font_db_arc(&self) -> Arc<fontdb::Database> {
-        self.font_db.as_ref().unwrap().clone()
-    }
-
     pub fn load_code_syntax_dir(&mut self, path: &Path) -> crate::Result<()> {
         log::debug!("Adding code syntax directory {}", path.display());
         let syntax_set = std::mem::take(&mut self.syntax_set);
