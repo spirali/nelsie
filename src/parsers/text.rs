@@ -162,34 +162,34 @@ mod tests {
     #[test]
     fn test_parse_text_styles() {
         let r = parse("Hello").unwrap();
-        assert_eq!(r.styles, vec![Vec::<_>::new()]);
+        assert!(r.styles.is_empty());
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
                 spans: vec![Span {
                     length: 5,
-                    style_idx: 0
+                    style_idx: None,
                 }],
                 text: "Hello".to_string(),
             }]
         );
 
         let r = parse("Hello\n Line 2 \n\n").unwrap();
-        assert_eq!(r.styles, vec![Vec::<_>::new()]);
+        assert!(r.styles.is_empty());
         assert_eq!(
             r.styled_lines,
             vec![
                 StyledLine {
                     spans: vec![Span {
                         length: 5,
-                        style_idx: 0
+                        style_idx: None
                     }],
                     text: "Hello".to_string(),
                 },
                 StyledLine {
                     spans: vec![Span {
                         length: 8,
-                        style_idx: 0
+                        style_idx: None
                     }],
                     text: " Line 2 ".to_string(),
                 },
@@ -201,22 +201,22 @@ mod tests {
         );
 
         let r = parse("xyz~name{ab}c").unwrap();
-        assert_eq!(r.styles, vec![vec![], vec![StyleOrName::Name("name")]]);
+        assert_eq!(r.styles, vec![vec![StyleOrName::Name("name")]]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
                 spans: vec![
                     Span {
                         length: 3,
-                        style_idx: 0
+                        style_idx: None
                     },
                     Span {
                         length: 2,
-                        style_idx: 1
+                        style_idx: Some(0)
                     },
                     Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: None
                     }
                 ],
                 text: "xyzabc".to_string(),
@@ -234,15 +234,15 @@ mod tests {
                 spans: vec![
                     Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: Some(0)
                     },
                     Span {
                         length: 1,
-                        style_idx: 1
+                        style_idx: Some(1)
                     },
                     Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: Some(0)
                     }
                 ],
                 text: "abc".to_string(),
@@ -264,7 +264,7 @@ mod tests {
                 StyledLine {
                     spans: vec![Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: Some(0)
                     },],
                     text: "x".to_string(),
                 },
@@ -275,7 +275,7 @@ mod tests {
                 StyledLine {
                     spans: vec![Span {
                         length: 2,
-                        style_idx: 0
+                        style_idx: Some(0)
                     },],
                     text: "yy".to_string(),
                 }
@@ -287,7 +287,6 @@ mod tests {
         assert_eq!(
             r.styles,
             vec![
-                vec![],
                 vec![StyleOrName::Name("name")],
                 vec![StyleOrName::Name("question")],
                 vec![
@@ -303,15 +302,15 @@ mod tests {
                     spans: vec![
                         Span {
                             length: 18,
-                            style_idx: 0
+                            style_idx: None
                         },
                         Span {
                             length: 5,
-                            style_idx: 1
+                            style_idx: Some(0)
                         },
                         Span {
                             length: 1,
-                            style_idx: 0
+                            style_idx: None
                         }
                     ],
                     text: "Hello, my name is Alice.".to_string(),
@@ -320,15 +319,15 @@ mod tests {
                     spans: vec![
                         Span {
                             length: 8,
-                            style_idx: 2
+                            style_idx: Some(1)
                         },
                         Span {
                             length: 3,
-                            style_idx: 3
+                            style_idx: Some(2)
                         },
                         Span {
                             length: 1,
-                            style_idx: 2
+                            style_idx: Some(1)
                         }
                     ],
                     text: "How are you?".to_string()
@@ -340,22 +339,22 @@ mod tests {
     #[test]
     fn test_parse_text_anchors() {
         let r = parse("abc~1{IJK}xyz").unwrap();
-        assert_eq!(r.styles, vec![Vec::<_>::new()]);
+        assert!(r.styles.is_empty());
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
                 spans: vec![
                     Span {
                         length: 3,
-                        style_idx: 0
+                        style_idx: None
                     },
                     Span {
                         length: 3,
-                        style_idx: 0
+                        style_idx: None
                     },
                     Span {
                         length: 3,
-                        style_idx: 0
+                        style_idx: None
                     }
                 ],
                 text: "abcIJKxyz".to_string(),
@@ -377,13 +376,13 @@ mod tests {
         );
 
         let r = parse("~1{IJK}").unwrap();
-        assert_eq!(r.styles, vec![Vec::<_>::new()]);
+        assert!(r.styles.is_empty());
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
                 spans: vec![Span {
                     length: 3,
-                    style_idx: 0
+                    style_idx: None
                 }],
                 text: "IJK".to_string(),
             }]
@@ -404,18 +403,18 @@ mod tests {
         );
 
         let r = parse("~2{abc}~1{xy}").unwrap();
-        assert_eq!(r.styles, vec![Vec::<_>::new()]);
+        assert!(r.styles.is_empty());
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
                 spans: vec![
                     Span {
                         length: 3,
-                        style_idx: 0
+                        style_idx: None
                     },
                     Span {
                         length: 2,
-                        style_idx: 0
+                        style_idx: None
                     }
                 ],
                 text: "abcxy".to_string(),
@@ -450,30 +449,30 @@ mod tests {
         );
 
         let r = parse("a~name{b~1{c}d}e").unwrap();
-        assert_eq!(r.styles, vec![vec![], vec![StyleOrName::Name("name")]]);
+        assert_eq!(r.styles, vec![vec![StyleOrName::Name("name")]]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
                 spans: vec![
                     Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: None
                     },
                     Span {
                         length: 1,
-                        style_idx: 1
+                        style_idx: Some(0)
                     },
                     Span {
                         length: 1,
-                        style_idx: 1
+                        style_idx: Some(0)
                     },
                     Span {
                         length: 1,
-                        style_idx: 1
+                        style_idx: Some(0)
                     },
                     Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: None
                     }
                 ],
                 text: "abcde".to_string(),
@@ -495,26 +494,26 @@ mod tests {
         );
 
         let r = parse("a~21{~name{xxx}z}e").unwrap();
-        assert_eq!(r.styles, vec![vec![], vec![StyleOrName::Name("name")]]);
+        assert_eq!(r.styles, vec![vec![StyleOrName::Name("name")]]);
         assert_eq!(
             r.styled_lines,
             vec![StyledLine {
                 spans: vec![
                     Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: None
                     },
                     Span {
                         length: 3,
-                        style_idx: 1
+                        style_idx: Some(0)
                     },
                     Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: None
                     },
                     Span {
                         length: 1,
-                        style_idx: 0
+                        style_idx: None
                     },
                 ],
                 text: "axxxze".to_string(),
@@ -562,7 +561,7 @@ mod tests {
         );
 
         let r = parse("ab~0{x\ny}z").unwrap();
-        assert_eq!(r.styles.len(), 1);
+        assert!(r.styles.is_empty());
         assert_eq!(
             r.styled_lines,
             vec![
@@ -570,11 +569,11 @@ mod tests {
                     spans: vec![
                         Span {
                             length: 2,
-                            style_idx: 0
+                            style_idx: None
                         },
                         Span {
                             length: 1,
-                            style_idx: 0
+                            style_idx: None
                         }
                     ],
                     text: "abx".to_string(),
@@ -583,11 +582,11 @@ mod tests {
                     spans: vec![
                         Span {
                             length: 1,
-                            style_idx: 0
+                            style_idx: None
                         },
                         Span {
                             length: 1,
-                            style_idx: 0
+                            style_idx: None
                         }
                     ],
                     text: "yz".to_string(),
