@@ -1,7 +1,6 @@
 use crate::common::Rectangle;
 use crate::model::{
-    InTextBoxId, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId,
-    Step,
+    LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeContent, NodeId, Step,
 };
 use crate::render::counters::replace_counters;
 use crate::render::rtext::RenderedText;
@@ -10,16 +9,6 @@ use itertools::Itertools;
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 use taffy::{prelude as tf, AlignItems, Display, JustifyContent};
-
-pub(crate) struct LayoutContext<'a> {
-    config: &'a mut RenderConfig<'a>,
-}
-
-#[derive(Debug)]
-pub(crate) struct TextLayout {
-    pub lines: Vec<Rectangle>,
-    pub anchor_points: HashMap<InTextBoxId, Rectangle>,
-}
 
 #[derive(Debug)]
 pub(crate) struct LayoutData {

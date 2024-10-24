@@ -1,10 +1,8 @@
 use crate::common::{Color, Path, PathBuilder, Rectangle, Stroke};
 use crate::model::{
-    InTextAnchor, InTextBoxId, NodeId, PartialTextStyle,
-    StyledText, TextAlign, TextStyle,
+    InTextAnchor, InTextBoxId, NodeId, PartialTextStyle, StyledText, TextAlign, TextStyle,
 };
 use fontique::Stretch;
-use image::Pixel;
 use parley::fontique::Weight;
 use parley::layout::{Alignment, GlyphRun, PositionedLayoutItem};
 use parley::style::{FontStack, FontStyle, StyleProperty};
@@ -149,7 +147,6 @@ fn set_text_style_to_parley(
 ) {
     let PartialTextStyle {
         font,
-        stroke,
         color,
         size,
         line_spacing,
@@ -157,7 +154,6 @@ fn set_text_style_to_parley(
         stretch,
         weight,
         underline,
-        overline,
         line_through,
     } = text_style;
 
@@ -168,7 +164,7 @@ fn set_text_style_to_parley(
         );
     }
 
-    if let Some(Some(color)) = *color {
+    if let Some(color) = *color {
         builder.push(StyleProperty::Brush(color), start..end);
     }
 
@@ -244,7 +240,6 @@ fn styled_text_to_parley(
 
     let TextStyle {
         font,
-        stroke,
         color,
         size,
         line_spacing,
@@ -252,13 +247,12 @@ fn styled_text_to_parley(
         stretch,
         weight,
         underline,
-        overline,
         line_through,
     } = &styled_text.main_style;
     builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(
         &font.family_name,
     ))));
-    builder.push_default(StyleProperty::Brush(color.unwrap_or_default()));
+    builder.push_default(StyleProperty::Brush(*color));
     builder.push_default(StyleProperty::FontSize(*size));
     builder.push_default(StyleProperty::LineHeight(*line_spacing));
     builder.push_default(StyleProperty::FontWeight(Weight::new(*weight as f32)));

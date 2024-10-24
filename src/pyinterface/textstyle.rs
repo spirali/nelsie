@@ -1,6 +1,6 @@
 use crate::model::{PartialTextStyle, Resources};
 
-use crate::common::{Color, Stroke};
+use crate::common::Color;
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
 use pyo3::pybacked::PyBackedStr;
@@ -16,15 +16,13 @@ use usvg::FontStretch;
 #[derive(Debug, Default)]
 pub(crate) struct PyTextStyle {
     pub font_family: Option<String>,
-    pub stroke: Option<Option<Stroke>>,
-    pub color: Option<Option<Color>>,
+    pub color: Option<Color>,
     pub size: Option<f32>,
     pub line_spacing: Option<f32>,
     pub italic: Option<bool>,
     pub stretch: Option<FontStretch>,
     pub weight: Option<u16>,
     pub underline: Option<bool>,
-    pub overline: Option<bool>,
     pub line_through: Option<bool>,
 }
 
@@ -36,7 +34,6 @@ impl PyTextStyle {
             .transpose()?;
         Ok(PartialTextStyle {
             font,
-            stroke: self.stroke.map(|s| s.map(Arc::new)),
             color: self.color,
             size: self.size,
             line_spacing: self.line_spacing,
@@ -44,7 +41,6 @@ impl PyTextStyle {
             stretch: self.stretch,
             weight: self.weight,
             underline: self.underline,
-            overline: self.overline,
             line_through: self.line_through,
         })
     }
@@ -74,50 +70,18 @@ impl<'py> FromPyObject<'py> for PyTextStyle {
                 _ => Err(PyValueError::new_err("Invalid font stretch")),
             })
             .transpose()?;
-        let color = ob
-            .getattr("color")?
-            .extract::<Option<PyBackedStr>>()?
-            .map(|c| -> PyResult<_> {
-                if c.trim() == "empty" {
-                    Ok(None)
-                } else {
-                    Ok(Some(Color::from_str(c.deref())?))
-                }
-            })
-            .transpose()?;
-        let stroke_attr = ob.getattr("stroke")?;
-        let stroke = if let Ok(s) = stroke_attr.extract::<PyBackedStr>() {
-            if s.deref() == "empty" {
-                Some(None)
-            } else {
-                return Err(PyValueError::new_err("Invalid stroke value"));
-            }
-        } else {
-            stroke_attr.extract::<Option<Stroke>>()?.map(Some)
-        };
         Ok(PyTextStyle {
             font_family: ob.getattr("font_family")?.extract::<Option<String>>()?,
-            stroke,
-            color,
+            color: ob.getattr("color")?.extract()?,
             size: ob.getattr("size")?.extract()?,
             line_spacing: ob.getattr("line_spacing")?.extract()?,
             italic: ob.getattr("italic")?.extract()?,
             stretch,
             weight: ob.getattr("weight")?.extract()?,
             underline: ob.getattr("underline")?.extract()?,
-            overline: ob.getattr("overline")?.extract()?,
             line_through: ob.getattr("line_through")?.extract()?,
         })
     }
-}
-
-fn stroke_to_py_map(stroke: &Stroke, py: Python<'_>) -> PyObject {
-    let mut map = HashMap::new();
-    map.insert("color".to_string(), stroke.color.to_string().to_object(py));
-    map.insert("width".to_string(), stroke.width.to_object(py));
-    map.insert("dash_array".to_string(), stroke.dash_array.to_object(py));
-    map.insert("dash_offset".to_string(), stroke.dash_offset.to_object(py));
-    map.to_object(py)
 }
 
 pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Python<'_>) -> PyObject {
@@ -143,27 +107,7 @@ pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Pytho
     );
     map.insert(
         "color".into(),
-        style
-            .color
-            .as_ref()
-            .map(|v| {
-                v.as_ref()
-                    .map(|c| c.to_string())
-                    .unwrap_or_else(|| "empty".to_string())
-            })
-            .to_object(py),
-    );
-    map.insert(
-        "stroke".into(),
-        style
-            .stroke
-            .as_ref()
-            .map(|v| {
-                v.as_ref()
-                    .map(|s| stroke_to_py_map(s, py))
-                    .unwrap_or_else(|| "empty".to_object(py))
-            })
-            .to_object(py),
+        style.color.as_ref().map(|c| c.to_string()).to_object(py),
     );
     map.insert("size".into(), style.size.to_object(py));
     map.insert("line_spacing".into(), style.line_spacing.to_object(py));
@@ -171,7 +115,6 @@ pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Pytho
     map.insert("stretch".into(), stretch_idx.to_object(py));
     map.insert("weight".into(), style.weight.to_object(py));
     map.insert("underline".into(), style.underline.to_object(py));
-    map.insert("overline".into(), style.overline.to_object(py));
     map.insert("line_through".into(), style.line_through.to_object(py));
     map.to_object(py)
 }

@@ -30,19 +30,6 @@ pub(crate) struct StyledLine {
     pub text: String,
 }
 
-impl StyledLine {
-    pub fn font_size(&self, text_styles: &[TextStyle]) -> Option<f32> {
-        todo!()
-        // self.spans
-        //     .iter()
-        //     .map(|span| {
-        //         let style = &text_styles[span.style_idx as usize];
-        //         style.size
-        //     })
-        //     .max_by(|x, y| x.partial_cmp(y).unwrap())
-    }
-}
-
 #[derive(Debug, Default, Clone)]
 pub(crate) struct StyledText {
     pub styled_lines: Vec<StyledLine>,
@@ -52,27 +39,6 @@ pub(crate) struct StyledText {
 }
 
 impl StyledText {
-    pub fn height(&self) -> f32 {
-        todo!() /*
-                if self.styled_lines.is_empty() {
-                    return 0.0;
-                }
-                self.styled_lines
-                    .iter()
-                    .enumerate()
-                    .map(|(idx, line)| {
-                        let size = line
-                            .font_size(&self.styles)
-                            .unwrap_or(self.default_font_size);
-                        if idx == 0 {
-                            size
-                        } else {
-                            size * self.default_line_spacing
-                        }
-                    })
-                    .sum()*/
-    }
-
     fn replace_line(line: &mut StyledLine, value1: &str, value2: &str) {
         'top: while let Some(target_idx) = line.text.find(value1) {
             let mut idx = 0;

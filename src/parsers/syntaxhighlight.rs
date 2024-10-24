@@ -18,8 +18,7 @@ impl From<syntect::highlighting::Color> for Color {
 fn create_style(s_style: Style) -> PartialTextStyle {
     PartialTextStyle {
         font: None,
-        stroke: None,
-        color: Some(Some(s_style.foreground.into())),
+        color: Some(s_style.foreground.into()),
         size: None,
         line_spacing: None,
         italic: if s_style
@@ -47,7 +46,6 @@ fn create_style(s_style: Style) -> PartialTextStyle {
         } else {
             None
         },
-        overline: None,
         line_through: None,
     }
 }

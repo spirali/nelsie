@@ -156,15 +156,13 @@ impl SlideDeck {
         let default_font = Arc::new(default_font);
         let default_style = PartialTextStyle {
             font: Some(default_font.clone()),
-            stroke: Some(None),
-            color: Some(Some(Color::new(svgtypes::Color::black()))),
+            color: Some(Color::new(svgtypes::Color::black())),
             size: Some(32.0),
             line_spacing: Some(1.2),
             italic: Some(false),
             stretch: Some(FontStretch::Normal),
             weight: Some(400),
             underline: Some(false),
-            overline: Some(false),
             line_through: Some(false),
         };
         let monospace_style = PartialTextStyle {
