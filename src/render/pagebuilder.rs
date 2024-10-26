@@ -17,7 +17,7 @@ use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 
 pub(crate) struct PdfWriterData {
-    pages: Mutex<Vec<Option<Chunk>>>,
+    pages: Mutex<Vec<Chunk>>,
     cache: PdfImageCache,
     pdf_builder: PdfBuilder,
     images: Vec<Arc<LoadedImage>>,
@@ -52,9 +52,6 @@ impl<'a> PageBuilder<'a> {
                     let mut pdf_builder = PdfBuilder::new(n_pages);
                     let (cache, images) = collect_image_cache(slide_deck, &mut pdf_builder);
                     let mut pages = Vec::with_capacity(n_pages as usize);
-                    for _ in 0..n_pages {
-                        pages.push(None);
-                    }
                     PageWriter::Pdf(PdfWriterData {
                         pages: Mutex::new(pages),
                         cache,
@@ -126,7 +123,7 @@ impl<'a> PageBuilder<'a> {
                 }
 
                 for chunk in pages.into_iter() {
-                    data.pdf_builder.add_chunk(chunk.unwrap());
+                    data.pdf_builder.add_chunk(chunk);
                 }
                 data.pdf_builder.write(path)?;
                 Vec::new()
@@ -160,7 +157,7 @@ impl<'a> PageBuilder<'a> {
                     &data.cache,
                     self.compression_level,
                 )?;
-                data.pages.lock().unwrap()[page_idx as usize] = Some(page);
+                data.pages.lock().unwrap().push(page);
             }
             PageWriter::Svg(output) => {
                 let data = write_svg_page(self.output_path, page_idx, canvas, self.n_pages)?;
