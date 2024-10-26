@@ -6,7 +6,7 @@ use crate::common::error::NelsieError;
 use crate::render::pdf::PdfRefAllocator;
 use by_address::ByAddress;
 use pdf_writer::types::{ActionType, AnnotationType};
-use pdf_writer::{Chunk, Content, Finish, Name, Rect, Ref, Str};
+use pdf_writer::{Chunk, Content, Filter, Finish, Name, Rect, Ref, Str};
 use std::collections::HashMap;
 use std::default::Default;
 use std::sync::Arc;
@@ -22,6 +22,7 @@ impl Canvas {
         page_tree_ref: Ref,
         alloc_ref: &PdfRefAllocator,
         cache: &PdfImageCache,
+        compression_level: u8,
     ) -> crate::Result<Chunk> {
         fn put_x_object(content: &mut Content, name: &str, rect: Rectangle, height: f32) {
             content
@@ -105,7 +106,17 @@ impl Canvas {
         resources.finish();
 
         page.finish();
-        chunk.stream(content_ref, &content.finish());
+
+        let mut content_data = content.finish();
+        if compression_level > 0 {
+            content_data =
+                miniz_oxide::deflate::compress_to_vec_zlib(&content_data, compression_level)
+        }
+        let mut stream = chunk.stream(content_ref, &content_data);
+        if compression_level > 0 {
+            stream.filter(Filter::FlateDecode);
+        }
+        stream.finish();
         Ok(chunk)
     }
 }

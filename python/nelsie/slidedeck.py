@@ -211,6 +211,7 @@ class SlideDeck:
         output_format: Literal["pdf"] | Literal["svg"] | Literal["png"] = "pdf",
         *,
         verbose: int = 1,
+        compression_level: int = 1,
         n_threads: int | None = None,
     ) -> None | list[bytes]:
         """
@@ -221,7 +222,11 @@ class SlideDeck:
 
         If `path` is None then objects are not written to the file system, and they are returned as python objects
         from the method call.
+
+        `compression_level` defines the level of compression for PDF, allowed ranges are 0-10
+        (0 = no compression, 1 = fast compression, 10 = maximal compression)
         """
+        assert 0 <= compression_level <= 10
         if path:
             path = str(path)
-        return self._deck.render(self.resources, verbose, output_format, path, n_threads)
+        return self._deck.render(self.resources, verbose, output_format, compression_level, path, n_threads)

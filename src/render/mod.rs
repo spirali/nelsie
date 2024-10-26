@@ -50,6 +50,7 @@ pub(crate) enum OutputFormat {
 pub(crate) struct OutputConfig<'a> {
     pub path: Option<&'a Path>,
     pub format: OutputFormat,
+    pub compression_level: u8,
 }
 
 pub(crate) enum VerboseLevel {

@@ -35,6 +35,7 @@ pub(crate) struct PageBuilder<'a> {
     output_path: Option<&'a std::path::Path>,
     progress_bar: Option<ProgressBar>,
     n_pages: u32,
+    compression_level: u8,
 }
 
 impl<'a> PageBuilder<'a> {
@@ -45,6 +46,7 @@ impl<'a> PageBuilder<'a> {
         n_pages: u32,
     ) -> crate::Result<Self> {
         Ok(PageBuilder {
+            compression_level: output_config.compression_level,
             writer: match output_config.format {
                 OutputFormat::Pdf => {
                     let mut pdf_builder = PdfBuilder::new(n_pages);
@@ -156,6 +158,7 @@ impl<'a> PageBuilder<'a> {
                     data.pdf_builder.page_tree_ref(),
                     data.pdf_builder.alloc_ref(),
                     &data.cache,
+                    self.compression_level,
                 )?;
                 data.pages.lock().unwrap()[page_idx as usize] = Some(page);
             }
