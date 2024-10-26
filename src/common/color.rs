@@ -10,12 +10,12 @@ impl Color {
         Color(color)
     }
 
-    pub fn as_3f32(&self) -> (f32, f32, f32) {
-        (
+    pub fn as_f32s(&self) -> [f32; 3] {
+        [
             self.0.red as f32 / 255.0,
             self.0.green as f32 / 255.0,
             self.0.blue as f32 / 255.0,
-        )
+        ]
     }
 }
 

@@ -1,5 +1,4 @@
 use super::color::Color;
-use crate::common::Rectangle;
 
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Stroke {
