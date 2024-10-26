@@ -1,3 +1,19 @@
+# Unreleased
+
+## Breaking changes
+
+* Removed `TextStyle` features: overline and stroke
+
+## New features
+
+* Allow to specify the compression level via .render(..., compression_level=...)
+
+## Internal
+
+* Migrated to `parley` for text rendering
+* Implemented direct text rendering into PDF (without internally going through SVG)
+
+
 # v0.14.0
 
 * Dependencies updated; slightly faster rendering and smaller PDFs

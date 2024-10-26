@@ -39,6 +39,17 @@ Nelsie will create the target directory if it does not exist.
 Images are named in the format "X-Y-Z.svg" (or "X-Y-Z.png"), where X is the page index (zero padded), Y is the slide
 index and Z is a step.
 
+## Compression level
+
+You may specify the compression level of PDF output via parameter `compression_level`:
+
+```python
+deck.render("slides.pdf", compression_level=...)
+```
+
+The allowed values are integer numbers 0-10.
+0 means no compression, 1 is a fast compression, 10 is the best (and slowest) compression. The default compression level is 1.
+
 ## In-memory rendering
 
 If the first parameter of the `.render()` method is `None` then Nelsie does not create files but returns

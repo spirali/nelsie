@@ -320,13 +320,14 @@ impl Deck {
             .collect_vec())
     }
 
-    #[pyo3(signature = (resources, verbose, format, path, n_threads))]
+    #[pyo3(signature = (resources, verbose, format, compression_level, path, n_threads))]
     fn render(
         &self,
         py: Python<'_>,
         resources: &mut Resources,
         verbose: u32,
         format: &str,
+        compression_level: u8,
         path: Option<&str>,
         n_threads: Option<usize>,
     ) -> PyResult<PyObject> {
@@ -349,6 +350,7 @@ impl Deck {
                 &OutputConfig {
                     path: path.map(std::path::Path::new),
                     format,
+                    compression_level,
                 },
                 verbose_level,
                 n_threads,
