@@ -12,15 +12,14 @@ use std::default::Default;
 use std::sync::Arc;
 use svg2pdf::usvg;
 
-pub(crate) type PdfImageCache = HashMap<ByAddress<Arc<Vec<u8>>>, Ref>;
+pub(crate) type PdfImageCache = HashMap<ByAddress<Arc<Vec<u8>>>, (Ref, Ref)>;
 
 impl Canvas {
     pub fn into_pdf_page(
         self,
         resources: &Resources,
-        page_ref: Ref,
+        alloc_ref: &mut PdfRefAllocator,
         page_tree_ref: Ref,
-        alloc_ref: &PdfRefAllocator,
         cache: &PdfImageCache,
         compression_level: u8,
     ) -> crate::Result<Chunk> {
@@ -38,6 +37,10 @@ impl Canvas {
                 .x_object(Name(name.as_bytes()))
                 .restore_state();
         }
+
+        // First reference get from allocator is already preregistered as page reference
+        let page_ref = alloc_ref.bump();
+
         let mut content = Content::new();
         content.save_state();
         let [r, g, b] = self.bg_color.as_f32s();
@@ -47,12 +50,12 @@ impl Canvas {
         content.restore_state();
 
         let mut chunk = Chunk::new();
-        let mut x_objects = Vec::new();
+        let mut x_objects: Vec<(String, Ref)> = Vec::new();
 
         for (i, item) in self.items.into_iter().enumerate() {
             match item {
                 CanvasItem::PngImage { rect, data } | CanvasItem::JpegImage { rect, data } => {
-                    let img_ref = cache.get(&ByAddress(data)).unwrap();
+                    let (img_ref, _) = cache.get(&ByAddress(data)).unwrap();
                     let name = format!("o{i}");
                     put_x_object(&mut content, &name, rect, self.height);
                     x_objects.push((name, *img_ref));
@@ -124,7 +127,7 @@ impl Canvas {
 fn renumber_into(
     chunk: &Chunk,
     target: &mut Chunk,
-    alloc_ref: &PdfRefAllocator,
+    alloc_ref: &mut PdfRefAllocator,
     top_ref: Ref,
 ) -> Ref {
     let mut map = HashMap::<Ref, Ref>::new();
@@ -164,7 +167,7 @@ fn draw_items_to_pdf(content: &mut Content, items: &[DrawItem], height: f32) {
 
 fn annotations_to_pdf(
     chunk: &mut Chunk,
-    alloc_ref: &PdfRefAllocator,
+    alloc_ref: &mut PdfRefAllocator,
     links: Vec<Link>,
     height: f32,
 ) -> Vec<Ref> {
