@@ -10,23 +10,29 @@ use std::sync::atomic::{AtomicI32, Ordering};
 pub(crate) struct PdfBuilder {
     pdf: pdf_writer::Pdf,
     page_refs: Vec<Ref>,
-    alloc_ref: PdfRefAllocator,
     page_tree_ref: Ref,
+    alloc_ref: Ref,
 }
 
+/*
+   Because rendering of PDF is done in parallel, we need to create separate
+   counter for each page, so we do not need a synchronization
+   Counters will be
+   for page 0: page_refs[0] + (n_pages + 1) + 2 * (n_pages + 1) ...
+   for page 1: page_refs[1] + (n_pages + 1) + 2 * (n_pages + 1) ...
+   ...
+   we are setting n_pages + 1 because the last allocator is reserved for generic purpose and not specific page
+*/
 pub(crate) struct PdfRefAllocator {
-    counter: AtomicI32,
+    counter: i32,
+    step: i32,
 }
 
 impl PdfRefAllocator {
-    pub fn new(rf: Ref) -> Self {
-        PdfRefAllocator {
-            counter: AtomicI32::new(rf.get()),
-        }
-    }
-
-    pub fn bump(&self) -> Ref {
-        Ref::new(self.counter.fetch_add(1, Ordering::Relaxed))
+    pub fn bump(&mut self) -> Ref {
+        let rf = self.counter;
+        self.counter += self.step;
+        Ref::new(rf)
     }
 }
 
@@ -36,24 +42,33 @@ impl PdfBuilder {
 
         let mut alloc_ref = Ref::new(1);
 
-        let catalog_id = alloc_ref.bump();
-        let page_tree_id = alloc_ref.bump();
+        let catalog_ref = alloc_ref.bump();
+        let page_tree_ref = alloc_ref.bump();
 
-        pdf.catalog(catalog_id).pages(page_tree_id);
-        let page_ids: Vec<Ref> = (0..n_pages).map(|_| alloc_ref.bump()).collect();
-        pdf.pages(page_tree_id)
-            .kids(page_ids.iter().copied())
-            .count(page_ids.len() as i32);
+        pdf.catalog(catalog_ref).pages(page_tree_ref);
+        let page_refs: Vec<Ref> = (0..n_pages).map(|_| alloc_ref.bump()).collect();
+        pdf.pages(page_tree_ref)
+            .kids(page_refs.iter().copied())
+            .count(page_refs.len() as i32);
         PdfBuilder {
             pdf,
-            page_refs: page_ids,
-            alloc_ref: PdfRefAllocator::new(alloc_ref),
-            page_tree_ref: page_tree_id,
+            page_refs,
+            page_tree_ref,
+            alloc_ref,
         }
     }
 
-    pub fn page_ref(&self, page_idx: u32) -> Ref {
-        self.page_refs[page_idx as usize]
+    pub fn page_ref_allocator(&self, page_idx: u32) -> PdfRefAllocator {
+        PdfRefAllocator {
+            counter: self.page_refs[page_idx as usize].get(),
+            step: self.page_refs.len() as i32 + 1,
+        }
+    }
+
+    pub fn ref_bump(&mut self) -> Ref {
+        let r = self.alloc_ref;
+        self.alloc_ref = Ref::new(r.get() + self.page_refs.len() as i32 + 1);
+        r
     }
 
     pub fn page_tree_ref(&self) -> Ref {
@@ -62,14 +77,6 @@ impl PdfBuilder {
 
     pub fn add_chunk(&mut self, chunk: Chunk) {
         self.pdf.extend(&chunk);
-    }
-
-    pub fn alloc_ref(&self) -> &PdfRefAllocator {
-        &self.alloc_ref
-    }
-
-    pub fn ref_bump(&mut self) -> Ref {
-        self.alloc_ref.bump()
     }
 
     pub fn write(self, path: &Path) -> crate::Result<()> {
