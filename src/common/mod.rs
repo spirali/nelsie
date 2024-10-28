@@ -6,4 +6,4 @@ mod path;
 
 pub(crate) use color::Color;
 pub(crate) use draw::{DrawItem, DrawRect, Rectangle};
-pub(crate) use path::{Path, PathBuilder, PathPart, Stroke};
+pub(crate) use path::{FillAndStroke, Path, PathBuilder, PathPart, Stroke};

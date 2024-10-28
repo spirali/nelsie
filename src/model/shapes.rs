@@ -1,4 +1,4 @@
-use crate::common::{Color, Stroke};
+use crate::common::{Color, FillAndStroke};
 use crate::model::{LayoutExpr, StepValue};
 
 #[derive(Debug)]
@@ -60,8 +60,7 @@ impl PathPart {
 
 #[derive(Debug, Default)]
 pub(crate) struct DrawingPath {
-    pub stroke: Option<Stroke>,
-    pub fill_color: Option<Color>,
+    pub fill_and_stroke: FillAndStroke,
     pub parts: Vec<PathPart>,
     pub arrow_start: Option<Arrow>,
     pub arrow_end: Option<Arrow>,

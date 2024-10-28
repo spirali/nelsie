@@ -5,7 +5,6 @@ use pdf_writer::{Chunk, Filter, Finish};
 
 use std::borrow::Cow;
 use std::path::Path;
-use std::sync::atomic::{AtomicI32, Ordering};
 
 pub(crate) struct PdfBuilder {
     pdf: pdf_writer::Pdf,

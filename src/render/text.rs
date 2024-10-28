@@ -1,4 +1,4 @@
-use crate::common::{Color, Path, PathBuilder, Rectangle, Stroke};
+use crate::common::{Color, FillAndStroke, Path, PathBuilder, Rectangle, Stroke};
 use crate::model::{
     InTextAnchor, InTextBoxId, NodeId, PartialTextStyle, StyledText, TextAlign, TextStyle,
 };
@@ -308,15 +308,12 @@ fn try_insert_ibox(
 
 fn render_decoration(glyph_run: &GlyphRun<Color>, color: Color, offset: f32, width: f32) -> Path {
     let y = glyph_run.baseline() - offset + width / 2.;
-    let mut builder = PathBuilder::new(
-        Some(Stroke {
-            color,
-            width,
-            dash_array: None,
-            dash_offset: 0.0,
-        }),
-        None,
-    );
+    let mut builder = PathBuilder::new(FillAndStroke::new_stroke(Stroke {
+        color,
+        width,
+        dash_array: None,
+        dash_offset: 0.0,
+    }));
     builder.move_to(glyph_run.offset(), y);
     builder.line_to(glyph_run.offset() + glyph_run.advance(), y);
     builder.build()
@@ -341,7 +338,7 @@ fn render_glyph_run(glyph_run: &GlyphRun<Color>, out: &mut Vec<Path>) {
     let outlines = font_ref.outline_glyphs();
 
     let mut pen = NelsiePathPen {
-        path_builder: PathBuilder::new(None, Some(color)),
+        path_builder: PathBuilder::new(FillAndStroke::new_fill(color)),
         x: 0.0,
         y: 0.0,
     };
