@@ -1,4 +1,4 @@
-use crate::common::{Color, Path, Stroke};
+use crate::common::{FillAndStroke, Path};
 
 #[derive(Debug, Clone)]
 pub(crate) struct Rectangle {
@@ -22,8 +22,7 @@ impl Rectangle {
 #[derive(Debug)]
 pub(crate) struct DrawRect {
     pub rectangle: Rectangle,
-    pub fill_color: Option<Color>,
-    pub stroke: Option<Stroke>,
+    pub fill_and_stroke: FillAndStroke,
 }
 
 #[derive(Debug)]

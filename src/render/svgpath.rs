@@ -1,18 +1,14 @@
-use crate::common::{Color, DrawRect, Path, PathPart, Stroke};
+use crate::common::{DrawRect, FillAndStroke, Path, PathPart};
 use crate::parsers::SimpleXmlWriter;
 use std::fmt::Write;
 
-pub(crate) fn stroke_and_fill_svg(
-    xml: &mut SimpleXmlWriter,
-    stroke: &Option<Stroke>,
-    fill_color: &Option<Color>,
-) {
-    if let Some(color) = fill_color {
+pub(crate) fn stroke_and_fill_svg(xml: &mut SimpleXmlWriter, fill_and_stroke: &FillAndStroke) {
+    if let Some(color) = &fill_and_stroke.fill_color {
         xml.attr("fill", color);
     } else {
         xml.attr("fill", "none");
     }
-    if let Some(stroke) = stroke {
+    if let Some(stroke) = &fill_and_stroke.stroke {
         xml.attr("stroke", stroke.color);
         xml.attr("stroke-width", stroke.width);
         if let Some(array) = &stroke.dash_array {
@@ -60,7 +56,7 @@ pub fn svg_path(xml: &mut SimpleXmlWriter, path: &Path) {
             }
         }
     });
-    stroke_and_fill_svg(xml, path.stroke(), path.fill_color());
+    stroke_and_fill_svg(xml, path.fill_and_stroke());
     xml.end("path");
 }
 
@@ -70,7 +66,7 @@ pub(crate) fn svg_rect(xml: &mut SimpleXmlWriter, rect: &DrawRect) {
     xml.attr("y", rect.rectangle.y);
     xml.attr("width", rect.rectangle.width);
     xml.attr("height", rect.rectangle.height);
-    stroke_and_fill_svg(xml, &rect.stroke, &rect.fill_color);
+    stroke_and_fill_svg(xml, &rect.fill_and_stroke);
     xml.end("rect");
 }
 
@@ -82,6 +78,6 @@ pub(crate) fn svg_ellipse(xml: &mut SimpleXmlWriter, rect: &DrawRect) {
     xml.attr("cy", rect.rectangle.y + hh);
     xml.attr("rx", wh);
     xml.attr("ry", hh);
-    stroke_and_fill_svg(xml, &rect.stroke, &rect.fill_color);
+    stroke_and_fill_svg(xml, &rect.fill_and_stroke);
     xml.end("ellipse");
 }

@@ -12,7 +12,7 @@ use std::sync::Arc;
 use crate::render::image::render_image_to_canvas;
 use crate::render::paths::{draw_item_from_rect, eval_path};
 
-use crate::common::{Color, DrawItem, DrawRect, Rectangle, Stroke};
+use crate::common::{Color, DrawItem, DrawRect, FillAndStroke, Rectangle, Stroke};
 use crate::render::canvas::{Canvas, Link};
 use crate::render::text::{RenderedText, TextContext};
 use svg2pdf::usvg;
@@ -47,8 +47,7 @@ fn draw_debug_frame(
             width: rect.width.max(1.0),
             height: rect.height.max(1.0),
         },
-        fill_color: None,
-        stroke: Some(Stroke {
+        fill_and_stroke: FillAndStroke::new_stroke(Stroke {
             color: *color,
             width: 1.0,
             dash_array: Some(vec![5.0, 2.5]),
@@ -152,7 +151,8 @@ impl<'a> RenderContext<'a> {
             if let Some(color) = &node.bg_color.at_step(step) {
                 let rect = &self.layout.node_layout(node.node_id).unwrap().rect;
                 let border_radius = *node.border_radius.at_step(step);
-                let item = draw_item_from_rect(rect, border_radius, None, Some(*color));
+                let item =
+                    draw_item_from_rect(rect, border_radius, FillAndStroke::new_fill(*color));
                 self.canvas.add_draw_item(item);
             }
 

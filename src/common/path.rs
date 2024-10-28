@@ -8,6 +8,27 @@ pub(crate) struct Stroke {
     pub dash_offset: f32,
 }
 
+#[derive(Clone, Debug, PartialEq, Default)]
+pub(crate) struct FillAndStroke {
+    pub fill_color: Option<Color>,
+    pub stroke: Option<Stroke>,
+}
+
+impl FillAndStroke {
+    pub fn new_fill(color: Color) -> Self {
+        FillAndStroke {
+            fill_color: Some(color),
+            stroke: None,
+        }
+    }
+    pub fn new_stroke(stroke: Stroke) -> Self {
+        FillAndStroke {
+            fill_color: None,
+            stroke: Some(stroke),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub(crate) enum PathPart {
     Move {
@@ -38,8 +59,7 @@ pub(crate) enum PathPart {
 #[derive(Debug)]
 pub(crate) struct Path {
     parts: Vec<PathPart>,
-    fill_color: Option<Color>,
-    stroke: Option<Stroke>,
+    fill_and_stroke: FillAndStroke,
 }
 
 impl Path {
@@ -47,23 +67,18 @@ impl Path {
         &self.parts
     }
 
-    pub fn stroke(&self) -> &Option<Stroke> {
-        &self.stroke
-    }
-
-    pub fn fill_color(&self) -> &Option<Color> {
-        &self.fill_color
+    pub fn fill_and_stroke(&self) -> &FillAndStroke {
+        &self.fill_and_stroke
     }
 }
 
 pub(crate) struct PathBuilder(Path);
 
 impl PathBuilder {
-    pub fn new(stroke: Option<Stroke>, fill_color: Option<Color>) -> Self {
+    pub fn new(fill_and_stroke: FillAndStroke) -> Self {
         PathBuilder(Path {
             parts: Vec::new(),
-            fill_color,
-            stroke,
+            fill_and_stroke,
         })
     }
 

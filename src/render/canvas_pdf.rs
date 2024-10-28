@@ -1,4 +1,4 @@
-use crate::common::{Color, DrawItem, DrawRect, Path, PathPart, Rectangle, Stroke};
+use crate::common::{DrawItem, DrawRect, FillAndStroke, Path, PathPart, Rectangle};
 use crate::model::Resources;
 use crate::render::canvas::{Canvas, CanvasItem, Link};
 
@@ -138,14 +138,14 @@ fn renumber_into(
 }
 
 fn draw_rect_to_pdf(content: &mut Content, item: &DrawRect) {
-    set_fill_and_stroke_to_pdf(content, &item.fill_color, &item.stroke);
+    set_fill_and_stroke_to_pdf(content, &item.fill_and_stroke);
     content.rect(
         item.rectangle.x,
         item.rectangle.y,
         item.rectangle.width,
         item.rectangle.height,
     );
-    draw_fill_and_stroke_to_pdf(content, &item.fill_color, &item.stroke);
+    draw_fill_and_stroke_to_pdf(content, &item.fill_and_stroke);
 }
 
 fn draw_items_to_pdf(content: &mut Content, items: &[DrawItem], height: f32) {
@@ -194,16 +194,12 @@ fn annotations_to_pdf(
     annotation_ids
 }
 
-fn set_fill_and_stroke_to_pdf(
-    content: &mut Content,
-    fill_color: &Option<Color>,
-    stroke: &Option<Stroke>,
-) {
-    if let Some(color) = fill_color {
+fn set_fill_and_stroke_to_pdf(content: &mut Content, fill_and_stroke: &FillAndStroke) {
+    if let Some(color) = &fill_and_stroke.fill_color {
         let [r, g, b] = color.as_f32s();
         content.set_fill_rgb(r, g, b);
     }
-    if let Some(stroke) = stroke {
+    if let Some(stroke) = &fill_and_stroke.stroke {
         let [r, g, b] = stroke.color.as_f32s();
         content.set_stroke_rgb(r, g, b);
         content.set_line_width(stroke.width);
@@ -213,12 +209,11 @@ fn set_fill_and_stroke_to_pdf(
     }
 }
 
-fn draw_fill_and_stroke_to_pdf(
-    content: &mut Content,
-    fill_color: &Option<Color>,
-    stroke: &Option<Stroke>,
-) {
-    match (fill_color.is_some(), stroke.is_some()) {
+fn draw_fill_and_stroke_to_pdf(content: &mut Content, fill_and_stroke: &FillAndStroke) {
+    match (
+        fill_and_stroke.fill_color.is_some(),
+        fill_and_stroke.stroke.is_some(),
+    ) {
         (true, true) => content.fill_nonzero_and_stroke(),
         (true, false) => content.fill_nonzero(),
         (false, true) => content.stroke(),
@@ -232,7 +227,7 @@ fn path_body_to_pdf(content: &mut Content, path: &Path) {
         (n1 + n2 * 2.0) / 3.0
     }
 
-    set_fill_and_stroke_to_pdf(content, path.fill_color(), path.stroke());
+    set_fill_and_stroke_to_pdf(content, path.fill_and_stroke());
 
     let mut last = (0.0, 0.0);
     for part in path.parts() {
@@ -272,7 +267,7 @@ fn path_body_to_pdf(content: &mut Content, path: &Path) {
             }
         }
     }
-    draw_fill_and_stroke_to_pdf(content, path.fill_color(), path.stroke());
+    draw_fill_and_stroke_to_pdf(content, path.fill_and_stroke());
 }
 
 fn path_to_pdf_at(content: &mut Content, path: &Path, x: f32, y: f32, height: f32) {

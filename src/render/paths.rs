@@ -1,4 +1,4 @@
-use crate::common::{Color, DrawItem, DrawRect, PathBuilder, Rectangle, Stroke};
+use crate::common::{DrawItem, DrawRect, FillAndStroke, PathBuilder, Rectangle, Stroke};
 use crate::model::{DrawingPath, NodeId, PathPart};
 use crate::render::canvas::Canvas;
 use crate::render::layout::ComputedLayout;
@@ -53,11 +53,10 @@ pub(crate) fn eval_path(
         let y2 = layout.eval(y2, parent_id);
         canvas.add_draw_item(DrawItem::Oval(DrawRect {
             rectangle: Rectangle::new(x1, y1, x2 - x1, y2 - y1),
-            fill_color: path.fill_color,
-            stroke: path.stroke.clone(),
+            fill_and_stroke: path.fill_and_stroke.clone(),
         }))
     } else {
-        let mut builder = PathBuilder::new(path.stroke.clone(), path.fill_color);
+        let mut builder = PathBuilder::new(path.fill_and_stroke.clone());
         for (i, part) in path.parts.iter().enumerate() {
             let (sx, sy) = move_point_for_arrow(layout, parent_id, path, i).unwrap_or((0.0, 0.0));
             match part {
@@ -160,7 +159,7 @@ pub(crate) fn create_arrow(
     let color = arrow
         .color
         .as_ref()
-        .or_else(|| path.stroke.as_ref().map(|s| &s.color))?;
+        .or_else(|| path.fill_and_stroke.stroke.as_ref().map(|s| &s.color))?;
     let (p1, p2) = if is_end_arrow {
         let mut parts = path.parts.iter().rev();
         (parts.next()?, parts.next())
@@ -176,20 +175,17 @@ pub(crate) fn create_arrow(
     let x2 = x + arrow.size * (a + angle).sin();
     let y2 = y + arrow.size * (a + angle).cos();
 
-    let (stroke, fill_color) = if let Some(width) = arrow.stroke_width {
-        (
-            Some(Stroke {
-                color: *color,
-                width,
-                dash_array: None,
-                dash_offset: 0.0,
-            }),
-            None,
-        )
+    let fill_and_stroke = if let Some(width) = arrow.stroke_width {
+        FillAndStroke::new_stroke(Stroke {
+            color: *color,
+            width,
+            dash_array: None,
+            dash_offset: 0.0,
+        })
     } else {
-        (None, Some(*color))
+        FillAndStroke::new_fill(*color)
     };
-    let mut builder = PathBuilder::new(stroke, fill_color);
+    let mut builder = PathBuilder::new(fill_and_stroke);
     builder.move_to(x1, y1);
     builder.line_to(x, y);
     builder.line_to(x2, y2);
@@ -208,17 +204,15 @@ pub(crate) fn create_arrow(
 pub(crate) fn draw_item_from_rect(
     rect: &Rectangle,
     border_radius: f32,
-    stroke: Option<Stroke>,
-    fill_color: Option<Color>,
+    fill_and_stroke: FillAndStroke,
 ) -> DrawItem {
     if border_radius < 0.001 {
         DrawItem::Rect(DrawRect {
             rectangle: rect.clone(),
-            stroke,
-            fill_color,
+            fill_and_stroke,
         })
     } else {
-        let mut builder = PathBuilder::new(stroke, fill_color);
+        let mut builder = PathBuilder::new(fill_and_stroke);
         let x2 = rect.x + rect.width;
         let y2 = rect.y + rect.height;
         builder.move_to(rect.x + border_radius, rect.y);

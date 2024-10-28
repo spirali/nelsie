@@ -5,7 +5,7 @@ use crate::pyinterface::basictypes::PyStringOrFloatOrExpr;
 
 use itertools::Itertools;
 
-use crate::common::{Color, Stroke};
+use crate::common::{Color, FillAndStroke, Stroke};
 use pyo3::types::PyAnyMethods;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 
@@ -88,8 +88,10 @@ impl PyPath {
     pub fn into_path(self) -> crate::Result<DrawingPath> {
         let mut points_iter = self.points.into_iter();
         Ok(DrawingPath {
-            stroke: self.stroke,
-            fill_color: self.fill_color,
+            fill_and_stroke: FillAndStroke {
+                stroke: self.stroke,
+                fill_color: self.fill_color,
+            },
             parts: self
                 .commands
                 .into_iter()
