@@ -17,6 +17,10 @@ impl Color {
             self.0.blue as f32 / 255.0,
         ]
     }
+
+    pub fn alpha(&self) -> u8 {
+        self.0.alpha
+    }
 }
 
 impl Default for Color {
