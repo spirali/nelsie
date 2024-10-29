@@ -40,7 +40,7 @@ impl Canvas {
             alloc_ref,
             res_name_counter: 0,
             xo_resources: Vec::new(),
-            gs_resources: Vec::new(),
+            gs_resources: HashMap::new(),
         };
 
         for item in self.items.into_iter() {
@@ -95,7 +95,7 @@ impl Canvas {
         }
         objects.finish();
         let mut g_states = resources.ext_g_states();
-        for (name, rf) in pdf_ctx.gs_resources {
+        for (name, rf) in pdf_ctx.gs_resources.values() {
             g_states.pair(Name(name.as_bytes()), rf);
         }
         g_states.finish();
@@ -123,7 +123,7 @@ struct PdfCtx<'a> {
     alloc_ref: &'a mut PdfRefAllocator,
     res_name_counter: u32,
     xo_resources: Vec<(String, Ref)>,
-    gs_resources: Vec<(String, Ref)>,
+    gs_resources: HashMap<(u8, u8), (String, Ref)>,
 }
 
 impl<'a> PdfCtx<'a> {
@@ -133,8 +133,8 @@ impl<'a> PdfCtx<'a> {
         name
     }
 
-    pub fn register_gs(&mut self, name: String, rf: Ref) {
-        self.gs_resources.push((name, rf));
+    pub fn register_gs(&mut self, key: (u8, u8), name: String, rf: Ref) {
+        self.gs_resources.insert(key, (name, rf));
     }
 
     fn put_x_object(&mut self, rf: Ref, rect: Rectangle, height: f32) {
@@ -222,10 +222,10 @@ fn annotations_to_pdf(pdf_ctx: &mut PdfCtx, links: Vec<Link>, height: f32) -> Ve
     annotation_ids
 }
 
-fn check_alpha(color: Color) -> Option<f32> {
+fn check_alpha(color: Color) -> Option<u8> {
     let alpha = color.alpha();
     if alpha < u8::MAX {
-        Some(alpha as f32 / u8::MAX as f32)
+        Some(alpha)
     } else {
         None
     }
@@ -238,18 +238,26 @@ fn set_fill_and_stroke(pdf_ctx: &mut PdfCtx, fill_and_stroke: &FillAndStroke) {
         .as_ref()
         .and_then(|stroke| check_alpha(stroke.color));
     if fill_alpha.is_some() || stroke_alpha.is_some() {
-        let gs_ref = pdf_ctx.alloc_ref.bump();
-        let mut gs = pdf_ctx.chunk.ext_graphics(gs_ref);
-        if let Some(alpha) = fill_alpha {
-            gs.non_stroking_alpha(alpha);
+        let key = (
+            fill_alpha.unwrap_or(u8::MAX),
+            stroke_alpha.unwrap_or(u8::MAX),
+        );
+        if let Some((name, _)) = pdf_ctx.gs_resources.get(&key) {
+            pdf_ctx.content.set_parameters(Name(name.as_bytes()));
+        } else {
+            let gs_ref = pdf_ctx.alloc_ref.bump();
+            let mut gs = pdf_ctx.chunk.ext_graphics(gs_ref);
+            if let Some(alpha) = fill_alpha {
+                gs.non_stroking_alpha(alpha as f32 / u8::MAX as f32);
+            }
+            if let Some(alpha) = stroke_alpha {
+                gs.stroking_alpha(alpha as f32 / u8::MAX as f32);
+            }
+            gs.finish();
+            let name = pdf_ctx.new_name();
+            pdf_ctx.content.set_parameters(Name(name.as_bytes()));
+            pdf_ctx.register_gs(key, name, gs_ref);
         }
-        if let Some(alpha) = stroke_alpha {
-            gs.stroking_alpha(alpha);
-        }
-        gs.finish();
-        let name = pdf_ctx.new_name();
-        pdf_ctx.content.set_parameters(Name(name.as_bytes()));
-        pdf_ctx.register_gs(name, gs_ref);
     }
 
     if let Some(color) = &fill_and_stroke.fill_color {
