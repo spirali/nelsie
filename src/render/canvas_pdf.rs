@@ -1,4 +1,6 @@
-use crate::common::{Color, DrawItem, DrawRect, FillAndStroke, Path, PathPart, Rectangle};
+use crate::common::{
+    Color, DrawItem, DrawRect, FillAndStroke, Path, PathBuilder, PathPart, Rectangle,
+};
 use crate::model::Resources;
 use crate::render::canvas::{Canvas, CanvasItem, Link};
 
@@ -179,6 +181,21 @@ fn draw_rect_to_pdf(pdf_ctx: &mut PdfCtx, item: &DrawRect) {
     draw_fill_and_stroke(pdf_ctx, &item.fill_and_stroke);
 }
 
+fn draw_ellipse_to_pdf(pdf_ctx: &mut PdfCtx, item: &DrawRect) {
+    let mut builder = PathBuilder::new(item.fill_and_stroke.clone());
+    let rx = item.rectangle.width / 2.0;
+    let ry = item.rectangle.height / 2.0;
+    let cx = item.rectangle.x + rx;
+    let cy = item.rectangle.y + ry;
+    builder.move_to(cx + rx, cy);
+    builder.arc_to(rx, ry, 0.0, false, true, cx, cy + ry);
+    builder.arc_to(rx, ry, 0.0, false, true, cx - rx, cy);
+    builder.arc_to(rx, ry, 0.0, false, true, cx, cy - ry);
+    builder.arc_to(rx, ry, 0.0, false, true, cx + rx, cy);
+    builder.close();
+    path_body_to_pdf(pdf_ctx, &builder.build())
+}
+
 fn draw_items_to_pdf(pdf_ctx: &mut PdfCtx, items: &[DrawItem], height: f32) {
     pdf_ctx.content.save_state();
     pdf_ctx
@@ -188,9 +205,7 @@ fn draw_items_to_pdf(pdf_ctx: &mut PdfCtx, items: &[DrawItem], height: f32) {
         pdf_ctx.content.save_state();
         match item {
             DrawItem::Rect(rect) => draw_rect_to_pdf(pdf_ctx, rect),
-            DrawItem::Oval(_) => {
-                todo!()
-            }
+            DrawItem::Oval(rect) => draw_ellipse_to_pdf(pdf_ctx, rect),
             DrawItem::Path(path) => path_body_to_pdf(pdf_ctx, path),
         }
         pdf_ctx.content.restore_state();

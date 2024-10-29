@@ -1150,6 +1150,7 @@ dependencies = [
  "imagesize",
  "indicatif",
  "itertools 0.13.0",
+ "kurbo",
  "log",
  "miniz_oxide 0.8.0",
  "notify",
