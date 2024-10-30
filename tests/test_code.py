@@ -53,8 +53,7 @@ f~s1{n} ~s1{main}() {
 
 ~s2{
 // test1
-// test2
-}
+// test2}
 """,
         language="rs",
         parse_styles=True,
