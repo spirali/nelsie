@@ -16,9 +16,6 @@ from nelsie import Resources, SlideDeck  # noqa
 
 def new_resources(**kwargs):
     resources = Resources(**kwargs)
-
-    # Let us fix the fonts, so we have the same results across all OSs
-    resources.load_fonts_dir(os.path.join(ASSETS_DIR, "fonts"))
     return resources
 
 

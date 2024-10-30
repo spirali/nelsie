@@ -4,7 +4,7 @@ import pytest
 from testutils import check
 
 import nelsie
-from nelsie import FontStretch, InSteps, Stroke, TextStyle
+from nelsie import FontStretch, InSteps, TextStyle
 
 
 def test_text_update():

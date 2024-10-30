@@ -1,4 +1,6 @@
 import pathlib
+import os
+import importlib.resources as import_resources
 from typing import Literal, List
 
 from . import nelsie as nelsie_rs
@@ -7,12 +9,16 @@ from .box import Box, BoxBuilder
 from .insteps import Step
 from .textstyle import TextStyle, _data_to_text_style
 
+from . import data
+BUILTIN_FONTS_DIR = os.path.abspath(import_resources.files(data) / "fonts")
 
 class Resources:
     def __init__(
-        self, *, system_fonts: bool = True, default_code_syntaxes: bool = True, default_code_themes: bool = True
+        self, *, builtin_fonts: bool = True, system_fonts: bool = False, default_code_syntaxes: bool = True, default_code_themes: bool = True
     ):
         self._resources = nelsie_rs.Resources(system_fonts, default_code_syntaxes, default_code_themes)
+        if builtin_fonts:
+            self._resources.load_fonts_dir(BUILTIN_FONTS_DIR)
 
     def load_code_syntax_dir(self, path: str):
         self._resources.load_code_syntax_dir(path)

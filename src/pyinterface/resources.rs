@@ -10,7 +10,6 @@ pub(crate) struct Resources {
 #[pymethods]
 impl Resources {
     #[new]
-    #[pyo3(signature = (system_fonts=true, default_code_syntaxes=true, default_code_themes=true))]
     fn new(
         system_fonts: bool,
         default_code_syntaxes: bool,
