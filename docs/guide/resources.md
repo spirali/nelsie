@@ -23,6 +23,23 @@ resources.load_fonts_dir("path/to/fonts")
 deck = SlideDeck(resources=resources)
 ```
 
+## Loading system fonts
+
+By default, Nelsie loads a fonts shipped together with Nelsie and ignores system fonts.
+You can change this by the following command command and load system fonts from your system.
+
+```python
+from nelsie import Resources
+
+resources = Resources(system_fonts=True, builtin_fonts=False)
+```
+
+!!! warning
+
+  The current text rendering engine used in Nelsie tries to preload some font data. So loading system fonts may take some time. On normal system it should be around 0.1s, but if you have many fonts installed it may be significantly slower. The solution is to create
+  a directory only with fonts that you are using in your slides and do not load all system fonts in such situations. It would also make
+  your slides more replicable on other computers.
+
 ## Loading custom code syntaxes
 
 Nelsie supports loading syntax files from Sublime editor (files with `.sublime-syntax` extension).
@@ -64,16 +81,6 @@ resources = Resources()
 
 deck1 = SlideDeck(resources=resources)
 deck2 = SlideDeck(resources=resources)
-```
-
-## Disable loading defaults
-
-```python
-from nelsie import Resources
-
-resources = Resources(system_fonts=False,
-                      default_code_syntaxes=False,
-                      default_code_themes=False)
 ```
 
 ## List of syntaxes
