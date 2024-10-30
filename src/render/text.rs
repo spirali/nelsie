@@ -232,7 +232,6 @@ fn styled_text_to_parley(
         text.push_str(&line.text);
         text.push('\n')
     }
-    text.pop();
     let mut builder = text_context
         .layout_cx
         .ranged_builder(&mut text_context.font_cx, &text, 1.0);
