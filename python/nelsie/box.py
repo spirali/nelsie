@@ -59,7 +59,7 @@ class BoxBuilder:
         """
         box = self.get_box()
         deck = box.deck
-        deck._deck.set_style(deck.resources, name, style, False, box.slide._slide_id, box._box_id)
+        deck._deck.set_style(deck.resources._resources, name, style, False, box.slide._slide_id, box._box_id)
 
     def update_style(self, name: str, style: TextStyle | InSteps[TextStyle]):
         """
@@ -68,7 +68,7 @@ class BoxBuilder:
         """
         box = self.get_box()
         deck = box.deck
-        deck._deck.set_style(deck.resources, name, style, True, box.slide._slide_id, box._box_id)
+        deck._deck.set_style(deck.resources._resources, name, style, True, box.slide._slide_id, box._box_id)
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
         """
@@ -313,7 +313,7 @@ class BoxBuilder:
 
         deck = parent_box.deck
         box_id, node_id = deck._deck.new_box(
-            deck.resources,
+            deck.resources._resources,
             parent_box.slide._slide_id,
             parent_box._box_id,
             active=active,
