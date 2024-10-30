@@ -7,7 +7,27 @@ from .box import Box, BoxBuilder
 from .insteps import Step
 from .textstyle import TextStyle, _data_to_text_style
 
-Resources = nelsie_rs.Resources
+
+class Resources:
+    def __init__(
+        self, *, system_fonts: bool = True, default_code_syntaxes: bool = True, default_code_themes: bool = True
+    ):
+        self._resources = nelsie_rs.Resources(system_fonts, default_code_syntaxes, default_code_themes)
+
+    def load_code_syntax_dir(self, path: str):
+        self._resources.load_code_syntax_dir(path)
+
+    def load_code_theme_dir(self, path: str):
+        self._resources.load_code_theme_dir(path)
+
+    def load_fonts_dir(self, path: str):
+        self._resources.load_fonts_dir(path)
+
+    def syntaxes(self) -> list[tuple[str, list[str]]]:
+        return self._resources.syntaxes()
+
+    def themes(self) -> list[str]:
+        return self._resources.themes()
 
 
 class Slide(BoxBuilder):
@@ -114,14 +134,14 @@ class SlideDeck:
         self.resources = resources
         self.default_code_theme = default_code_theme
         self.default_code_language = default_code_language
-        self._deck = nelsie_rs.Deck(resources, default_font, default_monospace_font)
+        self._deck = nelsie_rs.Deck(resources._resources, default_font, default_monospace_font)
         self._slides: List[Slide] = []
 
     def set_style(self, name: str, style: TextStyle):
-        self._deck.set_style(self.resources, name, style, False, None, None)
+        self._deck.set_style(self.resources._resources, name, style, False, None, None)
 
     def update_style(self, name: str, style: TextStyle):
-        self._deck.set_style(self.resources, name, style, True, None, None)
+        self._deck.set_style(self.resources._resources, name, style, True, None, None)
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
         return _data_to_text_style(self._deck.get_style(name, step, None, None))
@@ -229,4 +249,4 @@ class SlideDeck:
         assert 0 <= compression_level <= 10
         if path:
             path = str(path)
-        return self._deck.render(self.resources, verbose, output_format, compression_level, path, n_threads)
+        return self._deck.render(self.resources._resources, verbose, output_format, compression_level, path, n_threads)

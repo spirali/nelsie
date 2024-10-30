@@ -1,8 +1,5 @@
 from dataclasses import dataclass, InitVar
 from enum import IntEnum
-from typing import Literal
-
-from nelsie.basictypes import Stroke
 from nelsie.utils import unpack_dataclass
 
 
