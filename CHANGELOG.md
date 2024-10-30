@@ -2,11 +2,20 @@
 
 ## Breaking changes
 
+* By default, Nelsie no longer loads system fonts, but loads the fonts built into Nelsie instead.
+  You can revert to the original behavior by creating resouces as follows: `Resources(system_fonts=True, builtin_fonts=False)`.
 * Removed `TextStyle` features: overline and stroke
+
 
 ## New features
 
+* Dejavu fonts shipped in Nelsie package
+* Faster rendering especially if you are using lots of texts
 * Allow to specify the compression level via .render(..., compression_level=...)
+
+## Fixes
+
+* New rendering engine fixes some inconsistencies in line spacing
 
 ## Internal
 
