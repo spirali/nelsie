@@ -5,8 +5,9 @@ use crate::model::{
 use crate::render::layout::{compute_layout, ComputedLayout};
 use crate::render::RenderConfig;
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
 
+use resvg::usvg::FontStretch;
 use std::sync::Arc;
 
 use crate::render::image::render_image_to_canvas;
@@ -75,13 +76,13 @@ fn draw_debug_frame(
             size: 8.0,
             line_spacing: 0.0,
             italic: false,
-            stretch: Default::default(),
+            stretch: FontStretch::Normal,
             weight: 700,
             underline: false,
             line_through: false,
         },
         styles: Vec::new(),
-        anchors: Default::default(),
+        anchors: HashMap::new(),
     };
     canvas.add_text(
         Arc::new(RenderedText::render(
@@ -95,32 +96,49 @@ fn draw_debug_frame(
 }
 
 fn draw_debug_step(
+    text_context: &mut TextContext,
     rect: &Rectangle,
     step: &Step,
-    font_name: &str,
+    font: &Arc<FontData>,
     font_size: f32,
     canvas: &mut Canvas,
 ) {
-    todo!()
-    /*let mut xml = SimpleXmlWriter::new();
-    xml.begin("rect");
-    xml.attr("x", rect.x);
-    xml.attr("y", rect.y);
-    xml.attr("width", rect.width);
-    xml.attr("height", rect.height);
-    xml.attr("fill", "black");
-    xml.end("rect");
-    xml.begin("text");
-    xml.begin("tspan");
-    xml.attr("x", 10);
-    xml.attr("y", rect.y + font_size);
-    xml.attr("fill", "white");
-    xml.attr("font-size", font_size);
-    xml.attr("font-family", font_name);
-    xml.text(&step.to_string());
-    xml.end("tspan");
-    xml.end("text");
-    canvas.add_item(CanvasItem::SvgChunk(xml.into_string()));*/
+    canvas.add_draw_item(DrawItem::Rect(DrawRect {
+        rectangle: rect.clone(),
+        fill_and_stroke: FillAndStroke::new_fill(Color::new(svgtypes::Color::black())),
+    }));
+    let text = step.to_string();
+    let styled_text = StyledText {
+        styled_lines: vec![StyledLine {
+            spans: vec![Span {
+                length: text.len() as u32,
+                style_idx: None,
+            }],
+            text,
+        }],
+        main_style: TextStyle {
+            font: font.clone(),
+            color: Color::new(svgtypes::Color::white()),
+            size: font_size,
+            line_spacing: 0.0,
+            italic: false,
+            stretch: FontStretch::Normal,
+            weight: 400,
+            underline: false,
+            line_through: false,
+        },
+        styles: Vec::new(),
+        anchors: HashMap::new(),
+    };
+    canvas.add_text(
+        Arc::new(RenderedText::render(
+            text_context,
+            &styled_text,
+            TextAlign::Start,
+        )),
+        rect.x + 10.0,
+        rect.y + font_size / 2.0 * 1.25,
+    );
 }
 
 impl<'a> RenderContext<'a> {
@@ -241,6 +259,7 @@ pub(crate) fn render_to_canvas(render_cfg: &mut RenderConfig) -> Canvas {
 
     if render_cfg.slide.debug_steps {
         draw_debug_step(
+            &mut render_cfg.thread_resources.text_context,
             &Rectangle::new(
                 0.0,
                 render_cfg.slide.height,
@@ -248,7 +267,7 @@ pub(crate) fn render_to_canvas(render_cfg: &mut RenderConfig) -> Canvas {
                 DEBUG_STEP_FONT_SIZE * 1.25,
             ),
             render_cfg.step,
-            &render_cfg.default_font.family_name,
+            render_cfg.default_font,
             DEBUG_STEP_FONT_SIZE,
             &mut canvas,
         );
