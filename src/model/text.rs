@@ -1,63 +1,58 @@
 use crate::model::{PartialTextStyle, Step, StepValue, TextStyle};
-use std::collections::HashMap;
 
 pub(crate) type InTextBoxId = u32;
-
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
-pub(crate) struct InTextAnchorPoint {
-    pub line_idx: u32,
-    pub span_idx: u32,
-}
 
 #[derive(Debug, Clone)]
 #[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct InTextAnchor {
-    pub start: InTextAnchorPoint,
-    pub end: InTextAnchorPoint,
+    pub start: u32,
+    pub end: u32,
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub(crate) struct Span {
-    pub length: u32,
-    pub style_idx: Option<u32>,
-}
-
-#[derive(Debug, Clone)]
-#[cfg_attr(test, derive(PartialEq))]
-pub(crate) struct StyledLine {
-    pub spans: Vec<Span>,
-    pub text: String,
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct StyledRange {
+    pub start: u32,
+    pub end: u32,
+    pub style: PartialTextStyle,
 }
 
 #[derive(Debug, Default, Clone)]
 pub(crate) struct StyledText {
-    pub styled_lines: Vec<StyledLine>,
+    pub text: String,
     pub main_style: TextStyle,
-    pub styles: Vec<PartialTextStyle>,
-    pub anchors: HashMap<InTextBoxId, InTextAnchor>,
+    pub styles: Vec<StyledRange>,
+    pub anchors: Vec<(InTextBoxId, InTextAnchor)>,
 }
 
 impl StyledText {
-    fn replace_line(line: &mut StyledLine, value1: &str, value2: &str) {
-        'top: while let Some(target_idx) = line.text.find(value1) {
-            let mut idx = 0;
-            for span in line.spans.iter_mut() {
-                let end = idx + span.length as usize;
-                if target_idx >= idx && target_idx + value1.len() <= end {
-                    span.length = span.length + value2.len() as u32 - value1.len() as u32;
-                    line.text = line.text.replace(value1, value2);
-                    continue 'top;
-                }
-                idx = end;
-            }
-            break;
+    pub fn new_simple_text(text: String, main_style: TextStyle) -> Self {
+        StyledText {
+            text,
+            main_style,
+            styles: Vec::new(),
+            anchors: Default::default(),
         }
     }
 
     pub fn replace_text(&mut self, value1: &str, value2: &str) {
-        for line in &mut self.styled_lines {
-            Self::replace_line(line, value1, value2)
+        while let Some(start_idx) = self.text.find(value1) {
+            self.text = self.text.replace(value1, value2);
+            let start_idx = start_idx as u32;
+            let idx = start_idx + value1.len() as u32;
+            for style in self.styles.iter_mut() {
+                if style.start >= start_idx && style.start <= idx {
+                    style.start = start_idx;
+                } else if style.start >= idx {
+                    style.start += value2.len() as u32;
+                    style.start -= value1.len() as u32;
+                }
+                if style.end >= start_idx && style.end <= idx {
+                    style.end = idx + value2.len() as u32;
+                } else if style.end >= idx {
+                    style.end += value2.len() as u32;
+                    style.end -= value1.len() as u32;
+                }
+            }
         }
     }
 }

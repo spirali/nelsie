@@ -137,11 +137,11 @@ def test_step_other_counter(deck):
 
 
 @check()
-def test_step_invalid_counter(deck):
+def test_step_split_counter(deck):
     deck.set_style("default", TextStyle(size=12))
     deck.set_style("g", TextStyle(color="green"))
     slide = deck.new_slide(width=100, height=40)
-    slide.text("$(global_~g{page})", bg_color="gray", parse_counters=True)
+    slide.text(">>$(global_~g{page)<}<", bg_color="gray", parse_counters=True)
 
 
 @check(n_slides=4)

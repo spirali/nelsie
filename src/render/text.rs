@@ -1,6 +1,6 @@
 use crate::common::{Color, FillAndStroke, Path, PathBuilder, Rectangle, Stroke};
 use crate::model::{
-    InTextAnchor, InTextBoxId, NodeId, PartialTextStyle, StyledText, TextAlign, TextStyle,
+    InTextBoxId, NodeId, PartialTextStyle, StyledText, TextAlign, TextStyle,
 };
 use fontique::Stretch;
 use parley::fontique::Weight;
@@ -140,8 +140,8 @@ impl TextCache {
 }
 
 fn set_text_style_to_parley(
-    text_style: &PartialTextStyle,
     builder: &mut RangedBuilder<Color>,
+    text_style: &PartialTextStyle,
     start: usize,
     end: usize,
 ) {
@@ -227,16 +227,10 @@ fn styled_text_to_parley(
     text_context: &mut TextContext,
     styled_text: &StyledText,
 ) -> Layout<Color> {
-    let mut text = String::new();
-    for line in &styled_text.styled_lines {
-        text.push_str(&line.text);
-        text.push('\n')
-    }
-    let mut builder = text_context
-        .layout_cx
-        .ranged_builder(&mut text_context.font_cx, &text, 1.0);
-    let mut offset: usize = 0;
-
+    let mut builder =
+        text_context
+            .layout_cx
+            .ranged_builder(&mut text_context.font_cx, &styled_text.text, 1.0);
     let TextStyle {
         font,
         color,
@@ -261,48 +255,29 @@ fn styled_text_to_parley(
     if *italic {
         builder.push_default(StyleProperty::FontStyle(FontStyle::Italic));
     }
-    let anchors = &styled_text.anchors;
-    for (l_idx, line) in styled_text.styled_lines.iter().enumerate() {
-        let mut o = offset;
-        for (s_idx, span) in line.spans.iter().enumerate() {
-            try_insert_ibox(&mut builder, o, l_idx, s_idx, anchors);
-            if let Some(style_idx) = span.style_idx {
-                let style = &styled_text.styles[style_idx as usize];
-                set_text_style_to_parley(style, &mut builder, o, o + span.length as usize);
-            }
-            o += span.length as usize;
-        }
-        try_insert_ibox(&mut builder, o, l_idx, line.spans.len(), anchors);
-        offset += line.text.len() + 1;
+    for style in &styled_text.styles {
+        set_text_style_to_parley(
+            &mut builder,
+            &style.style,
+            style.start as usize,
+            style.end as usize,
+        );
     }
-    builder.build(&text)
-}
-
-fn try_insert_ibox(
-    builder: &mut RangedBuilder<Color>,
-    offset: usize,
-    line_idx: usize,
-    span_idx: usize,
-    anchors: &HashMap<InTextBoxId, InTextAnchor>,
-) {
-    for (id, anchor) in anchors {
-        if anchor.start.line_idx == line_idx as u32 && anchor.start.span_idx == span_idx as u32 {
-            builder.push_inline_box(InlineBox {
-                id: (*id as u64) * 2,
-                index: offset,
-                width: 0.0,
-                height: 0.0,
-            })
-        }
-        if anchor.end.line_idx == line_idx as u32 && anchor.end.span_idx == span_idx as u32 {
-            builder.push_inline_box(InlineBox {
-                id: (*id as u64) * 2 + 1,
-                index: offset,
-                width: 0.0,
-                height: 0.0,
-            })
-        }
+    for (anchor_id, anchor) in &styled_text.anchors {
+        builder.push_inline_box(InlineBox {
+            id: (*anchor_id as u64) * 2,
+            index: anchor.start as usize,
+            width: 0.0,
+            height: 0.0,
+        });
+        builder.push_inline_box(InlineBox {
+            id: (*anchor_id as u64) * 2 + 1,
+            index: anchor.end as usize,
+            width: 0.0,
+            height: 0.0,
+        });
     }
+    builder.build(&styled_text.text)
 }
 
 fn render_decoration(glyph_run: &GlyphRun<Color>, color: Color, offset: f32, width: f32) -> Path {

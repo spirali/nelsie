@@ -1,6 +1,6 @@
 use crate::model::{
     merge_stepped_styles, LengthOrExpr, LoadedImage, NodeContentText, PartialTextStyle, Step,
-    StepIndex, StepSet, StyleMap, StyledText, TextAlign,
+    StepIndex, StepSet, StyleMap, StyledRange, StyledText, TextAlign,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, StepValue,
@@ -14,6 +14,7 @@ use crate::parsers::{
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr, PyStringOrI16};
 use crate::pyinterface::insteps::{InSteps, ValueOrInSteps};
 use crate::pyinterface::textstyle::PyTextStyleOrName;
+use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
 
@@ -148,20 +149,19 @@ fn process_text_parsing(
         let styles = parsed
             .styles
             .into_iter()
-            .map(|names| {
-                names
-                    .into_iter()
-                    .try_fold(StepValue::Const(PartialTextStyle::default()), |s, style_or_name| {
-                        Ok(match style_or_name {
-                            StyleOrName::Name(name) => {
-                                merge_stepped_styles(&s, styles.get_style(name)?)
-                            }
-                            StyleOrName::Style(style) => s.map(|x| x.merge(&style)),
-                        })
-                    })
+            .map(|style| {
+                Ok((
+                    style.start,
+                    style.end,
+                    match style.style {
+                        StyleOrName::Name(name) =>
+                            Cow::Borrowed(styles.get_style(name)?),
+                        StyleOrName::Style(style) => Cow::Owned(StepValue::Const(style)),
+                    }
+                ))
             })
             .collect::<crate::Result<Vec<_>>>()?;
-        Ok((parsed.styled_lines, styles, parsed.anchors))
+        Ok((parsed.text, styles, parsed.anchors))
     }
     )?;
 
@@ -169,12 +169,12 @@ fn process_text_parsing(
     steps.extend(
         parsed
             .values()
-            .flat_map(|v| v.1.iter().flat_map(|s| s.steps())),
+            .flat_map(|v| v.1.iter().flat_map(|s| s.2.steps())),
     );
     steps.extend(main_style.steps());
 
     Ok(if steps.is_empty() {
-        let (styled_lines, styles, anchors) = parsed.get_const().unwrap();
+        let (text, styles, anchors) = parsed.get_const().unwrap();
         let main_style = main_style
             .clone()
             .get_const()
@@ -183,10 +183,14 @@ fn process_text_parsing(
             .unwrap();
         let styles = styles
             .into_iter()
-            .map(|s| s.get_const().unwrap())
+            .map(|(start, end, s)| StyledRange {
+                start,
+                end,
+                style: s.into_owned().get_const().unwrap(),
+            })
             .collect_vec();
         StepValue::Const(StyledText {
-            styled_lines,
+            text,
             main_style,
             styles,
             anchors,
@@ -194,17 +198,20 @@ fn process_text_parsing(
     } else {
         let mut map = BTreeMap::new();
         for step in steps {
-            let (styled_lines, styles, anchors) = parsed.at_step(step);
+            let (text, styles, anchors) = parsed.at_step(step);
             let main_style = main_style.at_step(step).clone().into_text_style().unwrap();
             let styles = styles
                 .iter()
-                .map(|s| s.at_step(step))
-                .cloned()
+                .map(|(start, end, s)| StyledRange {
+                    start: *start,
+                    end: *end,
+                    style: s.at_step(step).clone(),
+                })
                 .collect_vec();
             map.insert(
                 step.clone(),
                 StyledText {
-                    styled_lines: styled_lines.clone(),
+                    text: text.clone(),
                     main_style: main_style.clone(),
                     styles,
                     anchors: anchors.clone(),
