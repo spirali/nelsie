@@ -28,7 +28,7 @@ def image_diff(path1, path2, resize):
     difference = ImageChops.difference(new_img, old_img)
     stat = ImageStat.Stat(difference)
     s = sum(stat.sum) / 255.0
-    if s > 0:
+    if s > 0 and new_img.size == old_img.size:
         sub = np.subtract(np.array(new_img).astype(np.float32), np.array(old_img).astype(np.float32))
         diff_data2 = -np.minimum(np.min(sub, axis=2), 0)
         diff_data1 = np.maximum(np.max(sub, axis=2), 0)

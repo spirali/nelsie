@@ -93,14 +93,14 @@ impl<T: Debug> StepValue<T> {
         }
     }
 
-    pub fn map<S: Debug, F: FnMut(T) -> S>(self, mut f: F) -> StepValue<S> {
-        match self {
-            StepValue::Const(v) => StepValue::Const(f(v)),
-            StepValue::Steps(v) => {
-                StepValue::Steps(v.into_iter().map(|(k, v)| (k, f(v))).collect())
-            }
-        }
-    }
+    // pub fn map<S: Debug, F: FnMut(T) -> S>(self, mut f: F) -> StepValue<S> {
+    //     match self {
+    //         StepValue::Const(v) => StepValue::Const(f(v)),
+    //         StepValue::Steps(v) => {
+    //             StepValue::Steps(v.into_iter().map(|(k, v)| (k, f(v))).collect())
+    //         }
+    //     }
+    // }
 
     // pub fn map_ref<S: Debug, F: FnMut(&T) -> S>(&self, mut f: F) -> StepValue<S> {
     //     match self {

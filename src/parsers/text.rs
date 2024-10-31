@@ -1,9 +1,5 @@
 use crate::common::error::NelsieError;
-use crate::model::{
-    InTextAnchor, InTextAnchorPoint, InTextBoxId, PartialTextStyle, Span, StyledLine,
-};
-
-use std::collections::HashMap;
+use crate::model::{InTextAnchor, InTextBoxId, PartialTextStyle};
 
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum StyleOrName<'a> {
@@ -11,140 +7,121 @@ pub(crate) enum StyleOrName<'a> {
     Style(PartialTextStyle),
 }
 
-#[derive(Debug)]
-pub(crate) struct ParsedStyledText<'a> {
-    pub styled_lines: Vec<StyledLine>,
-    pub styles: Vec<Vec<StyleOrName<'a>>>,
-    pub anchors: HashMap<InTextBoxId, InTextAnchor>,
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct ParsedStyleRange<'a> {
+    pub start: u32,
+    pub end: u32,
+    pub style: StyleOrName<'a>,
 }
 
-fn find_first(text: &str, c1: char, c2: Option<char>) -> Option<(usize, char)> {
-    for (i, c) in text.char_indices() {
-        if c1 == c || c2.map(|c2| c2 == c).unwrap_or(false) {
-            return Some((i, c));
-        }
-    }
-    None
+#[derive(Debug)]
+pub(crate) struct ParsedStyledText<'a> {
+    pub text: String,
+    pub styles: Vec<ParsedStyleRange<'a>>,
+    pub anchors: Vec<(InTextBoxId, InTextAnchor)>,
 }
 
 pub(crate) fn parse_styled_text_from_plain_text(text: &str) -> ParsedStyledText {
     ParsedStyledText {
-        styled_lines: text
-            .lines()
-            .map(|line| StyledLine {
-                spans: vec![Span {
-                    length: line.len() as u32,
-                    style_idx: None,
-                }],
-                text: line.to_string(),
-            })
-            .collect(),
+        text: text.to_string(),
         styles: Vec::new(),
         anchors: Default::default(),
     }
 }
 
-pub(crate) fn parse_styled_text<'a>(
-    text: &'a str,
+#[derive(Debug)]
+enum StackEntry<'a> {
+    Style { start: u32, name: &'a str },
+    Anchor { start: u32, anchor_id: InTextBoxId },
+}
+
+pub(crate) fn parse_styled_text(
+    text: &str,
     esc_char: char,
     start_block: char,
     end_block: char,
 ) -> crate::Result<ParsedStyledText> {
-    let mut style_stack: Vec<StyleOrName<'a>> = Vec::new();
-    let mut anchor_stack: Vec<Option<(InTextBoxId, InTextAnchorPoint)>> = Vec::new();
-
+    let mut stack: Vec<StackEntry> = Vec::new();
+    let mut result_text = String::with_capacity(text.len());
     let mut result_styles = Vec::new();
-    let mut result_anchors = HashMap::<InTextBoxId, InTextAnchor>::new();
+    let mut result_anchors = Vec::new();
 
-    let get_style = |stack: &[StyleOrName<'a>], styles: &mut Vec<Vec<StyleOrName<'a>>>| {
-        if stack.is_empty() {
-            return None;
-        }
-        Some(styles.iter().position(|s| s == stack).unwrap_or_else(|| {
-            let idx = styles.len();
-            styles.push(stack.to_vec());
-            idx
-        }) as u32)
-    };
+    let mut input = text;
 
-    let mut out_lines: Vec<StyledLine> = Vec::new();
-    for (line_idx, mut line) in text.lines().enumerate() {
-        let mut result_text = String::new();
-        let mut spans = Vec::new();
-        loop {
-            if let Some((idx, c)) = find_first(
-                line,
-                esc_char,
-                if anchor_stack.is_empty() {
-                    None
-                } else {
-                    Some(end_block)
-                },
-            ) {
-                if idx > 0 {
-                    result_text.push_str(&line[..idx]);
-                    spans.push(Span {
-                        length: idx as u32,
-                        style_idx: get_style(&style_stack, &mut result_styles),
-                    });
-                }
-                line = &line[idx + 1..];
-                if c == esc_char {
-                    let idx = line.find(start_block).ok_or_else(|| {
-                        NelsieError::parsing_err(format!(
-                            "Invalid style formatting (line {}): character '{}' found, but no following '{}')",
-                            line_idx + 1, esc_char, start_block
-                        ))
-                    })?;
-                    let style_name = &line[..idx];
-                    if style_name.chars().all(|x| x.is_ascii_digit()) {
-                        let anchor_id: InTextBoxId = style_name
-                            .parse()
-                            .map_err(|_| NelsieError::parsing_err("Invalid anchor id"))?;
-                        anchor_stack.push(Some((
-                            anchor_id,
-                            InTextAnchorPoint {
-                                line_idx: line_idx as u32,
-                                span_idx: spans.len() as u32,
-                            },
-                        )));
-                    } else {
-                        anchor_stack.push(None);
-                        style_stack.push(StyleOrName::Name(style_name));
-                    }
-                    line = &line[idx + 1..];
-                } else if let Some((anchor_id, start)) = anchor_stack.pop().unwrap() {
-                    result_anchors.insert(
-                        anchor_id,
-                        InTextAnchor {
-                            start,
-                            end: InTextAnchorPoint {
-                                line_idx: line_idx as u32,
-                                span_idx: spans.len() as u32,
-                            },
-                        },
-                    );
-                } else {
-                    style_stack.pop();
-                }
+    let esc_len = esc_char.len_utf8();
+    let start_len = start_block.len_utf8();
+    let end_len = end_block.len_utf8();
+
+    while !input.is_empty() {
+        let mut esc_index = input.find(esc_char);
+        let mut end_index = if stack.is_empty() {
+            None
+        } else {
+            input.find(end_block)
+        };
+        if let (Some(idx1), Some(idx2)) = (esc_index, end_index) {
+            if idx2 > idx1 {
+                end_index = None;
             } else {
-                if !line.is_empty() {
-                    spans.push(Span {
-                        length: line.len() as u32,
-                        style_idx: get_style(&style_stack, &mut result_styles),
-                    });
-                    result_text.push_str(line);
-                }
-                out_lines.push(StyledLine {
-                    spans,
-                    text: result_text,
-                });
-                break;
+                esc_index = None;
             }
         }
+
+        if let Some(idx) = esc_index {
+            if idx > 0 {
+                result_text.push_str(&input[..idx]);
+            }
+            let start = idx + esc_len;
+            let end = input[start..].find(start_block).ok_or_else(|| {
+                NelsieError::parsing_err(format!(
+                    "Invalid style formatting: character '{}' found, but no following '{}')",
+                    esc_char, start_block
+                ))
+            })? + start;
+            let name = &input[start..end];
+            if name.chars().all(|x| x.is_ascii_digit()) {
+                stack.push(StackEntry::Anchor {
+                    start: result_text.len() as u32,
+                    anchor_id: name.parse().unwrap(),
+                });
+            } else {
+                stack.push(StackEntry::Style {
+                    start: result_text.len() as u32,
+                    name,
+                });
+            }
+            input = &input[end + start_len..];
+        } else if let Some(idx) = end_index {
+            if idx > 0 {
+                result_text.push_str(&input[..idx]);
+            }
+            let end = result_text.len() as u32;
+            match stack.pop().unwrap() {
+                StackEntry::Style { start, name } => result_styles.push(ParsedStyleRange {
+                    start,
+                    end,
+                    style: StyleOrName::Name(name),
+                }),
+                StackEntry::Anchor { start, anchor_id } => {
+                    result_anchors.push((anchor_id, InTextAnchor { start, end }))
+                }
+            }
+            input = &input[idx + end_len..];
+        } else {
+            result_text.push_str(input);
+            break;
+        };
     }
+
+    if !stack.is_empty() {
+        return Err(NelsieError::parsing_err("Unclosed style block"));
+    }
+
+    result_styles.reverse();
+    result_styles.sort_by_key(|s: &ParsedStyleRange| (s.start, s.end));
+
     Ok(ParsedStyledText {
-        styled_lines: out_lines,
+        text: result_text,
         styles: result_styles,
         anchors: result_anchors,
     })
@@ -152,8 +129,10 @@ pub(crate) fn parse_styled_text<'a>(
 
 #[cfg(test)]
 mod tests {
-    use crate::model::{InTextAnchor as TA, InTextAnchorPoint as TAP, Span, StyledLine};
-    use crate::parsers::text::{parse_styled_text, ParsedStyledText, StyleOrName};
+    use crate::model::InTextAnchor as TA;
+    use crate::parsers::text::{
+        parse_styled_text, ParsedStyleRange, ParsedStyledText, StyleOrName,
+    };
 
     fn parse(text: &str) -> crate::Result<ParsedStyledText> {
         parse_styled_text(text, '~', '{', '}')
@@ -163,174 +142,89 @@ mod tests {
     fn test_parse_text_styles() {
         let r = parse("Hello").unwrap();
         assert!(r.styles.is_empty());
-        assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![Span {
-                    length: 5,
-                    style_idx: None,
-                }],
-                text: "Hello".to_string(),
-            }]
-        );
+        assert_eq!(r.text, "Hello",);
 
         let r = parse("Hello\n Line 2 \n\n").unwrap();
         assert!(r.styles.is_empty());
-        assert_eq!(
-            r.styled_lines,
-            vec![
-                StyledLine {
-                    spans: vec![Span {
-                        length: 5,
-                        style_idx: None
-                    }],
-                    text: "Hello".to_string(),
-                },
-                StyledLine {
-                    spans: vec![Span {
-                        length: 8,
-                        style_idx: None
-                    }],
-                    text: " Line 2 ".to_string(),
-                },
-                StyledLine {
-                    spans: vec![],
-                    text: "".to_string(),
-                }
-            ]
-        );
+        assert_eq!(r.text, "Hello\n Line 2 \n\n");
 
         let r = parse("xyz~name{ab}c").unwrap();
-        assert_eq!(r.styles, vec![vec![StyleOrName::Name("name")]]);
+        assert_eq!(r.text, "xyzabc");
         assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![
-                    Span {
-                        length: 3,
-                        style_idx: None
-                    },
-                    Span {
-                        length: 2,
-                        style_idx: Some(0)
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: None
-                    }
-                ],
-                text: "xyzabc".to_string(),
+            r.styles,
+            vec![ParsedStyleRange {
+                start: 3,
+                end: 5,
+                style: StyleOrName::Name("name")
             }]
         );
 
         let r = parse("~x{a}~y{b}~x{c}").unwrap();
         assert_eq!(
             r.styles,
-            vec![vec![StyleOrName::Name("x")], vec![StyleOrName::Name("y")]]
+            vec![
+                ParsedStyleRange {
+                    start: 0,
+                    end: 1,
+                    style: StyleOrName::Name("x")
+                },
+                ParsedStyleRange {
+                    start: 1,
+                    end: 2,
+                    style: StyleOrName::Name("y")
+                },
+                ParsedStyleRange {
+                    start: 2,
+                    end: 3,
+                    style: StyleOrName::Name("x")
+                }
+            ]
         );
-        assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![
-                    Span {
-                        length: 1,
-                        style_idx: Some(0)
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: Some(1)
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: Some(0)
-                    }
-                ],
-                text: "abc".to_string(),
-            }]
-        );
+        assert_eq!(r.text, "abc");
 
         let r = parse("~L1{~L2{~L3{x\n\nyy}}}").unwrap();
+        assert_eq!(r.text, "x\n\nyy");
         assert_eq!(
             r.styles,
-            vec![vec![
-                StyleOrName::Name("L1"),
-                StyleOrName::Name("L2"),
-                StyleOrName::Name("L3")
-            ]]
-        );
-        assert_eq!(
-            r.styled_lines,
             vec![
-                StyledLine {
-                    spans: vec![Span {
-                        length: 1,
-                        style_idx: Some(0)
-                    },],
-                    text: "x".to_string(),
+                ParsedStyleRange {
+                    start: 0,
+                    end: 5,
+                    style: StyleOrName::Name("L1")
                 },
-                StyledLine {
-                    spans: vec![],
-                    text: "".to_string(),
+                ParsedStyleRange {
+                    start: 0,
+                    end: 5,
+                    style: StyleOrName::Name("L2")
                 },
-                StyledLine {
-                    spans: vec![Span {
-                        length: 2,
-                        style_idx: Some(0)
-                    },],
-                    text: "yy".to_string(),
+                ParsedStyleRange {
+                    start: 0,
+                    end: 5,
+                    style: StyleOrName::Name("L3")
                 }
             ]
         );
 
         let r =
-            parse("Hello, my name is ~name{Alice}.\n~question{How are ~highlight{you}?").unwrap();
+            parse("Hello, my name is ~name{Alice}.\n~question{How are ~highlight{you}?}").unwrap();
+        assert_eq!(r.text, "Hello, my name is Alice.\nHow are you?");
         assert_eq!(
             r.styles,
             vec![
-                vec![StyleOrName::Name("name")],
-                vec![StyleOrName::Name("question")],
-                vec![
-                    StyleOrName::Name("question"),
-                    StyleOrName::Name("highlight")
-                ]
-            ]
-        );
-        assert_eq!(
-            r.styled_lines,
-            vec![
-                StyledLine {
-                    spans: vec![
-                        Span {
-                            length: 18,
-                            style_idx: None
-                        },
-                        Span {
-                            length: 5,
-                            style_idx: Some(0)
-                        },
-                        Span {
-                            length: 1,
-                            style_idx: None
-                        }
-                    ],
-                    text: "Hello, my name is Alice.".to_string(),
+                ParsedStyleRange {
+                    start: 18,
+                    end: 23,
+                    style: StyleOrName::Name("name")
                 },
-                StyledLine {
-                    spans: vec![
-                        Span {
-                            length: 8,
-                            style_idx: Some(1)
-                        },
-                        Span {
-                            length: 3,
-                            style_idx: Some(2)
-                        },
-                        Span {
-                            length: 1,
-                            style_idx: Some(1)
-                        }
-                    ],
-                    text: "How are you?".to_string()
+                ParsedStyleRange {
+                    start: 25,
+                    end: 37,
+                    style: StyleOrName::Name("question")
+                },
+                ParsedStyleRange {
+                    start: 33,
+                    end: 36,
+                    style: StyleOrName::Name("highlight")
                 }
             ]
         );
@@ -340,273 +234,54 @@ mod tests {
     fn test_parse_text_anchors() {
         let r = parse("abc~1{IJK}xyz").unwrap();
         assert!(r.styles.is_empty());
-        assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![
-                    Span {
-                        length: 3,
-                        style_idx: None
-                    },
-                    Span {
-                        length: 3,
-                        style_idx: None
-                    },
-                    Span {
-                        length: 3,
-                        style_idx: None
-                    }
-                ],
-                text: "abcIJKxyz".to_string(),
-            }]
-        );
-        assert_eq!(r.anchors.len(), 1);
-        assert_eq!(
-            r.anchors.get(&1).unwrap(),
-            &TA {
-                start: TAP {
-                    line_idx: 0,
-                    span_idx: 1
-                },
-                end: TAP {
-                    line_idx: 0,
-                    span_idx: 2
-                },
-            }
-        );
+        assert_eq!(r.text, "abcIJKxyz");
+        assert_eq!(r.anchors, vec![(1, TA { start: 3, end: 6 })]);
 
         let r = parse("~1{IJK}").unwrap();
         assert!(r.styles.is_empty());
-        assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![Span {
-                    length: 3,
-                    style_idx: None
-                }],
-                text: "IJK".to_string(),
-            }]
-        );
-        assert_eq!(r.anchors.len(), 1);
-        assert_eq!(
-            r.anchors.get(&1).unwrap(),
-            &TA {
-                start: TAP {
-                    line_idx: 0,
-                    span_idx: 0
-                },
-                end: TAP {
-                    line_idx: 0,
-                    span_idx: 1
-                },
-            }
-        );
+        assert_eq!(r.text, "IJK");
+        assert_eq!(r.anchors, vec![(1, TA { start: 0, end: 3 })]);
 
         let r = parse("~2{abc}~1{xy}").unwrap();
         assert!(r.styles.is_empty());
+        assert_eq!(r.text, "abcxy");
         assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![
-                    Span {
-                        length: 3,
-                        style_idx: None
-                    },
-                    Span {
-                        length: 2,
-                        style_idx: None
-                    }
-                ],
-                text: "abcxy".to_string(),
-            }]
-        );
-        assert_eq!(r.anchors.len(), 2);
-        assert_eq!(
-            r.anchors.get(&2).unwrap(),
-            &TA {
-                start: TAP {
-                    line_idx: 0,
-                    span_idx: 0
-                },
-                end: TAP {
-                    line_idx: 0,
-                    span_idx: 1
-                },
-            }
-        );
-        assert_eq!(
-            r.anchors.get(&1).unwrap(),
-            &TA {
-                start: TAP {
-                    line_idx: 0,
-                    span_idx: 1
-                },
-                end: TAP {
-                    line_idx: 0,
-                    span_idx: 2
-                },
-            }
+            r.anchors,
+            vec![(2, TA { start: 0, end: 3 }), (1, TA { start: 3, end: 5 })]
         );
 
         let r = parse("a~name{b~1{c}d}e").unwrap();
-        assert_eq!(r.styles, vec![vec![StyleOrName::Name("name")]]);
+        assert_eq!(r.text, "abcde");
+        assert_eq!(r.anchors, vec![(1, TA { start: 2, end: 3 })]);
         assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![
-                    Span {
-                        length: 1,
-                        style_idx: None
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: Some(0)
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: Some(0)
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: Some(0)
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: None
-                    }
-                ],
-                text: "abcde".to_string(),
-            }]
-        );
-        assert_eq!(r.anchors.len(), 1);
-        assert_eq!(
-            r.anchors.get(&1).unwrap(),
-            &TA {
-                start: TAP {
-                    line_idx: 0,
-                    span_idx: 2
-                },
-                end: TAP {
-                    line_idx: 0,
-                    span_idx: 3
-                },
-            }
+            r.styles,
+            vec![ParsedStyleRange {
+                start: 1,
+                end: 4,
+                style: StyleOrName::Name("name")
+            },]
         );
 
         let r = parse("a~21{~name{xxx}z}e").unwrap();
-        assert_eq!(r.styles, vec![vec![StyleOrName::Name("name")]]);
+        assert_eq!(r.text, "axxxze");
+        assert_eq!(r.anchors, vec![(21, TA { start: 1, end: 5 })]);
         assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![
-                    Span {
-                        length: 1,
-                        style_idx: None
-                    },
-                    Span {
-                        length: 3,
-                        style_idx: Some(0)
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: None
-                    },
-                    Span {
-                        length: 1,
-                        style_idx: None
-                    },
-                ],
-                text: "axxxze".to_string(),
-            }]
-        );
-
-        assert_eq!(r.anchors.len(), 1);
-        assert_eq!(
-            r.anchors.get(&21).unwrap(),
-            &TA {
-                start: TAP {
-                    line_idx: 0,
-                    span_idx: 1
-                },
-                end: TAP {
-                    line_idx: 0,
-                    span_idx: 3
-                },
-            }
+            r.styles,
+            vec![ParsedStyleRange {
+                start: 1,
+                end: 4,
+                style: StyleOrName::Name("name")
+            },]
         );
 
         let r = parse("~123{}").unwrap();
+        assert_eq!(r.text, "");
+        assert_eq!(r.anchors, vec![(123, TA { start: 0, end: 0 })]);
         assert!(r.styles.is_empty());
-        assert_eq!(
-            r.styled_lines,
-            vec![StyledLine {
-                spans: vec![],
-                text: "".to_string(),
-            }]
-        );
-
-        assert_eq!(r.anchors.len(), 1);
-        assert_eq!(
-            r.anchors.get(&123).unwrap(),
-            &TA {
-                start: TAP {
-                    line_idx: 0,
-                    span_idx: 0
-                },
-                end: TAP {
-                    line_idx: 0,
-                    span_idx: 0
-                },
-            }
-        );
 
         let r = parse("ab~0{x\ny}z").unwrap();
+        assert_eq!(r.text, "abx\nyz");
+        assert_eq!(r.anchors, vec![(0, TA { start: 2, end: 5 })]);
         assert!(r.styles.is_empty());
-        assert_eq!(
-            r.styled_lines,
-            vec![
-                StyledLine {
-                    spans: vec![
-                        Span {
-                            length: 2,
-                            style_idx: None
-                        },
-                        Span {
-                            length: 1,
-                            style_idx: None
-                        }
-                    ],
-                    text: "abx".to_string(),
-                },
-                StyledLine {
-                    spans: vec![
-                        Span {
-                            length: 1,
-                            style_idx: None
-                        },
-                        Span {
-                            length: 1,
-                            style_idx: None
-                        }
-                    ],
-                    text: "yz".to_string(),
-                }
-            ]
-        );
-
-        assert_eq!(r.anchors.len(), 1);
-        assert_eq!(
-            r.anchors.get(&0).unwrap(),
-            &TA {
-                start: TAP {
-                    line_idx: 0,
-                    span_idx: 1
-                },
-                end: TAP {
-                    line_idx: 1,
-                    span_idx: 1
-                },
-            }
-        );
     }
 }

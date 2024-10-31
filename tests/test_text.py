@@ -185,7 +185,7 @@ def test_text_align(deck):
 
 @check()
 def test_text_descent_ascent1(deck):
-    slide = deck.new_slide(width=200, height=280)
+    slide = deck.new_slide(width=200, height=325)
     slide.set_style("default", TextStyle(size=24))
     box = slide.box(row=True)
     box.text("W1yg", bg_color="green", style=TextStyle(line_spacing=1.0))

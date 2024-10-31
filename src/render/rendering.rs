@@ -1,11 +1,11 @@
 use crate::model::{
-    Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Span, Step, StyledLine, StyledText,
+    Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Step, StyledText,
     TextAlign, TextStyle,
 };
 use crate::render::layout::{compute_layout, ComputedLayout};
 use crate::render::RenderConfig;
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::BTreeSet;
 
 use resvg::usvg::FontStretch;
 use std::sync::Arc;
@@ -62,15 +62,9 @@ fn draw_debug_frame(
     } else {
         format!("{} [{}x{}]", name, rect.width, rect.height)
     };
-    let styled_text = StyledText {
-        styled_lines: vec![StyledLine {
-            spans: vec![Span {
-                length: text.len() as u32,
-                style_idx: None,
-            }],
-            text,
-        }],
-        main_style: TextStyle {
+    let styled_text = StyledText::new_simple_text(
+        text,
+        TextStyle {
             font: font.clone(),
             color: *color,
             size: 8.0,
@@ -81,9 +75,7 @@ fn draw_debug_frame(
             underline: false,
             line_through: false,
         },
-        styles: Vec::new(),
-        anchors: HashMap::new(),
-    };
+    );
     canvas.add_text(
         Arc::new(RenderedText::render(
             text_context,
@@ -108,15 +100,9 @@ fn draw_debug_step(
         fill_and_stroke: FillAndStroke::new_fill(Color::new(svgtypes::Color::black())),
     }));
     let text = step.to_string();
-    let styled_text = StyledText {
-        styled_lines: vec![StyledLine {
-            spans: vec![Span {
-                length: text.len() as u32,
-                style_idx: None,
-            }],
-            text,
-        }],
-        main_style: TextStyle {
+    let styled_text = StyledText::new_simple_text(
+        text,
+        TextStyle {
             font: font.clone(),
             color: Color::new(svgtypes::Color::white()),
             size: font_size,
@@ -127,9 +113,7 @@ fn draw_debug_step(
             underline: false,
             line_through: false,
         },
-        styles: Vec::new(),
-        anchors: HashMap::new(),
-    };
+    );
     canvas.add_text(
         Arc::new(RenderedText::render(
             text_context,
