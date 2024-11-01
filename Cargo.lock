@@ -1161,6 +1161,7 @@ dependencies = [
  "resvg",
  "skrifa 0.19.3",
  "smallvec",
+ "strict-num",
  "svg2pdf",
  "svgtypes",
  "syntect",

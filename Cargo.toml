@@ -35,6 +35,7 @@ chumsky = "0.9"
 parley = { version = "0.2" }
 skrifa = "0.19"
 kurbo = "*" # Lets us give a version specified in parley -> penice -> kurbo
+strict-num = "0.1"
 
 [profile.release]
 lto = true

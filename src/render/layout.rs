@@ -241,7 +241,6 @@ fn compute_content_default_size(
                 node.node_id,
                 &mut config.thread_resources.text_context,
                 t,
-                text.text_align,
             );
             rtext.size()
         }
