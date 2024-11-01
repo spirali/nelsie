@@ -1,13 +1,12 @@
 use crate::model::{
-    Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Step, StyledText,
-    TextAlign, TextStyle,
+    Drawing, FontData, Node, NodeChild, NodeContent, NodeId, Step, StyledText, TextStyle,
 };
 use crate::render::layout::{compute_layout, ComputedLayout};
 use crate::render::RenderConfig;
 
 use std::collections::BTreeSet;
 
-use resvg::usvg::FontStretch;
+use resvg::usvg::{FontStretch, PositiveF32};
 use std::sync::Arc;
 
 use crate::render::image::render_image_to_canvas;
@@ -67,8 +66,8 @@ fn draw_debug_frame(
         TextStyle {
             font: font.clone(),
             color: *color,
-            size: 8.0,
-            line_spacing: 0.0,
+            size: PositiveF32::new(8.0).unwrap(),
+            line_spacing: PositiveF32::ZERO,
             italic: false,
             stretch: FontStretch::Normal,
             weight: 700,
@@ -77,11 +76,7 @@ fn draw_debug_frame(
         },
     );
     canvas.add_text(
-        Arc::new(RenderedText::render(
-            text_context,
-            &styled_text,
-            TextAlign::Start,
-        )),
+        Arc::new(RenderedText::render(text_context, &styled_text)),
         rect.x + 2.0,
         rect.y + 3.0,
     );
@@ -92,7 +87,7 @@ fn draw_debug_step(
     rect: &Rectangle,
     step: &Step,
     font: &Arc<FontData>,
-    font_size: f32,
+    font_size: PositiveF32,
     canvas: &mut Canvas,
 ) {
     canvas.add_draw_item(DrawItem::Rect(DrawRect {
@@ -106,7 +101,7 @@ fn draw_debug_step(
             font: font.clone(),
             color: Color::new(svgtypes::Color::white()),
             size: font_size,
-            line_spacing: 0.0,
+            line_spacing: PositiveF32::ZERO,
             italic: false,
             stretch: FontStretch::Normal,
             weight: 400,
@@ -115,13 +110,9 @@ fn draw_debug_step(
         },
     );
     canvas.add_text(
-        Arc::new(RenderedText::render(
-            text_context,
-            &styled_text,
-            TextAlign::Start,
-        )),
+        Arc::new(RenderedText::render(text_context, &styled_text)),
         rect.x + 10.0,
-        rect.y + font_size / 2.0 * 1.25,
+        rect.y + font_size.get() / 2.0 * 1.25,
     );
 }
 
@@ -252,7 +243,7 @@ pub(crate) fn render_to_canvas(render_cfg: &mut RenderConfig) -> Canvas {
             ),
             render_cfg.step,
             render_cfg.default_font,
-            DEBUG_STEP_FONT_SIZE,
+            PositiveF32::new(DEBUG_STEP_FONT_SIZE).unwrap(),
             &mut canvas,
         );
     }

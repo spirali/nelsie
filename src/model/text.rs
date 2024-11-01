@@ -2,26 +2,27 @@ use crate::model::{PartialTextStyle, Step, StepValue, TextStyle};
 
 pub(crate) type InTextBoxId = u32;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, Hash, PartialEq)]
 #[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct InTextAnchor {
     pub start: u32,
     pub end: u32,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct StyledRange {
     pub start: u32,
     pub end: u32,
     pub style: PartialTextStyle,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Eq, Hash, PartialEq)]
 pub(crate) struct StyledText {
     pub text: String,
     pub main_style: TextStyle,
     pub styles: Vec<StyledRange>,
     pub anchors: Vec<(InTextBoxId, InTextAnchor)>,
+    pub text_align: TextAlign,
 }
 
 impl StyledText {
@@ -31,6 +32,7 @@ impl StyledText {
             main_style,
             styles: Vec::new(),
             anchors: Default::default(),
+            text_align: TextAlign::Start,
         }
     }
 
@@ -57,17 +59,22 @@ impl StyledText {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub(crate) enum TextAlign {
     Start,
     Center,
     End,
 }
 
+impl Default for TextAlign {
+    fn default() -> Self {
+        TextAlign::Start
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct NodeContentText {
     pub styled_text: StepValue<StyledText>,
-    pub text_align: TextAlign,
     pub parse_counters: bool,
 }
 

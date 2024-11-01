@@ -1,5 +1,6 @@
 use crate::model::{PartialTextStyle, Resources};
 
+use crate::common::error::NelsieError;
 use crate::common::Color;
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
@@ -11,6 +12,7 @@ use std::ops::Deref;
 use std::str::FromStr;
 use std::sync::Arc;
 use svg2pdf::usvg;
+use svg2pdf::usvg::PositiveF32;
 use usvg::FontStretch;
 
 #[derive(Debug, Default)]
@@ -26,6 +28,12 @@ pub(crate) struct PyTextStyle {
     pub line_through: Option<bool>,
 }
 
+pub fn to_positive_f32(value: f32) -> crate::Result<PositiveF32> {
+    PositiveF32::new(value).ok_or_else(|| {
+        NelsieError::generic_err(format!("Expected non-negative float, got {value}"))
+    })
+}
+
 impl PyTextStyle {
     pub fn into_partial_style(self, resources: &mut Resources) -> crate::Result<PartialTextStyle> {
         let font = self
@@ -35,8 +43,8 @@ impl PyTextStyle {
         Ok(PartialTextStyle {
             font,
             color: self.color,
-            size: self.size,
-            line_spacing: self.line_spacing,
+            size: self.size.map(to_positive_f32).transpose()?,
+            line_spacing: self.line_spacing.map(to_positive_f32).transpose()?,
             italic: self.italic,
             stretch: self.stretch,
             weight: self.weight,
@@ -109,8 +117,11 @@ pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Pytho
         "color".into(),
         style.color.as_ref().map(|c| c.to_string()).to_object(py),
     );
-    map.insert("size".into(), style.size.to_object(py));
-    map.insert("line_spacing".into(), style.line_spacing.to_object(py));
+    map.insert("size".into(), style.size.map(|x| x.get()).to_object(py));
+    map.insert(
+        "line_spacing".into(),
+        style.line_spacing.map(|x| x.get()).to_object(py),
+    );
     map.insert("italic".into(), style.italic.to_object(py));
     map.insert("stretch".into(), stretch_idx.to_object(py));
     map.insert("weight".into(), style.weight.to_object(py));

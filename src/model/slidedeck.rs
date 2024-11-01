@@ -6,6 +6,7 @@ use crate::model::{
     Length, LengthOrAuto, LengthOrExpr, NodeId, PartialTextStyle, Resources, Step, StepSet,
     StepValue, StyleMap,
 };
+use resvg::usvg::PositiveF32;
 use std::collections::Bound::{Included, Unbounded};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -157,8 +158,8 @@ impl SlideDeck {
         let default_style = PartialTextStyle {
             font: Some(default_font.clone()),
             color: Some(Color::new(svgtypes::Color::black())),
-            size: Some(32.0),
-            line_spacing: Some(1.2),
+            size: Some(PositiveF32::new(32.0).unwrap()),
+            line_spacing: Some(PositiveF32::new(1.2).unwrap()),
             italic: Some(false),
             stretch: Some(FontStretch::Normal),
             weight: Some(400),

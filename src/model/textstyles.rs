@@ -2,22 +2,23 @@ use crate::common::error::NelsieError;
 use crate::model::StepValue;
 
 use crate::common::Color;
+use resvg::usvg::PositiveF32;
 use std::collections::HashMap;
 use std::sync::Arc;
 use svg2pdf::usvg;
 use usvg::FontStretch;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Eq, Hash, PartialEq)]
 pub(crate) struct FontData {
     pub family_name: String,
 }
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct PartialTextStyle {
     pub font: Option<Arc<FontData>>,
     pub color: Option<Color>,
-    pub size: Option<f32>,
-    pub line_spacing: Option<f32>,
+    pub size: Option<PositiveF32>,
+    pub line_spacing: Option<PositiveF32>,
     pub italic: Option<bool>,
     pub stretch: Option<FontStretch>,
     pub weight: Option<u16>,
@@ -55,12 +56,12 @@ impl PartialTextStyle {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct TextStyle {
     pub font: Arc<FontData>,
     pub color: Color,
-    pub size: f32,
-    pub line_spacing: f32,
+    pub size: PositiveF32,
+    pub line_spacing: PositiveF32,
     pub italic: bool,
     pub stretch: FontStretch,
     pub weight: u16,
@@ -75,8 +76,8 @@ impl Default for TextStyle {
                 family_name: "".to_string(),
             }),
             color: Color::default(),
-            size: 0.0,
-            line_spacing: 0.0,
+            size: PositiveF32::ZERO,
+            line_spacing: PositiveF32::ZERO,
             italic: false,
             stretch: Default::default(),
             weight: 0,

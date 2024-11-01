@@ -17,7 +17,7 @@ pub(crate) use pdf::PdfBuilder;
 use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
 use crate::render::rendering::render_to_canvas;
-use crate::render::text::{TextCache, TextContext};
+use crate::render::text::{GlobalTextCache, TextCache, TextContext};
 use itertools::Itertools;
 use parley::{FontContext, LayoutContext};
 use rayon::iter::IntoParallelIterator;
@@ -35,7 +35,7 @@ pub(crate) struct RenderConfig<'a> {
     pub slide: &'a Slide,
     pub slide_id: SlideId,
     pub step: &'a Step,
-    pub text_cache: TextCache,
+    pub text_cache: TextCache<'a>,
     pub default_font: &'a Arc<FontData>,
     pub counter_values: &'a CountersMap<'a>,
 }
@@ -77,6 +77,7 @@ impl VerboseLevel {
 fn render_slide_step(
     resources: &Resources,
     thread_resources: &mut ThreadLocalResources,
+    global_text_cache: &GlobalTextCache,
     builder: &PageBuilder,
     slide_id: SlideId,
     slide: &Slide,
@@ -93,7 +94,7 @@ fn render_slide_step(
         step,
         default_font,
         counter_values,
-        text_cache: TextCache::default(),
+        text_cache: TextCache::new(global_text_cache),
     };
     let canvas = render_to_canvas(&mut render_cfg);
     let counter = render_cfg.counter_values.get("global").unwrap();
@@ -137,6 +138,8 @@ pub(crate) fn render_slide_deck(
         let builder =
             PageBuilder::new(slide_deck, output_cfg, progress_bar, global_counter.n_pages)?;
 
+        let text_cache = GlobalTextCache::default();
+
         let (r1, r2) = rayon::join(
             || {
                 let tasks = slide_deck
@@ -163,6 +166,7 @@ pub(crate) fn render_slide_deck(
                         render_slide_step(
                             resources,
                             thread_resources,
+                            &text_cache,
                             &builder,
                             slide_idx as SlideId,
                             slide,

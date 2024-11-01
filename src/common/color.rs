@@ -1,9 +1,17 @@
 use crate::common::error::NelsieError;
 use std::fmt::{Display, Formatter};
+use std::hash::{Hash, Hasher};
 use std::str::FromStr;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) struct Color(svgtypes::Color);
+
+impl Hash for Color {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let rgba = [self.0.red, self.0.green, self.0.blue, self.0.alpha];
+        state.write_u32(u32::from_ne_bytes(rgba));
+    }
+}
 
 impl Color {
     pub fn new(color: svgtypes::Color) -> Self {

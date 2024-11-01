@@ -125,6 +125,7 @@ fn process_text_parsing(
     syntax_theme: Option<&str>,
     main_style: &StepValue<PartialTextStyle>,
     styles: &StyleMap,
+    text_align: TextAlign,
 ) -> PyResult<StepValue<StyledText>> {
     let parsed = text.try_map_ref(|s| {
         let mut parsed = if let Some(delimiters) = formatting_delimiters {
@@ -194,6 +195,7 @@ fn process_text_parsing(
             main_style,
             styles,
             anchors,
+            text_align,
         })
     } else {
         let mut map = BTreeMap::new();
@@ -215,6 +217,7 @@ fn process_text_parsing(
                     main_style: main_style.clone(),
                     styles,
                     anchors: anchors.clone(),
+                    text_align,
                 },
             );
         }
@@ -254,11 +257,11 @@ fn process_content(
                 text.syntax_theme.as_deref(),
                 &main_style,
                 styles,
+                text_align,
             )?;
 
             let node_content = NodeContentText {
                 styled_text,
-                text_align,
                 parse_counters: text.parse_counters,
             };
 

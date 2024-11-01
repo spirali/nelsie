@@ -1,7 +1,5 @@
 use crate::common::{Color, FillAndStroke, Path, PathBuilder, Rectangle, Stroke};
-use crate::model::{
-    InTextBoxId, NodeId, PartialTextStyle, StyledText, TextAlign, TextStyle,
-};
+use crate::model::{InTextBoxId, NodeId, PartialTextStyle, StyledText, TextAlign, TextStyle};
 use fontique::Stretch;
 use parley::fontique::Weight;
 use parley::layout::{Alignment, GlyphRun, PositionedLayoutItem};
@@ -13,8 +11,9 @@ use skrifa::outline::{DrawSettings, OutlinePen};
 use skrifa::raw::FontRef as ReadFontsRef;
 use skrifa::{GlyphId, MetadataProvider};
 use std::borrow::Cow;
+use std::collections::hash_map::Entry;
 use std::collections::{BTreeMap, HashMap};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 pub(crate) struct TextContext {
     pub layout_cx: LayoutContext<Color>,
@@ -47,17 +46,13 @@ impl RenderedText {
         &self.intext_rects
     }
 
-    pub fn render(
-        text_context: &mut TextContext,
-        text: &StyledText,
-        text_align: TextAlign,
-    ) -> Self {
+    pub fn render(text_context: &mut TextContext, text: &StyledText) -> Self {
         let mut layout = styled_text_to_parley(text_context, text);
 
         layout.break_all_lines(None);
         layout.align(
             None,
-            match text_align {
+            match text.text_align {
                 TextAlign::Start => Alignment::Start,
                 TextAlign::Center => Alignment::Middle,
                 TextAlign::End => Alignment::End,
@@ -111,27 +106,60 @@ impl RenderedText {
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct TextCache {
+pub(crate) struct GlobalTextCache {
+    cache: RwLock<HashMap<StyledText, Arc<RenderedText>>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct TextCache<'a> {
+    global_cache: &'a GlobalTextCache,
     cache: BTreeMap<NodeId, Arc<RenderedText>>,
 }
 
-impl TextCache {
+impl<'a> TextCache<'a> {
+    pub fn new(global_cache: &'a GlobalTextCache) -> Self {
+        TextCache {
+            global_cache,
+            cache: Default::default(),
+        }
+    }
+
     pub fn get_or_create(
         &mut self,
         node_id: NodeId,
         text_context: &mut TextContext,
         styled_text: &StyledText,
-        text_align: TextAlign,
-    ) -> &Arc<RenderedText> {
-        // if let Some(rtext) = self.cache.get(&node_id) {
-        //     return &rtext;
-        // }
-        // let rtext = RenderedText::render(text_context, styled_text);
-        // self.cache.insert(node_id, rtext);
-        // self.cache.get(&node_id).unwrap()
-        self.cache.entry(node_id).or_insert_with(|| {
-            Arc::new(RenderedText::render(text_context, styled_text, text_align))
-        })
+    ) -> Arc<RenderedText> {
+        if let Some(rtext) = self
+            .global_cache
+            .cache
+            .read()
+            .unwrap()
+            .get(styled_text)
+            .cloned()
+        {
+            self.cache.insert(node_id, rtext.clone());
+            return rtext;
+        }
+        let mut rtext = Arc::new(RenderedText::render(text_context, styled_text));
+        let styled_text = styled_text.clone();
+        {
+            let mut gcache = self.global_cache.cache.write().unwrap();
+            rtext = match gcache.entry(styled_text) {
+                Entry::Occupied(o) => {
+                    // Entry is occupied, so we have a collision
+                    // Lets us drop our own version and share the other
+                    o.get().clone()
+                    //dbg!("COLLISION");
+                }
+                Entry::Vacant(e) => {
+                    e.insert(rtext.clone());
+                    rtext
+                }
+            };
+        }
+        self.cache.insert(node_id, rtext.clone());
+        return rtext;
     }
 
     pub fn get(&self, node_id: NodeId) -> Option<&Arc<RenderedText>> {
@@ -169,11 +197,11 @@ fn set_text_style_to_parley(
     }
 
     if let Some(size) = size {
-        builder.push(StyleProperty::FontSize(*size), start..end);
+        builder.push(StyleProperty::FontSize(size.get()), start..end);
     }
 
     if let Some(line_spacing) = line_spacing {
-        builder.push_default(StyleProperty::LineHeight(*line_spacing));
+        builder.push_default(StyleProperty::LineHeight(line_spacing.get()));
     }
 
     if let Some(weight) = weight {
@@ -246,8 +274,8 @@ fn styled_text_to_parley(
         &font.family_name,
     ))));
     builder.push_default(StyleProperty::Brush(*color));
-    builder.push_default(StyleProperty::FontSize(*size));
-    builder.push_default(StyleProperty::LineHeight(*line_spacing));
+    builder.push_default(StyleProperty::FontSize(size.get()));
+    builder.push_default(StyleProperty::LineHeight(line_spacing.get()));
     builder.push_default(StyleProperty::FontWeight(Weight::new(*weight as f32)));
     builder.push_default(StyleProperty::Underline(*underline));
     builder.push_default(StyleProperty::Strikethrough(*line_through));
