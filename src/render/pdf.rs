@@ -4,10 +4,8 @@ use pdf_writer::Ref;
 use pdf_writer::{Chunk, Filter, Finish};
 
 use std::borrow::Cow;
-use std::path::Path;
 
-pub(crate) struct PdfBuilder {
-    pdf: pdf_writer::Pdf,
+pub(crate) struct PdfGlobalInfo {
     page_refs: Vec<Ref>,
     page_tree_ref: Ref,
     alloc_ref: Ref,
@@ -35,10 +33,8 @@ impl PdfRefAllocator {
     }
 }
 
-impl PdfBuilder {
-    pub fn new(n_pages: u32) -> Self {
-        let mut pdf = pdf_writer::Pdf::new();
-
+impl PdfGlobalInfo {
+    pub fn new(pdf: &mut pdf_writer::Pdf, n_pages: u32) -> Self {
         let mut alloc_ref = Ref::new(1);
 
         let catalog_ref = alloc_ref.bump();
@@ -49,8 +45,7 @@ impl PdfBuilder {
         pdf.pages(page_tree_ref)
             .kids(page_refs.iter().copied())
             .count(page_refs.len() as i32);
-        PdfBuilder {
-            pdf,
+        PdfGlobalInfo {
             page_refs,
             page_tree_ref,
             alloc_ref,
@@ -72,15 +67,6 @@ impl PdfBuilder {
 
     pub fn page_tree_ref(&self) -> Ref {
         self.page_tree_ref
-    }
-
-    pub fn add_chunk(&mut self, chunk: Chunk) {
-        self.pdf.extend(&chunk);
-    }
-
-    pub fn write(self, path: &Path) -> crate::Result<()> {
-        std::fs::write(path, self.pdf.finish())?;
-        Ok(())
     }
 }
 
