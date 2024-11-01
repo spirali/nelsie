@@ -159,7 +159,7 @@ impl<'a> TextCache<'a> {
             };
         }
         self.cache.insert(node_id, rtext.clone());
-        return rtext;
+        rtext
     }
 
     pub fn get(&self, node_id: NodeId) -> Option<&Arc<RenderedText>> {

@@ -3,7 +3,6 @@ use crate::model::{PartialTextStyle, Step, StepValue, TextStyle};
 pub(crate) type InTextBoxId = u32;
 
 #[derive(Debug, Clone, Eq, Hash, PartialEq)]
-#[cfg_attr(test, derive(PartialEq))]
 pub(crate) struct InTextAnchor {
     pub start: u32,
     pub end: u32,
@@ -59,17 +58,12 @@ impl StyledText {
     }
 }
 
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Default)]
 pub(crate) enum TextAlign {
+    #[default]
     Start,
     Center,
     End,
-}
-
-impl Default for TextAlign {
-    fn default() -> Self {
-        TextAlign::Start
-    }
 }
 
 #[derive(Debug)]

@@ -4,7 +4,7 @@ use crate::model::{LoadedImage, LoadedImageData, Resources, SlideDeck, SlideId, 
 use crate::render::canvas::Canvas;
 use crate::render::canvas_pdf::PdfImageCache;
 use crate::render::pdf::image_to_pdf_chunk;
-use crate::render::{OutputConfig, OutputFormat, PdfBuilder};
+use crate::render::{OutputConfig, OutputFormat, PdfGlobalInfo};
 use by_address::ByAddress;
 use indicatif::ProgressBar;
 use itertools::Itertools;
@@ -12,15 +12,34 @@ use itertools::Itertools;
 use pdf_writer::{Chunk, Finish};
 use resvg::{tiny_skia, usvg};
 
-use rayon::iter::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashSet;
+use std::ops::DerefMut;
 use std::sync::{Arc, Mutex};
 
 pub(crate) struct PdfWriterData {
     chunks: Mutex<Vec<Chunk>>,
     cache: PdfImageCache,
-    pdf_builder: PdfBuilder,
     images: Vec<Arc<LoadedImage>>,
+    pdf_ginfo: PdfGlobalInfo,
+    pdf: Mutex<pdf_writer::Pdf>,
+}
+
+impl PdfWriterData {
+    pub fn add_chunk(&self, chunk: Chunk) {
+        if let Ok(mut pdf) = self.pdf.try_lock() {
+            pdf.extend(&chunk);
+            let chunks = {
+                let mut chunks = self.chunks.lock().unwrap();
+                std::mem::take(chunks.deref_mut())
+            };
+            for chunk in chunks {
+                pdf.extend(&chunk);
+            }
+        } else {
+            self.chunks.lock().unwrap().push(chunk);
+        }
+    }
 }
 
 pub(crate) enum PageWriter {
@@ -48,14 +67,16 @@ impl<'a> PageBuilder<'a> {
             compression_level: output_config.compression_level,
             writer: match output_config.format {
                 OutputFormat::Pdf => {
-                    let mut pdf_builder = PdfBuilder::new(n_pages);
-                    let (cache, images) = collect_image_cache(slide_deck, &mut pdf_builder);
+                    let mut pdf = pdf_writer::Pdf::new();
+                    let mut pdf_ginfo = PdfGlobalInfo::new(&mut pdf, n_pages);
+                    let (cache, images) = collect_image_cache(slide_deck, &mut pdf_ginfo);
                     let pages = Vec::with_capacity(n_pages as usize);
                     PageWriter::Pdf(PdfWriterData {
                         chunks: Mutex::new(pages),
                         cache,
-                        pdf_builder,
+                        pdf_ginfo,
                         images,
+                        pdf: Mutex::new(pdf),
                     })
                 }
                 OutputFormat::Svg => {
@@ -102,7 +123,7 @@ impl<'a> PageBuilder<'a> {
     pub fn other_tasks(&self) -> crate::Result<()> {
         match &self.writer {
             PageWriter::Pdf(pdf_writer) => {
-                precompute_image_cache(&pdf_writer.cache, &pdf_writer.images, &pdf_writer.chunks);
+                precompute_image_cache(pdf_writer);
             }
             PageWriter::Svg(_) | PageWriter::Png(_) => {}
         };
@@ -111,12 +132,13 @@ impl<'a> PageBuilder<'a> {
 
     pub fn finish(self) -> crate::Result<Vec<(usize, Step, Vec<u8>)>> {
         let result = match (self.writer, self.output_path) {
-            (PageWriter::Pdf(mut data), Some(path)) => {
+            (PageWriter::Pdf(data), Some(path)) => {
+                let mut pdf = data.pdf.into_inner().unwrap();
                 let chunks = data.chunks.into_inner().unwrap();
                 for chunk in chunks.into_iter() {
-                    data.pdf_builder.add_chunk(chunk);
+                    pdf.extend(&chunk);
                 }
-                data.pdf_builder.write(path)?;
+                std::fs::write(path, pdf.finish())?;
                 Vec::new()
             }
             (PageWriter::Png(result), None) | (PageWriter::Svg(result), None) => {
@@ -142,12 +164,12 @@ impl<'a> PageBuilder<'a> {
             PageWriter::Pdf(data) => {
                 let page = canvas.into_pdf_page(
                     resources,
-                    &mut data.pdf_builder.page_ref_allocator(page_idx),
-                    data.pdf_builder.page_tree_ref(),
+                    &mut data.pdf_ginfo.page_ref_allocator(page_idx),
+                    data.pdf_ginfo.page_tree_ref(),
                     &data.cache,
                     self.compression_level,
                 )?;
-                data.chunks.lock().unwrap().push(page);
+                data.add_chunk(page);
             }
             PageWriter::Svg(output) => {
                 let data = write_svg_page(self.output_path, page_idx, canvas, self.n_pages)?;
@@ -228,7 +250,7 @@ fn write_png_page(
 
 pub fn collect_image_cache(
     deck: &SlideDeck,
-    pdf_builder: &mut PdfBuilder,
+    pdf_builder: &mut PdfGlobalInfo,
 ) -> (PdfImageCache, Vec<Arc<LoadedImage>>) {
     let mut image_set = HashSet::new();
     for slide in &deck.slides {
@@ -269,35 +291,42 @@ pub fn collect_image_cache(
     (cache, image_vec)
 }
 
-pub fn precompute_image_cache(
-    cache: &PdfImageCache,
-    images: &[Arc<LoadedImage>],
-    chunks: &Mutex<Vec<Chunk>>,
-) {
-    images.into_par_iter().for_each(|image| match &image.data {
-        LoadedImageData::Png(data) => {
-            let (img_ref, transparency_ref) = *cache.get(&ByAddress(data.clone())).unwrap();
-            let chunk = image_to_pdf_chunk(
-                image::ImageFormat::Png,
-                data,
-                img_ref,
-                Some(transparency_ref),
-            );
-            chunks.lock().unwrap().push(chunk);
-        }
-        LoadedImageData::Jpeg(data) => {
-            let (img_ref, _mask_ref) = *cache.get(&ByAddress(data.clone())).unwrap();
-            let chunk = image_to_pdf_chunk(image::ImageFormat::Jpeg, data, img_ref, None);
-            chunks.lock().unwrap().push(chunk);
-        }
-        LoadedImageData::Svg(_) => {
-            unreachable!()
-        }
-        LoadedImageData::Ora(ora) => ora.layers.par_iter().for_each(|layer| {
-            let (img_id, mask_ref) = *cache.get(&ByAddress(layer.data.clone())).unwrap();
-            let chunk =
-                image_to_pdf_chunk(image::ImageFormat::Png, &layer.data, img_id, Some(mask_ref));
-            chunks.lock().unwrap().push(chunk);
-        }),
-    });
+pub fn precompute_image_cache(pdf_writer: &PdfWriterData) {
+    pdf_writer
+        .images
+        .par_iter()
+        .for_each(|image| match &image.data {
+            LoadedImageData::Png(data) => {
+                let (img_ref, transparency_ref) =
+                    *pdf_writer.cache.get(&ByAddress(data.clone())).unwrap();
+                let chunk = image_to_pdf_chunk(
+                    image::ImageFormat::Png,
+                    data,
+                    img_ref,
+                    Some(transparency_ref),
+                );
+                pdf_writer.add_chunk(chunk);
+            }
+            LoadedImageData::Jpeg(data) => {
+                let (img_ref, _mask_ref) = *pdf_writer.cache.get(&ByAddress(data.clone())).unwrap();
+                let chunk = image_to_pdf_chunk(image::ImageFormat::Jpeg, data, img_ref, None);
+                pdf_writer.add_chunk(chunk);
+            }
+            LoadedImageData::Svg(_) => {
+                unreachable!()
+            }
+            LoadedImageData::Ora(ora) => ora.layers.par_iter().for_each(|layer| {
+                let (img_id, mask_ref) = *pdf_writer
+                    .cache
+                    .get(&ByAddress(layer.data.clone()))
+                    .unwrap();
+                let chunk = image_to_pdf_chunk(
+                    image::ImageFormat::Png,
+                    &layer.data,
+                    img_id,
+                    Some(mask_ref),
+                );
+                pdf_writer.add_chunk(chunk);
+            }),
+        });
 }

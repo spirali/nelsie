@@ -12,7 +12,7 @@ mod svgpath;
 mod text;
 
 use crate::model::{FontData, Resources, Slide, SlideDeck, SlideId, Step};
-pub(crate) use pdf::PdfBuilder;
+pub(crate) use pdf::PdfGlobalInfo;
 
 use crate::render::counters::{compute_counters, CountersMap};
 use crate::render::pagebuilder::PageBuilder;
