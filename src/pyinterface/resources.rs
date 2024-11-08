@@ -24,6 +24,11 @@ impl Resources {
         })
     }
 
+    fn set_generic_family(&mut self, family_name: &str, font_name: &str) -> PyResult<()> {
+        self.resources.set_generic_family(family_name, font_name)?;
+        Ok(())
+    }
+
     fn load_code_syntax_dir(&mut self, path: &str) -> PyResult<()> {
         self.resources.load_code_syntax_dir(Path::new(path))?;
         Ok(())

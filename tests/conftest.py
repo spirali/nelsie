@@ -28,8 +28,6 @@ def resources():
 def deck_builder(resources):
     def helper(**kwargs):
         kwargs.setdefault("image_directory", ASSETS_DIR)
-        kwargs.setdefault("default_font", "DejaVu Sans")
-        kwargs.setdefault("default_monospace_font", "DejaVu Sans Mono")
         kwargs.setdefault("resources", resources)
         return SlideDeck(**kwargs)
 

@@ -81,5 +81,9 @@ def test_svg_image_dtd(deck):
 def test_image_path_in_steps(deck):
     slide = deck.new_slide(width=150, height=150)
     slide.image(None)
-    slide.image(width=100, height=100, path=InSteps({1: "testimg.jpeg", 2: "testimg.png", 4: None, 5: "testimg.jpeg"}))
+    slide.image(
+        width=100,
+        height=100,
+        path=InSteps({1: "testimg.jpeg", 2: "testimg.png", 4: None, 5: "testimg.jpeg"}),
+    )
     slide.insert_step(3)

@@ -224,7 +224,11 @@ def test_m_xy_p_xy(deck):
 @check()
 def test_layout_grid_in_pixels(deck):
     slide = deck.new_slide(width=300, height=100)
-    box = slide.box(grid_template_rows=[20, 35, 20], grid_template_columns=[40, 100, 100], bg_color="gray")
+    box = slide.box(
+        grid_template_rows=[20, 35, 20],
+        grid_template_columns=[40, 100, 100],
+        bg_color="gray",
+    )
 
     box.box(grid_column=1, grid_row=2, bg_color="green")
     box.box(grid_column=2, grid_row=1, bg_color="blue")

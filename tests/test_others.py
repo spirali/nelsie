@@ -30,5 +30,11 @@ def test_pdf_url(deck):
     # Mostly just smoke test, as I do not know how to test annotations in resulting PDF
     slide = deck.new_slide(width=100, height=100)
     slide.box(
-        x=65, y=10, width=32, height=20, bg_color="red", border_radius=10, url="https://github.com/spirali/nelsie"
+        x=65,
+        y=10,
+        width=32,
+        height=20,
+        bg_color="red",
+        border_radius=10,
+        url="https://github.com/spirali/nelsie",
     )

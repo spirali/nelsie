@@ -59,7 +59,14 @@ class BoxBuilder:
         """
         box = self.get_box()
         deck = box.deck
-        deck._deck.set_style(deck.resources._resources, name, style, False, box.slide._slide_id, box._box_id)
+        deck._deck.set_style(
+            deck.resources._resources,
+            name,
+            style,
+            False,
+            box.slide._slide_id,
+            box._box_id,
+        )
 
     def update_style(self, name: str, style: TextStyle | InSteps[TextStyle]):
         """
@@ -68,7 +75,14 @@ class BoxBuilder:
         """
         box = self.get_box()
         deck = box.deck
-        deck._deck.set_style(deck.resources._resources, name, style, True, box.slide._slide_id, box._box_id)
+        deck._deck.set_style(
+            deck.resources._resources,
+            name,
+            style,
+            True,
+            box.slide._slide_id,
+            box._box_id,
+        )
 
     def get_style(self, name: str, step: int = 1) -> TextStyle:
         """
@@ -82,7 +96,13 @@ class BoxBuilder:
         box = self.get_box()
         return _data_to_text_style(box.deck._deck.get_style(name, step, box.slide._slide_id, box._box_id))
 
-    def image(self, path: str | None | InSteps[str | None], enable_steps=True, shift_steps=0, **box_args):
+    def image(
+        self,
+        path: str | None | InSteps[str | None],
+        enable_steps=True,
+        shift_steps=0,
+        **box_args,
+    ):
         """
         Create a box with an image. Supported formats: SVG, PNG, JPEG, GIF, ORA
         """
