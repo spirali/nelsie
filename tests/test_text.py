@@ -1,6 +1,8 @@
 from dataclasses import asdict
 
 import pytest
+
+from conftest import new_resources
 from testutils import check
 
 import nelsie
@@ -400,3 +402,16 @@ def test_array_text_in_steps(deck):
     slide = deck.new_slide(width=100, height=30)
     slide.set_style("default", TextStyle(size=12))
     slide.text(["Hello ", InSteps(["world", "Nelsie", "user"]), " ", InSteps({2: "!"})])
+
+
+def test_set_generic_families(deck):
+    res = new_resources()
+    res.set_monospace("DejaVu Sans")
+    res.set_sans_serif("DejaVu Sans")
+    res.set_serif("DejaVu Sans")
+    with pytest.raises(Exception, match="Font 'xxx' not found"):
+        res.set_serif("xxx")
+    with pytest.raises(Exception, match="Font 'xxx' not found"):
+        res.set_sans_serif("xxx")
+    with pytest.raises(Exception, match="Font 'xxx' not found"):
+        res.set_monospace("xxx")

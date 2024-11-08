@@ -1,7 +1,7 @@
 use crate::common::error::NelsieError;
 use crate::model::ImageManager;
 use parley::fontique::{Collection, CollectionOptions, SourceCache};
-use parley::FontContext;
+use parley::{FontContext, GenericFamily};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -60,6 +60,20 @@ impl Resources {
         }
     }
 
+    pub fn set_generic_family(&mut self, name: &str, font_name: &str) -> crate::Result<()> {
+        let family = GenericFamily::parse(name)
+            .ok_or_else(|| NelsieError::generic_err(format!("Invalid generic family '{name}'")))?;
+        let font_id = self
+            .font_context
+            .collection
+            .family_id(font_name)
+            .ok_or_else(|| NelsieError::generic_err(format!("Font '{font_name}' not found")))?;
+        self.font_context
+            .collection
+            .set_generic_families(family, [font_id].into_iter());
+        Ok(())
+    }
+
     pub fn load_code_syntax_dir(&mut self, path: &Path) -> crate::Result<()> {
         log::debug!("Adding code syntax directory {}", path.display());
         let syntax_set = std::mem::take(&mut self.syntax_set);
@@ -108,11 +122,12 @@ impl Resources {
     }
 
     pub fn check_font(&mut self, family_name: &str) -> crate::Result<FontData> {
-        if self
-            .font_context
-            .collection
-            .family_id(family_name)
-            .is_some()
+        if GenericFamily::parse(family_name).is_some()
+            || self
+                .font_context
+                .collection
+                .family_id(family_name)
+                .is_some()
         {
             Ok(FontData {
                 family_name: family_name.to_string(),

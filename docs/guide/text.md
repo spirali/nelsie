@@ -15,7 +15,6 @@ def text_demo(slide):
 
     Calling `.text()` creates a new box; this is a different behavior than in Elsie, where calling `.text()` does not create a new box, which very often leads to code like `.box().text()` to create a wrapping box. This is not necessary in Nelsie.
 
-
 ## Text styles
 
 The drawing of a text is configured by `TextStyle` instances.
@@ -30,9 +29,10 @@ def text_style_demo(slide):
     slide.text("Hello world!", style)
 ```
 
-The `TextStyle` constructor has the following parameters; each parameter can be `None', which means that the parameter will not be overridden by this style.
+The `TextStyle` constructor has the following parameters; each parameter can be `None', which means that the parameter
+will not be overridden by this style.
 
-* `font_family`: `str` - Name of the font
+* `font_family`: `str` - Name of the font or a generic family: `sans-serif`, `monospace`, `serif`
 * `color`: `str` - Color of the text
 * `size`: `float` - Size of the font
 * `line_spacing`: `float` - Line spacing relative to `size`
@@ -44,7 +44,8 @@ The `TextStyle` constructor has the following parameters; each parameter can be 
 * `underline`: `bool` - Draws a line under the text
 * `overline`: `bool` - Draws a line over the text
 * `line_through`: `bool` - Draws a line through a text
-* `stroke`: `Stroke | None` - If not `None`, font is drawn in stroked mode (see [Paths](paths.md) for documentation of `Stroke` class)
+* `stroke`: `Stroke | None` - If not `None`, font is drawn in stroked mode (see [Paths](paths.md) for documentation
+  of `Stroke` class)
 * `stretch`: `FontStretch`:
     * `FontStretch.UltraCondensed`
     * `FontStretch.ExtraCondensed`
@@ -82,8 +83,8 @@ There are three predefined text styles:
 * `"monospace"`
 * `"code"`
 
-Style `"default"` is special and is used as a source of default values for drawing fonts when values are not overridden by more specific fonts:
-
+Style `"default"` is special and is used as a source of default values for drawing fonts when values are not overridden
+by more specific fonts:
 
 ```nelsie
 @deck.slide()
@@ -98,12 +99,14 @@ def default_style_demo(slide):
 
 Style `"monospace"` sets the font family to a monospace font.
 
-Style `"code"` is used as a default style in `.code()` method. See [Code](code.md) for more details. By default is have the same effect as style `"monospace"`.
-
+Style `"code"` is used as a default style in `.code()` method. See [Code](code.md) for more details. By default is have
+the same effect as style `"monospace"`.
 
 ## Inline styles
 
-Named styles are particularly useful for modifying individual blocks of text within a single string passed to the `.text()` method. To style a block of text, use the following syntax `~STYLE{TEXT}` where STYLE is a style name and TEXT is the styled text.
+Named styles are particularly useful for modifying individual blocks of text within a single string passed to
+the `.text()` method. To style a block of text, use the following syntax `~STYLE{TEXT}` where STYLE is a style name and
+TEXT is the styled text.
 
 ```nelsie
 @deck.slide()
@@ -115,13 +118,13 @@ def inline_style_demo(slide):
     slide.text("~red{Hello} world!\n~monospace{github.com/spirali/~big{nelsie}}")
 ```
 
-
 ## Fonts
 
 A font can be specified by the `font_family` parameter of `TextStyle`.
 All system fonts are available by default. You can add more fonts via [Resources](resources.md).
 
-Nelsie is not shipped with a built-in font and tries to automatically detect a sans-serif font as `font_family` for the `"default"` style and a monospace font for the `"monospace"` style.
+Nelsie is not shipped with a built-in font and tries to automatically detect a sans-serif font as `font_family` for
+the `"default"` style and a monospace font for the `"monospace"` style.
 
 You can override this behavior by setting
 
@@ -129,15 +132,14 @@ You can override this behavior by setting
 deck = SlideDeck(default_font="Helvetica", default_monospace_font="Ubuntu Mono")
 ```
 
-
 !!! note "Robust slide rendering across systems"
 
     For robust cross-platform slide rendering, it is recommended to include all used fonts along with the slide source code.
 
-
 ## Text alignment
 
-A text can be aligned to the left, center, and right by setting `.text(align="...")` to `"start"`, `"center"`, or `"end"`. The value `"start"` is the default.
+A text can be aligned to the left, center, and right by setting `.text(align="...")` to `"start"`, `"center"`,
+or `"end"`. The value `"start"` is the default.
 
 ```nelsie
 @deck.slide()
@@ -151,10 +153,10 @@ def text_align_demo(slide):
     box.text(TEXT, align="end")
 ```
 
-
 ## Text box
 
-Calling `.text()` creates a box for the text; the method takes the same arguments as `.box()` to configure the underlying box.
+Calling `.text()` creates a box for the text; the method takes the same arguments as `.box()` to configure the
+underlying box.
 
 ```nelsie
 @deck.slide()
@@ -193,12 +195,10 @@ def text_style_demo(slide):
     slide.text("Hello world!", "my-style")
 ```
 
-
 !!! note "Setting a default style"
 
     There is an exception for style `"default"` as it always needs to define all attributes.
     Hence `.set_style()` for `"default"` style always behaves as `.update_style()`.
-
 
 ## Text and `InSteps`
 
@@ -220,7 +220,6 @@ def text_style_demo(slide):
     slide.text(["Hello ", InSteps({1: "world", 2: "Nelsie"}), "!"])
 ```
 
-
 ## Text styles and `InSteps`
 
 When a style is set through `set_style` an instance of `InSteps` can be used:
@@ -233,7 +232,6 @@ def text_style_demo(slide):
                     InSteps({1: TextStyle(color="red"), 2: TextStyle(color="green")}))
     slide.text("Hello world!", "my-style")
 ```
-
 
 ## Automatic text stripping
 

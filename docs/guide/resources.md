@@ -23,10 +23,18 @@ resources.load_fonts_dir("path/to/fonts")
 deck = SlideDeck(resources=resources)
 ```
 
+When you load new fonts, you may want to register it as generic families fonts:
+
+```python
+resources.set_sans_serif("Font for Sans")
+resources.set_monospace("Font For Monospace")
+resources.set_serif("Font for Serif")
+```
+
 ## Loading system fonts
 
 By default, Nelsie loads a fonts shipped together with Nelsie and ignores system fonts.
-You can change this by the following command command and load system fonts from your system.
+You can change this by the following command and load system fonts from your system.
 
 ```python
 from nelsie import Resources
@@ -36,9 +44,20 @@ resources = Resources(system_fonts=True, builtin_fonts=False)
 
 !!! warning
 
-  The current text rendering engine used in Nelsie tries to preload some font data. So loading system fonts may take some time. On normal system it should be around 0.1s, but if you have many fonts installed it may be significantly slower. The solution is to create
-  a directory only with fonts that you are using in your slides and do not load all system fonts in such situations. It would also make
-  your slides more replicable on other computers.
+The current text rendering engine used in Nelsie tries to preload some font data. So loading system fonts may take some
+time. On normal system it should be around 0.1s, but if you have many fonts installed it may be significantly slower.
+The solution is to create
+a directory only with fonts that you are using in your slides and do not load all system fonts in such situations. It
+would also make
+your slides more replicable on other computers.
+
+When you do not load build fonts, do not forget to set basic font set to existing fonts:
+
+```python
+resources.set_sans_serif("Font for Sans")
+resources.set_monospace("Font For Monospace")
+ressources.set_serif("Font for Serif")
+```
 
 ## Loading custom code syntaxes
 

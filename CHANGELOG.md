@@ -12,6 +12,11 @@
 * Dejavu fonts shipped in Nelsie package
 * Faster rendering especially if you are using lots of texts
 * Allow to specify the compression level via .render(..., compression_level=...)
+* You may use generic font families strings: "sans-serif", "monospace", "serif" as font names
+* You may set generic font families in resources via:
+	resources.set_sans_serif("FontName")
+	resources.set_monospace("FontName")
+	resources.set_serif("FontName")
 
 ## Fixes
 
