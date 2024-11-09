@@ -46,14 +46,13 @@ impl<T: Debug> StepValue<T> {
     }
 
     pub fn at_step(&self, step: &Step) -> &T {
-        debug_assert!(step >= &Step::from_int(1));
         match self {
             StepValue::Const(v) => v,
             StepValue::Steps(steps) => steps
                 .range((Unbounded, Included(step)))
                 .next_back()
                 .map(|(_, v)| v)
-                .unwrap_or_else(|| panic!("Invalid step {}", step)),
+                .unwrap_or_else(|| steps.first_key_value().unwrap().1),
         }
     }
 
