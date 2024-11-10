@@ -32,7 +32,7 @@ rayon = "1.10"
 notify = "6.1"
 smallvec = "1"
 chumsky = "0.9"
-parley = { version = "0.2" }
+parley = { git = "https://github.com/spirali/parley.git", branch="fix-newline-inlineboxes" }
 skrifa = "0.19"
 kurbo = "*" # Lets us give a version specified in parley -> penice -> kurbo
 strict-num = "0.1"

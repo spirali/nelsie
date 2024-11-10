@@ -72,7 +72,7 @@ def test_set_get_styles_deck(deck):
     for key, value in asdict(s).items():
         assert value is not None
 
-    assert s.font_family in ("DejaVu Sans", "Arial")
+    assert s.font_family == "sans-serif"
     assert s.color == "#000000"
     assert s.size == pytest.approx(32.0)
     assert s.line_spacing == pytest.approx(1.2)
