@@ -664,7 +664,7 @@ dependencies = [
 [[package]]
 name = "fontique"
 version = "0.2.0"
-source = "git+https://github.com/spirali/parley.git?branch=fix-newline-inlineboxes#df1a6df5aa2412e22d8eb2cde353bbd36bd9286b"
+source = "git+https://github.com/linebender/parley.git?rev=e8230d8382f799cd839ab63e136ed594622dc9fb#e8230d8382f799cd839ab63e136ed594622dc9fb"
 dependencies = [
  "core-foundation",
  "core-text",
@@ -1330,7 +1330,7 @@ dependencies = [
 [[package]]
 name = "parley"
 version = "0.2.0"
-source = "git+https://github.com/spirali/parley.git?branch=fix-newline-inlineboxes#df1a6df5aa2412e22d8eb2cde353bbd36bd9286b"
+source = "git+https://github.com/linebender/parley.git?rev=e8230d8382f799cd839ab63e136ed594622dc9fb#e8230d8382f799cd839ab63e136ed594622dc9fb"
 dependencies = [
  "fontique",
  "peniko",
