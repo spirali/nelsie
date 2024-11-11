@@ -117,14 +117,14 @@ pub(crate) struct SlideDeck {
 }
 
 impl SlideDeck {
-    pub fn new() -> crate::Result<Self> {
+    pub fn new(default_font: &str, default_monospace_font: &str) -> crate::Result<Self> {
         let creation_time = std::time::Instant::now();
 
         let default_font = Arc::new(FontData {
-            family_name: "sans-serif".to_string(),
+            family_name: default_font.to_string(),
         });
         let monospace_font = Arc::new(FontData {
-            family_name: "monospace".to_string(),
+            family_name: default_monospace_font.to_string(),
         });
 
         let default_style = PartialTextStyle {

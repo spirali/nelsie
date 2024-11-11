@@ -121,6 +121,8 @@ class SlideDeck:
         bg_color: str = "white",
         image_directory: str | None = None,
         resources: Resources | None = None,
+        default_font: str = "sans-serif",
+        default_monospace_font: str = "monospace",
         default_code_theme: str = "InspiredGitHub",
         default_code_language: str | None = None,
     ):
@@ -156,7 +158,7 @@ class SlideDeck:
         self.resources = resources
         self.default_code_theme = default_code_theme
         self.default_code_language = default_code_language
-        self._deck = nelsie_rs.Deck()
+        self._deck = nelsie_rs.Deck(default_font, default_monospace_font)
         self._slides: List[Slide] = []
 
     def set_style(self, name: str, style: TextStyle):
