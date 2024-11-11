@@ -1,22 +1,22 @@
-# Unreleased
+# v0.15.0
 
 ## Breaking changes
 
 * By default, Nelsie no longer loads system fonts, but loads the fonts built into Nelsie instead.
   You can revert to the original behavior by creating resouces as follows: `Resources(system_fonts=True, builtin_fonts=False)`.
 * Removed `TextStyle` features: overline and stroke
-
+* `SlideDeck(default_font=...)` removed. Default font is now set to "sans-serif" so use `resources.set_sans_serif("...")` 
 
 ## New features
 
 * Dejavu fonts shipped in Nelsie package
 * Faster rendering especially if you are using lots of texts
-* Allow to specify the compression level via .render(..., compression_level=...)
+* Allow to specify the compression level via `.render(..., compression_level=...)`
 * You may use generic font families strings: "sans-serif", "monospace", "serif" as font names
 * You may set generic font families in resources via:
-	resources.set_sans_serif("FontName")
-	resources.set_monospace("FontName")
-	resources.set_serif("FontName")
+	`resources.set_sans_serif("FontName")`
+	`resources.set_monospace("FontName")`
+	`resources.set_serif("FontName")`
 
 ## Fixes
 
