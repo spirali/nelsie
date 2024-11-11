@@ -311,6 +311,7 @@ impl Deck {
             .collect_vec())
     }
 
+    #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (resources, verbose, format, compression_level, path, n_threads))]
     fn render(
         &self,
