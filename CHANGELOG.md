@@ -5,7 +5,6 @@
 * By default, Nelsie no longer loads system fonts, but loads the fonts built into Nelsie instead.
   You can revert to the original behavior by creating resouces as follows: `Resources(system_fonts=True, builtin_fonts=False)`.
 * Removed `TextStyle` features: overline and stroke
-* `SlideDeck(default_font=...)` removed. Default font is now set to "sans-serif" so use `resources.set_sans_serif("...")` 
 
 ## New features
 
