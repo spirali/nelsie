@@ -1,4 +1,3 @@
-
 use crate::model::InTextBoxId;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]

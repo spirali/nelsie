@@ -74,6 +74,7 @@ impl VerboseLevel {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_slide_step(
     resources: &Resources,
     thread_resources: &mut ThreadLocalResources,

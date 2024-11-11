@@ -117,6 +117,7 @@ fn resolve_style(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn process_text_parsing(
     text: StepValue<String>,
     resources: &Resources,

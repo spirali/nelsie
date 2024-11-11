@@ -222,7 +222,7 @@ fn compute_content_default_size(
     match content {
         NodeContent::Text(text) => {
             let mut t = text.styled_text_at_step(step);
-            let mut tmp = None;
+            let tmp;
 
             if text.parse_counters {
                 // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"

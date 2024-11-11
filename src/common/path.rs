@@ -112,6 +112,7 @@ impl PathBuilder {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn arc_to(
         &mut self,
         rx: f32,

@@ -42,6 +42,7 @@ impl PdfWriterData {
     }
 }
 
+#[allow(clippy::large_enum_variant)] // This is ok, because this struct is not moved anywhere
 pub(crate) enum PageWriter {
     Pdf(PdfWriterData),
     Svg(Mutex<Vec<(usize, Step, Vec<u8>)>>),
