@@ -131,13 +131,12 @@ pub(crate) fn render_slide_deck(
         let counter_values = compute_counters(slide_deck);
         let global_counter = counter_values.get("global").unwrap();
 
-        let progress_bar = if verbose_level.is_normal_or_more() {
-            Some(indicatif::ProgressBar::new(global_counter.n_pages.into()))
-        } else {
-            None
-        };
-        let builder =
-            PageBuilder::new(slide_deck, output_cfg, progress_bar, global_counter.n_pages)?;
+        let builder = PageBuilder::new(
+            slide_deck,
+            output_cfg,
+            verbose_level.is_normal_or_more(),
+            global_counter.n_pages,
+        )?;
 
         let text_cache = GlobalTextCache::default();
 

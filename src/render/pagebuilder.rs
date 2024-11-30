@@ -61,63 +61,75 @@ impl<'a> PageBuilder<'a> {
     pub fn new(
         slide_deck: &SlideDeck,
         output_config: &'a OutputConfig,
-        progress_bar: Option<ProgressBar>,
+        has_progress_bar: bool,
         n_pages: u32,
     ) -> crate::Result<Self> {
-        Ok(PageBuilder {
-            compression_level: output_config.compression_level,
-            writer: match output_config.format {
-                OutputFormat::Pdf => {
-                    let mut pdf = pdf_writer::Pdf::new();
-                    let mut pdf_ginfo = PdfGlobalInfo::new(&mut pdf, n_pages);
-                    let (cache, images) = collect_image_cache(slide_deck, &mut pdf_ginfo);
-                    let pages = Vec::with_capacity(n_pages as usize);
+        let (writer, progress_steps) = match output_config.format {
+            OutputFormat::Pdf => {
+                let mut pdf = pdf_writer::Pdf::new();
+                let mut pdf_ginfo = PdfGlobalInfo::new(&mut pdf, n_pages);
+                let (cache, images) = collect_image_cache(slide_deck, &mut pdf_ginfo);
+                let count = images.len() as u64 + n_pages as u64;
+                let pages = Vec::new();
+                (
                     PageWriter::Pdf(PdfWriterData {
                         chunks: Mutex::new(pages),
                         cache,
                         pdf_ginfo,
                         images,
                         pdf: Mutex::new(pdf),
-                    })
+                    }),
+                    count,
+                )
+            }
+            OutputFormat::Svg => {
+                let mut result_data = Vec::new();
+                if output_config.path.is_none() {
+                    result_data.resize(n_pages as usize, (0, Step::default(), Vec::new()))
                 }
-                OutputFormat::Svg => {
-                    let mut result_data = Vec::new();
-                    if output_config.path.is_none() {
-                        result_data.resize(n_pages as usize, (0, Step::default(), Vec::new()))
-                    }
-                    if let Some(path) = output_config.path {
-                        log::debug!("Ensuring output directory for SVG: {}", path.display());
-                        ensure_directory(path).map_err(|e| {
-                            NelsieError::Generic(format!(
-                                "Cannot create directory for SVG output files: {}: {}",
-                                path.display(),
-                                e
-                            ))
-                        })?;
-                    }
-                    PageWriter::Svg(Mutex::new(result_data))
+                if let Some(path) = output_config.path {
+                    log::debug!("Ensuring output directory for SVG: {}", path.display());
+                    ensure_directory(path).map_err(|e| {
+                        NelsieError::Generic(format!(
+                            "Cannot create directory for SVG output files: {}: {}",
+                            path.display(),
+                            e
+                        ))
+                    })?;
                 }
-                OutputFormat::Png => {
-                    let mut result_data = Vec::new();
-                    if output_config.path.is_none() {
-                        result_data.resize(n_pages as usize, (0, Step::default(), Vec::new()))
-                    }
-                    if let Some(path) = output_config.path {
-                        log::debug!("Ensuring output directory for PNG: {}", path.display());
-                        ensure_directory(path).map_err(|e| {
-                            NelsieError::Generic(format!(
-                                "Cannot create directory for PNG output files: {}: {}",
-                                path.display(),
-                                e
-                            ))
-                        })?;
-                    }
-                    PageWriter::Png(Mutex::new(result_data))
+                (PageWriter::Svg(Mutex::new(result_data)), n_pages as u64)
+            }
+            OutputFormat::Png => {
+                let mut result_data = Vec::new();
+                if output_config.path.is_none() {
+                    result_data.resize(n_pages as usize, (0, Step::default(), Vec::new()))
                 }
-            },
-            output_path: output_config.path,
+                if let Some(path) = output_config.path {
+                    log::debug!("Ensuring output directory for PNG: {}", path.display());
+                    ensure_directory(path).map_err(|e| {
+                        NelsieError::Generic(format!(
+                            "Cannot create directory for PNG output files: {}: {}",
+                            path.display(),
+                            e
+                        ))
+                    })?;
+                }
+                (PageWriter::Png(Mutex::new(result_data)), n_pages as u64)
+            }
+        };
+
+        let progress_bar = if has_progress_bar {
+            Some(ProgressBar::new(progress_steps))
+        } else {
+            None
+        };
+
+        Ok(PageBuilder {
+            writer,
+            compression_level: output_config.compression_level,
             progress_bar,
             n_pages,
+            output_path: output_config.path,
         })
     }
 
