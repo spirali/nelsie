@@ -10,13 +10,14 @@ use crate::pyinterface::textstyle::{partial_text_style_to_pyobject, PyTextStyle}
 use crate::render::{render_slide_deck, OutputConfig, OutputFormat, VerboseLevel};
 use itertools::Itertools;
 use pyo3::exceptions::{PyException, PyValueError};
-use pyo3::{pyclass, pymethods, PyObject, PyResult, Python, ToPyObject};
+use pyo3::types::PyDict;
+use pyo3::{pyclass, pymethods, Bound, BoundObject, IntoPyObject, PyAny, PyResult, Python};
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use crate::pyinterface::basictypes::{PyStringOrFloat, PyStringOrFloatOrExpr};
 use pyo3::pybacked::PyBackedStr;
-use pyo3::types::{PyBytes, PyNone};
+use pyo3::types::{PyBytes, PyNone, PyTuple};
 use std::sync::Arc;
 
 #[pyclass]
@@ -246,15 +247,15 @@ impl Deck {
     }
 
     #[pyo3(signature = (name, step, slide_id, box_id))]
-    fn get_style(
+    fn get_style<'py>(
         &mut self,
-        py: Python<'_>,
+        py: Python<'py>,
         name: &str,
         step: Step,
         slide_id: Option<SlideId>,
         box_id: Option<BoxId>,
-    ) -> PyResult<PyObject> {
-        Ok((if let Some(slide_id) = slide_id {
+    ) -> PyResult<Bound<'py, PyDict>> {
+        if let Some(slide_id) = slide_id {
             let slide = resolve_slide_id(&mut self.deck, slide_id)?;
             if let Some(box_id) = box_id {
                 let node = resolve_box_id(&mut slide.node, &box_id)?;
@@ -262,15 +263,14 @@ impl Deck {
                     .get_style(name)
                     .map(|style| partial_text_style_to_pyobject(style.at_step(&step), py))?
             } else {
-                return Err(PyException::new_err("Invalid box id"));
+                Err(PyException::new_err("Invalid box id"))
             }
         } else {
             self.deck
                 .global_styles
                 .get_style(name)
                 .map(|style| partial_text_style_to_pyobject(style.at_step(&step), py))?
-        })
-        .to_object(py))
+        }
     }
 
     fn insert_step(&mut self, slide_id: SlideId, step: Step) -> PyResult<()> {
@@ -303,26 +303,30 @@ impl Deck {
         Ok(())
     }
 
-    fn get_steps(&mut self, py: Python<'_>, slide_id: SlideId) -> PyResult<Vec<PyObject>> {
-        Ok(resolve_slide_id(&mut self.deck, slide_id)?
+    fn get_steps<'py>(
+        &mut self,
+        py: Python<'py>,
+        slide_id: SlideId,
+    ) -> PyResult<Vec<Bound<'py, PyTuple>>> {
+        resolve_slide_id(&mut self.deck, slide_id)?
             .steps
             .iter()
-            .map(|s| s.to_object(py))
-            .collect_vec())
+            .map(|s| s.into_pyobject(py))
+            .collect::<Result<Vec<_>, _>>()
     }
 
     #[allow(clippy::too_many_arguments)]
     #[pyo3(signature = (resources, verbose, format, compression_level, path, n_threads))]
-    fn render(
+    fn render<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         resources: &mut Resources,
         verbose: u32,
         format: &str,
         compression_level: u8,
         path: Option<&str>,
         n_threads: Option<usize>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Bound<'py, PyAny>> {
         let verbose_level = match verbose {
             0 => VerboseLevel::Silent,
             1 => VerboseLevel::Normal,
@@ -348,14 +352,14 @@ impl Deck {
                 n_threads,
             )
         })?;
-        if result.is_empty() {
-            Ok(PyNone::get_bound(py).to_object(py))
+        Ok(if result.is_empty() {
+            PyNone::get(py).into_bound().into_any()
         } else {
-            Ok(result
+            result
                 .iter()
-                .map(|(slide_idx, step, data)| (slide_idx, step, PyBytes::new_bound(py, data)))
+                .map(|(slide_idx, step, data)| (slide_idx, step, PyBytes::new(py, data)))
                 .collect_vec()
-                .to_object(py))
-        }
+                .into_pyobject(py)?
+        })
     }
 }

@@ -3,7 +3,7 @@ use crate::model::{Step, StepSet, StepValue};
 use pyo3::exceptions::PyException;
 use pyo3::types::PyAnyMethods;
 use pyo3::types::PyTuple;
-use pyo3::{Bound, FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
+use pyo3::{Bound, FromPyObject, IntoPyObject, PyAny, PyErr, PyResult, Python};
 use std::collections::BTreeMap;
 use std::default::Default;
 use std::fmt::Debug;
@@ -23,9 +23,13 @@ impl<'py> FromPyObject<'py> for Step {
     }
 }
 
-impl ToPyObject for Step {
-    fn to_object(&self, py: Python<'_>) -> PyObject {
-        PyTuple::new_bound(py, self.indices()).into()
+impl<'py> IntoPyObject<'py> for &Step {
+    type Target = PyTuple;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        PyTuple::new(py, self.indices())
     }
 }
 

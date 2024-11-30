@@ -5,8 +5,8 @@ use crate::common::Color;
 use crate::pyinterface::insteps::ValueOrInSteps;
 use pyo3::exceptions::PyValueError;
 use pyo3::pybacked::PyBackedStr;
-use pyo3::types::PyAnyMethods;
-use pyo3::{Bound, FromPyObject, PyAny, PyObject, PyResult, Python, ToPyObject};
+use pyo3::types::{PyAnyMethods, PyDict};
+use pyo3::{Bound, FromPyObject, IntoPyObject, PyAny, PyResult, Python};
 use std::collections::HashMap;
 use std::ops::Deref;
 use std::str::FromStr;
@@ -92,7 +92,10 @@ impl<'py> FromPyObject<'py> for PyTextStyle {
     }
 }
 
-pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Python<'_>) -> PyObject {
+pub fn partial_text_style_to_pyobject<'py>(
+    style: &PartialTextStyle,
+    py: Python<'py>,
+) -> PyResult<Bound<'py, PyDict>> {
     let stretch_idx = style.stretch.map(|s| match s {
         FontStretch::UltraCondensed => 1,
         FontStretch::ExtraCondensed => 2,
@@ -104,30 +107,37 @@ pub(crate) fn partial_text_style_to_pyobject(style: &PartialTextStyle, py: Pytho
         FontStretch::ExtraExpanded => 8,
         FontStretch::UltraExpanded => 9,
     });
-    let mut map: HashMap<String, PyObject> = HashMap::new();
+    let mut map: HashMap<String, Bound<'py, PyAny>> = HashMap::new();
     map.insert(
         "font_family".into(),
         style
             .font
             .as_ref()
             .map(|f| f.family_name.as_str())
-            .to_object(py),
+            .into_pyobject(py)?,
     );
     map.insert(
         "color".into(),
-        style.color.as_ref().map(|c| c.to_string()).to_object(py),
+        style
+            .color
+            .as_ref()
+            .map(|c| c.to_string())
+            .into_pyobject(py)?,
     );
-    map.insert("size".into(), style.size.map(|x| x.get()).to_object(py));
+    map.insert(
+        "size".into(),
+        style.size.map(|x| x.get()).into_pyobject(py)?,
+    );
     map.insert(
         "line_spacing".into(),
-        style.line_spacing.map(|x| x.get()).to_object(py),
+        style.line_spacing.map(|x| x.get()).into_pyobject(py)?,
     );
-    map.insert("italic".into(), style.italic.to_object(py));
-    map.insert("stretch".into(), stretch_idx.to_object(py));
-    map.insert("weight".into(), style.weight.to_object(py));
-    map.insert("underline".into(), style.underline.to_object(py));
-    map.insert("line_through".into(), style.line_through.to_object(py));
-    map.to_object(py)
+    map.insert("italic".into(), style.italic.into_pyobject(py)?);
+    map.insert("stretch".into(), stretch_idx.into_pyobject(py)?);
+    map.insert("weight".into(), style.weight.into_pyobject(py)?);
+    map.insert("underline".into(), style.underline.into_pyobject(py)?);
+    map.insert("line_through".into(), style.line_through.into_pyobject(py)?);
+    map.into_pyobject(py)
 }
 
 #[derive(Debug, FromPyObject)]
