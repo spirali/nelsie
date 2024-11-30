@@ -69,7 +69,8 @@ impl<'a> PageBuilder<'a> {
                 let mut pdf = pdf_writer::Pdf::new();
                 let mut pdf_ginfo = PdfGlobalInfo::new(&mut pdf, n_pages);
                 let (cache, images) = collect_image_cache(slide_deck, &mut pdf_ginfo);
-                let count = images.len() as u64 + n_pages as u64;
+                let count = images.iter().map(|img| img.image_count()).sum::<usize>() as u64
+                    + n_pages as u64;
                 let pages = Vec::new();
                 (
                     PageWriter::Pdf(PdfWriterData {
@@ -136,7 +137,7 @@ impl<'a> PageBuilder<'a> {
     pub fn other_tasks(&self) -> crate::Result<()> {
         match &self.writer {
             PageWriter::Pdf(pdf_writer) => {
-                precompute_image_cache(pdf_writer);
+                precompute_image_cache(pdf_writer, self.progress_bar.as_ref());
             }
             PageWriter::Svg(_) | PageWriter::Png(_) => {}
         };
@@ -304,7 +305,7 @@ pub fn collect_image_cache(
     (cache, image_vec)
 }
 
-pub fn precompute_image_cache(pdf_writer: &PdfWriterData) {
+pub fn precompute_image_cache(pdf_writer: &PdfWriterData, progress_bar: Option<&ProgressBar>) {
     pdf_writer
         .images
         .par_iter()
@@ -319,11 +320,17 @@ pub fn precompute_image_cache(pdf_writer: &PdfWriterData) {
                     Some(transparency_ref),
                 );
                 pdf_writer.add_chunk(chunk);
+                if let Some(bar) = progress_bar {
+                    bar.inc(1);
+                }
             }
             LoadedImageData::Jpeg(data) => {
                 let (img_ref, _mask_ref) = *pdf_writer.cache.get(&ByAddress(data.clone())).unwrap();
                 let chunk = image_to_pdf_chunk(image::ImageFormat::Jpeg, data, img_ref, None);
                 pdf_writer.add_chunk(chunk);
+                if let Some(bar) = progress_bar {
+                    bar.inc(1);
+                }
             }
             LoadedImageData::Svg(_) => {
                 unreachable!()
@@ -340,6 +347,9 @@ pub fn precompute_image_cache(pdf_writer: &PdfWriterData) {
                     Some(mask_ref),
                 );
                 pdf_writer.add_chunk(chunk);
+                if let Some(bar) = progress_bar {
+                    bar.inc(1);
+                }
             }),
         });
 }

@@ -70,6 +70,13 @@ impl LoadedImage {
             }),
         }
     }
+
+    pub fn image_count(&self) -> usize {
+        match &self.data {
+            LoadedImageData::Png(_) | LoadedImageData::Jpeg(_) | LoadedImageData::Svg(_) => 1,
+            LoadedImageData::Ora(ora) => ora.layers.len(),
+        }
+    }
 }
 
 #[derive(Debug, Default)]
