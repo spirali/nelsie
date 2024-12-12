@@ -128,7 +128,7 @@ struct PdfCtx<'a> {
     gs_resources: HashMap<(u8, u8), (String, Ref)>,
 }
 
-impl<'a> PdfCtx<'a> {
+impl PdfCtx<'_> {
     pub fn new_name(&mut self) -> String {
         let name = format!("o{}", self.res_name_counter);
         self.res_name_counter += 1;
