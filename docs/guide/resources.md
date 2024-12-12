@@ -44,12 +44,12 @@ resources = Resources(system_fonts=True, builtin_fonts=False)
 
 !!! warning
 
-The current text rendering engine used in Nelsie tries to preload some font data. So loading system fonts may take some
-time. On normal system it should be around 0.1s, but if you have many fonts installed it may be significantly slower.
-The solution is to create
-a directory only with fonts that you are using in your slides and do not load all system fonts in such situations. It
-would also make
-your slides more replicable on other computers.
+    The current text rendering engine used in Nelsie tries to preload some font data. So loading system fonts may take some
+    time. On normal system it should be around 0.1s, but if you have many fonts installed it may be significantly slower.
+    The solution is to create
+    a directory only with fonts that you are using in your slides and do not load all system fonts in such situations. It
+    would also make
+    your slides more replicable on other computers.
 
 When you do not load build fonts, do not forget to set basic font set to existing fonts:
 
