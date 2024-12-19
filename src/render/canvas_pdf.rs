@@ -1,13 +1,15 @@
 use crate::common::{
     Color, DrawItem, DrawRect, FillAndStroke, Path, PathBuilder, PathPart, Rectangle,
 };
-use crate::model::Resources;
+use crate::model::{LoadedImageData, Resources, Video};
 use crate::render::canvas::{Canvas, CanvasItem, Link};
 
 use crate::common::error::NelsieError;
 use crate::render::pdf::PdfRefAllocator;
 use by_address::ByAddress;
-use pdf_writer::types::{ActionType, AnnotationType};
+use pdf_writer::types::{
+    ActionType, AnnotationType, MediaClipType, RenditionOperation, RenditionType, TempFileType,
+};
 use pdf_writer::{Chunk, Content, Filter, Finish, Name, Rect, Ref, Str};
 use std::collections::HashMap;
 use std::default::Default;
@@ -45,6 +47,8 @@ impl Canvas {
             gs_resources: HashMap::new(),
         };
 
+        let mut annotation_ids = Vec::new();
+
         for item in self.items.into_iter() {
             match item {
                 CanvasItem::PngImage { rect, data } | CanvasItem::JpegImage { rect, data } => {
@@ -78,9 +82,20 @@ impl Canvas {
                 CanvasItem::DrawItems(items) => {
                     draw_items_to_pdf(&mut pdf_ctx, &items, self.height);
                 }
+                CanvasItem::Video { rect, video } => {
+                    draw_video_to_pdf(
+                        &mut pdf_ctx,
+                        &rect,
+                        &video,
+                        self.height,
+                        page_ref,
+                        cache,
+                        &mut annotation_ids,
+                    )?;
+                }
             }
         }
-        let annotation_ids = annotations_to_pdf(&mut pdf_ctx, self.links, self.height);
+        annotations_to_pdf(&mut pdf_ctx, self.links, self.height, &mut annotation_ids);
         let content_ref = pdf_ctx.alloc_ref.bump();
         let mut page = pdf_ctx.chunk.page(page_ref);
         page.media_box(Rect::new(0.0, 0.0, self.width, self.height));
@@ -196,6 +211,81 @@ fn draw_ellipse_to_pdf(pdf_ctx: &mut PdfCtx, item: &DrawRect) {
     path_body_to_pdf(pdf_ctx, &builder.build())
 }
 
+fn draw_video_to_pdf(
+    pdf_ctx: &mut PdfCtx,
+    rect: &Rectangle,
+    video: &Arc<Video>,
+    height: f32,
+    page_ref: Ref,
+    cache: &PdfImageCache,
+    annotations: &mut Vec<Ref>,
+) -> crate::Result<()> {
+    let cover_form_ref = video.cover_image.as_ref().map(|image| {
+        let image_data = match &image.data {
+            LoadedImageData::Png(data) | LoadedImageData::Jpeg(data) => data,
+            _ => unreachable!(),
+        };
+        let (cover_image_id, _) = cache.get(&ByAddress(image_data.clone())).unwrap();
+        let form_xobject_ref = pdf_ctx.alloc_ref.bump();
+        let image_name = format!("cover{}", form_xobject_ref.get());
+        let mut content = Content::new();
+        content.save_state();
+        content.transform([
+            rect.width,
+            0.0,
+            0.0,
+            rect.height,
+            rect.x,
+            height - rect.height - rect.y,
+        ]);
+        content.x_object(Name(image_name.as_bytes()));
+        content.restore_state();
+        let content_data = content.finish();
+        let mut form_xobject = pdf_ctx.chunk.form_xobject(form_xobject_ref, &content_data);
+        form_xobject.bbox(pdf_rect(rect, height));
+        form_xobject
+            .resources()
+            .x_objects()
+            .pair(Name(image_name.as_bytes()), cover_image_id);
+        form_xobject.finish();
+        form_xobject_ref
+    });
+    let annotation_id = pdf_ctx.alloc_ref.bump();
+    annotations.push(annotation_id);
+    let video_file_id = pdf_ctx.alloc_ref.bump();
+    {
+        let data = std::fs::read(&video.path)?;
+        pdf_ctx.chunk.embedded_file(video_file_id, &data);
+    }
+    let mut annotation = pdf_ctx.chunk.annotation(annotation_id);
+    annotation.subtype(AnnotationType::Screen);
+    annotation.rect(pdf_rect(rect, height));
+    annotation.page(page_ref);
+    if let Some(form_ref) = cover_form_ref {
+        annotation.appearance().normal().stream(form_ref);
+    }
+
+    let mut action = annotation.action();
+    action.action_type(ActionType::Rendition);
+    action.operation(RenditionOperation::Play);
+    action.annotation(annotation_id);
+
+    let mut rendition = action.rendition();
+    rendition.subtype(RenditionType::Media);
+
+    let mut media_clip = rendition.media_clip();
+    media_clip.subtype(MediaClipType::Data);
+    media_clip.data().embedded_file(video_file_id);
+    media_clip.data_type(Str(video.data_type.as_bytes()));
+    media_clip.permissions().temp_file(TempFileType::Access);
+    media_clip.finish();
+    rendition.media_play_params().controls(video.show_controls);
+    rendition.finish();
+    action.finish();
+    annotation.finish();
+    Ok(())
+}
+
 fn draw_items_to_pdf(pdf_ctx: &mut PdfCtx, items: &[DrawItem], height: f32) {
     pdf_ctx.content.save_state();
     pdf_ctx
@@ -213,8 +303,21 @@ fn draw_items_to_pdf(pdf_ctx: &mut PdfCtx, items: &[DrawItem], height: f32) {
     pdf_ctx.content.restore_state();
 }
 
-fn annotations_to_pdf(pdf_ctx: &mut PdfCtx, links: Vec<Link>, height: f32) -> Vec<Ref> {
-    let mut annotation_ids = Vec::with_capacity(links.len());
+fn pdf_rect(rect: &Rectangle, height: f32) -> Rect {
+    Rect::new(
+        rect.x,
+        height - rect.y,
+        rect.x + rect.width,
+        height - (rect.y + rect.height),
+    )
+}
+
+fn annotations_to_pdf(
+    pdf_ctx: &mut PdfCtx,
+    links: Vec<Link>,
+    height: f32,
+    annotation_ids: &mut Vec<Ref>,
+) {
     for link in links {
         let rect = link.rect();
         let annotation_id = pdf_ctx.alloc_ref.bump();
@@ -222,19 +325,13 @@ fn annotations_to_pdf(pdf_ctx: &mut PdfCtx, links: Vec<Link>, height: f32) -> Ve
         annotation_ids.push(annotation_id);
         annotation.subtype(AnnotationType::Link);
         annotation.border(0.0, 0.0, 0.0, None);
-        annotation.rect(Rect::new(
-            rect.x,
-            height - rect.y,
-            rect.x + rect.width,
-            height - (rect.y + rect.height),
-        ));
+        annotation.rect(pdf_rect(rect, height));
         annotation
             .action()
             .action_type(ActionType::Uri)
             .uri(Str(link.url().as_bytes()));
         annotation.finish();
     }
-    annotation_ids
 }
 
 fn check_alpha(color: Color) -> Option<u8> {

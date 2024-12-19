@@ -39,7 +39,15 @@ class ImageContent:
     shift_steps: int
 
 
-NodeContent = ImageContent | TextContent | None
+@dataclass
+class VideoContent:
+    path: str
+    data_type: str
+    cover_image: str | None
+    show_controls: bool
+
+
+NodeContent = ImageContent | TextContent | VideoContent | None
 AlignItemsSteps = AlignItems | None | InSteps[AlignItems | None]
 AlignContentSteps = AlignContent | None | InSteps[AlignContent | None]
 GridTemplate = Sequence[float | str] | InSteps[Sequence[float | str]]
@@ -247,7 +255,7 @@ class BoxBuilder:
 
     def draw(self, paths: Path | list[Path] | InSteps[Path | list[Path]]):
         """
-        Draw one or paths in the slide.
+        Draw one or more paths in the slide.
         """
 
         if isinstance(paths, Path):
@@ -256,6 +264,29 @@ class BoxBuilder:
             paths = paths.map(lambda p: [p] if isinstance(p, Path) else p)
         box = self.get_box()
         box.deck._deck.draw(box.slide._slide_id, box._box_id, paths)
+
+    def video(
+        self,
+        path: str,
+        *,
+        data_type: str = "video/mp4",
+        cover_image: str | None = None,
+        show_controls: bool = False,
+        **box_args,
+    ):
+        """
+        Insert video into slide.````
+        """
+        if cover_image:
+            slide = self.get_box().slide
+            if slide.image_directory is not None:
+                cover_image = os.path.join(slide.image_directory, cover_image)
+            cover_image = os.path.abspath(cover_image)
+            watch_path(cover_image)
+        path = os.path.abspath(path)
+        watch_path(path)
+        video = VideoContent(path=path, data_type=data_type, cover_image=cover_image, show_controls=show_controls)
+        return self.box(_content=video, **box_args)
 
     def box(
         self,

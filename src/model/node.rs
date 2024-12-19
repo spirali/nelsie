@@ -11,6 +11,7 @@ use taffy::{GridPlacement, Line, NonRepeatedTrackSizingFunction};
 
 use crate::common::Color;
 use crate::model::image::LoadedImage;
+use crate::model::video::NodeContentVideo;
 use taffy::prelude::{AlignContent, AlignItems};
 use taffy::style::FlexWrap;
 
@@ -18,6 +19,7 @@ use taffy::style::FlexWrap;
 pub(crate) enum NodeContent {
     Text(NodeContentText),
     Image(NodeContentImage),
+    Video(NodeContentVideo),
 }
 
 #[derive(Debug)]
@@ -128,11 +130,19 @@ impl Node {
     }
 
     pub fn collect_images(&self, out: &mut HashSet<ByAddress<Arc<LoadedImage>>>) {
-        if let Some(NodeContent::Image(image)) = &self.content {
-            image.loaded_image.values().flatten().for_each(|img| {
-                out.insert(ByAddress::from(img.clone()));
-            });
-        };
+        match &self.content {
+            Some(NodeContent::Image(image)) => {
+                image.loaded_image.values().flatten().for_each(|img| {
+                    out.insert(ByAddress::from(img.clone()));
+                });
+            }
+            Some(NodeContent::Video(video)) => {
+                if let Some(image) = &video.video.cover_image {
+                    out.insert(ByAddress::from(image.clone()));
+                }
+            }
+            _ => {}
+        }
         for child in self.child_nodes() {
             child.collect_images(out);
         }

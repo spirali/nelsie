@@ -162,6 +162,9 @@ impl<'a> RenderContext<'a> {
                     NodeContent::Image(image) => {
                         render_image_to_canvas(image, step, rect, self.canvas)
                     }
+                    NodeContent::Video(video) => {
+                        self.canvas.add_video(rect.clone(), video.video.clone());
+                    }
                 }
             }
 

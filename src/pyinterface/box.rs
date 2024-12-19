@@ -1,6 +1,7 @@
 use crate::model::{
-    merge_stepped_styles, LengthOrExpr, LoadedImage, NodeContentText, PartialTextStyle, Step,
-    StepIndex, StepSet, StyleMap, StyledRange, StyledText, TextAlign,
+    merge_stepped_styles, LengthOrExpr, LoadedImage, LoadedImageData, NodeContentText,
+    NodeContentVideo, PartialTextStyle, Step, StepIndex, StepSet, StyleMap, StyledRange,
+    StyledText, TextAlign, Video,
 };
 use crate::model::{
     Length, LengthOrAuto, Node, NodeContent, NodeContentImage, NodeId, Resources, StepValue,
@@ -18,7 +19,7 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 use std::ops::Deref;
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::types::PyAnyMethods;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 
@@ -50,6 +51,14 @@ pub(crate) struct ImageContent {
 }
 
 #[derive(Debug, FromPyObject)]
+pub(crate) struct VideoContent {
+    path: PathBuf,
+    cover_image: Option<PathBuf>,
+    data_type: String,
+    show_controls: bool,
+}
+
+#[derive(Debug, FromPyObject)]
 pub(crate) struct TextContent {
     text: ValueOrInSteps<String>,
     style1: Option<PyTextStyleOrName>,
@@ -65,6 +74,7 @@ pub(crate) struct TextContent {
 pub(crate) enum Content {
     Text(TextContent),
     Image(ImageContent),
+    Video(VideoContent),
 }
 
 #[derive(Debug, FromPyObject)]
@@ -77,8 +87,10 @@ impl<'py> FromPyObject<'py> for Content {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
         Ok(if ob.hasattr("text")? {
             Content::Text(ob.extract()?)
-        } else {
+        } else if ob.hasattr("enable_steps")? {
             Content::Image(ob.extract()?)
+        } else {
+            Content::Video(ob.extract()?)
         })
     }
 }
@@ -291,6 +303,47 @@ fn process_content(
                 loaded_image,
                 enable_steps: image.enable_steps,
                 shift_steps: image.shift_steps,
+            })
+        }
+        Content::Video(video) => {
+            if !video.path.exists() {
+                return Err(PyException::new_err(format!(
+                    "Video file does not exist: {}",
+                    video.path.display()
+                )));
+            }
+            if !video.path.is_file() {
+                return Err(PyException::new_err(format!(
+                    "Path {} is not a file",
+                    video.path.display()
+                )));
+            }
+            let cover_image = video
+                .cover_image
+                .map(|path| {
+                    let image = nc_env
+                        .resources
+                        .image_manager
+                        .load_image(&path, nc_env.resources.font_db.as_ref().unwrap())
+                        .and_then(|image| match image.data {
+                            LoadedImageData::Png(_) | LoadedImageData::Jpeg(_) => Ok(image),
+                            LoadedImageData::Svg(_) | LoadedImageData::Ora(_) => {
+                                Err(NelsieError::generic_err(
+                                    "Invalid format (only formats png and jpeg are supported)",
+                                ))
+                            }
+                        });
+                    image
+                })
+                .transpose()
+                .map_err(|e| PyException::new_err(format!("cover image: {e}")))?;
+            NodeContent::Video(NodeContentVideo {
+                video: Arc::new(Video {
+                    path: video.path,
+                    cover_image,
+                    data_type: video.data_type,
+                    show_controls: video.show_controls,
+                }),
             })
         }
     })

@@ -250,6 +250,7 @@ fn compute_content_default_size(
             .as_ref()
             .map(|img| (img.width, img.height))
             .unwrap_or((0.0, 0.0)),
+        NodeContent::Video(_video) => (0.0, 0.0),
     }
 }
 
