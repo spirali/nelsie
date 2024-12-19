@@ -33,6 +33,7 @@ nav:
       - guide/list.md
       - guide/watch.md
       - guide/links.md
+      - guide/video.md
 
 theme:
   name: material

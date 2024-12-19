@@ -1,3 +1,10 @@
+# Unreleased
+
+## New features
+
+* Support embedding videos into slides
+* Better progressbar computing
+
 # v0.15.0
 
 ## Breaking changes
