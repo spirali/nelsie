@@ -8,6 +8,7 @@ mod stepvalues;
 mod text;
 mod textstyles;
 mod types;
+mod video;
 
 pub(crate) use self::image::{
     ImageManager, LoadedImage, LoadedImageData, NodeContentImage, OraImageData, SvgImageData,
@@ -25,3 +26,4 @@ pub(crate) use self::textstyles::{
     merge_stepped_styles, FontData, PartialTextStyle, StyleMap, TextStyle,
 };
 pub(crate) use self::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId};
+pub(crate) use self::video::{NodeContentVideo, Video};

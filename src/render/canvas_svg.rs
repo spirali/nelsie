@@ -1,4 +1,5 @@
 use crate::common::{DrawItem, Rectangle};
+use crate::model::LoadedImageData;
 use crate::parsers::SimpleXmlWriter;
 use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::svgpath::{svg_ellipse, svg_path, svg_rect};
@@ -35,6 +36,19 @@ impl Canvas {
                 CanvasItem::DrawItems(items) => items
                     .iter()
                     .for_each(|item| write_draw_item_to_svg(&mut writer, item)),
+                CanvasItem::Video { rect, video } => {
+                    if let Some(image) = &video.cover_image {
+                        match &image.data {
+                            LoadedImageData::Png(data) => {
+                                write_raster_image_to_svg(&rect, "png", data, &mut writer)
+                            }
+                            LoadedImageData::Jpeg(data) => {
+                                write_raster_image_to_svg(&rect, "jpeg", data, &mut writer)
+                            }
+                            LoadedImageData::Svg(_) | LoadedImageData::Ora(_) => unreachable!(),
+                        }
+                    }
+                }
             }
         }
 

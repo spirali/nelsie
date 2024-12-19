@@ -97,8 +97,8 @@ def in_steps(slide):
 @deck.slide()
 def images(slide):
     slide.text("Name-driven revealing layers in SVG and ORA images", m_bottom=40)
-    slide.image("imgs/stepped_logo.ora", width="25%")
-    slide.image("imgs/layers.svg", width="80%")
+    slide.image("assets/stepped_logo.ora", width="25%")
+    slide.image("assets/layers.svg", width="80%")
 
 
 # Header ##########################################
@@ -522,10 +522,10 @@ def chess_board(slide):
     )
 
     # Draw knight
-    tiles[(3, 4)].box(show="1", z_level=2).image("imgs/knight.svg")
-    tiles[(3, 3)].box(show="2", z_level=2).image("imgs/knight.svg")
-    tiles[(3, 2)].box(show="3", z_level=2).image("imgs/knight.svg")
-    tiles[(4, 2)].box(show="4", z_level=2).image("imgs/knight.svg")
+    tiles[(3, 4)].box(show="1", z_level=2).image("assets/knight.svg")
+    tiles[(3, 3)].box(show="2", z_level=2).image("assets/knight.svg")
+    tiles[(3, 2)].box(show="3", z_level=2).image("assets/knight.svg")
+    tiles[(4, 2)].box(show="4", z_level=2).image("assets/knight.svg")
 
 
 # Links
@@ -538,6 +538,24 @@ def links(slide):
         TextStyle(size=80, underline=True),
         url="https://github.com/spirali/nelsie",
     )
+
+
+# Video
+
+
+@deck.slide()
+def video(slide):
+    slide.text("Embedded video (click to play*)", "title")
+    row = slide.box(row=True, m_top=30)
+    box1 = row.box()
+    box1.video("assets/video.mp4", cover_image="../../docs/imgs/nelsie-logo.jpg", width=450, height=400)
+    box1.text("Without controls")
+    box2 = row.box()
+    box2.video(
+        "assets/video.mp4", cover_image="../../docs/imgs/nelsie-logo.jpg", width=450, height=400, show_controls=True
+    )
+    box2.text("With controls")
+    slide.text("* This functionally depends on pdf viewer", TextStyle(color="gray"), m_top=30)
 
 
 # Debugging frames ##########################################

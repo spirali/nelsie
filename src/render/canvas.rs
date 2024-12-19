@@ -1,4 +1,5 @@
 use crate::common::{Color, DrawItem, Rectangle};
+use crate::model::Video;
 use crate::render::text::RenderedText;
 use std::sync::Arc;
 
@@ -23,6 +24,10 @@ pub(crate) enum CanvasItem {
         text: Arc<RenderedText>,
         x: f32,
         y: f32,
+    },
+    Video {
+        rect: Rectangle,
+        video: Arc<Video>,
     },
 }
 
@@ -68,6 +73,10 @@ impl Canvas {
 
     pub fn add_jpeg_image(&mut self, rect: Rectangle, data: Arc<Vec<u8>>) {
         self.items.push(CanvasItem::JpegImage { rect, data });
+    }
+
+    pub fn add_video(&mut self, rect: Rectangle, video: Arc<Video>) {
+        self.items.push(CanvasItem::Video { rect, video });
     }
 
     pub fn add_png_image(&mut self, rect: Rectangle, data: Arc<Vec<u8>>) {
