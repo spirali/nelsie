@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Sequence, Literal
+from typing import Sequence
 
 from .basictypes import (
     AlignItems,

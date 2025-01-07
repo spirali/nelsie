@@ -13,12 +13,12 @@ def image_demo(slide):
 
     Calling `.image()` creates a new box; this is a different behavior than in Elsie, where calling `.image()` does not create a new box.
 
-
 ## Image box
 
 The `.image()` method also takes the same arguments as `.box()`, which are passed to the underlying box of the image.
 The main purpose is to set the image size.
-If only width or only height is set, the other coordinate is automatically calculated to maintain the aspect ratio of the image.
+If only width or only height is set, the other coordinate is automatically calculated to maintain the aspect ratio of
+the image.
 
 ```nelsie
 @deck.slide()
@@ -35,7 +35,6 @@ def image_demo(slide):
     slide.image("./imgs/nelsie-logo.jpg", width="50%", height="300", bg_color="green")
 ```
 
-
 ## Image directory
 
 A directory where images are searched for can be configured via `image_directory`.
@@ -43,6 +42,7 @@ A directory where images are searched for can be configured via `image_directory
 ```python
 # Set image directory globally
 deck = SlideDeck(image_directory="path/to/images")
+
 
 # Set image directory per slide
 @deck.slide(image_directory="path/to/images")
@@ -55,7 +55,8 @@ def my_slide(slide):
 Formats that supports layers (SVG and OpenRaster) may control revealing a part of image
 in steps by naming layers. JPEG, and PNG image does not have any impact on steps.
 
-If a layer has a name that ends with `**EXPR` where `EXPR` is an expression allowed in box's `show` argument, except for last/next/last+/next+ keywords. Keywords are not allowed in an image step definitions.
+If a layer has a name that ends with `**EXPR` where `EXPR` is an expression allowed in box's `show` argument, except for
+last/next/last+/next+ keywords. Keywords are not allowed in an image step definitions.
 Example: A layer with name "My layer **2-4" will be shown only steps 2, 3, 4.
 
 ### Example
@@ -99,4 +100,17 @@ def image_demo(slide):
 
     # The first image will be shown at step 3
     slide.image("./imgs/stepped_logo.ora", shift_steps=2)
+```
+
+### Directly passing image data
+
+You can pass directly image data into `.image()` method.
+Data has to be passed as tuple `(<data>, <format>)`. `<format>` has to be one of the following values:
+`"png"`, `"jpeg"`, or `"svg"`.
+
+```python
+@deck.slide()
+def image_data_demo(slide):
+    png_data = ...  # some bytes
+    slide.image((png_data, "png"))
 ```

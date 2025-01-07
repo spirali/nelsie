@@ -3,6 +3,7 @@
 ## New features
 
 * Support embedding videos into slides
+* `.image()` can now take directly image data (e.g. `.image((blob, "png"))`)
 * Better progressbar computing
 
 # v0.15.0
@@ -10,7 +11,8 @@
 ## Breaking changes
 
 * By default, Nelsie no longer loads system fonts, but loads the fonts built into Nelsie instead.
-  You can revert to the original behavior by creating resouces as follows: `Resources(system_fonts=True, builtin_fonts=False)`.
+  You can revert to the original behavior by creating resouces as
+  follows: `Resources(system_fonts=True, builtin_fonts=False)`.
 * Removed `TextStyle` features: overline and stroke
 
 ## New features
@@ -20,9 +22,9 @@
 * Allow to specify the compression level via `.render(..., compression_level=...)`
 * You may use generic font families strings: "sans-serif", "monospace", "serif" as font names
 * You may set generic font families in resources via:
-	`resources.set_sans_serif("FontName")`
-	`resources.set_monospace("FontName")`
-	`resources.set_serif("FontName")`
+  `resources.set_sans_serif("FontName")`
+  `resources.set_monospace("FontName")`
+  `resources.set_serif("FontName")`
 
 ## Fixes
 
@@ -32,7 +34,6 @@
 
 * Migrated to `parley` for text rendering
 * Implemented direct text rendering into PDF (without internally going through SVG)
-
 
 # v0.14.0
 
