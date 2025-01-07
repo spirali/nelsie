@@ -270,7 +270,7 @@ pub fn collect_image_cache(
     for slide in &deck.slides {
         slide.node.collect_images(&mut image_set);
     }
-    let mut image_vec: Vec<Arc<LoadedImage>> = image_set
+    let image_vec: Vec<Arc<LoadedImage>> = image_set
         .into_iter()
         .filter_map(|img| match img.data {
             LoadedImageData::Png(_) | LoadedImageData::Jpeg(_) | LoadedImageData::Ora(_) => {
@@ -279,7 +279,6 @@ pub fn collect_image_cache(
             LoadedImageData::Svg(_) => None,
         })
         .collect_vec();
-    image_vec.sort_unstable_by_key(|i| i.image_id);
     let mut cache = PdfImageCache::new();
     for image in &image_vec {
         match &image.data {

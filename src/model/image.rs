@@ -52,7 +52,6 @@ pub(crate) enum LoadedImageData {
 
 #[derive(Debug)]
 pub(crate) struct LoadedImage {
-    pub image_id: u32,
     pub width: f32,
     pub height: f32,
     pub data: LoadedImageData,
@@ -93,13 +92,26 @@ impl ImageManager {
         if let Some(img) = self.loaded_images.get(path) {
             Ok(img.clone())
         } else {
-            let mut img = load_image(path, font_db)?;
-            img.image_id = self.loaded_images.len() as u32;
+            let img = load_image(path, font_db)?;
             let img_ref = Arc::new(img);
             self.loaded_images
                 .insert(path.to_path_buf(), img_ref.clone());
             Ok(img_ref)
         }
+    }
+
+    pub fn load_raster_image(&self, data: Vec<u8>) -> crate::Result<Arc<LoadedImage>> {
+        Ok(Arc::new(load_raster_image(data).ok_or_else(|| {
+            NelsieError::generic_err("Data cannot be decoded as raster image format")
+        })?))
+    }
+
+    pub fn load_svg_image(
+        &self,
+        data: Vec<u8>,
+        font_db: &Arc<fontdb::Database>,
+    ) -> crate::Result<Arc<LoadedImage>> {
+        Ok(Arc::new(load_svg_image(data, font_db)?))
     }
 }
 
@@ -111,7 +123,6 @@ fn load_raster_image(raw_data: Vec<u8>) -> Option<LoadedImage> {
         _ => return None,
     };
     Some(LoadedImage {
-        image_id: 0,
         width: size.width as f32,
         height: size.height as f32,
         data,
@@ -154,7 +165,6 @@ fn load_svg_image(
 
     //tree.convert_text(font_db);
     Ok(LoadedImage {
-        image_id: 0,
         width: usvg_tree.size().width(),
         height: usvg_tree.size().height(),
         data: LoadedImageData::Svg(SvgImageData { tree, steps }),
@@ -241,7 +251,6 @@ fn load_ora_image(path: &Path) -> crate::Result<LoadedImage> {
     load_ora_stack(&image, &mut archive, &mut layers, &mut steps)?;
     layers.reverse();
     Ok(LoadedImage {
-        image_id: 0,
         width,
         height,
         data: LoadedImageData::Ora(OraImageData { layers, steps }),

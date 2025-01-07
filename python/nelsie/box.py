@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Sequence, Literal
 
 from .basictypes import (
     AlignItems,
@@ -32,9 +32,12 @@ class TextContent:
     parse_counters: bool
 
 
+PathOrData = str | None | tuple[bytes, str]
+
+
 @dataclass
 class ImageContent:
-    path: str | None | InSteps[str | None]
+    path_or_data: PathOrData | InSteps[PathOrData]
     enable_steps: bool
     shift_steps: int
 
@@ -106,7 +109,8 @@ class BoxBuilder:
 
     def image(
         self,
-        path: str | None | InSteps[str | None],
+        path_or_data: PathOrData | InSteps[PathOrData],
+        *,
         enable_steps=True,
         shift_steps=0,
         **box_args,
@@ -117,8 +121,8 @@ class BoxBuilder:
         assert shift_steps >= 0
 
         def process_path(p):
-            if p is None:
-                return None
+            if not isinstance(p, str):
+                return p
             if slide.image_directory is not None:
                 p = os.path.join(slide.image_directory, p)
             p = os.path.abspath(p)
@@ -126,12 +130,12 @@ class BoxBuilder:
             return p
 
         slide = self.get_box().slide
-        if isinstance(path, InSteps):
-            path = path.map(process_path)
+        if isinstance(path_or_data, InSteps):
+            path_or_data = path_or_data.map(process_path)
         else:
-            path = process_path(path)
+            path_or_data = process_path(path_or_data)
         image = ImageContent(
-            path=path,
+            path_or_data=path_or_data,
             enable_steps=enable_steps,
             shift_steps=shift_steps,
         )
