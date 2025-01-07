@@ -44,8 +44,14 @@ pub(crate) enum Show {
 }
 
 #[derive(Debug, FromPyObject)]
+pub(crate) enum PathOrData {
+    Path(PathBuf),
+    Data(Vec<u8>, String),
+}
+
+#[derive(Debug, FromPyObject)]
 pub(crate) struct ImageContent {
-    path: ValueOrInSteps<Option<PathBuf>>,
+    path_or_data: ValueOrInSteps<Option<PathOrData>>,
     enable_steps: bool,
     shift_steps: StepIndex,
 }
@@ -282,14 +288,29 @@ fn process_content(
         }
         Content::Image(image) => {
             let loaded_image: StepValue<Option<Arc<LoadedImage>>> =
-                image.path.parse(steps, |path| {
-                    crate::Result::Ok(if let Some(path) = path {
-                        Some(
-                            nc_env
+                image.path_or_data.parse(steps, |path_or_data| {
+                    crate::Result::Ok(if let Some(path_or_data) = path_or_data {
+                        Some(match path_or_data {
+                            PathOrData::Path(path) => nc_env
                                 .resources
                                 .image_manager
                                 .load_image(&path, nc_env.resources.font_db.as_ref().unwrap())?,
-                        )
+                            PathOrData::Data(data, format) => match format.as_str() {
+                                "png" | "jpeg" => {
+                                    nc_env.resources.image_manager.load_raster_image(data)?
+                                }
+                                "svg" => nc_env.resources.image_manager.load_svg_image(
+                                    data,
+                                    nc_env.resources.font_db.as_ref().unwrap(),
+                                )?,
+                                _ => {
+                                    return Err(NelsieError::generic_err(format!(
+                                        "Unknown format: {}",
+                                        format
+                                    )))
+                                }
+                            },
+                        })
                     } else {
                         None
                     })

@@ -1,5 +1,7 @@
+import os
 from nelsie import InSteps
 from testutils import check
+from conftest import ASSETS_DIR
 
 
 @check()
@@ -82,8 +84,22 @@ def test_image_path_in_steps(deck):
     slide = deck.new_slide(width=150, height=150)
     slide.image(None)
     slide.image(
+        InSteps({1: "testimg.jpeg", 2: "testimg.png", 4: None, 5: "testimg.jpeg"}),
         width=100,
         height=100,
-        path=InSteps({1: "testimg.jpeg", 2: "testimg.png", 4: None, 5: "testimg.jpeg"}),
     )
     slide.insert_step(3)
+
+
+@check()
+def test_inline_image(deck):
+    slide = deck.new_slide(width=200, height=200)
+    with open(os.path.join(ASSETS_DIR, "testimg.png"), "rb") as f:
+        png_data = f.read()
+    with open(os.path.join(ASSETS_DIR, "testimg.jpeg"), "rb") as f:
+        jpeg_data = f.read()
+    with open(os.path.join(ASSETS_DIR, "test.svg"), "rb") as f:
+        svg_data = f.read()
+    slide.image((png_data, "png"))
+    slide.image((jpeg_data, "jpeg"))
+    slide.image((svg_data, "svg"), enable_steps=False)
