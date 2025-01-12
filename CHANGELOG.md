@@ -1,4 +1,4 @@
-# Unreleased
+# v0.16.0
 
 ## New features
 
@@ -14,7 +14,7 @@
 ## Breaking changes
 
 * By default, Nelsie no longer loads system fonts, but loads the fonts built into Nelsie instead.
-  You can revert to the original behavior by creating resouces as
+  You can revert to the original behavior by creating resources as
   follows: `Resources(system_fonts=True, builtin_fonts=False)`.
 * Removed `TextStyle` features: overline and stroke
 
