@@ -26,11 +26,12 @@ pub(crate) struct Resources {
 impl Resources {
     pub fn new(
         system_fonts: bool,
+        system_fonts_for_svg: bool,
         default_code_syntaxes: bool,
         default_code_themes: bool,
     ) -> Resources {
         let mut font_db = fontdb::Database::new();
-        if system_fonts {
+        if system_fonts || system_fonts_for_svg {
             font_db.load_system_fonts();
         }
         let syntax_set = if default_code_syntaxes {

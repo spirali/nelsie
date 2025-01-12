@@ -20,10 +20,13 @@ class Resources:
         *,
         builtin_fonts: bool = True,
         system_fonts: bool = False,
+        system_fonts_for_svg: bool = True,
         default_code_syntaxes: bool = True,
         default_code_themes: bool = True,
     ):
-        self._resources = nelsie_rs.Resources(system_fonts, default_code_syntaxes, default_code_themes)
+        self._resources = nelsie_rs.Resources(
+            system_fonts, system_fonts_for_svg, default_code_syntaxes, default_code_themes
+        )
         if builtin_fonts:
             self._resources.load_fonts_dir(BUILTIN_FONTS_DIR)
             self._resources.set_generic_family("sans-serif", "DejaVu Sans")

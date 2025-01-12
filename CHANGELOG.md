@@ -5,6 +5,9 @@
 * Support embedding videos into slides
 * `.image()` can now take directly image data (e.g. `.image((blob, "png"))`)
 * Better progressbar computing
+* Introduce `system_fonts_for_svg` in `Resources`.
+  It is enabled by default and loads system fonts only for SVG.
+  It is a compromise for slower loading system fonts for non SVG parts and confusions like #72.
 
 # v0.15.0
 

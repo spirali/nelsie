@@ -12,12 +12,14 @@ impl Resources {
     #[new]
     fn new(
         system_fonts: bool,
+        system_fonts_for_svg: bool,
         default_code_syntaxes: bool,
         default_code_themes: bool,
     ) -> PyResult<Self> {
         Ok(Resources {
             resources: crate::model::Resources::new(
                 system_fonts,
+                system_fonts_for_svg,
                 default_code_syntaxes,
                 default_code_themes,
             ),
