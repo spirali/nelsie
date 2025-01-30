@@ -97,13 +97,13 @@ def check(
                         threshold = windows_threshold
                     compare_images(
                         os.path.join(tmp_path, "png"),
-                        os.path.join(CHECKS_DIR, "png", name),
+                        os.path.join(CHECKS_DIR, name, "png"),
                         n_slides,
                         threshold=threshold,
                     )
                     compare_images(
                         os.path.join(tmp_path, "pdf2png"),
-                        os.path.join(CHECKS_DIR, "pdf2png", name),
+                        os.path.join(CHECKS_DIR, name, "pdf2png"),
                         n_slides,
                         threshold=threshold,
                     )
