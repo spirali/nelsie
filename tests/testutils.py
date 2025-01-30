@@ -50,11 +50,9 @@ def compare_images(new_dir, old_dir, n_slides, threshold, resize=False):
         difference = ImageChops.difference(new_img, old_img)
         stat = ImageStat.Stat(difference)
         diff = sum(stat.sum) / 255.0
-#         if diff > threshold:
-#             combined = concat_images([new_img, old_img, difference])
-#             path = os.path.abspath(f"combined-{name1}.png")
-#             combined.save(path)
-#             raise Exception(f"Slide {os.path.join(new_dir, name1)} difference is {diff} (limit is {threshold})")
+
+        if diff > threshold:
+            raise Exception(f"Slide {os.path.join(new_dir, name1)} difference is {diff} (limit is {threshold})")
 
 
 def check(
