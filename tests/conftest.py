@@ -40,6 +40,7 @@ def deck_builder(resources):
 def deck(deck_builder):
     return deck_builder()
 
+
 if os.path.isdir(CURRENT_DIR):
     shutil.rmtree(CURRENT_DIR)
 os.mkdir(CURRENT_DIR)
