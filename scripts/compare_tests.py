@@ -53,7 +53,7 @@ class FailedTest:
 
 def check_images(name, path, fails, subdir, resize=False):
     test_dir = os.path.join(os.path.dirname(path), subdir)
-    check_dir = os.path.join(CHECKS, subdir, name)
+    check_dir = os.path.join(CHECKS, name, subdir)
     files = set()
     files.update(os.listdir(test_dir))
     if os.path.exists(check_dir):
