@@ -4,7 +4,7 @@ import sys
 
 import pytest
 import fitz
-from conftest import CHECKS_DIR
+from conftest import CHECKS_DIR, CURRENT_DIR
 from PIL import Image, ImageChops, ImageStat
 
 DEFAULT_THRESHOLD = 105.0
@@ -69,7 +69,9 @@ def check(
         if name.startswith("test_"):
             name = name[5:]
 
-        def helper(tmp_path, deck_builder):
+        def helper(deck_builder):
+            tmp_path = os.path.join(CURRENT_DIR, name)
+            os.mkdir(tmp_path)
             with change_workdir(tmp_path):
                 if deck_kwargs is None:
                     deck = deck_builder()
