@@ -4,7 +4,7 @@ import sys
 
 import pytest
 import fitz
-from conftest import CHECKS_DIR
+from conftest import CHECKS_DIR, CURRENT_DIR
 from PIL import Image, ImageChops, ImageStat
 
 DEFAULT_THRESHOLD = 105.0
@@ -50,10 +50,8 @@ def compare_images(new_dir, old_dir, n_slides, threshold, resize=False):
         difference = ImageChops.difference(new_img, old_img)
         stat = ImageStat.Stat(difference)
         diff = sum(stat.sum) / 255.0
+
         if diff > threshold:
-            combined = concat_images([new_img, old_img, difference])
-            path = os.path.abspath(f"combined-{name1}.png")
-            combined.save(path)
             raise Exception(f"Slide {os.path.join(new_dir, name1)} difference is {diff} (limit is {threshold})")
 
 
@@ -69,7 +67,9 @@ def check(
         if name.startswith("test_"):
             name = name[5:]
 
-        def helper(tmp_path, deck_builder):
+        def helper(deck_builder):
+            tmp_path = os.path.join(CURRENT_DIR, name)
+            os.mkdir(tmp_path)
             with change_workdir(tmp_path):
                 if deck_kwargs is None:
                     deck = deck_builder()
@@ -81,8 +81,6 @@ def check(
                         deck.render("png", "png")
                 else:
                     deck.render("png", "png")
-                    with open(os.path.join(tmp_path, "check.txt"), "w") as f:
-                        f.write(name)
                     deck.render(os.path.join(tmp_path, "output.pdf"), "pdf")
                     os.mkdir("pdf2png")
 
@@ -97,13 +95,13 @@ def check(
                         threshold = windows_threshold
                     compare_images(
                         os.path.join(tmp_path, "png"),
-                        os.path.join(CHECKS_DIR, "png", name),
+                        os.path.join(CHECKS_DIR, name, "png"),
                         n_slides,
                         threshold=threshold,
                     )
                     compare_images(
                         os.path.join(tmp_path, "pdf2png"),
-                        os.path.join(CHECKS_DIR, "pdf2png", name),
+                        os.path.join(CHECKS_DIR, name, "pdf2png"),
                         n_slides,
                         threshold=threshold,
                     )
