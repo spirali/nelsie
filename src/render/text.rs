@@ -1,10 +1,11 @@
 use crate::common::{Color, FillAndStroke, Path, PathBuilder, Rectangle, Stroke};
 use crate::model::{InTextBoxId, NodeId, PartialTextStyle, StyledText, TextAlign, TextStyle};
-use fontique::Stretch;
-use parley::fontique::Weight;
 use parley::layout::{Alignment, GlyphRun, PositionedLayoutItem};
 use parley::style::{FontStack, FontStyle, StyleProperty};
-use parley::{fontique, FontContext, InlineBox, Layout, LayoutContext, RangedBuilder};
+use parley::{
+    AlignmentOptions, FontContext, FontWeight, FontWidth, InlineBox, Layout, LayoutContext,
+    RangedBuilder,
+};
 use resvg::usvg::FontStretch;
 use skrifa::instance::{LocationRef, NormalizedCoord, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
@@ -57,6 +58,7 @@ impl RenderedText {
                 TextAlign::Center => Alignment::Middle,
                 TextAlign::End => Alignment::End,
             },
+            AlignmentOptions::default(),
         );
 
         let mut intext_rects = HashMap::new();
@@ -206,7 +208,7 @@ fn set_text_style_to_parley(
 
     if let Some(weight) = weight {
         builder.push(
-            StyleProperty::FontWeight(Weight::new(*weight as f32)),
+            StyleProperty::FontWeight(FontWeight::new(*weight as f32)),
             start..end,
         );
     }
@@ -231,23 +233,23 @@ fn set_text_style_to_parley(
     };
     if let Some(stretch) = stretch {
         builder.push(
-            StyleProperty::FontStretch(font_stretch_to_parley(*stretch)),
+            StyleProperty::FontWidth(font_stretch_to_parley(*stretch)),
             start..end,
         );
     }
 }
 
-fn font_stretch_to_parley(stretch: FontStretch) -> Stretch {
+fn font_stretch_to_parley(stretch: FontStretch) -> FontWidth {
     match stretch {
-        FontStretch::UltraCondensed => Stretch::ULTRA_CONDENSED,
-        FontStretch::ExtraCondensed => Stretch::EXTRA_CONDENSED,
-        FontStretch::Condensed => Stretch::CONDENSED,
-        FontStretch::SemiCondensed => Stretch::SEMI_CONDENSED,
-        FontStretch::Normal => Stretch::NORMAL,
-        FontStretch::SemiExpanded => Stretch::SEMI_EXPANDED,
-        FontStretch::Expanded => Stretch::EXPANDED,
-        FontStretch::ExtraExpanded => Stretch::EXTRA_EXPANDED,
-        FontStretch::UltraExpanded => Stretch::ULTRA_EXPANDED,
+        FontStretch::UltraCondensed => FontWidth::ULTRA_CONDENSED,
+        FontStretch::ExtraCondensed => FontWidth::EXTRA_CONDENSED,
+        FontStretch::Condensed => FontWidth::CONDENSED,
+        FontStretch::SemiCondensed => FontWidth::SEMI_CONDENSED,
+        FontStretch::Normal => FontWidth::NORMAL,
+        FontStretch::SemiExpanded => FontWidth::SEMI_EXPANDED,
+        FontStretch::Expanded => FontWidth::EXPANDED,
+        FontStretch::ExtraExpanded => FontWidth::EXTRA_EXPANDED,
+        FontStretch::UltraExpanded => FontWidth::ULTRA_EXPANDED,
     }
 }
 
@@ -276,10 +278,10 @@ fn styled_text_to_parley(
     builder.push_default(StyleProperty::Brush(*color));
     builder.push_default(StyleProperty::FontSize(size.get()));
     builder.push_default(StyleProperty::LineHeight(line_spacing.get()));
-    builder.push_default(StyleProperty::FontWeight(Weight::new(*weight as f32)));
+    builder.push_default(StyleProperty::FontWeight(FontWeight::new(*weight as f32)));
     builder.push_default(StyleProperty::Underline(*underline));
     builder.push_default(StyleProperty::Strikethrough(*line_through));
-    builder.push_default(StyleProperty::FontStretch(font_stretch_to_parley(*stretch)));
+    builder.push_default(StyleProperty::FontWidth(font_stretch_to_parley(*stretch)));
     if *italic {
         builder.push_default(StyleProperty::FontStyle(FontStyle::Italic));
     }
