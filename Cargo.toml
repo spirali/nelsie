@@ -11,8 +11,8 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.23", features = ["abi3-py310", "extension-module"] }
 taffy = "0.7"
-resvg = "0.43"
-svg2pdf = "0.12" # !!synchronized with resvg
+resvg = "0.45"
+svg2pdf = "0.13" # !!synchronized with resvg
 thiserror = "2"
 svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
@@ -31,8 +31,8 @@ rayon = "1.10"
 notify = "8"
 smallvec = "1"
 chumsky = "0.9"
-parley = { git = "https://github.com/linebender/parley.git", rev = "e8230d8382f799cd839ab63e136ed594622dc9fb" }
-skrifa = "0.19"
+parley = { version = "0.3"}
+skrifa = "*" # Lets us give a version specified in parley
 kurbo = "*" # Lets us give a version specified in parley -> penico -> kurbo
 
 
