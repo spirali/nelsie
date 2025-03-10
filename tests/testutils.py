@@ -42,8 +42,8 @@ def compare_images(new_dir, old_dir, n_slides, threshold, resize=False):
     if new_names != old_names:
         raise Exception(f"Produced files do not match with check files; new = {new_names}, old = {old_names}")
     for name1, name2 in zip(new_names, old_names):
-        new_img = Image.open(os.path.join(new_dir, name1))
-        old_img = Image.open(os.path.join(old_dir, name2))
+        new_img = Image.open(os.path.join(new_dir, name1)).convert("RGB")
+        old_img = Image.open(os.path.join(old_dir, name2)).convert("RGB")
         if resize:
             new_img = new_img.resize(old_img.size)
             new_img = new_img.convert(old_img.mode)
