@@ -180,7 +180,7 @@ jobs:
 
       - name: Archive test artifacts
         if: always() && steps.python_test.outcome == 'failure'
-        run: tar -cvf ${{ matrix.os }}-tests.tar testdir
+        run: tar -cvf ${{ matrix.os }}-tests.tar tests/current
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
