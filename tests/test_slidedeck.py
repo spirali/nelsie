@@ -51,7 +51,7 @@ def test_render_outputs(tmp_path, deck):
 
 
 @check(n_slides=2)
-def test_slide_decorator(deck):
+def test_slide_decorator_simple(deck):
     @deck.slide()
     def my_slide(slide):
         slide.box(width=400, height=200, bg_color="blue")
@@ -60,3 +60,14 @@ def test_slide_decorator(deck):
     @deck.slide(width=300, height=120, debug_layout="green")
     def my_slide2(slide):
         slide.text("Hello world!")
+
+
+@check(n_slides=1)
+def test_slide_decorator_ignore(deck):
+    @deck.slide(ignore=True)
+    def my_slide(slide):
+        slide.box(width=10, height=10, bg_color="red")
+
+    @deck.slide(width=10, height=10, debug_layout="green")
+    def my_slide2(slide):
+        pass
