@@ -218,6 +218,7 @@ class SlideDeck:
         counters: list[str] | None = None,
         parent_slide: tuple[Slide, int] | None = None,
         step_1: bool = True,
+        ignore: bool = False,
     ):
         """
         Decorator for creating new slide.
@@ -235,6 +236,8 @@ class SlideDeck:
         """
 
         def helper(fn):
+            if ignore:
+                return
             slide = self.new_slide(
                 width=width,
                 height=height,
