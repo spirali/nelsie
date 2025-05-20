@@ -22,6 +22,7 @@ pub(crate) enum NodeContent {
     Video(NodeContentVideo),
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub(crate) enum NodeChild {
     Node(Node),
