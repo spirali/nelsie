@@ -60,6 +60,7 @@ def check(
     error=None,
     error_match: str | None = None,
     windows_threshold=None,
+    pdf_threshold=None,
     deck_kwargs=None,
 ):
     def wrapper(fn):
@@ -93,6 +94,9 @@ def check(
                     threshold = DEFAULT_THRESHOLD
                     if windows_threshold is not None and sys.platform == "win32":
                         threshold = windows_threshold
+                    threshold2 = threshold
+                    if pdf_threshold is not None:
+                        threshold2 = pdf_threshold
                     compare_images(
                         os.path.join(tmp_path, "png"),
                         os.path.join(CHECKS_DIR, name, "png"),
@@ -103,7 +107,7 @@ def check(
                         os.path.join(tmp_path, "pdf2png"),
                         os.path.join(CHECKS_DIR, name, "pdf2png"),
                         n_slides,
-                        threshold=threshold,
+                        threshold=threshold2,
                     )
 
         return helper
