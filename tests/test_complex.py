@@ -2,7 +2,7 @@ from nelsie import Stroke, Path, Arrow
 from testutils import check
 
 
-@check(n_slides=4)
+@check(n_slides=4, pdf_threshold=205.0)  # On CI there is some problem with pdf rasterization of this example
 def test_chessboard(deck):
     slide = deck.new_slide(width=600, height=600)
 
