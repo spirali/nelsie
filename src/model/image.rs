@@ -2,7 +2,7 @@ use crate::model::{StepIndex, StepSet, StepValue};
 use crate::parsers::step_parser::parse_steps_from_label;
 use imagesize::blob_size;
 use resvg::usvg::fontdb;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};

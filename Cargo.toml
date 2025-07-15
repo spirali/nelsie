@@ -1,43 +1,16 @@
-[package]
-name = "nelsie"
-version = "0.16.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-[lib]
-name = "nelsie"
-crate-type = ["cdylib"]
-
-[dependencies]
-pyo3 = { version = "0.23", features = ["abi3-py310", "extension-module"] }
-taffy = "0.7"
-resvg = "0.45"
-svg2pdf = "0.13" # !!synchronized with resvg
-thiserror = "2"
-svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
-log = "0.4"
-pdf-writer = "0.12"
-itertools = "0.14"
-imagesize = "0.13"
-zip = { version = "2", default-features = false, features = ["deflate"] }
-syntect = { version = "5", default-features = false, features = ["default-fancy"] }
-indicatif = "0.17"
-base64 = "0.22"# Nice to be synchronized with resvg
-xmltree = { version = "0.11", features = ["attribute-order"] }
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"] } # Nice to be sycnrhonized with svg2pdf
-miniz_oxide = "0.8" # Nice to be sycnrhonized with svg2pdf
-by_address = "1"
-rayon = "1.10"
-notify = "8"
-smallvec = "1"
-chumsky = "0.9"
-parley = { version = "0.3"}
-skrifa = "*" # Lets us give a version specified in parley
-kurbo = "*" # Lets us give a version specified in parley -> penico -> kurbo
-
+[workspace]
+resolver = "3"
+members = ["renderer", "nelsie"]
 
 [profile.release]
 lto = true
 codegen-units = 1
 panic = "abort"
 debug = "line-tables-only"
+
+[workspace.dependencies]
+thiserror = { version = "2.0" }
+resvg = "0.45"
+svg2pdf = "0.13" # !!synchronized with resvg
+xmltree = { version = "0.11" }
+smallvec = "1"

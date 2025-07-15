@@ -6,7 +6,7 @@ from conftest import new_resources
 from testutils import check
 
 import nelsie
-from nelsie import FontStretch, InSteps, TextStyle
+from nelsie import FontStretch, TextStyle, StepVal
 
 
 def test_text_update():
@@ -19,9 +19,34 @@ def test_text_update():
 
 
 def test_text_invalid_font(deck):
-    s1 = TextStyle(font_family="Nonexisting font")
+    s1 = TextStyle(font="Nonexisting font")
+    deck.new_slide().text("Hello", style=s1)
     with pytest.raises(Exception, match="Font 'Nonexisting font' not found"):
-        deck.new_slide().text("Hello", style=s1)
+        deck.render("out.pdf")
+
+
+@check()
+def test_text_no_style(deck):
+    s = deck.new_slide(width=120, height=40)
+    s.text("Hello")
+
+
+@check()
+def test_text_shared(deck):
+    s = deck.new_slide(width=100, height=50)
+    s.text_style = TextStyle(size=12)
+    s.text("Shared")
+    s.text("Non-Shared")
+    s.text("Shared")
+
+
+@check()
+def test_text_squeeze(deck):
+    s = deck.new_slide(width=40, height=35)
+    s.text_style = TextStyle(size=12)
+    s.text("Shared", width=25)
+    s.text("Non-Shared", width=25)
+    s.text("Shared", width=25)
 
 
 @check(n_slides=4)
@@ -49,9 +74,8 @@ def test_render_text_steps(deck):
     slide = deck.new_slide(width=300, height=100)
     slide.set_style(
         "my_style",
-        InSteps({1: TextStyle(color="green"), 2: TextStyle(color="orange", size=64)}),
+        StepVal(TextStyle(color="green")).at(2, TextStyle(color="orange", size=64)),
     )
-    #    slide.box(bg_color="#f88").text("Say ~my_style{hello}!")
     slide.box().text("Say ~my_style{hello}!")
 
 
@@ -62,23 +86,12 @@ def test_render_text_unicode(deck):
     slide.box(bg_color="#f88").text("Příliš žluťoučký ~x{kůň} úpěl ďábelské ódy\n>>>y̆<<<")
 
 
-def test_set_invalid_font(deck):
-    with pytest.raises(Exception, match="Font 'NON-existent-fnt' not found."):
-        deck.set_style("my_style", TextStyle(font_family="NON-existent-fnt"))
-
-
 def test_set_get_styles_deck(deck):
     s = deck.get_style("default")
     for key, value in asdict(s).items():
         assert value is not None
 
-    assert s.font_family == "sans-serif"
-    assert s.color == "#000000"
-    assert s.size == pytest.approx(32.0)
-    assert s.line_spacing == pytest.approx(1.2)
-
-    with pytest.raises(Exception, match="Style 'big' not found"):
-        deck.get_style("big")
+    assert deck.get_style("big") is None
 
     deck.set_style("big", TextStyle(size=120.0))
     s = deck.get_style("big")
@@ -97,37 +110,6 @@ def test_text_lines(deck):
     slide.text("Test text", TextStyle(underline=True, line_through=True))
 
 
-def test_set_get_styles_box(deck):
-    slide = deck.new_slide()
-    slide.set_style("one", TextStyle(color="red"))
-    slide.set_style("two", TextStyle(color="green"))
-    b = slide.box()
-    b2 = b.box()
-    b2.set_style("one", TextStyle(color="blue"))
-    b2.set_style("three", TextStyle(size=321))
-    b2.set_style("four", InSteps({1: TextStyle(size=100), 4: TextStyle(size=40)}))
-    b3 = b2.box()
-    b3.set_style("default", TextStyle(line_spacing=1.0))
-
-    with pytest.raises(Exception, match="Style 'three' not found"):
-        deck.get_style("three")
-    with pytest.raises(Exception, match="Style 'three' not found"):
-        b.get_style("three")
-
-    s = b.get_style("one")
-    assert s == TextStyle(color="#ff0000")
-
-    s = b3.get_style("one")
-    assert s == TextStyle(color="#0000ff")
-
-    s = b3.get_style("three")
-    assert s.size == pytest.approx(321.0)
-
-    s = b3.get_style("default")
-    assert s.line_spacing == 1.0
-    assert s.color == "#000000"
-
-
 @check()
 def test_text_color_opacity(deck):
     slide = deck.new_slide(width=220, height=50)
@@ -135,7 +117,6 @@ def test_text_color_opacity(deck):
     slide.box(x=0, y=0, width=60, height="100%", bg_color="green")
     slide.box(x=60, y=0, width="30%", height="100%", bg_color="blue")
     slide.text("Opacity test", style="one")
-    assert slide.get_style("one").color == "#ff00ff50"
 
 
 @check()
@@ -147,28 +128,10 @@ def test_text_styling(deck):
     slide.text("Hi are you?", TextStyle(stretch=FontStretch.UltraExpanded, size=10))
 
 
-def test_text_bold_init(deck):
-    style = TextStyle(bold=True)
-    assert style.weight == 700
-
-
-def test_text_bold_init_false(deck):
-    style = TextStyle(bold=False)
-    assert style.weight is None
-
-
-def test_text_style_get_stretch(deck):
-    slide = deck.new_slide(width=220, height=150)
-    slide.set_style("test", TextStyle(stretch=FontStretch.Expanded))
-    assert isinstance(slide.get_style("test").stretch, nelsie.FontStretch)
-    assert slide.get_style("default").stretch == FontStretch.Normal
-    assert slide.get_style("test").stretch == FontStretch.Expanded
-
-
 @check()
 def test_text_monospace(deck):
     slide = deck.new_slide(width=150, height=100)
-    slide.text("Text W1", "monospace")
+    slide.text("WWW\n111", TextStyle(font="monospace"))
 
 
 @check()
@@ -194,6 +157,7 @@ def test_text_align(deck):
 def test_text_descent_ascent1(deck):
     slide = deck.new_slide(width=200, height=325)
     slide.set_style("default", TextStyle(size=24))
+    slide.set_style("monospace", TextStyle(font="monospace"))
     box = slide.box(row=True)
     box.text("W1yg", bg_color="green", style=TextStyle(line_spacing=1.0))
     box.text("W1yg", bg_color="red", style=TextStyle(line_spacing=1.2))
