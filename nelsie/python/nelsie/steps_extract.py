@@ -1,0 +1,27 @@
+from .steps import StepVal, Step
+from .textstyle import TextStyle
+from .text import TextContent
+from .box import Box
+from .slidedeck import Slide
+
+containers = (list, tuple, set)
+known_classes = (TextContent, TextStyle, Slide, Box)
+
+def extract_steps(obj, out: set[Step]):
+    if obj is None:
+        return
+    if isinstance(obj, StepVal):
+        if obj.named_steps is not None:
+            out.update(obj.named_steps)
+        else:
+            out.update(obj.values.keys())
+        return
+    if isinstance(obj, containers):
+        for o in obj:
+            extract_steps(o, out)
+    if isinstance(obj, dict):
+        for o in obj.values():
+            extract_steps(o, out)
+    if isinstance(obj, known_classes):
+        for o in obj.__dict__.values():
+            extract_steps(o, out)

@@ -1,19 +1,78 @@
+from nelsie.steps import extract_steps, parse_bool_steps
 from testutils import check
 
-from nelsie import InSteps, TextStyle
+from nelsie import TextStyle, s, InSteps, Box
 
 
-def test_step_values():
-    def check(in_steps, values, n_steps):
-        assert in_steps.in_step_values == values
+def test_step_value():
+    a = s().s(2, "A").s(4, "B")
+    assert a.get_step(1) is None
+    assert a.get_step(2) == "A"
+    assert a.get_step(3) == "A"
+    assert a.get_step(4) == "B"
+    assert a.get_step(5) == "B"
 
-    check(InSteps(["red", "red", "blue"]), {1: "red", 3: "blue"}, 3)
+    assert a.get_step((1, 9)) is None
+    assert a.get_step((2, 1)) == "A"
+    assert a.get_step((3, 9, 9, 9, 9)) == "A"
+    assert a.get_step((4, 0, 0)) == "B"
 
-    check(
-        InSteps({2: "black", 1: "orange", 4: "green"}),
-        {2: "black", 1: "orange", 4: "green"},
-        4,
-    )
+
+def test_parse_bool_steps():
+    s = parse_bool_steps("1")
+    assert s.values == {1: True, 2: False}
+    assert s.named_steps == [1]
+    s = parse_bool_steps("1, 2, 3")
+    assert s.values == {1: True, 4: False}
+    assert set(s.named_steps) == {1, 2, 3}
+
+    s = parse_bool_steps("2+")
+    assert s.values == {2: True}
+    assert set(s.named_steps) == {2}
+
+    s = parse_bool_steps("2, 4+")
+    assert s.values == {2: True, 3: False, 4: True}
+    assert set(s.named_steps) == {2, 4}
+
+    s = parse_bool_steps("4, 10-20, 30-40, 50+")
+    assert s.values == {4: True, 5: False, 10: True, 21: False, 30: True, 41: False, 50: True}
+    assert set(s.named_steps) == {4, 10, 20, 30, 40, 50}
+
+    s = parse_bool_steps("2.5.1+")
+    assert s.values == {(2, 5, 1): True}
+    assert set(s.named_steps) == {(2, 5, 1)}
+
+    s = parse_bool_steps("2.5.1")
+    assert s.values == {(2, 5, 1): True, (2, 5, 2): False}
+    assert set(s.named_steps) == {(2, 5, 1)}
+
+    s = parse_bool_steps("!20.50.100")
+    assert s.values == {(20, 50, 100): True, (20, 50, 100, 0): False}
+    assert set(s.named_steps) == {(20, 50, 100)}
+
+    s = parse_bool_steps("3-!6")
+    assert s.values == {3: True, (6, 0): False}
+    assert set(s.named_steps) == {3, 6}
+
+    s = parse_bool_steps("1, 2?, 3, 10-20?")
+    assert s.values == {1: True, 4: False, 10: True, 21: False}
+    assert set(s.named_steps) == {1, 3, 10}
+
+
+def test_extract_steps():
+    def check(obj, target):
+        out = set()
+        extract_steps(obj, out)
+        assert out == target
+
+    check(None, set())
+    a = s().s(2, "A").s(4, "B")
+    b = s().s(4, "A").s(5, "B")
+    check(a, {2, 4})
+    check([4, 5, 6, a, b], {2, 4, 5})
+    check(a, {2, 4})
+    check({1: a, 2: b}, {2, 4, 5})
+    check(Box().text(a), {2, 4})
 
 
 @check(n_slides=3)
@@ -21,14 +80,14 @@ def test_render_steps(deck):
     slide = deck.new_slide()
     slide.box(
         width=100,
-        height=InSteps({1: "75%", 2: "25%"}),
+        height=s("75%").s(2, "25%"),
         bg_color=InSteps(["red", "green", "blue"]),
     )
 
 
 @check(n_slides=3)
 def test_render_substeps(deck):
-    slide = deck.new_slide(step_1=False)
+    slide = deck.new_slide(init_steps=())
     slide.box(
         width=100,
         height=InSteps({(2, 3, 1): "75%", (2, 3, 2): "25%"}),
