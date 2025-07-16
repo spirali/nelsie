@@ -1,5 +1,5 @@
 use crate::node::{Node, NodeChild};
-use crate::render::canvas::Canvas;
+use crate::render::canvas::{Canvas, Link};
 use crate::render::context::RenderContext;
 use crate::render::layout::{ComputedLayout, compute_page_layout};
 use crate::shapes::FillAndStroke;
@@ -20,7 +20,6 @@ pub(crate) fn render_node(
         canvas.add_draw_item(node.z_level, item);
     }
 
-    todo!();
     /*if let Some(content) = &node.content {
         let rect = layout.node_layout(node.node_id).unwrap().rect;
         match content {
@@ -38,13 +37,12 @@ pub(crate) fn render_node(
                 self.canvas.add_video(rect.clone(), video.video.clone());
             }
         }
-    }
+    }*/
 
     if let Some(url) = &node.url {
         let rect = &layout.node_layout(node.node_id).unwrap().rect;
         canvas.add_link(Link::new(rect.clone(), url.clone()));
     }
-
 
     for child in &node.children {
         match child {
@@ -54,5 +52,5 @@ pub(crate) fn render_node(
                 //self.draw(step, node.node_id, draw)
             }*/
         }
-    }*/
+    }
 }

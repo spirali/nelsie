@@ -71,7 +71,7 @@ impl Canvas {
         }
     }
 
-    pub fn items(&self) -> impl Iterator<Item=&CanvasItem> {
+    pub fn items(&self) -> impl Iterator<Item = &CanvasItem> {
         self.items.iter().map(|item| &item.1)
     }
 

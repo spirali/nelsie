@@ -1,9 +1,10 @@
-use crate::render::canvas::{Canvas, CanvasItem};
-use crate::render::text::RenderedText;
-use std::io::Write;
 use crate::Rectangle;
+use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::draw::DrawItem;
+use crate::render::svgpath::{svg_ellipse, svg_path, svg_rect};
+use crate::render::text::RenderedText;
 use crate::utils::sxml::SimpleXmlWriter;
+use std::io::Write;
 
 impl Canvas {
     pub fn as_svg(&self) -> crate::Result<String> {
@@ -55,12 +56,11 @@ impl Canvas {
 }
 
 fn write_draw_item_to_svg(xml: &mut SimpleXmlWriter, item: &DrawItem) {
-   todo!()
-    /*match item {
+    match item {
         DrawItem::Rect(rect) => svg_rect(xml, rect),
         DrawItem::Oval(rect) => svg_ellipse(xml, rect),
         DrawItem::Path(path) => svg_path(xml, path),
-    }*/
+    }
 }
 
 fn write_raster_image_to_svg(
@@ -133,7 +133,7 @@ fn render_svg_image_into_svg(
             rect.width / width,
             rect.height / height
         )
-            .unwrap();
+        .unwrap();
     });
     writer.text_raw(data);
     writer.end("g");

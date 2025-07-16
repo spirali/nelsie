@@ -30,8 +30,7 @@ impl ComputedLayout {
     }
 
     pub fn eval(&self, expr: &LayoutExpr, parent_node: NodeId) -> f32 {
-        todo!()
-        /*match expr {
+        match expr {
             LayoutExpr::ConstValue { value } => *value,
             LayoutExpr::X { node_id } => self._rect(*node_id).x,
             LayoutExpr::Y { node_id } => self._rect(*node_id).y,
@@ -44,7 +43,7 @@ impl ComputedLayout {
             LayoutExpr::ParentY { shift } => self._rect(parent_node).y + shift,
             LayoutExpr::ParentWidth { fraction } => self._rect(parent_node).width * fraction,
             LayoutExpr::ParentHeight { fraction } => self._rect(parent_node).height * fraction,
-            LayoutExpr::LineX { node_id, line_idx } => {
+            /*LayoutExpr::LineX { node_id, line_idx } => {
                 let layout = self._layout(*node_id);
                 layout
                     .text
@@ -95,8 +94,8 @@ impl ComputedLayout {
                     })
                     .unwrap_or(0.0)
                     * fraction
-            }
-            LayoutExpr::InTextAnchorX { node_id, anchor_id } => {
+            }*/
+            /*LayoutExpr::InTextAnchorX { node_id, anchor_id } => {
                 let layout = self._layout(*node_id);
                 layout
                     .text
@@ -139,8 +138,8 @@ impl ComputedLayout {
                     .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.height))
                     .unwrap_or(0.0)
                     * fraction
-            }
-        }*/
+            }*/
+        }
     }
 
     fn set_layout(&mut self, node_id: NodeId, layout_data: LayoutData) {
@@ -449,7 +448,7 @@ pub fn compute_page_layout(render_ctx: &mut RenderContext, page: &Page) -> Compu
                         .unwrap_or(rect.height),
                 },
                 //text_layout: text_layouts.remove(&node.node_id),
-                text: todo!(), // config.text_cache.get(node.node_id).cloned(),
+                text: None, // todo!(), // config.text_cache.get(node.node_id).cloned(),
             },
         );
     }

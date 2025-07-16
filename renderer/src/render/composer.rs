@@ -345,12 +345,17 @@ pub fn precompute_image_cache(pdf_writer: &PdfWriterData, progress_bar: Option<&
 }
 */
 use crate::render::canvas::Canvas;
+use std::sync::Mutex;
+use resvg::{tiny_skia, usvg};
+use crate::Resources;
 
 pub(crate) trait Composer: Sync {
     fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()>;
-    fn finish(&self) -> crate::Result<()> {
-        Ok(())
-    }
+}
+
+fn path_name(page_idx: usize, extension: &str, n_pages: usize) -> String {
+    let padding = n_pages.ilog10() as usize + 1;
+    format!("{:0padding$}.{}", page_idx, extension, padding = padding,)
 }
 
 pub(crate) struct SvgWriteComposer<'a> {
@@ -364,11 +369,6 @@ impl<'a> SvgWriteComposer<'a> {
     }
 }
 
-fn path_name(page_idx: usize, extension: &str, n_pages: usize) -> String {
-    let padding = n_pages.to_string().len();
-    format!("{:0padding$}.{}", page_idx, extension, padding = padding,)
-}
-
 impl Composer for SvgWriteComposer<'_> {
     fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()> {
         let svg = canvas.as_svg()?;
@@ -376,4 +376,93 @@ impl Composer for SvgWriteComposer<'_> {
         std::fs::write(final_path, svg)?;
         Ok(())
     }
+}
+
+pub(crate) struct PngWriteComposer<'a> {
+    path: &'a std::path::Path,
+    n_pages: usize,
+}
+
+impl<'a> PngWriteComposer<'a> {
+    pub fn new(path: &'a std::path::Path, n_pages: usize) -> Self {
+        Self { path, n_pages }
+    }
+}
+
+impl Composer for PngWriteComposer<'_> {
+    fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()> {
+        let svg = canvas.as_svg()?;
+        let final_path = self.path.join(path_name(page_idx, "png", self.n_pages));
+        todo!();
+        std::fs::write(final_path, svg)?;
+        Ok(())
+    }
+}
+
+pub(crate) struct SvgCollectorComposer {
+    pages: Mutex<Vec<String>>,
+}
+
+impl SvgCollectorComposer {
+    pub fn new(n_pages: usize) -> Self {
+        Self {
+            pages: Mutex::new(vec![String::new(); n_pages]),
+        }
+    }
+
+    pub fn finish(self) -> Vec<String> {
+        self.pages.into_inner().unwrap()
+    }
+}
+
+impl Composer for SvgCollectorComposer {
+    fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()> {
+        let svg = canvas.as_svg()?;
+        self.pages.lock().unwrap()[page_idx] = svg;
+        Ok(())
+    }
+}
+
+pub(crate) struct PngCollectorComposer<'a> {
+    pages: Mutex<Vec<Vec<u8>>>,
+    resources: &'a Resources
+}
+
+impl<'a> PngCollectorComposer<'a> {
+    pub fn new(resources: &'a Resources, n_pages: usize) -> Self {
+        Self {
+            pages: Mutex::new(vec![Vec::new(); n_pages]),
+            resources,
+        }
+    }
+
+    pub fn finish(self) -> Vec<Vec<u8>> {
+        self.pages.into_inner().unwrap()
+    }
+}
+
+impl<'a> Composer for PngCollectorComposer<'a> {
+    fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()> {
+        let svg = canvas.as_svg()?;
+        let data = svg_to_png(self.resources, &svg)?;
+        self.pages.lock().unwrap()[page_idx] = data;
+        Ok(())
+    }
+}
+
+fn svg_to_png(resources: &Resources, svg: &str) -> crate::Result<Vec<u8>> {
+    let options = usvg::Options {
+        fontdb: resources.font_db.as_ref().unwrap().clone(),
+        ..Default::default()
+    };
+    let tree = usvg::Tree::from_str(&svg, &options)?;
+    let zoom = 1.0;
+    let pixmap_size = tree.size().to_int_size().scale_by(zoom).unwrap();
+    let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();
+    let render_ts = tiny_skia::Transform::from_scale(zoom, zoom);
+    resvg::render(&tree, render_ts, &mut pixmap.as_mut());
+
+    pixmap
+        .encode_png()
+        .map_err(|e| crate::Error::Generic(e.to_string()))
 }

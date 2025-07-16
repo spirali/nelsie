@@ -4,6 +4,7 @@ use crate::render::canvas::Canvas;
 use crate::render::context::RenderContext;
 use crate::render::layout::compute_page_layout;
 use crate::render::node::render_node;
+use bon::Builder;
 use std::collections::BTreeSet;
 
 pub struct Page {
@@ -14,6 +15,15 @@ pub struct Page {
 }
 
 impl Page {
+    pub fn new(node: Node, width: f32, height: f32, bg_color: Color) -> Self {
+        Page {
+            node,
+            width,
+            height,
+            bg_color,
+        }
+    }
+
     pub(crate) fn render_to_canvas(&self, render_ctx: &mut RenderContext) -> Canvas {
         log::debug!("Creating layout");
         let layout = compute_page_layout(render_ctx, self);

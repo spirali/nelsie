@@ -34,7 +34,7 @@ impl Length {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) enum LengthOrAuto {
+pub enum LengthOrAuto {
     Points { value: f32 },
     Fraction { value: f32 },
     Auto,
@@ -51,7 +51,7 @@ impl LengthOrAuto {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum LengthOrExpr {
+pub enum LengthOrExpr {
     Points { value: f32 },
     Fraction { value: f32 },
     Expr(LayoutExpr),
@@ -64,6 +64,11 @@ impl Default for LengthOrExpr {
 }
 
 impl LengthOrExpr {
+    #[inline]
+    pub fn points(value: f32) -> LengthOrExpr {
+        LengthOrExpr::Points { value }
+    }
+
     pub fn is_expr(&self) -> bool {
         match self {
             LengthOrExpr::Points { .. } | LengthOrExpr::Fraction { .. } => false,
@@ -80,37 +85,17 @@ impl LengthOrExpr {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum LayoutExpr {
-    ConstValue {
-        value: f32,
-    },
-    ParentX {
-        shift: f32,
-    },
-    ParentY {
-        shift: f32,
-    },
-    ParentWidth {
-        fraction: f32,
-    },
-    ParentHeight {
-        fraction: f32,
-    },
-    X {
-        node_id: NodeId,
-    },
-    Y {
-        node_id: NodeId,
-    },
-    Width {
-        node_id: NodeId,
-        fraction: f32,
-    },
-    Height {
-        node_id: NodeId,
-        fraction: f32,
-    },
-    LineX {
+pub enum LayoutExpr {
+    ConstValue { value: f32 },
+    ParentX { shift: f32 },
+    ParentY { shift: f32 },
+    ParentWidth { fraction: f32 },
+    ParentHeight { fraction: f32 },
+    X { node_id: NodeId },
+    Y { node_id: NodeId },
+    Width { node_id: NodeId, fraction: f32 },
+    Height { node_id: NodeId, fraction: f32 },
+    /*LineX {
         node_id: NodeId,
         line_idx: u32,
     },
@@ -127,7 +112,7 @@ pub(crate) enum LayoutExpr {
         node_id: NodeId,
         line_idx: u32,
         fraction: f32,
-    },
+    },*/
     /*    InTextAnchorX {
         node_id: NodeId,
         anchor_id: InTextBoxId,
@@ -146,13 +131,19 @@ pub(crate) enum LayoutExpr {
         anchor_id: InTextBoxId,
         fraction: f32,
     },*/
-    Sum {
-        expressions: Vec<LayoutExpr>,
-    },
+    Sum { expressions: Vec<LayoutExpr> },
 }
 
 impl LayoutExpr {
-    pub(crate) fn add(self, other: LayoutExpr) -> LayoutExpr {
+    pub const ZERO: LayoutExpr = LayoutExpr::ConstValue { value: 0.0 };
+
+    #[inline]
+    pub fn const_value(value: f32) -> LayoutExpr {
+        LayoutExpr::ConstValue { value }
+    }
+
+    #[inline]
+    pub fn add(self, other: LayoutExpr) -> LayoutExpr {
         LayoutExpr::Sum {
             expressions: vec![self, other],
         }

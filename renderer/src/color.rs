@@ -18,6 +18,13 @@ impl Color {
         Color(color)
     }
 
+    #[inline]
+    pub fn from_str(s: &str) -> Result<Self, Error> {
+        Ok(Color::new(svgtypes::Color::from_str(s).map_err(|_| {
+            Error::parsing_err(format!("Invalid color: '{s}'"))
+        })?))
+    }
+
     pub fn as_f32s(&self) -> [f32; 3] {
         [
             self.0.red as f32 / 255.0,
