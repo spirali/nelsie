@@ -76,7 +76,7 @@ pub fn run_syntax_highlighting(
     for line in &mut text.text.lines() {
         let highlighted_line = highlight
             .highlight_line(line, &resources.syntax_set)
-            .map_err(|e| NelsieError::generic_err(format!("Syntax highlight error: {}", e)))?;
+            .map_err(|e| NelsieError::generic_err(format!("Syntax highlight error: {e}")))?;
         for (style, word) in highlighted_line {
             let len = word.len() as u32;
             styles.push(ParsedStyleRange {

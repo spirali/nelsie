@@ -20,7 +20,7 @@ impl Display for Step {
             if i > 0 {
                 write!(f, ".")?;
             }
-            write!(f, "{}", v)?;
+            write!(f, "{v}")?;
         }
         Ok(())
     }

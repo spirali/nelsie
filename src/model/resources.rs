@@ -81,7 +81,7 @@ impl Resources {
         let mut builder = syntax_set.into_builder();
         builder
             .add_from_folder(path, false)
-            .map_err(|e| NelsieError::Generic(format!("Adding syntax failed: {}", e)))?;
+            .map_err(|e| NelsieError::Generic(format!("Adding syntax failed: {e}")))?;
         self.syntax_set = builder.build();
         Ok(())
     }
@@ -90,7 +90,7 @@ impl Resources {
         log::debug!("Adding code theme directory {}", path.display());
         self.theme_set
             .add_from_folder(path)
-            .map_err(|e| NelsieError::Generic(format!("Adding theme failed: {}", e)))?;
+            .map_err(|e| NelsieError::Generic(format!("Adding theme failed: {e}")))?;
         Ok(())
     }
 
@@ -135,8 +135,7 @@ impl Resources {
             })
         } else {
             Err(NelsieError::Generic(format!(
-                "Font '{}' not found.",
-                family_name
+                "Font '{family_name}' not found."
             )))
         }
     }

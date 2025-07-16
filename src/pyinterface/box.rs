@@ -305,8 +305,7 @@ fn process_content(
                                 )?,
                                 _ => {
                                     return Err(NelsieError::generic_err(format!(
-                                        "Unknown format: {}",
-                                        format
+                                        "Unknown format: {format}"
                                     )))
                                 }
                             },

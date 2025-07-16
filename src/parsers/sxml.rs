@@ -50,7 +50,7 @@ impl<'a> SimpleXmlWriter<'a> {
     }
 
     pub fn attr<T: Display>(&mut self, name: &str, value: T) {
-        self.attr_buf(name, |s| write!(s, "{}", value).unwrap());
+        self.attr_buf(name, |s| write!(s, "{value}").unwrap());
     }
 
     pub fn attr_buf<F: Fn(&mut String)>(&mut self, name: &str, f: F) {

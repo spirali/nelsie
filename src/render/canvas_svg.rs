@@ -96,9 +96,7 @@ pub(crate) fn svg_begin(xml: &mut SimpleXmlWriter, width: f32, height: f32) {
     xml.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
     xml.attr("width", width);
     xml.attr("height", height);
-    xml.attr_buf("viewBox", |s| {
-        write!(s, "0 0 {} {}", width, height).unwrap()
-    });
+    xml.attr_buf("viewBox", |s| write!(s, "0 0 {width} {height}").unwrap());
 }
 
 fn render_text_into_svg(
