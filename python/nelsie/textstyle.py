@@ -43,7 +43,7 @@ class TextStyle:
             assert 1 <= self.weight <= 1000
             if bold is not None:
                 raise Exception("Cannot set both `weight` and `bold` when creating a TextStyle")
-        if bold is not None:
+        if bold is True:
             # Workaround to set frozen attribute
             super().__setattr__("weight", 700)
 
