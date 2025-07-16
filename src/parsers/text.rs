@@ -74,8 +74,7 @@ pub(crate) fn parse_styled_text(
             let start = idx + esc_len;
             let end = input[start..].find(start_block).ok_or_else(|| {
                 NelsieError::parsing_err(format!(
-                    "Invalid style formatting: character '{}' found, but no following '{}')",
-                    esc_char, start_block
+                    "Invalid style formatting: character '{esc_char}' found, but no following '{start_block}')"
                 ))
             })? + start;
             let name = &input[start..end];

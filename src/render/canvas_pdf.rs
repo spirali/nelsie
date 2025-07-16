@@ -68,7 +68,7 @@ impl Canvas {
                     let tree = usvg::Tree::from_str(&data, &options)?;
                     let (svg_chunk, svg_ref) =
                         svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default()).map_err(
-                            |e| NelsieError::generic_err(format!("PDF conversion error: {}", e)),
+                            |e| NelsieError::generic_err(format!("PDF conversion error: {e}")),
                         )?;
                     let svg_ref =
                         renumber_into(&svg_chunk, &mut pdf_ctx.chunk, pdf_ctx.alloc_ref, svg_ref);

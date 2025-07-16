@@ -15,9 +15,9 @@ pub(crate) fn stroke_and_fill_svg(xml: &mut SimpleXmlWriter, fill_and_stroke: &F
             xml.attr_buf("stroke-dasharray", |s| {
                 for (i, v) in array.iter().enumerate() {
                     if i == 0 {
-                        write!(s, "{}", v).unwrap();
+                        write!(s, "{v}").unwrap();
                     } else {
-                        write!(s, " {}", v).unwrap();
+                        write!(s, " {v}").unwrap();
                     }
                 }
             });

@@ -210,7 +210,7 @@ impl<'a> PageBuilder<'a> {
 
 fn path_name(page_idx: u32, extension: &str, n_pages: u32) -> String {
     let padding = n_pages.to_string().len();
-    format!("{:0padding$}.{}", page_idx, extension, padding = padding,)
+    format!("{page_idx:0padding$}.{extension}",)
 }
 
 fn write_svg_page(
