@@ -152,6 +152,11 @@ def test_text_bold_init(deck):
     assert style.weight == 700
 
 
+def test_text_bold_init_false(deck):
+    style = TextStyle(bold=False)
+    assert style.weight is None
+
+
 def test_text_style_get_stretch(deck):
     slide = deck.new_slide(width=220, height=150)
     slide.set_style("test", TextStyle(stretch=FontStretch.Expanded))
