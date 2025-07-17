@@ -1,28 +1,45 @@
+use std::collections::HashMap;
 use std::io::Bytes;
 use crate::node::Node;
 use crate::render::composer::{Composer, PngCollectorComposer, PngWriteComposer, SvgCollectorComposer, SvgWriteComposer};
 use crate::render::context::{RenderContext, ThreadLocalResources};
-use crate::render::text::TextContext;
+use crate::render::text::{RenderedText, TextContext};
 use crate::resources::Resources;
-use crate::{Color, Page};
+use crate::{Color, NodeId, Page};
 use parley::{FontContext, LayoutContext};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use crate::text::{Text, TextId};
 
 pub struct Document {
-    pub pages: Vec<Page>,
+    pages: Vec<Page>,
+    texts: HashMap<Text, (TextId, u32)>
 }
 
 impl Document {
     pub fn new() -> Self {
-        Self { pages: Vec::new() }
+        Self { pages: Vec::new(), texts: HashMap::new() }
     }
 
     pub fn add_page(&mut self, page: Page) {
         self.pages.push(page);
     }
 
+    pub fn register_text(&mut self, text: Text) -> TextId {
+        let count = self.texts.len();
+        let entry = self.texts.entry(text).or_insert_with(|| (TextId::new(count as u32), 0));
+        entry.1 += 1;
+        entry.0
+    }
+
     fn render(&self, resources: &Resources, composer: &dyn Composer) -> crate::Result<()> {
+        let text_cache: HashMap<_, _> = self.texts.par_iter().map_init(|| FontContext {
+            collection: resources.font_context.collection.clone(),
+            source_cache: resources.font_context.source_cache.clone(),
+        }, |font_ctx, (text, (node_id, count))| {
+               todo!()
+        }).collect::<crate::Result::<HashMap<NodeId, RenderedText>>>()?;
+
         self.pages.par_iter().enumerate().try_for_each_init(
             || ThreadLocalResources {
                 text_context: TextContext {

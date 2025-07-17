@@ -9,3 +9,7 @@ pub(crate) struct TextContext {
     pub layout_cx: LayoutContext<Color>,
     pub font_cx: FontContext,
 }
+
+pub fn render_text() {
+    
+}

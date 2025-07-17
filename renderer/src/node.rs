@@ -6,6 +6,7 @@ use std::sync::Arc;
 use taffy::{
     AlignContent, AlignItems, FlexWrap, GridPlacement, Line, NonRepeatedTrackSizingFunction,
 };
+use crate::text::{Text, TextId};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
@@ -13,6 +14,12 @@ pub enum NodeChild {
     Node(Node),
     //    Draw(Drawing),
 }
+
+#[derive(Debug)]
+pub(crate) enum NodeContent {
+    Text(TextId),
+}
+
 
 #[derive(Builder, Debug)]
 pub struct Node {
@@ -101,8 +108,9 @@ pub struct Node {
 
     #[builder(default)]
     pub z_level: i32,
-
-    //pub content: Option<NodeContent>,
+    
+    pub content: Option<NodeContent>,
+    
     pub url: Option<String>,
 }
 

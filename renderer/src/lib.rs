@@ -9,6 +9,8 @@ mod resources;
 mod shapes;
 mod types;
 mod utils;
+mod text;
+mod styling;
 
 pub use color::Color;
 pub use document::Document;

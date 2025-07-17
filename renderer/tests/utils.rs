@@ -8,13 +8,11 @@ fn current_dir() -> PathBuf {
         .join("current")
 }
 
-
 fn snapshots_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join("snapshots")
 }
-
 
 // Returns the current function name
 #[macro_export]
@@ -64,7 +62,12 @@ impl<'a> TestEnv<'a> {
 
         let n_pages = nodes.len();
         for node in nodes {
-            let page = Page::new(node, self.width, self.height, Color::from_str("white").unwrap());
+            let page = Page::new(
+                node,
+                self.width,
+                self.height,
+                Color::from_str("white").unwrap(),
+            );
             doc.add_page(page);
         }
         let snapshots_path = snapshots_dir().join(&self.name);
@@ -83,7 +86,7 @@ impl<'a> TestEnv<'a> {
                     errors.push(format!("{filename}: images differ"));
                 }
             } else {
-                errors.push(format!("{filename}: reference image not found", ));
+                errors.push(format!("{filename}: reference image not found",));
             }
         }
         if !errors.is_empty() {
