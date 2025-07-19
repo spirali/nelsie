@@ -109,6 +109,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "by_address"
+version = "1.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64fa3c856b712db6612c019f14756e64e4bcea13337a6b33b696333a9eaa2d06"
+
+[[package]]
 name = "bytemuck"
 version = "1.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -567,6 +573,7 @@ version = "0.0.0"
 dependencies = [
  "base64",
  "bon",
+ "by_address",
  "image",
  "itertools",
  "kurbo",
@@ -576,7 +583,8 @@ dependencies = [
  "pdf-writer",
  "rayon",
  "resvg",
- "skrifa 0.26.6",
+ "skrifa 0.31.3",
+ "smallvec",
  "svg2pdf",
  "svgtypes",
  "syntect",

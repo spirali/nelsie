@@ -1,9 +1,10 @@
 use crate::text::{Text, TextId};
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
-use crate::{Color, NodeId};
+use crate::{Color, ImageId, ImagePlacement, NodeId};
 use bon::Builder;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
+use smallvec::SmallVec;
 use taffy::{
     AlignContent, AlignItems, FlexWrap, GridPlacement, Line, NonRepeatedTrackSizingFunction,
 };
@@ -15,9 +16,12 @@ pub enum NodeChild {
     //    Draw(Drawing),
 }
 
-#[derive(Debug)]
-pub(crate) enum NodeContent {
+#[derive(Debug, Default)]
+pub enum NodeContent {
+    #[default]
+    None,
     Text(TextId),
+    Image(SmallVec<[ImagePlacement; 1]>),
 }
 
 #[derive(Builder, Debug)]
@@ -108,7 +112,8 @@ pub struct Node {
     #[builder(default)]
     pub z_level: i32,
 
-    pub content: Option<NodeContent>,
+    #[builder(default)]
+    pub content: NodeContent,
 
     pub url: Option<String>,
 }
