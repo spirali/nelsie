@@ -2,9 +2,9 @@ use crate::text::{Text, TextId};
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
 use crate::{Color, ImageId, ImagePlacement, NodeId};
 use bon::Builder;
+use smallvec::SmallVec;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
-use smallvec::SmallVec;
 use taffy::{
     AlignContent, AlignItems, FlexWrap, GridPlacement, Line, NonRepeatedTrackSizingFunction,
 };

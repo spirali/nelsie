@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use by_address::ByAddress;
+use std::sync::Arc;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub struct ImageId(u32);

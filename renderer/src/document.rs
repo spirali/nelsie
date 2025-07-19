@@ -1,3 +1,4 @@
+use crate::image::InMemoryImage;
 use crate::node::Node;
 use crate::render::composer::{
     Composer, PngCollectorComposer, PngWriteComposer, SvgCollectorComposer, SvgWriteComposer,
@@ -11,8 +12,7 @@ use parley::{FontContext, LayoutContext};
 use rayon::iter::IndexedParallelIterator;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use crate::image::InMemoryImage;
+use std::path::PathBuf;
 
 pub struct Document {
     pages: Vec<Page>,
@@ -48,7 +48,7 @@ impl Document {
         entry.0
     }
 
-    pub fn register_image_path(&mut self, path: &Path) -> ImageId {
+    pub fn register_image_path(&mut self, path: &std::path::Path) -> ImageId {
         if let Some(image_id) = self.images_paths.get(path) {
             return *image_id;
         }
@@ -56,19 +56,44 @@ impl Document {
         self.images_paths.insert(path.to_path_buf(), image_id);
         image_id
     }
-    
+
+    pub fn register_image_mem(&mut self, image: InMemoryImage) -> ImageId {
+        let entry = self
+            .images_mem
+            .entry(image)
+            .or_insert_with(|| self.image_id_counter.bump());
+        *entry
+    }
+
     fn render(&self, resources: &Resources, composer: &dyn Composer) -> crate::Result<()> {
-        let text_cache: HashMap<_, _> = self
-            .texts
-            .par_iter()
-            .map_init(
-                || FontContext {
-                    collection: resources.font_context.collection.clone(),
-                    source_cache: resources.font_context.source_cache.clone(),
-                },
-                |font_ctx, (text, (node_id, count))| todo!(),
-            )
-            .collect::<crate::Result<HashMap<NodeId, RenderedText>>>()?;
+        let (text_cache, image_cache): (
+            crate::Result<HashMap<_, _>>,
+            crate::Result<HashMap<_, _>>,
+        ) = rayon::join(
+            || {
+                self.texts
+                    .par_iter()
+                    .map_init(
+                        || FontContext {
+                            collection: resources.font_context.collection.clone(),
+                            source_cache: resources.font_context.source_cache.clone(),
+                        },
+                        |font_ctx, (text, (node_id, count))| todo!(),
+                    )
+                    .collect::<crate::Result<HashMap<NodeId, RenderedText>>>()
+            },
+            || todo!(),
+        );
+        let text_cache = text_cache?;
+        let mut image_cache: HashMap<ImageId, InMemoryImage> = image_cache?;
+
+        for (image, image_id) in self.images_mem.iter() {
+            assert!(
+                image_cache
+                    .insert(image_id.clone(), image.clone())
+                    .is_none()
+            );
+        }
 
         self.pages.par_iter().enumerate().try_for_each_init(
             || ThreadLocalResources {
