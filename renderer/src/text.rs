@@ -1,7 +1,9 @@
-use std::collections::HashMap;
-use std::sync::Arc;
-use resvg::usvg::{FontStretch, PositiveF32};
 use crate::Color;
+use resvg::usvg::{FontStretch, PositiveF32};
+use std::collections::HashMap;
+use std::num::ParseIntError;
+use std::str::FromStr;
+use std::sync::Arc;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub struct TextId(u32);
@@ -16,17 +18,24 @@ impl TextId {
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
-pub struct InlineBoxId(u32);
+pub struct InlineId(u32);
 
-impl InlineBoxId {
+impl InlineId {
     pub fn new(text_id: u32) -> Self {
-        InlineBoxId(text_id)
+        InlineId(text_id)
     }
     pub fn as_u32(self) -> u32 {
         self.0
     }
 }
 
+impl FromStr for InlineId {
+    type Err = ParseIntError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        u32::from_str(s).map(InlineId::new)
+    }
+}
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct TextStyle {
@@ -43,21 +52,21 @@ pub struct TextStyle {
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct SyntaxHighlightSettings {
-    language: String,
-    theme: String,
+    pub language: String,
+    pub theme: String,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct ParsingChars {
-    escape_char: char,
-    block_begin: char,
-    block_end: char,
+    pub escape_char: char,
+    pub block_begin: char,
+    pub block_end: char,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct TextStyling {
-    parsing_chars: ParsingChars,
-    styles: Vec<(Arc<String>, TextStyle)>
+    pub parsing_chars: ParsingChars,
+    pub named_styles: Vec<(Arc<String>, TextStyle)>,
 }
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Default)]

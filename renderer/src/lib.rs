@@ -7,10 +7,10 @@ mod rectangle;
 mod render;
 mod resources;
 mod shapes;
+mod text;
 mod types;
 mod utils;
-mod text;
-mod styling;
+pub(crate) mod textutils;
 
 pub use color::Color;
 pub use document::Document;

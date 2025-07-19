@@ -344,10 +344,10 @@ pub fn precompute_image_cache(pdf_writer: &PdfWriterData, progress_bar: Option<&
         });
 }
 */
-use crate::render::canvas::Canvas;
-use std::sync::Mutex;
-use resvg::{tiny_skia, usvg};
 use crate::Resources;
+use crate::render::canvas::Canvas;
+use resvg::{tiny_skia, usvg};
+use std::sync::Mutex;
 
 pub(crate) trait Composer: Sync {
     fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()>;
@@ -425,7 +425,7 @@ impl Composer for SvgCollectorComposer {
 
 pub(crate) struct PngCollectorComposer<'a> {
     pages: Mutex<Vec<Vec<u8>>>,
-    resources: &'a Resources
+    resources: &'a Resources,
 }
 
 impl<'a> PngCollectorComposer<'a> {

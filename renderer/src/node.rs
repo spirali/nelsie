@@ -1,3 +1,4 @@
+use crate::text::{Text, TextId};
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
 use crate::{Color, NodeId};
 use bon::Builder;
@@ -6,7 +7,6 @@ use std::sync::Arc;
 use taffy::{
     AlignContent, AlignItems, FlexWrap, GridPlacement, Line, NonRepeatedTrackSizingFunction,
 };
-use crate::text::{Text, TextId};
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
@@ -19,7 +19,6 @@ pub enum NodeChild {
 pub(crate) enum NodeContent {
     Text(TextId),
 }
-
 
 #[derive(Builder, Debug)]
 pub struct Node {
@@ -108,9 +107,9 @@ pub struct Node {
 
     #[builder(default)]
     pub z_level: i32,
-    
+
     pub content: Option<NodeContent>,
-    
+
     pub url: Option<String>,
 }
 
