@@ -9,10 +9,11 @@ use crate::resources::Resources;
 use crate::text::{Text, TextId};
 use crate::{Color, ImageId, NodeId, Page};
 use parley::{FontContext, LayoutContext};
-use rayon::iter::IndexedParallelIterator;
+use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use itertools::Itertools;
 
 pub struct Document {
     pages: Vec<Page>,
@@ -21,6 +22,12 @@ pub struct Document {
     images_paths: HashMap<PathBuf, ImageId>,
     images_mem: HashMap<InMemoryImage, ImageId>,
     image_id_counter: ImageId,
+}
+
+enum PreprocessingJob<'a> {
+    Text(&'a Text, TextId),
+    ImageMem(&'a InMemoryImage, ImageId),
+    ImagePath(&'a std::path::Path, ImageId),
 }
 
 impl Document {
@@ -71,8 +78,8 @@ impl Document {
             crate::Result<HashMap<_, _>>,
         ) = rayon::join(
             || {
-                self.texts
-                    .par_iter()
+                self.texts.iter().collect_vec()
+                    .into_par_iter()
                     .map_init(
                         || FontContext {
                             collection: resources.font_context.collection.clone(),
@@ -82,7 +89,10 @@ impl Document {
                     )
                     .collect::<crate::Result<HashMap<NodeId, RenderedText>>>()
             },
-            || todo!(),
+            || {
+                //self.images_paths.par_iter()
+                todo!()
+            },
         );
         let text_cache = text_cache?;
         let mut image_cache: HashMap<ImageId, InMemoryImage> = image_cache?;
