@@ -10,5 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 renderer = { path = "../renderer" }
-pyo3 = "0.25"
+pyo3 = { version = "0.25", features = ["abi3-py311", "extension-module"] }
+
 thiserror = { workspace = true }
