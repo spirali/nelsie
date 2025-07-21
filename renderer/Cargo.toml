@@ -1,5 +1,5 @@
 [package]
-name = "nelsie"
+name = "renderer"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -7,17 +7,18 @@ edition = "2024"
 name = "renderer"
 
 [dependencies]
+thiserror = { workspace = true }
+
 taffy = "0.7"
 resvg = "0.45"
 svg2pdf = "0.13" # !!synchronized with resvg
-thiserror = "2"
 svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
 pdf-writer = "0.12"
 itertools = "0.14"
 rayon = "1.10"
-parley = { version = "0.3"}
-image = {  version = "0.25", default-features = false, features = ["png", "jpeg"] }
+parley = { version = "0.3" }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 miniz_oxide = "0.8"
 base64 = "0.22"
 bon = "3.6"

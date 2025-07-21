@@ -1,9 +1,12 @@
 [workspace]
 resolver = "3"
-members = ["renderer"]
+members = ["renderer", "nelsie"]
 
 [profile.release]
 lto = true
 codegen-units = 1
 panic = "abort"
 debug = "line-tables-only"
+
+[workspace.dependencies]
+thiserror = { version = "2.0" }
