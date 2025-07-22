@@ -5,31 +5,33 @@ from .nelsie import check_color
 
 
 class BoxBuilderMixin:
-
     def add(self, box: "Box"):
         raise NotImplementedError
 
-    def box(self,
-            *,
-            x: Sv[Position] = None,
-            y: Sv[Position] = None,
-            width: Sv[Size] = None,
-            height: Sv[Size] = None,
-            bg_color: Sv[str | None] = None):
+    def box(
+        self,
+        *,
+        x: Sv[Position] = None,
+        y: Sv[Position] = None,
+        width: Sv[Size] = None,
+        height: Sv[Size] = None,
+        bg_color: Sv[str | None] = None,
+    ):
         box = Box(x=x, y=y, width=width, height=height, bg_color=bg_color)
         self.add(box)
         return box
 
 
 class Box(BoxBuilderMixin):
-
-    def __init__(self,
-                 *,
-                 x: Sv[Position] = None,
-                 y: Sv[Position] = None,
-                 width: Sv[Size] = None,
-                 height: Sv[Size] = None,
-                 bg_color: Sv[str | None] = None):
+    def __init__(
+        self,
+        *,
+        x: Sv[Position] = None,
+        y: Sv[Position] = None,
+        width: Sv[Size] = None,
+        height: Sv[Size] = None,
+        bg_color: Sv[str | None] = None,
+    ):
         if x:
             check_position(x)
         if y:
@@ -80,4 +82,5 @@ class Box(BoxBuilderMixin):
             width=at_step(self._width, step),
             height=at_step(self._height, step),
             bg_color=at_step(self._bg_color, step),
+            children=[child.at_step(step) for child in self._children],
         )

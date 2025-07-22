@@ -13,6 +13,14 @@ def at_step(obj: Sv[T], step: Step) -> T:
     return obj
 
 
+def at_step_or(obj: Sv[T], step: Step, default_value: T) -> T:
+    value = at_step(obj, step)
+    if value is None:
+        return default_value
+    else:
+        return value
+
+
 def extract_steps(obj: Sv[T], out: set[Step]):
     if isinstance(obj, dict):
         for key in obj:

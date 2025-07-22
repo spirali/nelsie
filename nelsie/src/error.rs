@@ -4,6 +4,8 @@ use thiserror::Error;
 pub enum NelsieError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
+    #[error(transparent)]
+    Renderer(#[from] renderer::Error),
     #[error("{0}")]
     Parsing(String),
     #[error("{0}")]

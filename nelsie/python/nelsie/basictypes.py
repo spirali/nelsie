@@ -8,7 +8,7 @@ LengthAuto = Length | Literal["auto"]
 Size = Length | LayoutExpr | None
 Position = Size
 
-num_or_expr = (int | float | LayoutExpr)
+num_or_expr = int | float | LayoutExpr
 
 length_pattern = re.compile(r"^\s*\d+\s*%?\s*$")
 

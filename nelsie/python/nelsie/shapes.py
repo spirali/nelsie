@@ -41,12 +41,12 @@ class Arrow:
 
 class Path:
     def __init__(
-            self,
-            *,
-            stroke: Stroke | None = None,
-            fill_color: str | None = None,
-            arrow_start: Arrow | None = None,
-            arrow_end: Arrow | None = None,
+        self,
+        *,
+        stroke: Stroke | None = None,
+        fill_color: str | None = None,
+        arrow_start: Arrow | None = None,
+        arrow_end: Arrow | None = None,
     ):
         self.stroke = stroke
         self.fill_color = fill_color
@@ -57,13 +57,13 @@ class Path:
 
     @staticmethod
     def oval(
-            x1: PathValue,
-            y1: PathValue,
-            x2: PathValue,
-            y2: PathValue,
-            *,
-            stroke: Stroke | None = None,
-            fill_color: str | None = None,
+        x1: PathValue,
+        y1: PathValue,
+        x2: PathValue,
+        y2: PathValue,
+        *,
+        stroke: Stroke | None = None,
+        fill_color: str | None = None,
     ):
         path = Path(stroke=stroke, fill_color=fill_color)
         path.commands.append("oval")
@@ -123,13 +123,13 @@ class Path:
         return self
 
     def cubic_to(
-            self,
-            x1: PathValue,
-            y1: PathValue,
-            x2: PathValue,
-            y2: PathValue,
-            x: PathValue,
-            y: PathValue,
+        self,
+        x1: PathValue,
+        y1: PathValue,
+        x2: PathValue,
+        y2: PathValue,
+        x: PathValue,
+        y: PathValue,
     ):
         self.commands.append("cubic")
         self.points.append(x1)

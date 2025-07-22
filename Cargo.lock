@@ -592,6 +592,7 @@ dependencies = [
 name = "nelsie"
 version = "0.1.0"
 dependencies = [
+ "itertools",
  "pyo3",
  "renderer",
  "thiserror 2.0.12",

@@ -8,12 +8,12 @@ use crate::render::text::{RenderedText, TextContext};
 use crate::resources::Resources;
 use crate::text::{Text, TextId};
 use crate::{Color, ImageId, NodeId, Page};
+use itertools::Itertools;
 use parley::{FontContext, LayoutContext};
 use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use itertools::Itertools;
 
 pub struct Document {
     pages: Vec<Page>,
@@ -78,7 +78,9 @@ impl Document {
             crate::Result<HashMap<_, _>>,
         ) = rayon::join(
             || {
-                self.texts.iter().collect_vec()
+                self.texts
+                    .iter()
+                    .collect_vec()
                     .into_par_iter()
                     .map_init(
                         || FontContext {
