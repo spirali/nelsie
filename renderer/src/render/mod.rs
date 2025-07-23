@@ -3,6 +3,7 @@ pub(crate) mod canvas;
 pub(crate) mod canvas_pdf;
 mod canvas_svg;
 pub(crate) mod composer;
+mod composer_pdf;
 pub(crate) mod context;
 pub(crate) mod draw;
 pub(crate) mod layout;
