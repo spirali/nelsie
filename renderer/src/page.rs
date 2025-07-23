@@ -4,7 +4,6 @@ use crate::render::canvas::Canvas;
 use crate::render::context::RenderContext;
 use crate::render::layout::compute_page_layout;
 use crate::render::node::render_node;
-use bon::Builder;
 use std::collections::BTreeSet;
 
 pub struct Page {

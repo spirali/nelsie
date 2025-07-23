@@ -9,13 +9,13 @@ BUILTIN_FONTS_DIR = os.path.abspath(import_resources.files(data) / "fonts")
 
 class Resources:
     def __init__(
-        self,
-        *,
-        builtin_fonts: bool = True,
-        system_fonts: bool = False,
-        system_fonts_for_svg: bool = True,
-        default_code_syntaxes: bool = True,
-        default_code_themes: bool = True,
+            self,
+            *,
+            builtin_fonts: bool = True,
+            system_fonts: bool = False,
+            system_fonts_for_svg: bool = True,
+            default_code_syntaxes: bool = True,
+            default_code_themes: bool = True,
     ):
         self._resources = nelsie_rs.Resources(
             system_fonts, system_fonts_for_svg, default_code_syntaxes, default_code_themes

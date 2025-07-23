@@ -52,33 +52,32 @@ impl LengthOrAuto {
 
 #[derive(Debug, Clone)]
 pub enum LengthOrExpr {
-    Points { value: f32 },
-    Fraction { value: f32 },
+    Length(Length),
     Expr(LayoutExpr),
 }
 
 impl Default for LengthOrExpr {
     fn default() -> Self {
-        LengthOrExpr::Points { value: 0.0f32 }
+        LengthOrExpr::Length(Length::ZERO)
     }
 }
 
 impl LengthOrExpr {
     #[inline]
     pub fn points(value: f32) -> LengthOrExpr {
-        LengthOrExpr::Points { value }
+        LengthOrExpr::Length(Length::Points { value })
     }
 
     pub fn is_expr(&self) -> bool {
         match self {
-            LengthOrExpr::Points { .. } | LengthOrExpr::Fraction { .. } => false,
+            LengthOrExpr::Length(_) => false,
             LengthOrExpr::Expr(_) => true,
         }
     }
 
     pub fn as_expr(&self) -> Option<&LayoutExpr> {
         match self {
-            LengthOrExpr::Points { .. } | LengthOrExpr::Fraction { .. } => None,
+            LengthOrExpr::Length(_) => None,
             LengthOrExpr::Expr(e) => Some(e),
         }
     }

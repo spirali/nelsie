@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 
 from .resources import Resources
 from .basictypes import Position, Size
@@ -28,11 +29,5 @@ class Document:
         self.pages = pages
         self.resources = resources
 
-    def render_png_dir(self, path: str):
-        nelsie_rs.render_png_dir(self.resources, self.pages, path)
-
-    def render_svg_dir(self, path: str):
-        nelsie_rs.render_svg_dir(self.resources, self.pages, path)
-
-    def render_pdf_file(self, path: str):
-        nelsie_rs.render_pdf_file(self.resources, self.pages, path)
+    def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf"):
+        nelsie_rs.render(self.resources._resources, self.pages, path, format)

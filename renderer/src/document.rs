@@ -15,34 +15,21 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-pub struct Document {
-    pages: Vec<Page>,
+pub struct Register {
     texts: HashMap<Text, (TextId, u32)>,
-
     images_paths: HashMap<PathBuf, ImageId>,
     images_mem: HashMap<InMemoryImage, ImageId>,
     image_id_counter: ImageId,
 }
 
-enum PreprocessingJob<'a> {
-    Text(&'a Text, TextId),
-    ImageMem(&'a InMemoryImage, ImageId),
-    ImagePath(&'a std::path::Path, ImageId),
-}
-
-impl Document {
+impl Register {
     pub fn new() -> Self {
         Self {
-            pages: Vec::new(),
             texts: HashMap::new(),
             images_paths: HashMap::default(),
             images_mem: HashMap::default(),
             image_id_counter: ImageId::new(0),
         }
-    }
-
-    pub fn add_page(&mut self, page: Page) {
-        self.pages.push(page);
     }
 
     pub fn register_text(&mut self, text: Text) -> TextId {
@@ -71,6 +58,30 @@ impl Document {
             .or_insert_with(|| self.image_id_counter.bump());
         *entry
     }
+}
+
+pub struct Document {
+    pages: Vec<Page>,
+    register: Register,
+}
+
+enum PreprocessingJob<'a> {
+    Text(&'a Text, TextId),
+    ImageMem(&'a InMemoryImage, ImageId),
+    ImagePath(&'a std::path::Path, ImageId),
+}
+
+impl Document {
+    pub fn new(pages: Vec<Page>, register: Register) -> Self {
+        Self {
+            pages: Vec::new(),
+            register,
+        }
+    }
+
+    pub fn add_page(&mut self, page: Page) {
+        self.pages.push(page);
+    }
 
     fn render(&self, resources: &Resources, composer: &dyn Composer) -> crate::Result<()> {
         let (text_cache, image_cache): (
@@ -78,7 +89,8 @@ impl Document {
             crate::Result<HashMap<_, _>>,
         ) = rayon::join(
             || {
-                self.texts
+                self.register
+                    .texts
                     .iter()
                     .collect_vec()
                     .into_par_iter()
@@ -93,13 +105,14 @@ impl Document {
             },
             || {
                 //self.images_paths.par_iter()
-                todo!()
+                // todo!()
+                Ok(HashMap::new())
             },
         );
         let text_cache = text_cache?;
         let mut image_cache: HashMap<ImageId, InMemoryImage> = image_cache?;
 
-        for (image, image_id) in self.images_mem.iter() {
+        for (image, image_id) in self.register.images_mem.iter() {
             assert!(
                 image_cache
                     .insert(image_id.clone(), image.clone())
@@ -126,6 +139,18 @@ impl Document {
                 composer.add_page(page_idx, &canvas)
             },
         )
+    }
+
+    pub fn render_pdf_to_file(
+        &self,
+        resources: &Resources,
+        path: &std::path::Path,
+    ) -> crate::Result<()> {
+        todo!()
+    }
+
+    pub fn render_pdf_to_mem(&self, resources: &Resources) -> crate::Result<Vec<u8>> {
+        todo!()
     }
 
     pub fn render_svg_to_dir(

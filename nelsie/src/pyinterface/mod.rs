@@ -13,6 +13,7 @@ use pyo3::PyTypeInfo;
 fn nelsie(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Resources>()?;
     m.add_function(wrap_pyfunction!(check::check_color, m)?)?;
+    m.add_function(wrap_pyfunction!(rendering::render, m)?)?;
     Ok(())
 }
 
