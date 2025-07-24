@@ -29,5 +29,6 @@ class Document:
         self.pages = pages
         self.resources = resources
 
-    def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf"):
-        nelsie_rs.render(self.resources._resources, self.pages, path, format)
+    def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
+               n_threads: int | None = None):
+        nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level, n_threads)

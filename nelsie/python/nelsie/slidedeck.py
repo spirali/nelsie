@@ -147,6 +147,7 @@ class SlideDeck:
                 raw_pages.append(slide.at_step(step, self))
         return Document(self.resources, raw_pages)
 
-    def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf"):
+    def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
+               n_threads: int | None = None):
         doc = self._create_doc()
-        return doc.render(path, format)
+        return doc.render(path, format, compression_level, n_threads)

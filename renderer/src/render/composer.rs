@@ -379,22 +379,27 @@ impl Composer for SvgWriteComposer<'_> {
 }
 
 pub(crate) struct PngWriteComposer<'a> {
+    resources: &'a Resources,
     path: &'a std::path::Path,
     n_pages: usize,
 }
 
 impl<'a> PngWriteComposer<'a> {
-    pub fn new(path: &'a std::path::Path, n_pages: usize) -> Self {
-        Self { path, n_pages }
+    pub fn new(resources: &'a Resources, path: &'a std::path::Path, n_pages: usize) -> Self {
+        Self {
+            resources,
+            path,
+            n_pages,
+        }
     }
 }
 
 impl Composer for PngWriteComposer<'_> {
     fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
         let svg = canvas.as_svg()?;
+        let data = svg_to_png(&self.resources, &svg)?;
         let final_path = self.path.join(path_name(page_idx, "png", self.n_pages));
-        todo!();
-        std::fs::write(final_path, svg)?;
+        std::fs::write(final_path, data)?;
         Ok(())
     }
 }

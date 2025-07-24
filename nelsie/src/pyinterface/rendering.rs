@@ -4,7 +4,9 @@ use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::types::{PyAnyMethods, PyList, PyNone};
 use pyo3::{pyfunction, Bound, FromPyObject, Py, PyAny, PyObject, PyResult, Python};
-use renderer::{Color, Document, LengthOrExpr, Node, NodeChild, NodeId, Page, Register};
+use renderer::{
+    Color, Document, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, RenderingOptions,
+};
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -14,6 +16,8 @@ pub(crate) fn render<'py>(
     pages: &Bound<'py, PyList>,
     path: Option<&'py str>,
     format: &str,
+    compression_level: u8,
+    n_threads: Option<usize>,
 ) -> PyResult<Bound<'py, PyAny>> {
     let mut register = Register::new();
     let pages: Vec<_> = pages
@@ -21,13 +25,29 @@ pub(crate) fn render<'py>(
         .map(|obj| obj_to_page(obj))
         .collect::<PyResult<Vec<_>>>()?;
     let doc = Document::new(pages, register);
+
+    let options = RenderingOptions {
+        compression_level,
+        n_threads,
+    };
+    let result = py.allow_threads(|| run_rendering(resources, &options, path, format, doc))?;
+    Ok(py.None().into_bound(py))
+}
+
+fn run_rendering(
+    resources: &Resources,
+    options: &RenderingOptions,
+    path: Option<&str>,
+    format: &str,
+    doc: Document,
+) -> PyResult<()> {
     match (path, format) {
         (Some(path), "pdf") => {
-            doc.render_pdf_to_file(&resources.resources, std::path::Path::new(path))
+            doc.render_pdf_to_file(&resources.resources, options, std::path::Path::new(path))
                 .map_err(crate::Error::from)?;
         }
         (Some(path), "png") => {
-            doc.render_png_to_dir(&resources.resources, std::path::Path::new(path))
+            doc.render_png_to_dir(&resources.resources, options, std::path::Path::new(path))
                 .map_err(crate::Error::from)?;
         }
         _ => {
@@ -35,7 +55,7 @@ pub(crate) fn render<'py>(
             todo!()
         }
     }
-    Ok(py.None().into_bound(py))
+    Ok(())
 }
 
 fn str_to_color(s: &str) -> PyResult<Color> {
@@ -72,7 +92,7 @@ macro_rules! xget {
             .map_err(|_| {
                 PyValueError::new_err(format!(
                     "Cannot extract argument '{}' for class '{}'.",
-                    $name, $class
+                    $name, $class,
                 ))
             })?
     }};
@@ -157,7 +177,15 @@ fn obj_to_node(obj: Bound<PyAny>, id_counter: &mut NodeId) -> PyResult<Node> {
         m_bottom: Default::default(),
         m_left: Default::default(),
         m_right: Default::default(),
-        bg_color: None,
+        bg_color: {
+            let v = get!(obj, "bg_color", "Node");
+            if v.is_none() {
+                None
+            } else {
+                // TODO: custom extract
+                Some(str_to_color(v.extract()?)?)
+            }
+        },
         z_level: 0,
         content: Default::default(),
         url: None,

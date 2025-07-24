@@ -14,7 +14,7 @@ mod types;
 mod utils;
 
 pub use color::Color;
-pub use document::{Document, Register};
+pub use document::{Document, Register, RenderingOptions};
 pub use error::RendererError as Error;
 pub use image::{ImageId, ImagePlacement};
 pub use node::{Node, NodeChild};
