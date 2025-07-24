@@ -136,7 +136,7 @@ impl Document {
                     thread_resources,
                 };
                 let canvas = page.render_to_canvas(&mut render_ctx);
-                composer.add_page(page_idx, &canvas)
+                composer.add_page(page_idx, canvas)
             },
         )
     }

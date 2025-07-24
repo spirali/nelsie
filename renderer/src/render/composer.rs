@@ -350,7 +350,7 @@ use resvg::{tiny_skia, usvg};
 use std::sync::Mutex;
 
 pub(crate) trait Composer: Sync {
-    fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()>;
+    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()>;
 }
 
 fn path_name(page_idx: usize, extension: &str, n_pages: usize) -> String {
@@ -370,7 +370,7 @@ impl<'a> SvgWriteComposer<'a> {
 }
 
 impl Composer for SvgWriteComposer<'_> {
-    fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()> {
+    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
         let svg = canvas.as_svg()?;
         let final_path = self.path.join(path_name(page_idx, "svg", self.n_pages));
         std::fs::write(final_path, svg)?;
@@ -390,7 +390,7 @@ impl<'a> PngWriteComposer<'a> {
 }
 
 impl Composer for PngWriteComposer<'_> {
-    fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()> {
+    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
         let svg = canvas.as_svg()?;
         let final_path = self.path.join(path_name(page_idx, "png", self.n_pages));
         todo!();
@@ -416,7 +416,7 @@ impl SvgCollectorComposer {
 }
 
 impl Composer for SvgCollectorComposer {
-    fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()> {
+    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
         let svg = canvas.as_svg()?;
         self.pages.lock().unwrap()[page_idx] = svg;
         Ok(())
@@ -442,7 +442,7 @@ impl<'a> PngCollectorComposer<'a> {
 }
 
 impl<'a> Composer for PngCollectorComposer<'a> {
-    fn add_page(&self, page_idx: usize, canvas: &Canvas) -> crate::Result<()> {
+    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
         let svg = canvas.as_svg()?;
         let data = svg_to_png(self.resources, &svg)?;
         self.pages.lock().unwrap()[page_idx] = data;
