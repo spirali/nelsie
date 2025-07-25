@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 
-from .textstyle import TextStyle
+from .textstyle import TextStyle, merge_in_step
 from .steps import Sv, Sn, Step, get_step
 from .basictypes import TextAlign
+
 
 @dataclass
 class TextContent:
@@ -12,10 +13,11 @@ class TextContent:
     syntax_language: Sn[str]
     syntax_theme: Sn[str]
 
-    def get_step(self, step: Step, default_style: TextStyle) -> TextContent:
+    def to_raw(self, step: Step, ctx) -> "TextContent":
+        style = merge_in_step(ctx.text_style, self.style, step)
         return TextContent(
             text=get_step(self.text, step),
-            style=get_step(self.style, step, default_style),
+            style=style,
             align=get_step(self.align, step),
             syntax_language=get_step(self.syntax_language, step),
             syntax_theme=get_step(self.syntax_theme, step),

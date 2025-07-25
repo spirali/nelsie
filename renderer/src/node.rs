@@ -15,10 +15,8 @@ pub enum NodeChild {
     //    Draw(Drawing),
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub enum NodeContent {
-    #[default]
-    None,
     Text(TextId),
     Image(SmallVec<[ImagePlacement; 1]>),
 }
@@ -79,7 +77,7 @@ pub struct Node {
 
     pub z_level: i32,
 
-    pub content: NodeContent,
+    pub content: Option<NodeContent>,
 
     pub url: Option<String>,
 }

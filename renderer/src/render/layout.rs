@@ -1,4 +1,4 @@
-use crate::node::Node;
+use crate::node::{Node, NodeContent};
 use crate::render::context::RenderContext;
 use crate::render::text::RenderedText;
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
@@ -197,17 +197,16 @@ impl From<&LengthOrExpr> for tf::Dimension {
     }
 }
 
-/*
+
 fn compute_content_default_size(
     render_ctx: &mut RenderContext,
     node: &Node,
     content: &NodeContent,
 ) -> (f32, f32) {
-    todo!()
-    /*
     match content {
-        NodeContent::Text(text) => {
-            let mut t = text.styled_text_at_step(step);
+        NodeContent::Text(text_id) => {
+            todo!()
+            /*let mut t = text.styled_text_at_step(step);
             let tmp;
 
             if text.parse_counters {
@@ -228,9 +227,9 @@ fn compute_content_default_size(
                 &mut config.thread_resources.text_context,
                 t,
             );
-            rtext.size()
+            rtext.size()*/
         }
-        NodeContent::Image(image) => image
+/*        NodeContent::Image(image) => image
             .loaded_image
             .at_step(step)
             .as_ref()
@@ -239,7 +238,7 @@ fn compute_content_default_size(
         NodeContent::Video(_video) => (0.0, 0.0),
     }*/
 }
-*/
+
 
 fn gather_taffy_layout<'b>(
     node: &'b Node,
@@ -282,8 +281,7 @@ fn compute_layout_helper(
     let h = node.height.as_ref();
 
     let (content_w, content_h, content_aspect_ratio) = if w.is_none() || h.is_none() {
-        todo!()
-        /*if let Some(content) = node.content.as_ref() {
+        if let Some(content) = node.content.as_ref() {
             let (content_w, content_h) = compute_content_default_size(render_ctx, node, content);
             if w.is_none() && h.is_none() {
                 (
@@ -296,7 +294,7 @@ fn compute_layout_helper(
             }
         } else {
             (None, None, None)
-        }*/
+        }
     } else {
         (None, None, None)
     };

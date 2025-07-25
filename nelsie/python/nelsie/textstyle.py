@@ -65,6 +65,14 @@ class TextStyle:
             bold=Step.get_step(self.bold, step),
         )
 
+
+def merge_in_step(text_style: TextStyle, other: Sn[TextStyle], step: Step) -> TextStyle:
+    other = get_step(other, step)
+    if other is None:
+        return text_style
+    return text_style.merge(other.get_step(step))
+
+
 DEFAULT_TEXT_STYLE = TextStyle(
     font_family="sans-serif",
     color="black",

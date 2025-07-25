@@ -3,9 +3,10 @@ from typing import Literal
 from .box import BoxBuilderMixin, Box
 from .doc import RawPage, RawBox, Document
 from .resources import Resources
-from .steps import Step, Sv, get_step, get_step_or
+from .steps import Step, Sv, get_step
 from . import nelsie as nelsie_rs
-from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE
+from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, merge_in_step
+from .toraw import ToRawContext, box_to_raw
 
 
 class Slide(BoxBuilderMixin):
@@ -22,16 +23,20 @@ class Slide(BoxBuilderMixin):
     def add(self, box: Box):
         self.children.append(box)
 
-    def at_step(self, step: Step, deck: "SlideDeck") -> RawPage:
+    def to_raw_page(self, step: Step, deck: "SlideDeck") -> RawPage:
         width = get_step(self.width, step, deck.width)
         height = get_step(self.height, step, deck.height)
+        text_style = merge_in_step(deck.text_style, self.text_style, step)
+        code_style = merge_in_step(deck.code_style, self.code_style, step)
+        ctx = ToRawContext(text_style, code_style)
         root = RawBox(
             x=0,
             y=0,
             width=width,
             height=height,
             bg_color=None,
-            children=[child.get_step(step) for child in self.children],
+            children=[box_to_raw(child, step, ctx) for child in self.children],
+            content=None,
         )
         return RawPage(
             width=width,
@@ -157,7 +162,7 @@ class SlideDeck:
             # TODO: gather steps
             steps = [1]
             for step in steps:
-                raw_pages.append(slide.get_step(step, self))
+                raw_pages.append(slide.to_raw_page(step, self))
         return Document(self.resources, raw_pages)
 
     def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,

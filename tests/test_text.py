@@ -6,7 +6,7 @@ from conftest import new_resources
 from testutils import check
 
 import nelsie
-from nelsie import FontStretch, InSteps, TextStyle
+from nelsie import FontStretch, TextStyle
 
 
 def test_text_update():
@@ -22,6 +22,11 @@ def test_text_invalid_font(deck):
     s1 = TextStyle(font_family="Nonexisting font")
     with pytest.raises(Exception, match="Font 'Nonexisting font' not found"):
         deck.new_slide().text("Hello", style=s1)
+
+
+@check()
+def test_text_simple(deck):
+    deck.new_slide().text("Hello")
 
 
 @check(n_slides=4)

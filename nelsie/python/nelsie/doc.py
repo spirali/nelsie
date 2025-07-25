@@ -3,6 +3,7 @@ from typing import Literal
 
 from .resources import Resources
 from .basictypes import Position, Size
+from .text import TextContent
 from . import nelsie as nelsie_rs
 
 
@@ -14,6 +15,7 @@ class RawBox:
     height: Size
     bg_color: str | None
     children: list["RawBox"]
+    content: TextContent | None
 
 
 class RawPage:
