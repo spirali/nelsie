@@ -14,3 +14,4 @@ pyo3 = { version = "0.25", features = ["abi3-py311", "extension-module"] }
 
 thiserror = { workspace = true }
 itertools = "0.14"
+strict-num = "*"

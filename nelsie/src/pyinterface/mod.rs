@@ -1,7 +1,9 @@
 mod check;
+mod common;
 mod extract;
 mod rendering;
 mod resources;
+mod text;
 
 use crate::pyinterface::resources::Resources;
 use pyo3::exceptions::PyException;

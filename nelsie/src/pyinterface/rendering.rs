@@ -23,7 +23,7 @@ pub(crate) fn render<'py>(
     let mut register = Register::new();
     let pages: Vec<_> = pages
         .into_iter()
-        .map(|obj| obj_to_page(obj))
+        .map(|obj| obj_to_page(obj, &mut register))
         .collect::<PyResult<Vec<_>>>()?;
     let doc = Document::new(pages, register);
 

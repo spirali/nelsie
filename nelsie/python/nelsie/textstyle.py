@@ -2,7 +2,7 @@ from dataclasses import dataclass, InitVar
 from enum import IntEnum
 
 from .steps import Sn, Step, get_step
-from .utils import unpack_dataclass
+from .utils import unpack_dataclass, check_is_type
 from .nelsie import check_color
 
 
@@ -20,7 +20,7 @@ class FontStretch(IntEnum):
 
 @dataclass(frozen=True)
 class TextStyle:
-    font_family: Sn[str | list[str]] = None
+    font: Sn[str] = None
     color: Sn[str] = None
     size: Sn[float] = None
     line_spacing: Sn[float] = None
@@ -53,7 +53,7 @@ class TextStyle:
 
     def get_step(self, step: Step) -> "TextStyle":
         TextStyle(
-            font_family=get_step(self.font_family, step),
+            font=get_step(self.font, step),
             color=get_step(self.color, step),
             size=get_step(self.size, step),
             line_spacing=get_step(self.line_spacing, step),
@@ -73,8 +73,12 @@ def merge_in_step(text_style: TextStyle, other: Sn[TextStyle], step: Step) -> Te
     return text_style.merge(other.get_step(step))
 
 
+def check_is_text_style(obj):
+    check_is_type(obj, TextStyle)
+
+
 DEFAULT_TEXT_STYLE = TextStyle(
-    font_family="sans-serif",
+    font="sans-serif",
     color="black",
     size=32,
     line_spacing=1.2,
@@ -86,5 +90,5 @@ DEFAULT_TEXT_STYLE = TextStyle(
 )
 
 DEFAULT_CODE_STYLE = TextStyle(
-    font_family="monospace"
+    font="monospace"
 )

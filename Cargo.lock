@@ -529,6 +529,7 @@ dependencies = [
  "itertools",
  "pyo3",
  "renderer",
+ "strict-num",
  "thiserror 2.0.12",
 ]
 

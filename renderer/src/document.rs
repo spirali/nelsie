@@ -1,3 +1,4 @@
+use crate::NodeChild::Node;
 use crate::image::InMemoryImage;
 use crate::render::composer::{
     Composer, PngCollectorComposer, PngWriteComposer, SvgCollectorComposer, SvgWriteComposer,
@@ -17,6 +18,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub struct Register {
+    node_id_counter: NodeId,
     texts: HashMap<Text, (TextId, u32)>,
     images_paths: HashMap<PathBuf, ImageId>,
     images_mem: HashMap<InMemoryImage, ImageId>,
@@ -26,11 +28,17 @@ pub struct Register {
 impl Register {
     pub fn new() -> Self {
         Self {
+            node_id_counter: NodeId::new(0),
             texts: HashMap::new(),
             images_paths: HashMap::default(),
             images_mem: HashMap::default(),
             image_id_counter: ImageId::new(0),
         }
+    }
+
+    #[inline]
+    pub fn new_node_id(&mut self) -> NodeId {
+        self.node_id_counter.bump()
     }
 
     pub fn register_text(&mut self, text: Text) -> TextId {

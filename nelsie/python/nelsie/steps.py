@@ -4,6 +4,7 @@ T = TypeVar("T")
 
 Step = int | tuple[int]
 
+
 class InSteps(Generic[T]):
 
     def __init__(self):
@@ -22,6 +23,16 @@ def s(value: T, from_step: Step = 1, to_step: Step | None = None) -> InSteps[T]:
 
 type Sv[T] = T | InSteps[T]
 type Sn[T] = Sv[T | None]
+
+
+def sv_check(obj, check_fn):
+    check_fn(obj)
+
+
+def sn_check(obj, check_fn):
+    if obj is not None:
+        check_fn(obj)
+
 
 def get_step(obj: Sn[T], step: Step, default_value: T | None = None) -> T:
     if isinstance(obj, InSteps):

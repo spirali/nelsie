@@ -17,10 +17,11 @@ pub use color::Color;
 pub use document::{Document, Register, RenderingOptions};
 pub use error::RendererError as Error;
 pub use image::{ImageId, ImagePlacement};
-pub use node::{Node, NodeChild};
+pub use node::{Node, NodeChild, NodeContent};
 pub use page::Page;
 pub use rectangle::Rectangle;
 pub use resources::Resources;
+pub use text::{FontStretch, Text, TextAlign, TextStyle};
 pub use types::{LayoutExpr, Length, LengthOrExpr, NodeId};
 
 pub type Result<T> = std::result::Result<T, Error>;

@@ -17,7 +17,7 @@ class FontStretch(IntEnum):
 
 @dataclass(frozen=True)
 class TextStyle:
-    font_family: str | list[str] | None = None
+    font: str | list[str] | None = None
     color: str | None = None
     size: float | None = None
     line_spacing: float | None = None

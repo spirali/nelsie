@@ -1,19 +1,14 @@
 use crate::parsers::length::parse_string_length;
+use crate::pyinterface::common::PyColor;
+use crate::pyinterface::text::PyTextContent;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{Color, Length, LengthOrExpr, Node, NodeChild, NodeId, Page};
-
-struct PyColor(Color);
-
-impl<'py> FromPyObject<'py> for PyColor {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
-        let s: &str = obj.extract()?;
-        Ok(PyColor(Color::from_str(s).map_err(crate::Error::from)?))
-    }
-}
+use renderer::{
+    Color, Length, LengthOrExpr, Node, NodeChild, NodeContent, NodeId, Page, Register, Text,
+};
 
 #[derive(FromPyObject)]
 struct PyPage<'py> {
@@ -45,6 +40,7 @@ struct PyNode<'py> {
     height: Option<PyLengthOrExpr>,
     bg_color: Option<PyColor>,
     children: Bound<'py, PyList>,
+    content: Option<PyTextContent>,
 }
 
 fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2>>(
@@ -59,9 +55,17 @@ fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2
     })
 }
 
-fn obj_to_node(obj: Bound<PyAny>, id_counter: &mut NodeId) -> PyResult<Node> {
-    let node_id = id_counter.bump();
+fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
+    let node_id = register.new_node_id();
     let node: PyNode = obj.extract()?;
+    let content = node
+        .content
+        .map(|content| -> PyResult<_> {
+            let text: Text = content.try_into()?;
+            let text_id = register.register_text(text);
+            Ok(NodeContent::Text(text_id))
+        })
+        .transpose()?;
     Ok(Node {
         node_id,
         width: node.width.map(|x| x.0),
@@ -94,28 +98,27 @@ fn obj_to_node(obj: Bound<PyAny>, id_counter: &mut NodeId) -> PyResult<Node> {
         m_bottom: Default::default(),
         m_left: Default::default(),
         m_right: Default::default(),
-        bg_color: node.bg_color.map(|x| x.0),
+        bg_color: node.bg_color.map(|x| x.into()),
         z_level: 0,
-        content: Default::default(),
+        content,
         url: None,
         children: node
             .children
             .try_iter()?
             .map(|child| {
                 let child = child?;
-                Ok(NodeChild::Node(obj_to_node(child, id_counter)?))
+                Ok(NodeChild::Node(obj_to_node(child, register)?))
             })
             .collect::<PyResult<Vec<NodeChild>>>()?,
     })
 }
 
-pub fn obj_to_page(obj: Bound<PyAny>) -> PyResult<Page> {
+pub fn obj_to_page(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Page> {
     let py_page: PyPage = obj.extract()?;
-    let mut id_counter = NodeId::new(0);
     Ok(Page::new(
-        obj_to_node(py_page.root, &mut id_counter)?,
+        obj_to_node(py_page.root, register)?,
         py_page.width,
         py_page.height,
-        py_page.bg_color.0,
+        py_page.bg_color.into(),
     ))
 }

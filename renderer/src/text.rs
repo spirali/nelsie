@@ -1,9 +1,11 @@
 use crate::Color;
-use resvg::usvg::{FontStretch, PositiveF32};
+use resvg::usvg::PositiveF32;
 use std::collections::HashMap;
 use std::num::ParseIntError;
 use std::str::FromStr;
 use std::sync::Arc;
+
+pub use resvg::usvg::FontStretch;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub struct TextId(u32);
@@ -70,7 +72,7 @@ pub struct TextStyling {
 }
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq, Default)]
-pub(crate) enum TextAlign {
+pub enum TextAlign {
     #[default]
     Start,
     Center,
@@ -79,9 +81,9 @@ pub(crate) enum TextAlign {
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct Text {
-    pub(crate) text: String,
-    pub(crate) style: TextStyle,
-    pub(crate) styling: Option<TextStyling>,
-    pub(crate) text_align: TextAlign,
-    pub(crate) syntax_highlight: Option<SyntaxHighlightSettings>,
+    pub text: String,
+    pub style: TextStyle,
+    pub styling: Option<TextStyling>,
+    pub text_align: TextAlign,
+    pub syntax_highlight: Option<SyntaxHighlightSettings>,
 }

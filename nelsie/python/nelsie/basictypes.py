@@ -28,6 +28,14 @@ def check_size(obj):
 
 TextAlign = Literal["start", "center", "end"]
 
+TEXT_ALIGN_VALUES = ("start", "center", "end")
+
+
+def check_text_align(align):
+    if align not in TEXT_ALIGN_VALUES:
+        raise ValueError("Invalid text align value")
+
+
 AlignItems = Literal[
     "start",
     "end",

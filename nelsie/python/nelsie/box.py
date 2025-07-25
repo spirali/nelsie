@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from copy import copy
 from .doc import RawBox
-from .steps import Sn, Step, get_step, Sv
-from .basictypes import Position, Size, check_position, check_size, TextAlign
+from .steps import Sn, Step, get_step, Sv, sv_check, sn_check
+from .basictypes import Position, Size, check_position, check_size, TextAlign, check_text_align
 from .nelsie import check_color
 from .text import TextContent
-from .textstyle import TextStyle, merge_in_step
+from .textstyle import TextStyle, merge_in_step, check_is_text_style
+from .utils import check_is_str
 
 
 class BoxBuilderMixin:
@@ -25,7 +26,10 @@ class BoxBuilderMixin:
         self.add(box)
         return box
 
-    def text(self, text: Sn[str], style: Sn[TextStyle] = None, align: Sv[TextAlign] = "left", **box_args):
+    def text(self, text: Sv[str], style: Sn[TextStyle] = None, align: Sv[TextAlign] = "start", **box_args):
+        sv_check(text, check_is_str)
+        sv_check(align, check_text_align)
+        sn_check(style, check_is_text_style)
         box = self.box(**box_args)
         box._content = TextContent(text, style, align, None, None)
 
