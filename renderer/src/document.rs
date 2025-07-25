@@ -1,5 +1,4 @@
 use crate::image::InMemoryImage;
-use crate::node::Node;
 use crate::render::composer::{
     Composer, PngCollectorComposer, PngWriteComposer, SvgCollectorComposer, SvgWriteComposer,
 };

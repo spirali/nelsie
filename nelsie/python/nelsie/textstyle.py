@@ -1,7 +1,9 @@
 from dataclasses import dataclass, InitVar
 from enum import IntEnum
 
+from .steps import Sn, Step, get_step
 from .utils import unpack_dataclass
+from .nelsie import check_color
 
 
 class FontStretch(IntEnum):
@@ -18,35 +20,30 @@ class FontStretch(IntEnum):
 
 @dataclass(frozen=True)
 class TextStyle:
-    font_family: str | list[str] | None = None
-    color: str | None = None
-    size: float | None = None
-    line_spacing: float | None = None
-    italic: bool | None = None
-    stretch: FontStretch | None = None
-    underline: bool | None = None
-    line_through: bool | None = None
+    font_family: Sn[str | list[str]] = None
+    color: Sn[str] = None
+    size: Sn[float] = None
+    line_spacing: Sn[float] = None
+    italic: Sn[bool] = None
+    stretch: Sn[FontStretch] = None
+    underline: Sn[bool] = None
+    line_through: Sn[bool] = None
 
     # 1-1000; 400 = Normal, 700 = Bold
-    weight: int | None = None
+    weight: Sn[int] = None
 
-    # Init only fields
-    # These are used as helpers for initializing
-    # commonly used attributes
-    bold: InitVar[bool | None] = None
+    # If True, ignores weight value and forces weight 700
+    bold: Sn[bool] = None
 
-    def __post_init__(self, bold: bool | None):
+    def __post_init__(self):
+        if self.color is not None:
+            check_color(self.color)
         if self.size is not None:
             assert self.size >= 0
         if self.line_spacing is not None:
             assert self.line_spacing >= 0
         if self.weight is not None:
             assert 1 <= self.weight <= 1000
-            if bold is not None:
-                raise Exception("Cannot set both `weight` and `bold` when creating a TextStyle")
-        if bold is not None:
-            # Workaround to set frozen attribute
-            super().__setattr__("weight", 700)
 
     def merge(self, other: "TextStyle") -> "TextStyle":
         assert isinstance(other, TextStyle)
@@ -54,9 +51,32 @@ class TextStyle:
             *[b if b is not None else a for (a, b) in zip(unpack_dataclass(self), unpack_dataclass(other))]
         )
 
+    def get_step(self, step: Step) -> "TextStyle":
+        TextStyle(
+            font_family=get_step(self.font_family, step),
+            color=get_step(self.color, step),
+            size=get_step(self.size, step),
+            line_spacing=get_step(self.line_spacing, step),
+            italic=get_step(self.italic, step),
+            stretch=get_step(self.stretch, step),
+            underline=get_step(self.underline, step),
+            line_through=get_step(self.line_through, step),
+            weight=get_step(self.weight, step),
+            bold=Step.get_step(self.bold, step),
+        )
 
-def _data_to_text_style(data):
-    stretch = data.get("stretch")
-    if stretch is not None:
-        data["stretch"] = FontStretch(stretch)
-    return TextStyle(**data)
+DEFAULT_TEXT_STYLE = TextStyle(
+    font_family="sans-serif",
+    color="black",
+    size=32,
+    line_spacing=1.2,
+    italic=False,
+    stretch=FontStretch.Normal,
+    underline=False,
+    line_through=False,
+    weight=400,
+)
+
+DEFAULT_CODE_STYLE = TextStyle(
+    font_family="monospace"
+)

@@ -3,8 +3,9 @@ from typing import Literal
 from .box import BoxBuilderMixin, Box
 from .doc import RawPage, RawBox, Document
 from .resources import Resources
-from .steps import Step, Sv, at_step, at_step_or
+from .steps import Step, Sv, get_step, get_step_or
 from . import nelsie as nelsie_rs
+from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE
 
 
 class Slide(BoxBuilderMixin):
@@ -15,24 +16,27 @@ class Slide(BoxBuilderMixin):
         self.name = name
         self.children = []
 
+        self.text_style = None
+        self.code_style = None
+
     def add(self, box: Box):
         self.children.append(box)
 
     def at_step(self, step: Step, deck: "SlideDeck") -> RawPage:
-        width = at_step_or(self.width, step, deck.width)
-        height = at_step_or(self.height, step, deck.height)
+        width = get_step(self.width, step, deck.width)
+        height = get_step(self.height, step, deck.height)
         root = RawBox(
             x=0,
             y=0,
             width=width,
             height=height,
             bg_color=None,
-            children=[child.at_step(step) for child in self.children],
+            children=[child.get_step(step) for child in self.children],
         )
         return RawPage(
             width=width,
             height=height,
-            bg_color=at_step_or(self.bg_color, step, deck.bg_color),
+            bg_color=get_step(self.bg_color, step, deck.bg_color),
             root=root,
         )
 
@@ -44,6 +48,8 @@ class SlideDeck:
             width: float = 1024,
             height: float = 768,
             bg_color: str = "white",
+            text_style: TextStyle | None = None,
+            code_style: TextStyle = DEFAULT_CODE_STYLE,
             resources: Resources | None = None,
             default_code_theme: str = "InspiredGitHub",
             default_code_language: str | None = None,
@@ -70,12 +76,19 @@ class SlideDeck:
         if resources is None:
             resources = Resources()
 
+        if text_style is not None:
+            text_style = DEFAULT_TEXT_STYLE.merge(text_style)
+        else:
+            text_style = DEFAULT_TEXT_STYLE
+
         self.width = width
         self.height = height
         self.bg_color = bg_color
         self.resources = resources
         self.default_code_theme = default_code_theme
         self.default_code_language = default_code_language
+        self.text_style = text_style
+        self.code_style = code_style
         self.slides = []
 
     def new_slide(
@@ -144,7 +157,7 @@ class SlideDeck:
             # TODO: gather steps
             steps = [1]
             for step in steps:
-                raw_pages.append(slide.at_step(step, self))
+                raw_pages.append(slide.get_step(step, self))
         return Document(self.resources, raw_pages)
 
     def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,

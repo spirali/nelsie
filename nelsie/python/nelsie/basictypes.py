@@ -5,7 +5,7 @@ from .layoutexpr import LayoutExpr
 
 Length = int | float | str
 LengthAuto = Length | Literal["auto"]
-Size = Length | LayoutExpr | None
+Size = Length | LayoutExpr
 Position = Size
 
 num_or_expr = int | float | LayoutExpr
