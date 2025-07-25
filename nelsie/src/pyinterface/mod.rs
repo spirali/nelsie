@@ -1,4 +1,5 @@
 mod check;
+mod extract;
 mod rendering;
 mod resources;
 
