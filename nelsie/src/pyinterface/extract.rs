@@ -6,9 +6,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{
-    Color, Length, LengthOrExpr, Node, NodeChild, NodeContent, NodeId, Page, Register, Text,
-};
+use renderer::{Color, Length, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, Text};
 
 #[derive(FromPyObject)]
 struct PyPage<'py> {
@@ -62,8 +60,7 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
         .content
         .map(|content| -> PyResult<_> {
             let text: Text = content.try_into()?;
-            let text_id = register.register_text(text);
-            Ok(NodeContent::Text(text_id))
+            Ok(register.register_text(text))
         })
         .transpose()?;
     Ok(Node {

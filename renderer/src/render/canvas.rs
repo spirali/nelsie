@@ -1,22 +1,12 @@
 use crate::render::draw::DrawItem;
-use crate::{Color, Rectangle};
+use crate::{Color, ContentId, Rectangle};
 use std::sync::Arc;
 
 #[derive(Debug)]
 pub(crate) enum CanvasItem {
-    PngImage {
+    Content {
         rect: Rectangle,
-        data: Arc<Vec<u8>>,
-    },
-    JpegImage {
-        rect: Rectangle,
-        data: Arc<Vec<u8>>,
-    },
-    SvgImage {
-        rect: Rectangle,
-        data: String,
-        width: f32,
-        height: f32,
+        content_id: ContentId,
     },
     DrawItem(DrawItem),
     /*DrawItems(Vec<DrawItem>),
@@ -79,10 +69,10 @@ impl Canvas {
         self.items.sort_by_key(|item| item.0);
     }
 
-    pub fn add_jpeg_image(&mut self, z_level: i32, rect: Rectangle, data: Arc<Vec<u8>>) {
+    /*pub fn add_jpeg_image(&mut self, z_level: i32, rect: Rectangle, data: Arc<Vec<u8>>) {
         self.items
             .push((z_level, CanvasItem::JpegImage { rect, data }));
-    }
+    }*/
 
     // pub fn add_video(&mut self, rect: Rectangle, video: Arc<Video>) {
     //     self.items.push(CanvasItem::Video { rect, video });
@@ -96,7 +86,7 @@ impl Canvas {
     //     self.items.push(CanvasItem::Text { text, x, y })
     // }
 
-    pub fn add_svg_image(
+    /*pub fn add_svg_image(
         &mut self,
         z_level: i32,
         rect: Rectangle,
@@ -113,6 +103,11 @@ impl Canvas {
                 height,
             },
         ))
+    }*/
+
+    pub fn add_content(&mut self, z_level: i32, rect: Rectangle, content_id: ContentId) {
+        self.items
+            .push((z_level, CanvasItem::Content { rect, content_id }))
     }
 
     pub fn add_draw_item(&mut self, z_level: i32, item: DrawItem) {

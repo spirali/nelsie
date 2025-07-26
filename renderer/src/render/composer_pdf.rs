@@ -1,13 +1,18 @@
+use crate::ContentId;
 use crate::render::canvas::Canvas;
 use crate::render::composer::{Composer, PngCollectorComposer};
+use crate::render::content::{Content, ContentMap};
 use miniz_oxide::deflate::CompressionLevel;
 use pdf_writer::{Chunk, Ref};
+use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Mutex;
 
 pub(crate) struct PdfComposer {
     chunks: Mutex<Vec<Chunk>>,
     pdf: Mutex<pdf_writer::Pdf>,
+    content_to_ref_builder: Mutex<HashMap<ContentId, Ref>>,
+    content_to_ref: HashMap<ContentId, Ref>,
     page_tree_ref: Ref,
     page_refs: Vec<Ref>,
     n_rendering_items: usize,
@@ -27,6 +32,8 @@ impl PdfComposer {
             page_refs,
             n_rendering_items,
             compression_level,
+            content_to_ref: HashMap::new(),
+            content_to_ref_builder: Mutex::new(HashMap::new()),
         }
     }
 
@@ -56,16 +63,32 @@ impl PdfComposer {
 }
 
 impl<'a> Composer for PdfComposer {
-    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
+    fn add_page(
+        &self,
+        page_idx: usize,
+        canvas: Canvas,
+        content_map: &ContentMap,
+    ) -> crate::Result<()> {
         let mut ref_allocator =
             PdfRefAllocator::new(self.page_refs[page_idx], self.n_rendering_items);
         let page = canvas.into_pdf_page(
             &mut ref_allocator,
             self.page_tree_ref,
             self.compression_level,
+            content_map,
+            &self.content_to_ref,
         )?;
         self.add_chunk(page);
         Ok(())
+    }
+
+    fn preprocess_content(&self, content_id: ContentId, content: &Content) -> crate::Result<()> {
+        todo!()
+    }
+
+    fn preprocessing_finished(&mut self) {
+        let mut map = self.content_to_ref_builder.lock().unwrap();
+        std::mem::swap(&mut *map, &mut self.content_to_ref);
     }
 }
 

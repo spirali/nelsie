@@ -344,13 +344,24 @@ pub fn precompute_image_cache(pdf_writer: &PdfWriterData, progress_bar: Option<&
         });
 }
 */
-use crate::Resources;
 use crate::render::canvas::Canvas;
+use crate::render::content::{Content, ContentMap};
+use crate::{ContentId, Resources};
 use resvg::{tiny_skia, usvg};
 use std::sync::Mutex;
 
-pub(crate) trait Composer: Sync {
-    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()>;
+pub(crate) trait Composer: Sync + Send {
+    fn add_page(
+        &self,
+        page_idx: usize,
+        canvas: Canvas,
+        content_map: &ContentMap,
+    ) -> crate::Result<()>;
+    fn preprocess_content(&self, content_id: ContentId, content: &Content) -> crate::Result<()> {
+        Ok(())
+    }
+
+    fn preprocessing_finished(&mut self) {}
 }
 
 fn path_name(page_idx: usize, extension: &str, n_pages: usize) -> String {
@@ -370,8 +381,13 @@ impl<'a> SvgWriteComposer<'a> {
 }
 
 impl Composer for SvgWriteComposer<'_> {
-    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
-        let svg = canvas.as_svg()?;
+    fn add_page(
+        &self,
+        page_idx: usize,
+        canvas: Canvas,
+        content_map: &ContentMap,
+    ) -> crate::Result<()> {
+        let svg = canvas.as_svg(content_map)?;
         let final_path = self.path.join(path_name(page_idx, "svg", self.n_pages));
         std::fs::write(final_path, svg)?;
         Ok(())
@@ -395,8 +411,13 @@ impl<'a> PngWriteComposer<'a> {
 }
 
 impl Composer for PngWriteComposer<'_> {
-    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
-        let svg = canvas.as_svg()?;
+    fn add_page(
+        &self,
+        page_idx: usize,
+        canvas: Canvas,
+        content_map: &ContentMap,
+    ) -> crate::Result<()> {
+        let svg = canvas.as_svg(content_map)?;
         let data = svg_to_png(&self.resources, &svg)?;
         let final_path = self.path.join(path_name(page_idx, "png", self.n_pages));
         std::fs::write(final_path, data)?;
@@ -421,8 +442,13 @@ impl SvgCollectorComposer {
 }
 
 impl Composer for SvgCollectorComposer {
-    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
-        let svg = canvas.as_svg()?;
+    fn add_page(
+        &self,
+        page_idx: usize,
+        canvas: Canvas,
+        content_map: &ContentMap,
+    ) -> crate::Result<()> {
+        let svg = canvas.as_svg(content_map)?;
         self.pages.lock().unwrap()[page_idx] = svg;
         Ok(())
     }
@@ -447,8 +473,13 @@ impl<'a> PngCollectorComposer<'a> {
 }
 
 impl<'a> Composer for PngCollectorComposer<'a> {
-    fn add_page(&self, page_idx: usize, canvas: Canvas) -> crate::Result<()> {
-        let svg = canvas.as_svg()?;
+    fn add_page(
+        &self,
+        page_idx: usize,
+        canvas: Canvas,
+        content_map: &ContentMap,
+    ) -> crate::Result<()> {
+        let svg = canvas.as_svg(content_map)?;
         let data = svg_to_png(self.resources, &svg)?;
         self.pages.lock().unwrap()[page_idx] = data;
         Ok(())

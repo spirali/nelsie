@@ -1,9 +1,10 @@
 use crate::render::canvas::{Canvas, CanvasItem, Link};
 
 use crate::render::composer_pdf::PdfRefAllocator;
+use crate::render::content::ContentMap;
 use crate::render::draw::{DrawItem, DrawRect, PathBuilder};
 use crate::shapes::FillAndStroke;
-use crate::{Color, Rectangle};
+use crate::{Color, ContentId, Rectangle};
 use pdf_writer::types::{
     ActionType, AnnotationType, MediaClipType, RenditionOperation, RenditionType, TempFileType,
 };
@@ -20,6 +21,8 @@ impl Canvas {
         alloc_ref: &mut PdfRefAllocator,
         page_tree_ref: Ref,
         compression_level: u8,
+        content_map: &ContentMap,
+        content_to_ref: &HashMap<ContentId, Ref>,
     ) -> crate::Result<Chunk> {
         // First reference get from allocator is already preregistered as page reference
         let page_ref = alloc_ref.bump();
@@ -53,8 +56,9 @@ impl Canvas {
                 CanvasItem::DrawItem(item) => {
                     draw_items_to_pdf(&mut pdf_ctx, item);
                 }
-                _ => {
-                    todo!()
+                CanvasItem::Content { rect, content_id } => {
+                    let content_ref = content_to_ref.get(content_id).unwrap();
+                    pdf_ctx.put_x_object(*content_ref, rect.clone(), self.height);
                 }
             }
             /*                CanvasItem::PngImage { rect, data } | CanvasItem::JpegImage { rect, data } => {

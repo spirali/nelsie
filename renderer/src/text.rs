@@ -8,18 +8,6 @@ use std::sync::Arc;
 pub use resvg::usvg::FontStretch;
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
-pub struct TextId(u32);
-
-impl TextId {
-    pub fn new(text_id: u32) -> Self {
-        TextId(text_id)
-    }
-    pub fn as_u32(self) -> u32 {
-        self.0
-    }
-}
-
-#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub struct InlineId(u32);
 
 impl InlineId {

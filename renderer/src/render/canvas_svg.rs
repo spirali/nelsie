@@ -1,5 +1,6 @@
 use crate::Rectangle;
 use crate::render::canvas::{Canvas, CanvasItem};
+use crate::render::content::{ContentBody, ContentMap};
 use crate::render::draw::DrawItem;
 use crate::render::svgpath::{svg_ellipse, svg_path, svg_rect};
 use crate::render::text::RenderedText;
@@ -7,7 +8,7 @@ use crate::utils::sxml::SimpleXmlWriter;
 use std::io::Write;
 
 impl Canvas {
-    pub fn as_svg(&self) -> crate::Result<String> {
+    pub fn as_svg(&self, content_map: &ContentMap) -> crate::Result<String> {
         let mut writer = SimpleXmlWriter::new();
 
         svg_begin(&mut writer, self.width, self.height);
@@ -20,7 +21,7 @@ impl Canvas {
 
         for item in self.items() {
             match item {
-                CanvasItem::PngImage { rect, data } => {
+                /*CanvasItem::PngImage { rect, data } => {
                     write_raster_image_to_svg(&rect, "png", &data, &mut writer)
                 }
                 CanvasItem::JpegImage { rect, data } => {
@@ -31,8 +32,16 @@ impl Canvas {
                     data,
                     width,
                     height,
-                } => render_svg_image_into_svg(&mut writer, data.as_str(), &rect, *width, *height),
+                } => render_svg_image_into_svg(&mut writer, data.as_str(), &rect, *width, *height),*/
                 /*CanvasItem::Text { text, x, y } => render_text_into_svg(&mut writer, &text, x, y),*/
+                CanvasItem::Content { rect, content_id } => {
+                    let content = content_map.get(content_id).unwrap();
+                    match content.body() {
+                        ContentBody::Text(text) => {
+                            render_text_into_svg(&mut writer, text, rect.x, rect.y)
+                        }
+                    }
+                }
                 CanvasItem::DrawItem(item) => write_draw_item_to_svg(&mut writer, item),
                 /*CanvasItem::Video { rect, video } => {
                     if let Some(image) = &video.cover_image {
@@ -105,14 +114,13 @@ fn render_text_into_svg(
     x: f32,
     y: f32,
 ) {
-    todo!()
-    /*use std::fmt::Write;
+    use std::fmt::Write;
     writer.begin("g");
     writer.attr_buf("transform", |s| write!(s, "translate({x}, {y})").unwrap());
     for path in rendered_text.paths() {
         svg_path(writer, path);
     }
-    writer.end("g")*/
+    writer.end("g")
 }
 
 fn render_svg_image_into_svg(

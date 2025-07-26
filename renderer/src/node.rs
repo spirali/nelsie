@@ -1,6 +1,6 @@
-use crate::text::{Text, TextId};
+use crate::text::Text;
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
-use crate::{Color, ImageId, ImagePlacement, NodeId};
+use crate::{Color, ImagePlacement, NodeId};
 use smallvec::SmallVec;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
@@ -15,10 +15,22 @@ pub enum NodeChild {
     //    Draw(Drawing),
 }
 
-#[derive(Debug)]
-pub enum NodeContent {
-    Text(TextId),
-    Image(SmallVec<[ImagePlacement; 1]>),
+#[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
+pub struct ContentId(u32);
+
+impl ContentId {
+    pub fn new(image_id: u32) -> Self {
+        ContentId(image_id)
+    }
+
+    pub fn as_u32(self) -> u32 {
+        self.0
+    }
+
+    pub fn bump(&mut self) -> ContentId {
+        self.0 += 1;
+        ContentId::new(self.0)
+    }
 }
 
 #[derive(Debug)]
@@ -77,7 +89,7 @@ pub struct Node {
 
     pub z_level: i32,
 
-    pub content: Option<NodeContent>,
+    pub content: Option<ContentId>,
 
     pub url: Option<String>,
 }

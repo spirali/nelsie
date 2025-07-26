@@ -1,8 +1,8 @@
-use crate::node::{Node, NodeContent};
+use crate::node::Node;
 use crate::render::context::RenderContext;
 use crate::render::text::RenderedText;
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
-use crate::{NodeId, Page, Rectangle};
+use crate::{ContentId, NodeId, Page, Rectangle};
 use itertools::Itertools;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
@@ -197,49 +197,49 @@ impl From<&LengthOrExpr> for tf::Dimension {
     }
 }
 
-fn compute_content_default_size(
-    render_ctx: &mut RenderContext,
-    node: &Node,
-    content: &NodeContent,
-) -> (f32, f32) {
-    match content {
-        NodeContent::Text(text_id) => {
-            todo!()
-        }
-        NodeContent::Image(images) => {
-            todo!()
-        } /*let mut t = text.styled_text_at_step(step);
-          let tmp;
-
-          if text.parse_counters {
-              // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
-              // for counters
-              let mut text = t.clone();
-              replace_counters(
-                  config.counter_values,
-                  &mut text,
-                  config.slide_id,
-                  config.step,
-              );
-              tmp = Some(text);
-              t = tmp.as_ref().unwrap();
-          }
-          let rtext = config.text_cache.get_or_create(
-              node.node_id,
-              &mut config.thread_resources.text_context,
-              t,
-          );
-          rtext.size()*/
-    }
-    /*        NodeContent::Image(image) => image
-            .loaded_image
-            .at_step(step)
-            .as_ref()
-            .map(|img| (img.width, img.height))
-            .unwrap_or((0.0, 0.0)),
-        NodeContent::Video(_video) => (0.0, 0.0),
-    }*/
-}
+// fn compute_content_default_size(
+//     render_ctx: &mut RenderContext,
+//     node: &Node,
+//     content_id: &ContentId,
+// ) -> (f32, f32) {
+//     match content {
+//         NodeContent::Text(text_id) => {
+//             todo!()
+//         }
+//         NodeContent::Image(images) => {
+//             todo!()
+//         } /*let mut t = text.styled_text_at_step(step);
+//           let tmp;
+//
+//           if text.parse_counters {
+//               // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
+//               // for counters
+//               let mut text = t.clone();
+//               replace_counters(
+//                   config.counter_values,
+//                   &mut text,
+//                   config.slide_id,
+//                   config.step,
+//               );
+//               tmp = Some(text);
+//               t = tmp.as_ref().unwrap();
+//           }
+//           let rtext = config.text_cache.get_or_create(
+//               node.node_id,
+//               &mut config.thread_resources.text_context,
+//               t,
+//           );
+//           rtext.size()*/
+//     }
+//     /*        NodeContent::Image(image) => image
+//             .loaded_image
+//             .at_step(step)
+//             .as_ref()
+//             .map(|img| (img.width, img.height))
+//             .unwrap_or((0.0, 0.0)),
+//         NodeContent::Video(_video) => (0.0, 0.0),
+//     }*/
+// }
 
 fn gather_taffy_layout<'b>(
     node: &'b Node,
@@ -283,7 +283,7 @@ fn compute_layout_helper(
 
     let (content_w, content_h, content_aspect_ratio) = if w.is_none() || h.is_none() {
         if let Some(content) = node.content.as_ref() {
-            let (content_w, content_h) = compute_content_default_size(render_ctx, node, content);
+            let (content_w, content_h) = render_ctx.content_map.get(content).unwrap().size();
             if w.is_none() && h.is_none() {
                 (
                     Some(tf::Dimension::Length(content_w)),

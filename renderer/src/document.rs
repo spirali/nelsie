@@ -1,14 +1,16 @@
 use crate::NodeChild::Node;
 use crate::image::InMemoryImage;
+use crate::node::ContentId;
 use crate::render::composer::{
     Composer, PngCollectorComposer, PngWriteComposer, SvgCollectorComposer, SvgWriteComposer,
 };
 use crate::render::composer_pdf::PdfComposer;
-use crate::render::context::{RenderContext, ThreadLocalResources};
-use crate::render::text::{RenderedText, TextContext};
+use crate::render::content::{Content, ContentBody, ContentMap};
+use crate::render::context::RenderContext;
+use crate::render::text::{RenderedText, TextContext, render_text};
 use crate::resources::Resources;
-use crate::text::{Text, TextId};
-use crate::{Color, ImageId, NodeId, Page};
+use crate::text::Text;
+use crate::{Color, NodeId, Page};
 use itertools::Itertools;
 use miniz_oxide::deflate::CompressionLevel;
 use parley::{FontContext, LayoutContext};
@@ -16,23 +18,24 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::sync::Mutex;
 
 pub struct Register {
     node_id_counter: NodeId,
-    texts: HashMap<Text, (TextId, u32)>,
-    images_paths: HashMap<PathBuf, ImageId>,
-    images_mem: HashMap<InMemoryImage, ImageId>,
-    image_id_counter: ImageId,
+    content_id_counter: ContentId,
+    texts: HashMap<Text, (ContentId, u32)>,
+    images_paths: HashMap<PathBuf, ContentId>,
+    images_mem: HashMap<InMemoryImage, ContentId>,
 }
 
 impl Register {
     pub fn new() -> Self {
         Self {
             node_id_counter: NodeId::new(0),
+            content_id_counter: ContentId::new(0),
             texts: HashMap::new(),
             images_paths: HashMap::default(),
             images_mem: HashMap::default(),
-            image_id_counter: ImageId::new(0),
         }
     }
 
@@ -41,30 +44,29 @@ impl Register {
         self.node_id_counter.bump()
     }
 
-    pub fn register_text(&mut self, text: Text) -> TextId {
-        let count = self.texts.len();
+    pub fn register_text(&mut self, text: Text) -> ContentId {
         let entry = self
             .texts
             .entry(text)
-            .or_insert_with(|| (TextId::new(count as u32), 0));
+            .or_insert_with(|| (self.content_id_counter.bump(), 0));
         entry.1 += 1;
         entry.0
     }
 
-    pub fn register_image_path(&mut self, path: &std::path::Path) -> ImageId {
+    pub fn register_image_path(&mut self, path: &std::path::Path) -> ContentId {
         if let Some(image_id) = self.images_paths.get(path) {
             return *image_id;
         }
-        let image_id = self.image_id_counter.bump();
+        let image_id = self.content_id_counter.bump();
         self.images_paths.insert(path.to_path_buf(), image_id);
         image_id
     }
 
-    pub fn register_image_mem(&mut self, image: InMemoryImage) -> ImageId {
+    pub fn register_image_mem(&mut self, image: InMemoryImage) -> ContentId {
         let entry = self
             .images_mem
             .entry(image)
-            .or_insert_with(|| self.image_id_counter.bump());
+            .or_insert_with(|| self.content_id_counter.bump());
         *entry
     }
 }
@@ -75,9 +77,9 @@ pub struct Document {
 }
 
 enum PreprocessingJob<'a> {
-    Text(&'a Text, TextId),
-    ImageMem(&'a InMemoryImage, ImageId),
-    ImagePath(&'a std::path::Path, ImageId),
+    Text(&'a Text),
+    ImageMem(&'a InMemoryImage),
+    ImagePath(&'a std::path::Path),
 }
 
 pub struct RenderingOptions {
@@ -98,69 +100,61 @@ impl Document {
         &self,
         resources: &Resources,
         options: &RenderingOptions,
-        composer: &dyn Composer,
+        composer: &mut dyn Composer,
     ) -> crate::Result<()> {
         let mut thread_pool_builder = rayon::ThreadPoolBuilder::new();
         if let Some(n_threads) = options.n_threads {
             thread_pool_builder = thread_pool_builder.num_threads(n_threads);
         }
         let thread_pool = thread_pool_builder.build().unwrap();
+        let content_map: Mutex<ContentMap> = Mutex::new(HashMap::new());
         thread_pool.install(|| {
-            let (text_cache, image_cache): (
-                crate::Result<HashMap<_, _>>,
-                crate::Result<HashMap<_, _>>,
-            ) = rayon::join(
+            let (texts, _) = rayon::join(
                 || {
                     self.register
                         .texts
                         .iter()
                         .collect_vec()
                         .into_par_iter()
-                        .map_init(
-                            || FontContext {
-                                collection: resources.font_context.collection.clone(),
-                                source_cache: resources.font_context.source_cache.clone(),
+                        .try_for_each_init(
+                            || TextContext {
+                                layout_cx: Default::default(),
+                                font_cx: FontContext {
+                                    collection: resources.font_context.collection.clone(),
+                                    source_cache: resources.font_context.source_cache.clone(),
+                                },
                             },
-                            |font_ctx, (text, (node_id, count))| todo!(),
+                            |text_ctx, (text, (content_id, count))| {
+                                let (rtext, width, height) =
+                                    render_text(resources, text_ctx, text)?;
+                                let content = Content::new(width, height, ContentBody::Text(rtext));
+                                composer.preprocess_content(*content_id, &content)?;
+                                content_map.lock().unwrap().insert(*content_id, content);
+                                crate::Result::Ok(())
+                            },
                         )
-                        .collect::<crate::Result<HashMap<NodeId, RenderedText>>>()
                 },
                 || {
                     //self.images_paths.par_iter()
                     // todo!()
-                    Ok(HashMap::new())
+                    ()
                 },
             );
-            let text_cache = text_cache?;
-            let mut image_cache: HashMap<ImageId, InMemoryImage> = image_cache?;
+            texts?;
+            let content_map = content_map.into_inner().unwrap();
 
-            for (image, image_id) in self.register.images_mem.iter() {
-                assert!(
-                    image_cache
-                        .insert(image_id.clone(), image.clone())
-                        .is_none()
-                );
-            }
+            composer.preprocessing_finished();
 
-            self.pages.par_iter().enumerate().try_for_each_init(
-                || ThreadLocalResources {
-                    text_context: TextContext {
-                        layout_cx: LayoutContext::new(),
-                        font_cx: FontContext {
-                            collection: resources.font_context.collection.clone(),
-                            source_cache: resources.font_context.source_cache.clone(),
-                        },
-                    },
-                },
-                |thread_resources, (page_idx, page)| {
+            self.pages
+                .par_iter()
+                .enumerate()
+                .try_for_each(|(page_idx, page)| {
                     let mut render_ctx = RenderContext {
-                        resources,
-                        thread_resources,
+                        content_map: &content_map,
                     };
                     let canvas = page.render_to_canvas(&mut render_ctx);
-                    composer.add_page(page_idx, canvas)
-                },
-            )
+                    composer.add_page(page_idx, canvas, &render_ctx.content_map)
+                })
         })
     }
 
@@ -180,8 +174,8 @@ impl Document {
         resources: &Resources,
         options: &RenderingOptions,
     ) -> crate::Result<Vec<u8>> {
-        let composer = PdfComposer::new(self.pages.len(), options.compression_level);
-        self.render(resources, options, &composer)?;
+        let mut composer = PdfComposer::new(self.pages.len(), options.compression_level);
+        self.render(resources, options, &mut composer)?;
         Ok(composer.finish())
     }
 
@@ -192,8 +186,8 @@ impl Document {
         path: &std::path::Path,
     ) -> crate::Result<()> {
         std::fs::create_dir_all(path)?;
-        let composer = SvgWriteComposer::new(path, self.pages.len());
-        self.render(resources, options, &composer)
+        let mut composer = SvgWriteComposer::new(path, self.pages.len());
+        self.render(resources, options, &mut composer)
     }
 
     pub fn render_png_to_dir(
@@ -203,8 +197,8 @@ impl Document {
         path: &std::path::Path,
     ) -> crate::Result<()> {
         std::fs::create_dir_all(path)?;
-        let composer = PngWriteComposer::new(resources, path, self.pages.len());
-        self.render(resources, options, &composer)
+        let mut composer = PngWriteComposer::new(resources, path, self.pages.len());
+        self.render(resources, options, &mut composer)
     }
 
     pub fn render_svg_to_vec(
@@ -212,8 +206,8 @@ impl Document {
         resources: &Resources,
         options: &RenderingOptions,
     ) -> crate::Result<Vec<String>> {
-        let composer = SvgCollectorComposer::new(self.pages.len());
-        self.render(resources, options, &composer)?;
+        let mut composer = SvgCollectorComposer::new(self.pages.len());
+        self.render(resources, options, &mut composer)?;
         Ok(composer.finish())
     }
 
@@ -222,8 +216,8 @@ impl Document {
         resources: &Resources,
         options: &RenderingOptions,
     ) -> crate::Result<Vec<Vec<u8>>> {
-        let composer = PngCollectorComposer::new(resources, self.pages.len());
-        self.render(resources, options, &composer)?;
+        let mut composer = PngCollectorComposer::new(resources, self.pages.len());
+        self.render(resources, options, &mut composer)?;
         Ok(composer.finish())
     }
 }

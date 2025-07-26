@@ -18,11 +18,14 @@ use std::collections::HashMap;
 #[derive(Debug)]
 pub(crate) struct RenderedText {
     paths: Vec<DrawPath>,
-    width: f32,
-    height: f32,
-
     line_rects: Vec<Rectangle>,
     inline_rects: HashMap<InlineId, Rectangle>,
+}
+
+impl RenderedText {
+    pub fn paths(&self) -> &[DrawPath] {
+        &self.paths
+    }
 }
 
 pub(crate) struct TextContext {
@@ -34,7 +37,7 @@ pub fn render_text(
     resources: &Resources,
     text_ctx: &mut TextContext,
     text: &Text,
-) -> crate::Result<RenderedText> {
+) -> crate::Result<(RenderedText, f32, f32)> {
     let styled_text = StyledText::from(resources, text)?;
 
     let mut layout = styled_text_to_parley(text_ctx, &styled_text);
@@ -86,13 +89,15 @@ pub fn render_text(
         }
         line_rects.push(Rectangle::new(min_x, line_y, max_x - min_x, line_height));
     }
-    Ok(RenderedText {
-        paths,
-        width: layout.width(),
-        height: layout.height(),
-        line_rects,
-        inline_rects,
-    })
+    Ok((
+        RenderedText {
+            paths,
+            line_rects,
+            inline_rects,
+        },
+        layout.width(),
+        layout.height(),
+    ))
 }
 
 fn styled_text_to_parley(
