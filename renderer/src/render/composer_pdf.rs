@@ -32,7 +32,7 @@ impl PdfComposer {
             page_tree_ref,
             pdf: Mutex::new(pdf),
             page_refs,
-            compression_level: 0,
+            compression_level,
             content_to_ref: HashMap::new(),
             content_to_ref_builder: Mutex::new(HashMap::new()),
             ref_allocator: PdfRefAllocator::new(alloc_ref),
@@ -183,21 +183,21 @@ fn create_text_xobject(
     pdf_writer.content.save_state();
     pdf_writer
         .content
-        .transform([width, 0.0, 0.0, height, 0.0, 0.0]);
+        .transform([1.0 / width, 0.0, 0.0, 1.0 / height, 0.0, 0.0]);
     for path in text.paths() {
         path_to_pdf(&mut pdf_writer, path)
     }
     pdf_writer.content.restore_state();
 
     let mut content_data = pdf_writer.content.finish();
-    /*if compression_level > 0 {
+    if compression_level > 0 {
         content_data = miniz_oxide::deflate::compress_to_vec_zlib(&content_data, compression_level)
-    }*/
+    }
     let mut x_obj = pdf_writer.chunk.form_xobject(obj_ref, &content_data);
-    x_obj.bbox(Rect::new(0.0, 0.0, width, height));
-    /*if compression_level > 0 {
+    x_obj.bbox(Rect::new(0.0, 0.0, 1.0, 1.0));
+    if compression_level > 0 {
         x_obj.filter(Filter::FlateDecode);
-    }*/
+    }
     x_obj.finish();
     (pdf_writer.chunk, obj_ref)
 }
