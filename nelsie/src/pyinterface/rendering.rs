@@ -51,6 +51,10 @@ fn run_rendering(
             doc.render_png_to_dir(&resources.resources, options, std::path::Path::new(path))
                 .map_err(crate::Error::from)?;
         }
+        (Some(path), "svg") => {
+            doc.render_svg_to_dir(&resources.resources, options, std::path::Path::new(path))
+                .map_err(crate::Error::from)?;
+        }
         _ => {
             println!("TODO RENDER");
             todo!()

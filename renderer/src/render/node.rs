@@ -20,6 +20,11 @@ pub(crate) fn render_node(
         canvas.add_draw_item(node.z_level, item);
     }
 
+    if let Some(content_id) = &node.content {
+        let rect = layout.node_layout(node.node_id).unwrap().rect.clone();
+        canvas.add_content(node.z_level, rect, *content_id);
+    }
+
     /*if let Some(content) = &node.content {
         let rect = layout.node_layout(node.node_id).unwrap().rect;
         match content {

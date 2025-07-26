@@ -83,7 +83,8 @@ impl<'a> Composer for PdfComposer {
     }
 
     fn preprocess_content(&self, content_id: ContentId, content: &Content) -> crate::Result<()> {
-        todo!()
+        //todo!()
+        Ok(())
     }
 
     fn preprocessing_finished(&mut self) {

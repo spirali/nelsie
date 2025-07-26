@@ -10,6 +10,7 @@ use crate::render::context::RenderContext;
 use crate::render::text::{RenderedText, TextContext, render_text};
 use crate::resources::Resources;
 use crate::text::Text;
+use crate::utils::fileutils::ensure_directory;
 use crate::{Color, NodeId, Page};
 use itertools::Itertools;
 use miniz_oxide::deflate::CompressionLevel;
@@ -185,7 +186,7 @@ impl Document {
         options: &RenderingOptions,
         path: &std::path::Path,
     ) -> crate::Result<()> {
-        std::fs::create_dir_all(path)?;
+        ensure_directory(path)?;
         let mut composer = SvgWriteComposer::new(path, self.pages.len());
         self.render(resources, options, &mut composer)
     }
@@ -196,7 +197,7 @@ impl Document {
         options: &RenderingOptions,
         path: &std::path::Path,
     ) -> crate::Result<()> {
-        std::fs::create_dir_all(path)?;
+        ensure_directory(path)?;
         let mut composer = PngWriteComposer::new(resources, path, self.pages.len());
         self.render(resources, options, &mut composer)
     }

@@ -1,8 +1,8 @@
 use crate::render::canvas::{Canvas, CanvasItem, Link};
 
 use crate::render::composer_pdf::PdfRefAllocator;
-use crate::render::content::ContentMap;
-use crate::render::draw::{DrawItem, DrawRect, PathBuilder};
+use crate::render::content::{ContentBody, ContentMap};
+use crate::render::draw::{DrawItem, DrawPath, DrawPathPart, DrawRect, PathBuilder};
 use crate::shapes::FillAndStroke;
 use crate::{Color, ContentId, Rectangle};
 use pdf_writer::types::{
@@ -57,8 +57,22 @@ impl Canvas {
                     draw_items_to_pdf(&mut pdf_ctx, item);
                 }
                 CanvasItem::Content { rect, content_id } => {
-                    let content_ref = content_to_ref.get(content_id).unwrap();
-                    pdf_ctx.put_x_object(*content_ref, rect.clone(), self.height);
+                    let content = content_map.get(content_id).unwrap();
+                    match content.body() {
+                        ContentBody::Text(text) => {
+                            pdf_ctx.content.save_state();
+                            pdf_ctx
+                                .content
+                                .transform([1.0, 0.0, 0.0, 1.0, rect.x, rect.y]);
+                            for path in text.paths() {
+                                path_to_pdf(&mut pdf_ctx, path)
+                            }
+                            pdf_ctx.content.restore_state();
+                        }
+                    }
+                    //let content_ref = content_to_ref.get(content_id).unwrap();
+
+                    //pdf_ctx.put_x_object(*content_ref, rect.clone(), self.height);
                 }
             }
             /*                CanvasItem::PngImage { rect, data } | CanvasItem::JpegImage { rect, data } => {
@@ -210,9 +224,7 @@ fn draw_items_to_pdf(pdf_ctx: &mut PdfCtx, item: &DrawItem) {
     match item {
         DrawItem::Rect(rect) => draw_rect_to_pdf(pdf_ctx, rect),
         DrawItem::Oval(rect) => draw_ellipse_to_pdf(pdf_ctx, rect),
-        DrawItem::Path(path) => {
-            todo!(); /*path_body_to_pdf(pdf_ctx, path)*/
-        }
+        DrawItem::Path(path) => path_to_pdf(pdf_ctx, path),
     }
     pdf_ctx.content.restore_state();
 }
@@ -399,9 +411,9 @@ fn draw_ellipse_to_pdf(pdf_ctx: &mut PdfCtx, item: &DrawRect) {
     action.finish();
     annotation.finish();
     Ok(())
-}
+}*/
 
-fn path_body_to_pdf(pdf_ctx: &mut PdfCtx, path: &Path) {
+fn path_to_pdf(pdf_ctx: &mut PdfCtx, path: &DrawPath) {
     // Taken from resvg
     fn calc(n1: f32, n2: f32) -> f32 {
         (n1 + n2 * 2.0) / 3.0
@@ -412,15 +424,15 @@ fn path_body_to_pdf(pdf_ctx: &mut PdfCtx, path: &Path) {
     let mut last = (0.0, 0.0);
     for part in path.parts() {
         match part {
-            PathPart::Move { x, y } => {
+            DrawPathPart::Move { x, y } => {
                 last = (*x, *y);
                 pdf_ctx.content.move_to(*x, *y);
             }
-            PathPart::Line { x, y } => {
+            DrawPathPart::Line { x, y } => {
                 last = (*x, *y);
                 pdf_ctx.content.line_to(*x, *y);
             }
-            PathPart::Quad { x1, y1, x, y } => {
+            DrawPathPart::Quad { x1, y1, x, y } => {
                 pdf_ctx.content.cubic_to(
                     calc(last.0, *x1),
                     calc(last.1, *y1),
@@ -431,7 +443,7 @@ fn path_body_to_pdf(pdf_ctx: &mut PdfCtx, path: &Path) {
                 );
                 last = (*x, *y);
             }
-            PathPart::Cubic {
+            DrawPathPart::Cubic {
                 x1,
                 y1,
                 x2,
@@ -442,20 +454,10 @@ fn path_body_to_pdf(pdf_ctx: &mut PdfCtx, path: &Path) {
                 last = (*x, *y);
                 pdf_ctx.content.cubic_to(*x1, *y1, *x2, *y2, *x, *y);
             }
-            PathPart::Close => {
+            DrawPathPart::Close => {
                 pdf_ctx.content.close_path();
             }
         }
     }
     draw_fill_and_stroke(pdf_ctx, path.fill_and_stroke());
 }
-
-fn path_to_pdf_at(pdf_ctx: &mut PdfCtx, path: &Path, x: f32, y: f32, height: f32) {
-    pdf_ctx.content.save_state();
-    pdf_ctx
-        .content
-        .transform([1.0, 0.0, 0.0, -1.0, x, height - y]);
-    path_body_to_pdf(pdf_ctx, path);
-    pdf_ctx.content.restore_state();
-}
-*/

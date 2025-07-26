@@ -26,7 +26,7 @@ def test_text_invalid_font(deck):
 
 @check()
 def test_text_simple(deck):
-    deck.new_slide().text("Hello")
+    deck.new_slide(width=120, height=40).text("Hello")
 
 
 @check(n_slides=4)
