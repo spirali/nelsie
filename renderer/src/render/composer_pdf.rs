@@ -1,12 +1,15 @@
 use crate::ContentId;
 use crate::render::canvas::Canvas;
 use crate::render::composer::{Composer, PngCollectorComposer};
-use crate::render::content::{Content, ContentMap};
+use crate::render::content::{Content, ContentBody, ContentMap};
+use crate::render::pdfdraw::{PdfWriter, init_pdf, path_to_pdf};
+use crate::render::text::RenderedText;
 use miniz_oxide::deflate::CompressionLevel;
-use pdf_writer::{Chunk, Ref};
+use pdf_writer::{Chunk, Filter, Finish, Rect, Ref};
 use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicI32, Ordering};
 
 pub(crate) struct PdfComposer {
     chunks: Mutex<Vec<Chunk>>,
@@ -15,8 +18,8 @@ pub(crate) struct PdfComposer {
     content_to_ref: HashMap<ContentId, Ref>,
     page_tree_ref: Ref,
     page_refs: Vec<Ref>,
-    n_rendering_items: usize,
     compression_level: u8,
+    ref_allocator: PdfRefAllocator,
 }
 
 impl PdfComposer {
@@ -24,16 +27,15 @@ impl PdfComposer {
         let mut alloc_ref = Ref::new(1);
         let mut pdf = pdf_writer::Pdf::new();
         let (page_tree_ref, page_refs) = init_pdf(&mut pdf, &mut alloc_ref, n_pages);
-        let n_rendering_items = n_pages;
         PdfComposer {
             chunks: Mutex::new(Vec::new()),
             page_tree_ref,
             pdf: Mutex::new(pdf),
             page_refs,
-            n_rendering_items,
-            compression_level,
+            compression_level: 0,
             content_to_ref: HashMap::new(),
             content_to_ref_builder: Mutex::new(HashMap::new()),
+            ref_allocator: PdfRefAllocator::new(alloc_ref),
         }
     }
 
@@ -69,10 +71,9 @@ impl<'a> Composer for PdfComposer {
         canvas: Canvas,
         content_map: &ContentMap,
     ) -> crate::Result<()> {
-        let mut ref_allocator =
-            PdfRefAllocator::new(self.page_refs[page_idx], self.n_rendering_items);
         let page = canvas.into_pdf_page(
-            &mut ref_allocator,
+            &self.ref_allocator,
+            self.page_refs[page_idx],
             self.page_tree_ref,
             self.compression_level,
             content_map,
@@ -83,7 +84,23 @@ impl<'a> Composer for PdfComposer {
     }
 
     fn preprocess_content(&self, content_id: ContentId, content: &Content) -> crate::Result<()> {
-        //todo!()
+        match content.body() {
+            ContentBody::Text(text) => {
+                let (width, height) = content.size();
+                let (chunk, rf) = create_text_xobject(
+                    text,
+                    width,
+                    height,
+                    &self.ref_allocator,
+                    self.compression_level,
+                );
+                self.content_to_ref_builder
+                    .lock()
+                    .unwrap()
+                    .insert(content_id, rf);
+                self.add_chunk(chunk);
+            }
+        }
         Ok(())
     }
 
@@ -98,17 +115,6 @@ impl<'a> Composer for PdfComposer {
 //     page_tree_ref: Ref,
 //     alloc_ref: Ref,
 // }
-
-fn init_pdf(pdf: &mut pdf_writer::Pdf, alloc_ref: &mut Ref, n_pages: usize) -> (Ref, Vec<Ref>) {
-    let catalog_ref = alloc_ref.bump();
-    let page_tree_ref = alloc_ref.bump();
-    pdf.catalog(catalog_ref).pages(page_tree_ref);
-    let page_refs: Vec<Ref> = (0..n_pages).map(|_| alloc_ref.bump()).collect();
-    pdf.pages(page_tree_ref)
-        .kids(page_refs.iter().copied())
-        .count(page_refs.len() as i32);
-    (page_tree_ref, page_refs)
-}
 
 // impl PdfGlobalInfo {
 //     pub fn new(pdf: &mut pdf_writer::Pdf, n_pages: usize) -> Self {
@@ -148,22 +154,50 @@ fn init_pdf(pdf: &mut pdf_writer::Pdf, alloc_ref: &mut Ref, n_pages: usize) -> (
    ...
    we are setting n_pages + 1 because the last allocator is reserved for generic purpose and not specific page
 */
+
 pub(crate) struct PdfRefAllocator {
-    counter: i32,
-    step: i32,
+    counter: AtomicI32,
 }
 
 impl PdfRefAllocator {
-    pub fn new(initial_ref: Ref, n_rendering_items: usize) -> Self {
-        PdfRefAllocator {
-            counter: initial_ref.get(),
-            step: n_rendering_items as i32,
+    pub fn new(rf: Ref) -> Self {
+        Self {
+            counter: AtomicI32::new(rf.get()),
         }
     }
-
-    pub fn bump(&mut self) -> Ref {
-        let rf = self.counter;
-        self.counter += self.step;
+    pub fn bump(&self) -> Ref {
+        let rf = self.counter.fetch_add(1, Ordering::Relaxed);
         Ref::new(rf)
     }
+}
+
+fn create_text_xobject(
+    text: &RenderedText,
+    width: f32,
+    height: f32,
+    allocator: &PdfRefAllocator,
+    compression_level: u8,
+) -> (Chunk, Ref) {
+    let obj_ref = allocator.bump();
+    let mut pdf_writer = PdfWriter::new(allocator);
+    pdf_writer.content.save_state();
+    pdf_writer
+        .content
+        .transform([width, 0.0, 0.0, height, 0.0, 0.0]);
+    for path in text.paths() {
+        path_to_pdf(&mut pdf_writer, path)
+    }
+    pdf_writer.content.restore_state();
+
+    let mut content_data = pdf_writer.content.finish();
+    /*if compression_level > 0 {
+        content_data = miniz_oxide::deflate::compress_to_vec_zlib(&content_data, compression_level)
+    }*/
+    let mut x_obj = pdf_writer.chunk.form_xobject(obj_ref, &content_data);
+    x_obj.bbox(Rect::new(0.0, 0.0, width, height));
+    /*if compression_level > 0 {
+        x_obj.filter(Filter::FlateDecode);
+    }*/
+    x_obj.finish();
+    (pdf_writer.chunk, obj_ref)
 }

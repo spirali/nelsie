@@ -9,5 +9,6 @@ pub(crate) mod context;
 pub(crate) mod draw;
 pub(crate) mod layout;
 pub(crate) mod node;
+mod pdfdraw;
 mod svgpath;
 pub(crate) mod text;
