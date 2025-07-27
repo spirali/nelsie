@@ -51,21 +51,27 @@ impl Canvas {
                     if let Some(rf) = content_to_ref.get(content_id) {
                         pdf_writer.put_x_object(*rf, rect.clone());
                     } else {
-                        todo!();
+                        let content = content_map.get(content_id).unwrap();
+                        match content.body() {
+                            ContentBody::Text((text, is_shared)) => {
+                                assert!(!is_shared);
+                                let (width, height) = content.size();
+                                pdf_writer.content.save_state();
+                                pdf_writer.content.transform([
+                                    rect.width / width,
+                                    0.0,
+                                    0.0,
+                                    rect.height / height,
+                                    rect.x,
+                                    rect.y,
+                                ]);
+                                for path in text.paths() {
+                                    path_to_pdf(&mut pdf_writer, path)
+                                }
+                                pdf_writer.content.restore_state();
+                            }
+                        }
                     }
-                    // let content = content_map.get(content_id).unwrap();
-                    // match content.body() {
-                    //     ContentBody::Text(text) => {
-                    //         pdf_writer.content.save_state();
-                    //         pdf_writer
-                    //             .content
-                    //             .transform([1.0, 0.0, 0.0, 1.0, rect.x, rect.y]);
-                    //         for path in text.paths() {
-                    //             path_to_pdf(&mut pdf_writer, path)
-                    //         }
-                    //         pdf_writer.content.restore_state();
-                    //     }
-                    // }
                     //}
                 }
             }

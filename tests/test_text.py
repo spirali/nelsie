@@ -25,9 +25,27 @@ def test_text_invalid_font(deck):
 
 
 @check()
-def test_text_simple(deck):
-    deck.new_slide(width=120, height=40).text("Hello")
-    deck.new_slide(width=120, height=40).text("Hello")
+def test_text_no_style(deck):
+    s = deck.new_slide(width=120, height=40)
+    s.text("Hello")
+
+
+@check()
+def test_text_shared(deck):
+    s = deck.new_slide(width=100, height=50)
+    s.text_style = TextStyle(size=12)
+    s.text("Shared")
+    s.text("Non-Shared")
+    s.text("Shared")
+
+
+@check()
+def test_text_squeeze(deck):
+    s = deck.new_slide(width=40, height=35)
+    s.text_style = TextStyle(size=12)
+    s.text("Shared", width=25)
+    s.text("Non-Shared", width=25)
+    s.text("Shared", width=25)
 
 
 @check(n_slides=4)

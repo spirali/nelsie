@@ -36,9 +36,10 @@ impl Canvas {
                 /*CanvasItem::Text { text, x, y } => render_text_into_svg(&mut writer, &text, x, y),*/
                 CanvasItem::Content { rect, content_id } => {
                     let content = content_map.get(content_id).unwrap();
+                    let (width, height) = content.size();
                     match content.body() {
-                        ContentBody::Text(text) => {
-                            render_text_into_svg(&mut writer, text, rect.x, rect.y)
+                        ContentBody::Text((text, _is_shared)) => {
+                            render_text_into_svg(&mut writer, text, rect, width, height);
                         }
                     }
                 }
@@ -111,12 +112,20 @@ pub(crate) fn svg_begin(xml: &mut SimpleXmlWriter, width: f32, height: f32) {
 fn render_text_into_svg(
     writer: &mut SimpleXmlWriter,
     rendered_text: &RenderedText,
-    x: f32,
-    y: f32,
+    rect: &Rectangle,
+    width: f32,
+    height: f32,
 ) {
+    let scale_x = rect.width / width;
+    let scale_y = rect.height / height;
     use std::fmt::Write;
     writer.begin("g");
-    writer.attr_buf("transform", |s| write!(s, "translate({x}, {y})").unwrap());
+    writer.attr_buf("transform", |s| {
+        write!(s, "translate({}, {})", rect.x, rect.y).unwrap();
+        if scale_x < 0.99999 || scale_x > 1.00001 || scale_y < 0.99999 || scale_y > 1.00001 {
+            write!(s, " scale({}, {})", scale_x, scale_y).unwrap()
+        }
+    });
     for path in rendered_text.paths() {
         svg_path(writer, path);
     }

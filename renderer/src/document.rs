@@ -128,7 +128,11 @@ impl Document {
                             |text_ctx, (text, (content_id, count))| {
                                 let (rtext, width, height) =
                                     render_text(resources, text_ctx, text)?;
-                                let content = Content::new(width, height, ContentBody::Text(rtext));
+                                let content = Content::new(
+                                    width,
+                                    height,
+                                    ContentBody::Text((rtext, *count > 1)),
+                                );
                                 composer.preprocess_content(*content_id, &content)?;
                                 content_map.lock().unwrap().insert(*content_id, content);
                                 crate::Result::Ok(())

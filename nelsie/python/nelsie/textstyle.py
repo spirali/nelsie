@@ -62,7 +62,7 @@ class TextStyle:
             underline=get_step(self.underline, step),
             line_through=get_step(self.line_through, step),
             weight=get_step(self.weight, step),
-            bold=Step.get_step(self.bold, step),
+            bold=get_step(self.bold, step),
         )
 
 
@@ -70,7 +70,7 @@ def merge_in_step(text_style: TextStyle, other: Sn[TextStyle], step: Step) -> Te
     other = get_step(other, step)
     if other is None:
         return text_style
-    return text_style.merge(other.get_step(step))
+    return text_style.merge(other)
 
 
 def check_is_text_style(obj):

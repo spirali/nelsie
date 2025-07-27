@@ -85,7 +85,7 @@ impl<'a> Composer for PdfComposer {
 
     fn preprocess_content(&self, content_id: ContentId, content: &Content) -> crate::Result<()> {
         match content.body() {
-            ContentBody::Text(text) => {
+            ContentBody::Text((text, is_shared)) if *is_shared => {
                 let (width, height) = content.size();
                 let (chunk, rf) = create_text_xobject(
                     text,
@@ -100,6 +100,7 @@ impl<'a> Composer for PdfComposer {
                     .insert(content_id, rf);
                 self.add_chunk(chunk);
             }
+            _ => {}
         }
         Ok(())
     }

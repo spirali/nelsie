@@ -30,5 +30,5 @@ impl Content {
 }
 
 pub(crate) enum ContentBody {
-    Text(RenderedText),
+    Text((RenderedText, bool)),
 }
