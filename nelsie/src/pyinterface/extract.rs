@@ -1,12 +1,17 @@
 use crate::parsers::length::parse_string_length;
 use crate::pyinterface::common::PyColor;
+use crate::pyinterface::image::{
+    PyImageFormat, PyMemImage, PyPathImage, SharedData, SharedDataMap,
+};
 use crate::pyinterface::text::PyTextContent;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{Color, Length, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, Text};
+use renderer::{
+    Color, InMemoryImage, Length, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, Text,
+};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -35,12 +40,19 @@ impl<'py> FromPyObject<'py> for PyLengthOrExpr {
 }
 
 #[derive(FromPyObject)]
+enum NodeContent {
+    Text(PyTextContent),
+    PathImage(PyPathImage),
+    MemImage(PyMemImage),
+}
+
+#[derive(FromPyObject)]
 struct PyNode<'py> {
     width: Option<PyLengthOrExpr>,
     height: Option<PyLengthOrExpr>,
     bg_color: Option<PyColor>,
     children: Bound<'py, PyList>,
-    content: Option<PyTextContent>,
+    content: Option<NodeContent>,
 }
 
 fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2>>(
@@ -58,15 +70,26 @@ fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2
 fn obj_to_node(
     obj: Bound<PyAny>,
     register: &mut Register,
-    shared_data: &HashMap<usize, Arc<Vec<u8>>>,
+    shared_data: &SharedDataMap,
 ) -> PyResult<Node> {
     let node_id = register.new_node_id();
     let node: PyNode = obj.extract()?;
     let content = node
         .content
         .map(|content| -> PyResult<_> {
-            let text: Text = content.try_into()?;
-            Ok(register.register_text(text))
+            Ok(match content {
+                NodeContent::Text(text) => register.register_text(text.try_into()?),
+                NodeContent::PathImage(_) => {
+                    todo!()
+                }
+                NodeContent::MemImage(img) => {
+                    let shared_data = shared_data.get(&img.data_id).unwrap();
+                    match (img.format, shared_data) {
+                        (PyImageFormat::Png, SharedData::Bytes(data)) => InMemoryImage::Png(data),
+                    }
+                    todo!()
+                }
+            })
         })
         .transpose()?;
     Ok(Node {
@@ -119,7 +142,7 @@ fn obj_to_node(
 pub fn obj_to_page(
     obj: Bound<PyAny>,
     register: &mut Register,
-    shared_data: &HashMap<usize, Arc<Vec<u8>>>,
+    shared_data: &SharedDataMap,
 ) -> PyResult<Page> {
     let py_page: PyPage = obj.extract()?;
     Ok(Page::new(

@@ -1,4 +1,5 @@
 use crate::ContentId;
+use crate::image::InMemoryImage;
 use crate::render::text::RenderedText;
 use std::collections::HashMap;
 
@@ -31,4 +32,5 @@ impl Content {
 
 pub(crate) enum ContentBody {
     Text((RenderedText, bool)),
+    Image(InMemoryImage),
 }

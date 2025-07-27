@@ -1,6 +1,6 @@
 use crate::text::Text;
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
-use crate::{Color, ImagePlacement, NodeId};
+use crate::{Color, NodeId};
 use smallvec::SmallVec;
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;

@@ -1,5 +1,6 @@
 use crate::parsers::length::parse_string_length;
 use crate::pyinterface::extract::obj_to_page;
+use crate::pyinterface::image::{SharedData, SharedDataMap};
 use crate::pyinterface::resources::Resources;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::{PyException, PyValueError};
@@ -27,10 +28,16 @@ pub(crate) fn render<'py>(
         .iter()
         .map(|(key, value)| {
             let key: usize = key.extract()?;
-            let value: Vec<u8> = value.extract()?;
-            Ok((key, Arc::new(value)))
+            let value = if let Ok(data) = value.extract::<Vec<u8>>() {
+                SharedData::Bytes(Arc::new(data))
+            } else if let Ok(data) = value.extract::<String>() {
+                SharedData::Str(Arc::new(data))
+            } else {
+                return Err(PyValueError::new_err("Invalid value for shared data"));
+            };
+            Ok((key, value))
         })
-        .collect::<PyResult<HashMap<usize, _>>>()?;
+        .collect::<PyResult<SharedDataMap>>()?;
     let mut register = Register::new();
     let pages: Vec<_> = pages
         .into_iter()

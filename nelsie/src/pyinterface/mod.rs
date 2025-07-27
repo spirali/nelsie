@@ -1,6 +1,7 @@
 mod check;
 mod common;
 mod extract;
+mod image;
 mod rendering;
 mod resources;
 mod text;

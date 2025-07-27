@@ -5,12 +5,18 @@ from typing import Literal
 from .steps import Sv, Sn, Step, get_step
 
 ImageFormat = Literal["png", "svg", "jpeg", "ora"]
-PathOrImageData = str | tuple[bytes, ImageFormat]
+PathOrImageData = str | tuple[bytes | str, ImageFormat]
 
 
 @dataclass
-class RawImage:
-    path_or_data: str | tuple[bytes, int]
+class RawPathImage:
+    path: str
+
+
+@dataclass
+class RawMemImage:
+    data_id: int
+    format: ImageFormat
 
 
 known_suffixes = (".png", ".svg", ".jpg", ".jpeg", ".ora")
@@ -29,7 +35,13 @@ def check_image_path_or_data(obj):
             if obj.endswith(suffix):
                 return
         raise Exception("Unknown image format extension")
-    if isinstance(obj, tuple) and len(obj) == 2 and isinstance(obj[0], bytes) and obj[1] in known_formats:
+    if isinstance(obj, tuple) and len(obj) == 2 and obj[1] in known_formats:
+        if obj[1] == "svg":
+            if not isinstance(obj[0], str):
+                raise Exception(f"Image format '{obj[1]}' expect 'str' as data")
+        else:
+            if not isinstance(obj[0], bytes):
+                raise Exception(f"Image format '{obj[1]}' expect 'bytes' as data")
         return  # Ok
     raise Exception("Image specification has to be path or tuple [bytes, format]")
 
@@ -40,7 +52,7 @@ class ImageContent:
     enable_steps: Sv[bool]
     shift_steps: Sv[int]
 
-    def to_raw(self, step: Step, ctx) -> RawImage | None:
+    def to_raw(self, step: Step, ctx) -> RawPathImage | RawMemImage | None:
         path_or_data = get_step(self.path_or_data, step)
         if path_or_data is None:
             return None
@@ -48,5 +60,5 @@ class ImageContent:
             data, data_type = path_or_data
             data_id = id(data)
             ctx.shared_data[data_id] = data
-            path_or_data = (data_id, data_type)
-        return RawImage(path_or_data)
+            return RawMemImage(data_id, data_type)
+        return RawPathImage(path_or_data)

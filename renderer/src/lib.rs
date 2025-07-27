@@ -16,7 +16,7 @@ mod utils;
 pub use color::Color;
 pub use document::{Document, Register, RenderingOptions};
 pub use error::RendererError as Error;
-pub use image::ImagePlacement;
+pub use image::InMemoryImage;
 pub use node::{ContentId, Node, NodeChild};
 pub use page::Page;
 pub use rectangle::Rectangle;

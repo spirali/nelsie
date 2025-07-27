@@ -70,6 +70,9 @@ impl Canvas {
                                 }
                                 pdf_writer.content.restore_state();
                             }
+                            ContentBody::Image(_) => {
+                                todo!()
+                            }
                         }
                     }
                     //}
