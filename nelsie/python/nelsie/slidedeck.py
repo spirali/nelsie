@@ -23,12 +23,12 @@ class Slide(BoxBuilderMixin):
     def add(self, box: Box):
         self.children.append(box)
 
-    def to_raw_page(self, step: Step, deck: "SlideDeck") -> RawPage:
+    def to_raw_page(self, step: Step, deck: "SlideDeck", shared_data: dict[int, bytes]) -> RawPage:
         width = get_step(self.width, step, deck.width)
         height = get_step(self.height, step, deck.height)
         text_style = merge_in_step(deck.text_style, self.text_style, step)
         code_style = merge_in_step(deck.code_style, self.code_style, step)
-        ctx = ToRawContext(text_style, code_style)
+        ctx = ToRawContext(text_style, code_style, shared_data)
         root = RawBox(
             x=0,
             y=0,
@@ -158,12 +158,13 @@ class SlideDeck:
 
     def _create_doc(self):
         raw_pages = []
+        shared_data = {}
         for slide in self.slides:
             # TODO: gather steps
             steps = [1]
             for step in steps:
-                raw_pages.append(slide.to_raw_page(step, self))
-        return Document(self.resources, raw_pages)
+                raw_pages.append(slide.to_raw_page(step, self, shared_data))
+        return Document(self.resources, raw_pages, shared_data)
 
     def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
                n_threads: int | None = None):

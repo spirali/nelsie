@@ -7,6 +7,8 @@ use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 use renderer::{Color, Length, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, Text};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 #[derive(FromPyObject)]
 struct PyPage<'py> {
@@ -53,7 +55,11 @@ fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2
     })
 }
 
-fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
+fn obj_to_node(
+    obj: Bound<PyAny>,
+    register: &mut Register,
+    shared_data: &HashMap<usize, Arc<Vec<u8>>>,
+) -> PyResult<Node> {
     let node_id = register.new_node_id();
     let node: PyNode = obj.extract()?;
     let content = node
@@ -104,16 +110,20 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
             .try_iter()?
             .map(|child| {
                 let child = child?;
-                Ok(NodeChild::Node(obj_to_node(child, register)?))
+                Ok(NodeChild::Node(obj_to_node(child, register, shared_data)?))
             })
             .collect::<PyResult<Vec<NodeChild>>>()?,
     })
 }
 
-pub fn obj_to_page(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Page> {
+pub fn obj_to_page(
+    obj: Bound<PyAny>,
+    register: &mut Register,
+    shared_data: &HashMap<usize, Arc<Vec<u8>>>,
+) -> PyResult<Page> {
     let py_page: PyPage = obj.extract()?;
     Ok(Page::new(
-        obj_to_node(py_page.root, register)?,
+        obj_to_node(py_page.root, register, shared_data)?,
         py_page.width,
         py_page.height,
         py_page.bg_color.into(),

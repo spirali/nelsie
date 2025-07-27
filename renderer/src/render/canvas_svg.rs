@@ -109,6 +109,19 @@ pub(crate) fn svg_begin(xml: &mut SimpleXmlWriter, width: f32, height: f32) {
     });
 }
 
+fn write_g_transform(writer: &mut SimpleXmlWriter, rect: &Rectangle, width: f32, height: f32) {
+    use std::fmt::Write;
+    let scale_x = rect.width / width;
+    let scale_y = rect.height / height;
+    writer.begin("g");
+    writer.attr_buf("transform", |s| {
+        write!(s, "translate({},{})", rect.x, rect.y).unwrap();
+        if scale_x < 0.999999 || scale_x > 1.000001 || scale_y < 0.999999 || scale_y > 1.000001 {
+            write!(s, ",scale({},{})", scale_x, scale_y).unwrap()
+        }
+    });
+}
+
 fn render_text_into_svg(
     writer: &mut SimpleXmlWriter,
     rendered_text: &RenderedText,
@@ -116,16 +129,7 @@ fn render_text_into_svg(
     width: f32,
     height: f32,
 ) {
-    let scale_x = rect.width / width;
-    let scale_y = rect.height / height;
-    use std::fmt::Write;
-    writer.begin("g");
-    writer.attr_buf("transform", |s| {
-        write!(s, "translate({}, {})", rect.x, rect.y).unwrap();
-        if scale_x < 0.99999 || scale_x > 1.00001 || scale_y < 0.99999 || scale_y > 1.00001 {
-            write!(s, " scale({}, {})", scale_x, scale_y).unwrap()
-        }
-    });
+    write_g_transform(writer, rect, width, height);
     for path in rendered_text.paths() {
         svg_path(writer, path);
     }
@@ -139,19 +143,7 @@ fn render_svg_image_into_svg(
     width: f32,
     height: f32,
 ) {
-    use std::fmt::Write;
-    writer.begin("g");
-    writer.attr_buf("transform", |s| {
-        writeln!(
-            s,
-            "translate({}, {}),scale({}, {})",
-            rect.x,
-            rect.y,
-            rect.width / width,
-            rect.height / height
-        )
-        .unwrap();
-    });
+    write_g_transform(writer, rect, width, height);
     writer.text_raw(data);
     writer.end("g");
 }

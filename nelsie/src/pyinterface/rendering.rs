@@ -3,11 +3,13 @@ use crate::pyinterface::extract::obj_to_page;
 use crate::pyinterface::resources::Resources;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::{PyException, PyValueError};
-use pyo3::types::{PyAnyMethods, PyList, PyNone};
+use pyo3::types::{PyAnyMethods, PyDict, PyDictMethods, PyList, PyNone};
 use pyo3::{pyfunction, Bound, FromPyObject, Py, PyAny, PyObject, PyResult, Python};
 use renderer::{
     Color, Document, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, RenderingOptions,
 };
+use std::collections::HashMap;
+use std::sync::Arc;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -15,15 +17,24 @@ pub(crate) fn render<'py>(
     py: Python<'py>,
     resources: &Resources,
     pages: &Bound<'py, PyList>,
+    shared_data: &Bound<'py, PyDict>,
     path: Option<&'py str>,
     format: &str,
     compression_level: u8,
     n_threads: Option<usize>,
 ) -> PyResult<Bound<'py, PyAny>> {
+    let shared_data = shared_data
+        .iter()
+        .map(|(key, value)| {
+            let key: usize = key.extract()?;
+            let value: Vec<u8> = value.extract()?;
+            Ok((key, Arc::new(value)))
+        })
+        .collect::<PyResult<HashMap<usize, _>>>()?;
     let mut register = Register::new();
     let pages: Vec<_> = pages
         .into_iter()
-        .map(|obj| obj_to_page(obj, &mut register))
+        .map(|obj| obj_to_page(obj, &mut register, &shared_data))
         .collect::<PyResult<Vec<_>>>()?;
     let doc = Document::new(pages, register);
 

@@ -12,3 +12,11 @@ def check_is_type(obj, tp):
 
 def check_is_str(obj):
     check_is_type(obj, str)
+
+
+def check_is_int(obj):
+    check_is_type(obj, int)
+
+
+def check_is_bool(obj):
+    check_is_type(obj, bool)

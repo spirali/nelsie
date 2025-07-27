@@ -10,6 +10,7 @@ from .textstyle import TextStyle, merge_in_step
 class ToRawContext:
     text_style: TextStyle
     code_style: TextStyle
+    shared_data: dict[int, bytes]
 
     def update(self, box: "Box", step: Step):
         return ToRawContext(

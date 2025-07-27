@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Literal
 
+from .image import RawImage
 from .resources import Resources
 from .basictypes import Position, Size
 from .text import TextContent
@@ -15,7 +16,7 @@ class RawBox:
     height: Size
     bg_color: str | None
     children: list["RawBox"]
-    content: TextContent | None
+    content: TextContent | RawImage | None
 
 
 class RawPage:
@@ -27,10 +28,12 @@ class RawPage:
 
 
 class Document:
-    def __init__(self, resources: Resources, pages: list[RawPage]):
+    def __init__(self, resources: Resources, pages: list[RawPage], shared_data: dict[int, bytes]):
         self.pages = pages
         self.resources = resources
+        self.shared_data = shared_data
 
     def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
                n_threads: int | None = None):
-        nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level, n_threads)
+        nelsie_rs.render(self.resources._resources, self.pages, self.shared_data, path, format, compression_level,
+                         n_threads)
