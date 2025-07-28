@@ -1,15 +1,18 @@
-use crate::ContentId;
+use std::borrow::Cow;
+use crate::{ContentId, InMemoryBinImage};
 use crate::render::canvas::Canvas;
 use crate::render::composer::{Composer, PngCollectorComposer};
 use crate::render::content::{Content, ContentBody, ContentMap};
 use crate::render::pdfdraw::{PdfWriter, init_pdf, path_to_pdf};
 use crate::render::text::RenderedText;
-use miniz_oxide::deflate::CompressionLevel;
+use miniz_oxide::deflate::{compress_to_vec_zlib, CompressionLevel};
 use pdf_writer::{Chunk, Filter, Finish, Rect, Ref};
 use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicI32, Ordering};
+use image::GenericImageView;
+use itertools::Itertools;
 
 pub(crate) struct PdfComposer {
     chunks: Mutex<Vec<Chunk>>,
@@ -84,24 +87,30 @@ impl<'a> Composer for PdfComposer {
     }
 
     fn preprocess_content(&self, content_id: ContentId, content: &Content) -> crate::Result<()> {
-        match content.body() {
+        let (chunk, rf) = match content.body() {
             ContentBody::Text((text, is_shared)) if *is_shared => {
                 let (width, height) = content.size();
-                let (chunk, rf) = create_text_xobject(
+                create_text_xobject(
                     text,
                     width,
                     height,
                     &self.ref_allocator,
                     self.compression_level,
-                );
-                self.content_to_ref_builder
-                    .lock()
-                    .unwrap()
-                    .insert(content_id, rf);
-                self.add_chunk(chunk);
+                )
             }
-            _ => {}
-        }
+            ContentBody::Text((_, _)) => {
+                // not shared, do nothing
+                return Ok(())
+            }
+            ContentBody::BinImage(image) => {
+                create_image_xobject(image, &self.ref_allocator)
+            }
+        };
+        self.content_to_ref_builder
+            .lock()
+            .unwrap()
+            .insert(content_id, rf);
+        self.add_chunk(chunk);
         Ok(())
     }
 
@@ -109,7 +118,7 @@ impl<'a> Composer for PdfComposer {
         let mut map = self.content_to_ref_builder.lock().unwrap();
         std::mem::swap(&mut *map, &mut self.content_to_ref);
     }
-    
+
     fn needs_image_preprocessing(&self) -> bool {
         true
     }
@@ -174,6 +183,11 @@ impl PdfRefAllocator {
         let rf = self.counter.fetch_add(1, Ordering::Relaxed);
         Ref::new(rf)
     }
+    pub fn bump_pair(&self) -> (Ref, Ref) {
+        let rf = self.counter.fetch_add(2, Ordering::Relaxed);
+        (Ref::new(rf), Ref::new(rf + 1))
+    }
+
 }
 
 fn create_text_xobject(
@@ -205,4 +219,59 @@ fn create_text_xobject(
     }
     x_obj.finish();
     (pdf_writer.chunk, obj_ref)
+}
+
+
+pub fn create_image_xobject(
+    bin_image: &InMemoryBinImage,
+    pdf_ref_allocator: &PdfRefAllocator,
+) -> (Chunk, Ref) {
+
+    let (filter, encoded, mask, w, h) = match bin_image {
+        InMemoryBinImage::Jpeg(data) => {
+            let dynamic = image::load_from_memory_with_format(data, image::ImageFormat::Jpeg).unwrap();
+            assert_eq!(dynamic.color(), image::ColorType::Rgb8);
+            (Filter::DctDecode, Cow::Borrowed(data.as_slice()), None, dynamic.width(), dynamic.height())
+        }
+
+        InMemoryBinImage::Png(data) => {
+            let level = CompressionLevel::DefaultLevel as u8;
+            let dynamic = image::load_from_memory_with_format(data, image::ImageFormat::Jpeg).unwrap();
+            let w = dynamic.width();
+            let h = dynamic.height();
+            let encoded = compress_to_vec_zlib(dynamic.to_rgb8().as_raw(), level);
+
+            let mask = dynamic.color().has_alpha().then(|| {
+                let alphas: Vec<_> = dynamic.pixels().map(|p| (p.2).0[3]).collect();
+                compress_to_vec_zlib(&alphas, level)
+            });
+
+            (Filter::FlateDecode, Cow::Owned(encoded), mask, w, h)
+        }
+        _ => panic!("unsupported image format"),
+    };
+
+    let (image_ref, mask_ref) = pdf_ref_allocator.bump_pair();
+    let mut chunk = Chunk::new();
+    let mut image = chunk.image_xobject(image_ref, &encoded);
+    image.filter(filter);
+    image.width(w as i32);
+    image.height(h as i32);
+    image.color_space().device_rgb();
+    image.bits_per_component(8);
+    if mask.is_some() {
+        image.s_mask(mask_ref);
+    };
+    image.finish();
+
+    if let Some(encoded) = &mask {
+        let mut s_mask = chunk.image_xobject(mask_ref, encoded);
+        s_mask.filter(filter);
+        s_mask.width(w as i32);
+        s_mask.height(h as i32);
+        s_mask.color_space().device_gray();
+        s_mask.bits_per_component(8);
+        s_mask.finish();
+    }
+    (chunk, image_ref)
 }

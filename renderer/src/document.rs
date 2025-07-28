@@ -92,7 +92,7 @@ impl Document {
         let thread_pool = thread_pool_builder.build().unwrap();
         let content_map: Mutex<ContentMap> = Mutex::new(HashMap::new());
         thread_pool.install(|| {
-            let (texts, _) = rayon::join(
+            let (texts, images) = rayon::join(
                 || {
                     self.register
                         .texts
@@ -122,17 +122,28 @@ impl Document {
                         )
                 },
                 || {
-                    self.register
-                        .images
-                        .iter()
-                        .collect_vec()
-
-                        //self.images_paths.par_iter()
-                    // todo!()
-                    ()
+                    if !composer.needs_image_preprocessing() {
+                        let mut content_map = content_map.lock().unwrap();
+                        self.register
+                            .bin_images
+                            .iter().for_each(|(img, (content_id, width, height))| {
+                            content_map.insert(*content_id, Content::new(*width, *height, ContentBody::BinImage(img.clone())));
+                        });
+                        crate::Result::Ok(())
+                    } else {
+                        self.register
+                            .bin_images
+                            .iter().collect_vec().into_par_iter().try_for_each(|(img, (content_id, width, height))| {
+                            let content = Content::new(*width, *height, ContentBody::BinImage(img.clone()));
+                            composer.preprocess_content(*content_id, &content)?;
+                            content_map.lock().unwrap().insert(*content_id, content);
+                            Ok(())
+                        })
+                    }
                 },
             );
             texts?;
+            images?;
             let content_map = content_map.into_inner().unwrap();
 
             composer.preprocessing_finished();

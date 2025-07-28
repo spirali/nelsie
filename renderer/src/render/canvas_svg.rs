@@ -1,4 +1,4 @@
-use crate::Rectangle;
+use crate::{InMemoryBinImage, Rectangle};
 use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::content::{ContentBody, ContentMap};
 use crate::render::draw::DrawItem;
@@ -36,13 +36,17 @@ impl Canvas {
                 /*CanvasItem::Text { text, x, y } => render_text_into_svg(&mut writer, &text, x, y),*/
                 CanvasItem::Content { rect, content_id } => {
                     let content = content_map.get(content_id).unwrap();
-                    let (width, height) = content.size();
                     match content.body() {
                         ContentBody::Text((text, _is_shared)) => {
+                            let (width, height) = content.size();
                             render_text_into_svg(&mut writer, text, rect, width, height);
                         }
-                        ContentBody::BinImage(_) => {
-                            todo!()
+                        ContentBody::BinImage(image) => {
+                            let (format, data) = match image {
+                                InMemoryBinImage::Png(data) => ("png", data),
+                                InMemoryBinImage::Jpeg(data) => ("jpeg", data),
+                            };
+                            write_raster_image_to_svg(rect, format, data, &mut writer);
                         }
                     }
                 }

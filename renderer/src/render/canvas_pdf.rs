@@ -71,7 +71,7 @@ impl Canvas {
                                 pdf_writer.content.restore_state();
                             }
                             ContentBody::BinImage(_) => {
-                                todo!()
+                                unreachable!()
                             }
                         }
                     }
