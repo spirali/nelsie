@@ -42,7 +42,7 @@ impl<'a> PdfWriter<'a> {
         let name = self.new_name();
         self.content
             .save_state()
-            .transform([rect.width, 0.0, 0.0, rect.height, rect.x, rect.y])
+            .transform([rect.width, 0.0, 0.0, -rect.height, rect.x, rect.y + rect.height])
             .x_object(Name(name.as_bytes()))
             .restore_state();
         self.xo_resources.push((name, rf));

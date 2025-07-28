@@ -202,7 +202,7 @@ fn create_text_xobject(
     pdf_writer.content.save_state();
     pdf_writer
         .content
-        .transform([1.0 / width, 0.0, 0.0, 1.0 / height, 0.0, 0.0]);
+        .transform([1.0 / width, 0.0, 0.0, -1.0 / height, 0.0, 1.0]);
     for path in text.paths() {
         path_to_pdf(&mut pdf_writer, path)
     }
@@ -210,7 +210,7 @@ fn create_text_xobject(
 
     let mut content_data = pdf_writer.content.finish();
     if compression_level > 0 {
-        content_data = miniz_oxide::deflate::compress_to_vec_zlib(&content_data, compression_level)
+        content_data = compress_to_vec_zlib(&content_data, compression_level)
     }
     let mut x_obj = pdf_writer.chunk.form_xobject(obj_ref, &content_data);
     x_obj.bbox(Rect::new(0.0, 0.0, 1.0, 1.0));
@@ -236,7 +236,7 @@ pub fn create_image_xobject(
 
         InMemoryBinImage::Png(data) => {
             let level = CompressionLevel::DefaultLevel as u8;
-            let dynamic = image::load_from_memory_with_format(data, image::ImageFormat::Jpeg).unwrap();
+            let dynamic = image::load_from_memory_with_format(data, image::ImageFormat::Png).unwrap();
             let w = dynamic.width();
             let h = dynamic.height();
             let encoded = compress_to_vec_zlib(dynamic.to_rgb8().as_raw(), level);
