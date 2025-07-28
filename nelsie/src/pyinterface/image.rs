@@ -53,6 +53,7 @@ pub(crate) fn create_mem_image<'py>(data: &Bound<'py, PyAny>, image_format: PyIm
         }
         PyImageFormat::Svg => {
             let s: String = data.extract()?;
+            let usvg_tree = renderer::usvg::Tree::from_xmltree(&xml_tree, &options)?;
             Ok(PyImage {
                 width: todo!(),
                 height: todo!(),

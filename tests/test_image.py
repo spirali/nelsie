@@ -103,4 +103,4 @@ def test_inline_image(deck):
         svg_data = f.read()
     slide.image((png_data, "png"))
     slide.image((jpeg_data, "jpeg"))
-    #slide.image((svg_data, "svg"), enable_steps=False)
+    slide.image((svg_data, "svg"), enable_steps=False)
