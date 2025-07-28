@@ -45,6 +45,10 @@ class Slide(BoxBuilderMixin):
             root=root,
         )
 
+    def traverse_tree(self, shared_data):
+        for child in self.children:
+            child.traverse_tree(shared_data)
+
 
 class SlideDeck:
     def __init__(
@@ -157,14 +161,15 @@ class SlideDeck:
         return helper
 
     def _create_doc(self):
-        raw_pages = []
         shared_data = {}
+        raw_pages = []
         for slide in self.slides:
+            slide.traverse_tree(shared_data)
             # TODO: gather steps
             steps = [1]
             for step in steps:
                 raw_pages.append(slide.to_raw_page(step, self, shared_data))
-        return Document(self.resources, raw_pages, shared_data)
+        return Document(self.resources, raw_pages)
 
     def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
                n_threads: int | None = None):

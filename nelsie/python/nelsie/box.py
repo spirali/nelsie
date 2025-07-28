@@ -105,3 +105,9 @@ class Box(BoxBuilderMixin):
 
     def add(self, box: "Box"):
         self._children.append(box)
+
+    def traverse_tree(self, shared_data):
+        for child in self._children:
+            child.traverse_children(shared_data)
+        if self._content is not None:
+            self._content.traverse_tree(shared_data)

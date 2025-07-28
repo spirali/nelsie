@@ -70,7 +70,7 @@ impl Canvas {
                                 }
                                 pdf_writer.content.restore_state();
                             }
-                            ContentBody::Image(_) => {
+                            ContentBody::BinImage(_) => {
                                 todo!()
                             }
                         }

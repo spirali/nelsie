@@ -8,22 +8,26 @@ use std::sync::Arc;
 // }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub enum InMemoryImage {
+pub enum InMemoryBinImage {
     Png(ByAddress<Arc<Vec<u8>>>),
     Jpeg(ByAddress<Arc<Vec<u8>>>),
-    Svg(ByAddress<Arc<String>>),
 }
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct InMemorySvgImage(ByAddress<Arc<String>>);
 
-impl InMemoryImage {
+
+impl InMemoryBinImage {
     pub fn new_png(data: Arc<Vec<u8>>) -> Self {
-        InMemoryImage::Png(ByAddress::from(data))
+        InMemoryBinImage::Png(ByAddress::from(data))
     }
 
     pub fn new_jpeg(data: Arc<Vec<u8>>) -> Self {
-        InMemoryImage::Jpeg(ByAddress::from(data))
+        InMemoryBinImage::Jpeg(ByAddress::from(data))
     }
+}
 
-    pub fn new_svg(data: Arc<String>) -> Self {
-        InMemoryImage::Svg(ByAddress::from(data))
+impl InMemorySvgImage {
+    pub fn new(data: Arc<String>) -> Self {
+        InMemorySvgImage(ByAddress::from(data))
     }
 }

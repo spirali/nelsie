@@ -1,5 +1,4 @@
 use crate::NodeChild::Node;
-use crate::image::InMemoryImage;
 use crate::node::ContentId;
 use crate::render::composer::{
     Composer, PngCollectorComposer, PngWriteComposer, SvgCollectorComposer, SvgWriteComposer,
@@ -11,7 +10,7 @@ use crate::render::text::{RenderedText, TextContext, render_text};
 use crate::resources::Resources;
 use crate::text::Text;
 use crate::utils::fileutils::ensure_directory;
-use crate::{Color, NodeId, Page};
+use crate::{Color, InMemoryBinImage, NodeId, Page};
 use itertools::Itertools;
 use miniz_oxide::deflate::CompressionLevel;
 use parley::{FontContext, LayoutContext};
@@ -25,8 +24,7 @@ pub struct Register {
     node_id_counter: NodeId,
     content_id_counter: ContentId,
     texts: HashMap<Text, (ContentId, u32)>,
-    images_paths: HashMap<PathBuf, ContentId>,
-    images_mem: HashMap<InMemoryImage, ContentId>,
+    bin_images: HashMap<InMemoryBinImage, (ContentId, f32, f32)>,
 }
 
 impl Register {
@@ -35,8 +33,7 @@ impl Register {
             node_id_counter: NodeId::new(0),
             content_id_counter: ContentId::new(0),
             texts: HashMap::new(),
-            images_paths: HashMap::default(),
-            images_mem: HashMap::default(),
+            bin_images: HashMap::default(),
         }
     }
 
@@ -54,33 +51,18 @@ impl Register {
         entry.0
     }
 
-    pub fn register_image_path(&mut self, path: &std::path::Path) -> ContentId {
-        if let Some(image_id) = self.images_paths.get(path) {
-            return *image_id;
-        }
-        let image_id = self.content_id_counter.bump();
-        self.images_paths.insert(path.to_path_buf(), image_id);
-        image_id
-    }
-
-    pub fn register_image_mem(&mut self, image: InMemoryImage) -> ContentId {
+    pub fn register_bin_image(&mut self, image: InMemoryBinImage, width: f32, height: f32) -> ContentId {
         let entry = self
-            .images_mem
+            .bin_images
             .entry(image)
-            .or_insert_with(|| self.content_id_counter.bump());
-        *entry
+            .or_insert_with(|| (self.content_id_counter.bump(), width, height));
+        entry.0
     }
 }
 
 pub struct Document {
     pages: Vec<Page>,
     register: Register,
-}
-
-enum PreprocessingJob<'a> {
-    Text(&'a Text),
-    ImageMem(&'a InMemoryImage),
-    ImagePath(&'a std::path::Path),
 }
 
 pub struct RenderingOptions {
@@ -140,7 +122,12 @@ impl Document {
                         )
                 },
                 || {
-                    //self.images_paths.par_iter()
+                    self.register
+                        .images
+                        .iter()
+                        .collect_vec()
+
+                        //self.images_paths.par_iter()
                     // todo!()
                     ()
                 },

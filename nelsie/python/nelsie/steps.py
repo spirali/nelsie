@@ -33,6 +33,9 @@ def sn_check(obj, check_fn):
     if obj is not None:
         check_fn(obj)
 
+def sn_apply(obj, apply_fn):
+    if obj is not None:
+        apply_fn(obj)
 
 def get_step(obj: Sn[T], step: Step, default_value: T | None = None) -> T:
     if isinstance(obj, InSteps):

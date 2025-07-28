@@ -2,26 +2,20 @@ import os.path
 from dataclasses import dataclass
 from typing import Literal
 
-from .steps import Sv, Sn, Step, get_step
+from .steps import Sv, Sn, Step, get_step, sn_apply
+from . import nelsie as nelsie_rs
 
 ImageFormat = Literal["png", "svg", "jpeg", "ora"]
 PathOrImageData = str | tuple[bytes | str, ImageFormat]
 
 
-@dataclass
-class RawPathImage:
-    path: str
-
-
-@dataclass
-class RawMemImage:
-    data_id: int
-    format: ImageFormat
-
-
 known_suffixes = (".png", ".svg", ".jpg", ".jpeg", ".ora")
 known_formats = ("png", "svg", "jpeg", "ora")
 
+
+# An class for opaque Image produced by nelsie_rs
+class RawImage:
+    pass
 
 def check_image_path_or_data(obj):
     if isinstance(obj, str):
@@ -46,19 +40,32 @@ def check_image_path_or_data(obj):
     raise Exception("Image specification has to be path or tuple [bytes, format]")
 
 
+def _put_into_shared_data(path_or_data: PathOrImageData | None, shared_data):
+    if path_or_data is None:
+        return
+    check_image_path_or_data(path_or_data)
+    if isinstance(path_or_data, str):
+        raise Exception("TODO")
+    data, data_type = path_or_data
+    key = (id(data), data_type)
+    if key not in shared_data:
+        shared_data[key] = nelsie_rs.create_mem_image(data, data_type)
+
 @dataclass
 class ImageContent:
-    path_or_data: Sn[str | tuple[int, str]]
+    path_or_data: Sn[PathOrImageData]
     enable_steps: Sv[bool]
     shift_steps: Sv[int]
 
-    def to_raw(self, step: Step, ctx) -> RawPathImage | RawMemImage | None:
+    def traverse_tree(self, shared_data):
+        sn_apply(self.path_or_data, lambda path_or_data: _put_into_shared_data(path_or_data, shared_data))
+
+    def to_raw(self, step: Step, ctx):
         path_or_data = get_step(self.path_or_data, step)
         if path_or_data is None:
             return None
         if isinstance(path_or_data, tuple):
-            data, data_type = path_or_data
-            data_id = id(data)
-            ctx.shared_data[data_id] = data
-            return RawMemImage(data_id, data_type)
-        return RawPathImage(path_or_data)
+            key = (id(path_or_data[0]), path_or_data[1])
+        else:
+            raise Exception("TODO")
+        return ctx.shared_data[key]

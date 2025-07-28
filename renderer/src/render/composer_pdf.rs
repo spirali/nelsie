@@ -109,6 +109,10 @@ impl<'a> Composer for PdfComposer {
         let mut map = self.content_to_ref_builder.lock().unwrap();
         std::mem::swap(&mut *map, &mut self.content_to_ref);
     }
+    
+    fn needs_image_preprocessing(&self) -> bool {
+        true
+    }
 }
 
 // pub struct PdfGlobalInfo {

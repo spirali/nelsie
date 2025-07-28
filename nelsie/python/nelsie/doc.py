@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from typing import Literal
 
-from .image import RawImage
 from .resources import Resources
 from .basictypes import Position, Size
 from .text import TextContent
+from .image import RawImage
 from . import nelsie as nelsie_rs
 
 
@@ -28,12 +28,11 @@ class RawPage:
 
 
 class Document:
-    def __init__(self, resources: Resources, pages: list[RawPage], shared_data: dict[int, bytes]):
+    def __init__(self, resources: Resources, pages: list[RawPage]):
         self.pages = pages
         self.resources = resources
-        self.shared_data = shared_data
 
     def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
                n_threads: int | None = None):
-        nelsie_rs.render(self.resources._resources, self.pages, self.shared_data, path, format, compression_level,
+        nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level,
                          n_threads)

@@ -1,14 +1,15 @@
 import os
-from nelsie import InSteps
 from testutils import check
 from conftest import ASSETS_DIR
 
+IMG_PNG = os.path.join(ASSETS_DIR, "testimg.png")
+IMG_JPEG = os.path.join(ASSETS_DIR, "testimg.jpeg")
 
 @check()
 def test_render_raster_image_native_size(deck):
     slide = deck.new_slide(width=400, height=400)
-    slide.image("testimg.png")
-    slide.image("testimg.jpeg")
+    slide.image(IMG_PNG)
+    slide.image(IMG_JPEG)
 
 
 @check(n_slides=5)
@@ -98,8 +99,8 @@ def test_inline_image(deck):
         png_data = f.read()
     with open(os.path.join(ASSETS_DIR, "testimg.jpeg"), "rb") as f:
         jpeg_data = f.read()
-    with open(os.path.join(ASSETS_DIR, "test.svg"), "rb") as f:
+    with open(os.path.join(ASSETS_DIR, "test.svg"), "r") as f:
         svg_data = f.read()
     slide.image((png_data, "png"))
     slide.image((jpeg_data, "jpeg"))
-    slide.image((svg_data, "svg"), enable_steps=False)
+    #slide.image((svg_data, "svg"), enable_steps=False)

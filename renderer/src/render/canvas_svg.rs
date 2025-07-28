@@ -41,7 +41,7 @@ impl Canvas {
                         ContentBody::Text((text, _is_shared)) => {
                             render_text_into_svg(&mut writer, text, rect, width, height);
                         }
-                        ContentBody::Image(_) => {
+                        ContentBody::BinImage(_) => {
                             todo!()
                         }
                     }

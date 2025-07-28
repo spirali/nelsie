@@ -362,6 +362,10 @@ pub(crate) trait Composer: Sync + Send {
     }
 
     fn preprocessing_finished(&mut self) {}
+
+    fn needs_image_preprocessing(&self) -> bool {
+        false
+    }
 }
 
 fn path_name(page_idx: usize, extension: &str, n_pages: usize) -> String {

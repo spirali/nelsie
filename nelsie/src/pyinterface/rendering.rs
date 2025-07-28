@@ -1,6 +1,5 @@
 use crate::parsers::length::parse_string_length;
 use crate::pyinterface::extract::obj_to_page;
-use crate::pyinterface::image::{SharedData, SharedDataMap};
 use crate::pyinterface::resources::Resources;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::{PyException, PyValueError};
@@ -18,30 +17,15 @@ pub(crate) fn render<'py>(
     py: Python<'py>,
     resources: &Resources,
     pages: &Bound<'py, PyList>,
-    shared_data: &Bound<'py, PyDict>,
     path: Option<&'py str>,
     format: &str,
     compression_level: u8,
     n_threads: Option<usize>,
 ) -> PyResult<Bound<'py, PyAny>> {
-    let shared_data = shared_data
-        .iter()
-        .map(|(key, value)| {
-            let key: usize = key.extract()?;
-            let value = if let Ok(data) = value.extract::<Vec<u8>>() {
-                SharedData::Bytes(Arc::new(data))
-            } else if let Ok(data) = value.extract::<String>() {
-                SharedData::Str(Arc::new(data))
-            } else {
-                return Err(PyValueError::new_err("Invalid value for shared data"));
-            };
-            Ok((key, value))
-        })
-        .collect::<PyResult<SharedDataMap>>()?;
     let mut register = Register::new();
     let pages: Vec<_> = pages
         .into_iter()
-        .map(|obj| obj_to_page(obj, &mut register, &shared_data))
+        .map(|obj| obj_to_page(obj, &mut register))
         .collect::<PyResult<Vec<_>>>()?;
     let doc = Document::new(pages, register);
 
