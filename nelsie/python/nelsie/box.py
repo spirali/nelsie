@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from copy import copy
 
-from .doc import RawBox
 from .image import PathOrImageData, ImageContent, check_image_path_or_data
 from .steps import Sn, Step, get_step, Sv, sv_check, sn_check
 from .basictypes import Position, Size, check_position, check_size, TextAlign, check_text_align
@@ -20,13 +19,14 @@ class BoxBuilderMixin:
             *,
             x: Sn[Position] = None,
             y: Sn[Position] = None,
+            z_level: Sn[int] = None,
             width: Sn[Size] = None,
             height: Sn[Size] = None,
             bg_color: Sn[str] = None,
             row: Sv[bool] = False,
             reverse: Sv[bool] = False,
     ):
-        box = Box(x=x, y=y, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse)
+        box = Box(x=x, y=y, z_level=z_level, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse)
         self.add(box)
         return box
 
@@ -58,6 +58,7 @@ class Box(BoxBuilderMixin):
             *,
             x: Sn[Position] = None,
             y: Sn[Position] = None,
+            z_level: Sn[int] = None,
             width: Sn[Size] = None,
             height: Sn[Size] = None,
             bg_color: Sn[str] = None,
@@ -66,19 +67,24 @@ class Box(BoxBuilderMixin):
     ):
         sn_check(x, check_position)
         sn_check(y, check_position)
+        sn_check(z_level, check_is_int)
         sn_check(width, check_size)
         sn_check(height, check_size)
         sn_check(bg_color, check_color)
         sv_check(row, check_is_bool)
         sv_check(reverse, check_is_bool)
 
+
         self._x = x
         self._y = y
+        self._z_level = z_level
         self._width = width
         self._height = height
         self._bg_color = bg_color
         self._content = None
         self._children = []
+        self._row = row
+        self._reverse = reverse
 
         self._text_style: Sn[TextStyle] = None
         self._code_style: Sn[TextStyle] = None
@@ -90,6 +96,14 @@ class Box(BoxBuilderMixin):
     def y(self, y: Sn[Position]):
         check_position(y)
         self._y = y
+
+    def z_level(self, z_level: Sn[int]):
+        check_is_int(z_level)
+        self._z_level = z_level
+
+    def row(self, row: Sv[bool]):
+        sv_check(row, check_is_bool)
+        self._row = row
 
     def width(self, width: Sn[Size]):
         check_size(width)
@@ -109,6 +123,6 @@ class Box(BoxBuilderMixin):
 
     def traverse_tree(self, shared_data):
         for child in self._children:
-            child.traverse_children(shared_data)
+            child.traverse_tree(shared_data)
         if self._content is not None:
             self._content.traverse_tree(shared_data)

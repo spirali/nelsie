@@ -22,7 +22,7 @@ pub(crate) struct ComputedLayout {
 impl ComputedLayout {
     fn _layout(&self, node_id: NodeId) -> &LayoutData {
         self.node_layout(node_id)
-            .expect("Node id not found, ordering not correct?")
+            .unwrap_or_else(|| panic!("Node {node_id:?} not found, ordering not correct?"))
     }
 
     fn _rect(&self, node_id: NodeId) -> &Rectangle {

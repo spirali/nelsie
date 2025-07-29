@@ -7,9 +7,40 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{Color, Length, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, Text};
+use renderer::{Color, LayoutExpr, Length, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, Text};
 use std::collections::HashMap;
+use std::marker::PhantomData;
 use std::sync::Arc;
+
+trait Dimension {
+    fn parent_pos(shift: f32) -> LayoutExpr;
+    fn parent_size(fraction: f32) -> LayoutExpr;
+}
+
+struct DimX;
+struct DimY;
+
+impl Dimension for DimX {
+    fn parent_pos(shift: f32) -> LayoutExpr {
+        LayoutExpr::ParentX { shift }
+    }
+
+    fn parent_size(fraction: f32) -> LayoutExpr {
+        LayoutExpr::ParentWidth { fraction }
+    }
+}
+
+impl Dimension for DimY {
+    fn parent_pos(shift: f32) -> LayoutExpr {
+        LayoutExpr::ParentY { shift }
+    }
+
+    fn parent_size(fraction: f32) -> LayoutExpr {
+        LayoutExpr::ParentHeight { fraction }
+    }
+
+}
+
 
 #[derive(FromPyObject)]
 struct PyPage<'py> {
@@ -23,17 +54,40 @@ struct PyLengthOrExpr(LengthOrExpr);
 
 impl<'py> FromPyObject<'py> for PyLengthOrExpr {
     fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
-        if let Ok(value) = obj.extract::<f32>() {
-            return Ok(PyLengthOrExpr(LengthOrExpr::points(value)));
-        }
-        if let Ok(value) = obj.extract::<&str>() {
-            return Ok(PyLengthOrExpr(LengthOrExpr::Length(parse_string_length(
+        Ok(PyLengthOrExpr(if let Ok(value) = obj.extract::<f32>() {
+            LengthOrExpr::points(value)
+        } else if let Ok(value) = obj.extract::<&str>() {
+            LengthOrExpr::Length(parse_string_length(
                 value,
-            )?)));
-        }
-        todo!()
+            )?)
+        } else {
+            todo!()
+        }))
     }
 }
+
+struct PyPosition<D: Dimension> {
+    expr: LayoutExpr,
+    _dim: PhantomData<D>,
+}
+
+impl<'py, D: Dimension> FromPyObject<'py> for PyPosition<D> {
+        fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+            Ok(PyPosition { expr: if let Ok(value) = obj.extract::<f32>() {
+                D::parent_pos(value)
+            } else if let Ok(value) = obj.extract::<&str>() {
+                D::parent_pos(0.0).add(match parse_string_length(value)? {
+                    Length::Points { value } => D::parent_pos(value),
+                    Length::Fraction { value } => D::parent_size(0.0).add(D::parent_size(value)),
+                })
+            } else {
+                todo!()
+            },
+                _dim: Default::default(),
+            })
+    }
+}
+
 
 #[derive(FromPyObject)]
 enum NodeContent<'py> {
@@ -43,9 +97,14 @@ enum NodeContent<'py> {
 
 #[derive(FromPyObject)]
 struct PyNode<'py> {
+    x: Option<PyPosition<DimX>>,
+    y: Option<PyPosition<DimY>>,
+    z_level: i32,
     width: Option<PyLengthOrExpr>,
     height: Option<PyLengthOrExpr>,
     bg_color: Option<PyColor>,
+    row: bool,
+    reverse: bool,
     children: Bound<'py, PyList>,
     content: Option<NodeContent<'py>>,
 }
@@ -89,11 +148,11 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
         width: node.width.map(|x| x.0),
         height: node.height.map(|x| x.0),
         show: true,
-        x: None,
-        y: None,
+        x: node.x.map(|x| x.expr),
+        y: node.y.map(|x| x.expr),
         border_radius: 0.0,
-        row: false,
-        reverse: false,
+        row: node.row,
+        reverse: node.reverse,
         flex_wrap: Default::default(),
         flex_grow: 0.0,
         flex_shrink: 0.0,
@@ -117,7 +176,7 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
         m_left: Default::default(),
         m_right: Default::default(),
         bg_color: node.bg_color.map(|x| x.into()),
-        z_level: 0,
+        z_level: node.z_level,
         content,
         url: None,
         children: node

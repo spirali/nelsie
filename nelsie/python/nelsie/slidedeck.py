@@ -1,12 +1,10 @@
 from typing import Literal
 
 from .box import BoxBuilderMixin, Box
-from .doc import RawPage, RawBox, Document
 from .resources import Resources
 from .steps import Step, Sv, get_step
 from . import nelsie as nelsie_rs
 from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, merge_in_step
-from .toraw import ToRawContext, box_to_raw
 
 
 class Slide(BoxBuilderMixin):
@@ -22,28 +20,6 @@ class Slide(BoxBuilderMixin):
 
     def add(self, box: Box):
         self.children.append(box)
-
-    def to_raw_page(self, step: Step, deck: "SlideDeck", shared_data: dict[int, bytes]) -> RawPage:
-        width = get_step(self.width, step, deck.width)
-        height = get_step(self.height, step, deck.height)
-        text_style = merge_in_step(deck.text_style, self.text_style, step)
-        code_style = merge_in_step(deck.code_style, self.code_style, step)
-        ctx = ToRawContext(text_style, code_style, shared_data)
-        root = RawBox(
-            x=0,
-            y=0,
-            width=width,
-            height=height,
-            bg_color=None,
-            children=[box_to_raw(child, step, ctx) for child in self.children],
-            content=None,
-        )
-        return RawPage(
-            width=width,
-            height=height,
-            bg_color=get_step(self.bg_color, step, deck.bg_color),
-            root=root,
-        )
 
     def traverse_tree(self, shared_data):
         for child in self.children:
@@ -161,6 +137,7 @@ class SlideDeck:
         return helper
 
     def _create_doc(self):
+        from .toraw import Document, slide_to_raw
         shared_data = {}
         raw_pages = []
         for slide in self.slides:
@@ -168,7 +145,7 @@ class SlideDeck:
             # TODO: gather steps
             steps = [1]
             for step in steps:
-                raw_pages.append(slide.to_raw_page(step, self, shared_data))
+                raw_pages.append(slide_to_raw(slide, step, self, shared_data))
         return Document(self.resources, raw_pages)
 
     def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
