@@ -23,8 +23,10 @@ class BoxBuilderMixin:
             width: Sn[Size] = None,
             height: Sn[Size] = None,
             bg_color: Sn[str] = None,
+            row: Sv[bool] = False,
+            reverse: Sv[bool] = False,
     ):
-        box = Box(x=x, y=y, width=width, height=height, bg_color=bg_color)
+        box = Box(x=x, y=y, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse)
         self.add(box)
         return box
 
@@ -59,17 +61,16 @@ class Box(BoxBuilderMixin):
             width: Sn[Size] = None,
             height: Sn[Size] = None,
             bg_color: Sn[str] = None,
+            row: Sv[bool] = False,
+            reverse: Sv[bool] = False,
     ):
-        if x:
-            check_position(x)
-        if y:
-            check_position(y)
-        if width:
-            check_size(width)
-        if height:
-            check_size(height)
-        if bg_color:
-            check_color(bg_color)
+        sn_check(x, check_position)
+        sn_check(y, check_position)
+        sn_check(width, check_size)
+        sn_check(height, check_size)
+        sn_check(bg_color, check_color)
+        sv_check(row, check_is_bool)
+        sv_check(reverse, check_is_bool)
 
         self._x = x
         self._y = y
