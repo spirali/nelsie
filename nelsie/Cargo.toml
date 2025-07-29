@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 renderer = { path = "../renderer" }
 resvg = { workspace = true }
 thiserror = { workspace = true }
+xmltree = { workspace = true }
 
 pyo3 = { version = "0.25", features = ["abi3-py311", "extension-module"] }
 itertools = "0.14"

@@ -74,7 +74,7 @@ impl Canvas {
                                 unreachable!()
                             }
                             ContentBody::SvgImage(_) => {
-                                todo!()
+                                
                             }
                         }
                     }

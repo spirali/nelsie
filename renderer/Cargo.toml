@@ -10,6 +10,8 @@ name = "renderer"
 thiserror = { workspace = true }
 resvg = { workspace = true }
 svg2pdf = { workspace = true }
+xmltree = { workspace = true }
+
 
 taffy = "0.7"
 svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg

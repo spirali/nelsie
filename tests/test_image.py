@@ -101,6 +101,6 @@ def test_inline_image(deck):
         jpeg_data = f.read()
     with open(os.path.join(ASSETS_DIR, "test.svg"), "r") as f:
         svg_data = f.read()
-    slide.image((png_data, "png"))
-    slide.image((jpeg_data, "jpeg"))
-    slide.image((svg_data, "svg"), enable_steps=False)
+    slide.image((png_data, "png"), height="30%")
+    slide.image((jpeg_data, "jpeg"), height="30%")
+    slide.image((svg_data, "svg"), enable_steps=False, height="30%")

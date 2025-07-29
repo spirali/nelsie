@@ -12,3 +12,4 @@ debug = "line-tables-only"
 thiserror = { version = "2.0" }
 resvg = "0.45"
 svg2pdf = "0.13" # !!synchronized with resvg
+xmltree = { version = "0.11" }

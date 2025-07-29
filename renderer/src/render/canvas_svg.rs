@@ -48,8 +48,9 @@ impl Canvas {
                             };
                             write_raster_image_to_svg(rect, format, data, &mut writer);
                         }
-                        ContentBody::SvgImage(_) => {
-                            todo!()
+                        ContentBody::SvgImage(image) => {
+                            let (width, height) = content.size();
+                            render_svg_image_into_svg(&mut writer, &image.as_string(), rect, width, height);
                         }
                     }
                 }
@@ -69,7 +70,6 @@ impl Canvas {
                 }*/
             }
         }
-
         writer.end("svg");
         Ok(writer.into_string())
     }

@@ -135,7 +135,7 @@ impl Document {
                                     height,
                                     ContentBody::Text((rtext, *count > 1)),
                                 );
-                                composer.preprocess_content(*content_id, &content)?;
+                                composer.preprocess_content(resources, *content_id, &content)?;
                                 Ok((*content_id, content))
                             },
                         )
@@ -159,7 +159,7 @@ impl Document {
                                     Content::new(
                                         *width,
                                         *height,
-                                        ContentBody::SvgImage((img.clone(), false)),
+                                        ContentBody::SvgImage(img.clone()),
                                     ),
                                 )
                             },
@@ -169,7 +169,7 @@ impl Document {
                         image_contents
                             .par_iter()
                             .try_for_each(|(content_id, content)| {
-                                composer.preprocess_content(*content_id, &content)
+                                composer.preprocess_content(resources, *content_id, &content)
                             })?;
                     }
                     crate::Result::Ok(image_contents)

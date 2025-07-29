@@ -13,7 +13,7 @@ pub enum InMemoryBinImage {
     Jpeg(ByAddress<Arc<Vec<u8>>>),
 }
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct InMemorySvgImage(ByAddress<Arc<String>>);
+pub struct InMemorySvgImage(ByAddress<Arc<xmltree::Element>>);
 
 impl InMemoryBinImage {
     pub fn new_png(data: Arc<Vec<u8>>) -> Self {
@@ -26,7 +26,20 @@ impl InMemoryBinImage {
 }
 
 impl InMemorySvgImage {
-    pub fn new(data: Arc<String>) -> Self {
+    pub fn new(data: Arc<xmltree::Element>) -> Self {
         InMemorySvgImage(ByAddress::from(data))
+    }
+
+    pub fn as_string(&self) -> String {
+        let mut s = Vec::<u8>::new();
+        self.0.write_with_config(
+            &mut s,
+            xmltree::EmitterConfig {
+                write_document_declaration: false,
+                ..Default::default()
+            },
+        )
+            .unwrap();
+        String::from_utf8(s).unwrap()
     }
 }

@@ -3,7 +3,7 @@ use crate::render::composer::{Composer, PngCollectorComposer};
 use crate::render::content::{Content, ContentBody, ContentMap};
 use crate::render::pdfdraw::{PdfWriter, init_pdf, path_to_pdf};
 use crate::render::text::RenderedText;
-use crate::{ContentId, InMemoryBinImage};
+use crate::{ContentId, InMemoryBinImage, InMemorySvgImage, Resources};
 use image::GenericImageView;
 use itertools::Itertools;
 use miniz_oxide::deflate::{CompressionLevel, compress_to_vec_zlib};
@@ -86,7 +86,7 @@ impl<'a> Composer for PdfComposer {
         Ok(())
     }
 
-    fn preprocess_content(&self, content_id: ContentId, content: &Content) -> crate::Result<()> {
+    fn preprocess_content(&self, resources: &Resources, content_id: ContentId, content: &Content) -> crate::Result<()> {
         let (chunk, rf) = match content.body() {
             ContentBody::Text((text, is_shared)) if *is_shared => {
                 let (width, height) = content.size();
@@ -98,14 +98,13 @@ impl<'a> Composer for PdfComposer {
                     self.compression_level,
                 )
             }
-            ContentBody::Text((_, _)) => {
+            ContentBody::Text(_) => {
                 // not shared, do nothing
                 return Ok(());
             }
             ContentBody::BinImage(image) => create_image_xobject(image, &self.ref_allocator),
-            ContentBody::SvgImage(image) => {
-                todo!()
-            }
+            ContentBody::SvgImage(image) =>
+                create_svg_xobject(resources, image, &self.ref_allocator)?,
         };
         self.content_to_ref_builder
             .lock()
@@ -220,6 +219,36 @@ fn create_text_xobject(
     x_obj.finish();
     (pdf_writer.chunk, obj_ref)
 }
+
+pub fn create_svg_xobject(resources: &Resources, svg_image: &InMemorySvgImage, pdf_ref_allocator: &PdfRefAllocator) -> crate::Result<(Chunk, Ref)> {
+    let options = svg2pdf::usvg::Options {
+        fontdb: resources.font_db.as_ref().unwrap().clone(),
+        ..Default::default()
+    };
+    let tree = svg2pdf::usvg::Tree::from_str(&svg_image.as_string(), &options)?;
+    let (svg_chunk, svg_ref) =
+        svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default()).map_err(
+            |e| crate::Error::generic_err(format!("PDF conversion error: {}", e)),
+        )?;
+    let mut chunk = Chunk::with_capacity(svg_chunk.len());
+    let svg_ref =
+        renumber_into(&svg_chunk, &mut chunk, pdf_ref_allocator, svg_ref);
+    Ok((chunk, svg_ref))
+}
+
+fn renumber_into(
+    chunk: &Chunk,
+    target: &mut Chunk,
+    alloc_ref: &PdfRefAllocator,
+    top_ref: Ref,
+) -> Ref {
+    let mut map = HashMap::<Ref, Ref>::new();
+    chunk.renumber_into(target, |r| {
+        *map.entry(r).or_insert_with(|| alloc_ref.bump())
+    });
+    *map.get(&top_ref).unwrap()
+}
+
 
 pub fn create_image_xobject(
     bin_image: &InMemoryBinImage,

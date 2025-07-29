@@ -32,5 +32,5 @@ impl Content {
 pub(crate) enum ContentBody {
     Text((RenderedText, bool)),
     BinImage(InMemoryBinImage),
-    SvgImage((InMemorySvgImage, bool)),
+    SvgImage(InMemorySvgImage),
 }

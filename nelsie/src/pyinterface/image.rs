@@ -73,10 +73,11 @@ pub(crate) fn create_mem_image<'py>(
             let usvg_tree = resvg::usvg::Tree::from_xmltree(&doc, &options)
                 .map_err(|_| PyException::new_err("Could not parse SVG file"))?;
             let size = usvg_tree.size();
+            let tree = xmltree::Element::parse(s.as_bytes()).unwrap();
             Ok(PyImage {
                 width: size.width(),
                 height: size.height(),
-                image_data: PyImageData::SvgImage(InMemorySvgImage::new(Arc::new(s))),
+                image_data: PyImageData::SvgImage(InMemorySvgImage::new(Arc::new(tree))),
             })
         }
     }

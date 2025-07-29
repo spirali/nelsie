@@ -539,6 +539,7 @@ dependencies = [
  "resvg",
  "strict-num",
  "thiserror 2.0.12",
+ "xmltree",
 ]
 
 [[package]]
@@ -884,6 +885,7 @@ dependencies = [
  "syntect",
  "taffy",
  "thiserror 2.0.12",
+ "xmltree",
 ]
 
 [[package]]
@@ -1524,6 +1526,21 @@ name = "writeable"
 version = "0.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e9df38ee2d2c3c5948ea468a8406ff0db0b29ae1ffde1bcf20ef305bcc95c51"
+
+[[package]]
+name = "xml-rs"
+version = "0.8.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6fd8403733700263c6eb89f192880191f1b83e332f7a20371ddcf421c4a337c7"
+
+[[package]]
+name = "xmltree"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b619f8c85654798007fb10afa5125590b43b088c225a25fc2fec100a9fad0fc6"
+dependencies = [
+ "xml-rs",
+]
 
 [[package]]
 name = "xmlwriter"
