@@ -1,18 +1,18 @@
-use std::borrow::Cow;
-use crate::{ContentId, InMemoryBinImage};
 use crate::render::canvas::Canvas;
 use crate::render::composer::{Composer, PngCollectorComposer};
 use crate::render::content::{Content, ContentBody, ContentMap};
 use crate::render::pdfdraw::{PdfWriter, init_pdf, path_to_pdf};
 use crate::render::text::RenderedText;
-use miniz_oxide::deflate::{compress_to_vec_zlib, CompressionLevel};
+use crate::{ContentId, InMemoryBinImage};
+use image::GenericImageView;
+use itertools::Itertools;
+use miniz_oxide::deflate::{CompressionLevel, compress_to_vec_zlib};
 use pdf_writer::{Chunk, Filter, Finish, Rect, Ref};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicI32, Ordering};
-use image::GenericImageView;
-use itertools::Itertools;
 
 pub(crate) struct PdfComposer {
     chunks: Mutex<Vec<Chunk>>,
@@ -100,10 +100,11 @@ impl<'a> Composer for PdfComposer {
             }
             ContentBody::Text((_, _)) => {
                 // not shared, do nothing
-                return Ok(())
+                return Ok(());
             }
-            ContentBody::BinImage(image) => {
-                create_image_xobject(image, &self.ref_allocator)
+            ContentBody::BinImage(image) => create_image_xobject(image, &self.ref_allocator),
+            ContentBody::SvgImage(image) => {
+                todo!()
             }
         };
         self.content_to_ref_builder
@@ -187,7 +188,6 @@ impl PdfRefAllocator {
         let rf = self.counter.fetch_add(2, Ordering::Relaxed);
         (Ref::new(rf), Ref::new(rf + 1))
     }
-
 }
 
 fn create_text_xobject(
@@ -221,22 +221,28 @@ fn create_text_xobject(
     (pdf_writer.chunk, obj_ref)
 }
 
-
 pub fn create_image_xobject(
     bin_image: &InMemoryBinImage,
     pdf_ref_allocator: &PdfRefAllocator,
 ) -> (Chunk, Ref) {
-
     let (filter, encoded, mask, w, h) = match bin_image {
         InMemoryBinImage::Jpeg(data) => {
-            let dynamic = image::load_from_memory_with_format(data, image::ImageFormat::Jpeg).unwrap();
+            let dynamic =
+                image::load_from_memory_with_format(data, image::ImageFormat::Jpeg).unwrap();
             assert_eq!(dynamic.color(), image::ColorType::Rgb8);
-            (Filter::DctDecode, Cow::Borrowed(data.as_slice()), None, dynamic.width(), dynamic.height())
+            (
+                Filter::DctDecode,
+                Cow::Borrowed(data.as_slice()),
+                None,
+                dynamic.width(),
+                dynamic.height(),
+            )
         }
 
         InMemoryBinImage::Png(data) => {
             let level = CompressionLevel::DefaultLevel as u8;
-            let dynamic = image::load_from_memory_with_format(data, image::ImageFormat::Png).unwrap();
+            let dynamic =
+                image::load_from_memory_with_format(data, image::ImageFormat::Png).unwrap();
             let w = dynamic.width();
             let h = dynamic.height();
             let encoded = compress_to_vec_zlib(dynamic.to_rgb8().as_raw(), level);

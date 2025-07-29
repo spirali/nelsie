@@ -10,7 +10,7 @@ use crate::render::text::{RenderedText, TextContext, render_text};
 use crate::resources::Resources;
 use crate::text::Text;
 use crate::utils::fileutils::ensure_directory;
-use crate::{Color, InMemoryBinImage, NodeId, Page};
+use crate::{Color, InMemoryBinImage, InMemorySvgImage, NodeId, Page};
 use itertools::Itertools;
 use miniz_oxide::deflate::CompressionLevel;
 use parley::{FontContext, LayoutContext};
@@ -25,6 +25,7 @@ pub struct Register {
     content_id_counter: ContentId,
     texts: HashMap<Text, (ContentId, u32)>,
     bin_images: HashMap<InMemoryBinImage, (ContentId, f32, f32)>,
+    svg_images: HashMap<InMemorySvgImage, (ContentId, usize, f32, f32)>,
 }
 
 impl Register {
@@ -33,7 +34,8 @@ impl Register {
             node_id_counter: NodeId::new(0),
             content_id_counter: ContentId::new(0),
             texts: HashMap::new(),
-            bin_images: HashMap::default(),
+            bin_images: HashMap::new(),
+            svg_images: HashMap::new(),
         }
     }
 
@@ -51,11 +53,30 @@ impl Register {
         entry.0
     }
 
-    pub fn register_bin_image(&mut self, image: InMemoryBinImage, width: f32, height: f32) -> ContentId {
+    pub fn register_bin_image(
+        &mut self,
+        image: InMemoryBinImage,
+        width: f32,
+        height: f32,
+    ) -> ContentId {
         let entry = self
             .bin_images
             .entry(image)
             .or_insert_with(|| (self.content_id_counter.bump(), width, height));
+        entry.0
+    }
+
+    pub fn register_svg_image(
+        &mut self,
+        image: InMemorySvgImage,
+        width: f32,
+        height: f32,
+    ) -> ContentId {
+        let entry = self
+            .svg_images
+            .entry(image)
+            .or_insert_with(|| (self.content_id_counter.bump(), 0, width, height));
+        entry.1 += 1;
         entry.0
     }
 }
@@ -90,7 +111,6 @@ impl Document {
             thread_pool_builder = thread_pool_builder.num_threads(n_threads);
         }
         let thread_pool = thread_pool_builder.build().unwrap();
-        let content_map: Mutex<ContentMap> = Mutex::new(HashMap::new());
         thread_pool.install(|| {
             let (texts, images) = rayon::join(
                 || {
@@ -99,7 +119,7 @@ impl Document {
                         .iter()
                         .collect_vec()
                         .into_par_iter()
-                        .try_for_each_init(
+                        .map_init(
                             || TextContext {
                                 layout_cx: Default::default(),
                                 font_cx: FontContext {
@@ -116,35 +136,48 @@ impl Document {
                                     ContentBody::Text((rtext, *count > 1)),
                                 );
                                 composer.preprocess_content(*content_id, &content)?;
-                                content_map.lock().unwrap().insert(*content_id, content);
-                                crate::Result::Ok(())
+                                Ok((*content_id, content))
                             },
                         )
+                        .collect::<crate::Result<Vec<_>>>()
                 },
                 || {
-                    if !composer.needs_image_preprocessing() {
-                        let mut content_map = content_map.lock().unwrap();
-                        self.register
-                            .bin_images
-                            .iter().for_each(|(img, (content_id, width, height))| {
-                            content_map.insert(*content_id, Content::new(*width, *height, ContentBody::BinImage(img.clone())));
-                        });
-                        crate::Result::Ok(())
-                    } else {
-                        self.register
-                            .bin_images
-                            .iter().collect_vec().into_par_iter().try_for_each(|(img, (content_id, width, height))| {
-                            let content = Content::new(*width, *height, ContentBody::BinImage(img.clone()));
-                            composer.preprocess_content(*content_id, &content)?;
-                            content_map.lock().unwrap().insert(*content_id, content);
-                            Ok(())
+                    let image_contents = self
+                        .register
+                        .bin_images
+                        .iter()
+                        .map(|(img, (content_id, width, height))| {
+                            (
+                                *content_id,
+                                Content::new(*width, *height, ContentBody::BinImage(img.clone())),
+                            )
                         })
+                        .chain(self.register.svg_images.iter().map(
+                            |(img, (content_id, _, width, height))| {
+                                (
+                                    *content_id,
+                                    Content::new(
+                                        *width,
+                                        *height,
+                                        ContentBody::SvgImage((img.clone(), false)),
+                                    ),
+                                )
+                            },
+                        ))
+                        .collect_vec();
+                    if composer.needs_image_preprocessing() {
+                        image_contents
+                            .par_iter()
+                            .try_for_each(|(content_id, content)| {
+                                composer.preprocess_content(*content_id, &content)
+                            })?;
                     }
+                    crate::Result::Ok(image_contents)
                 },
             );
-            texts?;
-            images?;
-            let content_map = content_map.into_inner().unwrap();
+            let texts = texts?;
+            let images = images?;
+            let content_map: HashMap<_, _> = texts.into_iter().chain(images.into_iter()).collect();
 
             composer.preprocessing_finished();
 

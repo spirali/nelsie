@@ -73,6 +73,9 @@ impl Canvas {
                             ContentBody::BinImage(_) => {
                                 unreachable!()
                             }
+                            ContentBody::SvgImage(_) => {
+                                todo!()
+                            }
                         }
                     }
                     //}

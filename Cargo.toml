@@ -10,3 +10,5 @@ debug = "line-tables-only"
 
 [workspace.dependencies]
 thiserror = { version = "2.0" }
+resvg = "0.45"
+svg2pdf = "0.13" # !!synchronized with resvg

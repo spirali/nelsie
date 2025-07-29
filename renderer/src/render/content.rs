@@ -1,5 +1,5 @@
-use crate::{ContentId, InMemoryBinImage};
 use crate::render::text::RenderedText;
+use crate::{ContentId, InMemoryBinImage, InMemorySvgImage};
 use std::collections::HashMap;
 
 pub(crate) type ContentMap = HashMap<ContentId, Content>;
@@ -32,4 +32,5 @@ impl Content {
 pub(crate) enum ContentBody {
     Text((RenderedText, bool)),
     BinImage(InMemoryBinImage),
+    SvgImage((InMemorySvgImage, bool)),
 }

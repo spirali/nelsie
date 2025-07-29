@@ -10,9 +10,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 renderer = { path = "../renderer" }
-pyo3 = { version = "0.25", features = ["abi3-py311", "extension-module"] }
-
+resvg = { workspace = true }
 thiserror = { workspace = true }
+
+pyo3 = { version = "0.25", features = ["abi3-py311", "extension-module"] }
 itertools = "0.14"
 strict-num = "*"
-imagesize = {  version="0.14", default-features = false, features = ["jpeg", "png"] }
+imagesize = { version = "0.14", default-features = false, features = ["jpeg", "png"] }

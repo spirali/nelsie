@@ -1,10 +1,10 @@
-use crate::{InMemoryBinImage, Rectangle};
 use crate::render::canvas::{Canvas, CanvasItem};
 use crate::render::content::{ContentBody, ContentMap};
 use crate::render::draw::DrawItem;
 use crate::render::svgpath::{svg_ellipse, svg_path, svg_rect};
 use crate::render::text::RenderedText;
 use crate::utils::sxml::SimpleXmlWriter;
+use crate::{InMemoryBinImage, Rectangle};
 use std::io::Write;
 
 impl Canvas {
@@ -47,6 +47,9 @@ impl Canvas {
                                 InMemoryBinImage::Jpeg(data) => ("jpeg", data),
                             };
                             write_raster_image_to_svg(rect, format, data, &mut writer);
+                        }
+                        ContentBody::SvgImage(_) => {
+                            todo!()
                         }
                     }
                 }

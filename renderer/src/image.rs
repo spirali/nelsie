@@ -15,7 +15,6 @@ pub enum InMemoryBinImage {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InMemorySvgImage(ByAddress<Arc<String>>);
 
-
 impl InMemoryBinImage {
     pub fn new_png(data: Arc<Vec<u8>>) -> Self {
         InMemoryBinImage::Png(ByAddress::from(data))

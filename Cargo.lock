@@ -536,6 +536,7 @@ dependencies = [
  "itertools",
  "pyo3",
  "renderer",
+ "resvg",
  "strict-num",
  "thiserror 2.0.12",
 ]

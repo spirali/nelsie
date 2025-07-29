@@ -8,10 +8,10 @@ name = "renderer"
 
 [dependencies]
 thiserror = { workspace = true }
+resvg = { workspace = true }
+svg2pdf = { workspace = true }
 
 taffy = "0.7"
-resvg = "0.45"
-svg2pdf = "0.13" # !!synchronized with resvg
 svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
 pdf-writer = "0.12"
