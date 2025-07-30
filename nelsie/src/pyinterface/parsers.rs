@@ -1,7 +1,7 @@
-use std::collections::{BTreeMap, HashMap};
-use pyo3::{pyfunction, Bound, IntoPyObjectExt, PyAny, PyResult, Python};
-use pyo3::types::{PyDict, PyDictMethods, PyList, PyTuple};
 use crate::parsers::steps::Step;
+use pyo3::types::{PyDict, PyDictMethods, PyList, PyTuple};
+use pyo3::{pyfunction, Bound, IntoPyObjectExt, PyAny, PyResult, Python};
+use std::collections::{BTreeMap, HashMap};
 
 fn step_to_pyobj<'py>(py: Python<'py>, step: &Step) -> PyResult<Bound<'py, PyAny>> {
     let indices = step.indices();
@@ -13,7 +13,10 @@ fn step_to_pyobj<'py>(py: Python<'py>, step: &Step) -> PyResult<Bound<'py, PyAny
 }
 
 #[pyfunction]
-pub(crate) fn parse_bool_steps<'py>(py: Python<'py>, input: &str) -> PyResult<(Bound<'py, PyAny>, Bound<'py, PyAny>)> {
+pub(crate) fn parse_bool_steps<'py>(
+    py: Python<'py>,
+    input: &str,
+) -> PyResult<(Bound<'py, PyAny>, Bound<'py, PyAny>)> {
     let mut objs = BTreeMap::new();
     let (steps, named) = super::super::parsers::steps::parse_bool_steps(input)?;
     let mut result = PyDict::new(py);
@@ -23,11 +26,16 @@ pub(crate) fn parse_bool_steps<'py>(py: Python<'py>, input: &str) -> PyResult<(B
         objs.insert(step, s);
     }
 
-    let named_list = PyList::new(py, named.into_iter().map(|step| {
-        objs.remove(&step).unwrap_or_else(|| {
-            step_to_pyobj(py, &step).unwrap()
-        })
-    }));
-    
-    Ok((result.into_bound_py_any(py)?, named_list?.into_bound_py_any(py)?))
+    let named_list = PyList::new(
+        py,
+        named.into_iter().map(|step| {
+            objs.remove(&step)
+                .unwrap_or_else(|| step_to_pyobj(py, &step).unwrap())
+        }),
+    );
+
+    Ok((
+        result.into_bound_py_any(py)?,
+        named_list?.into_bound_py_any(py)?,
+    ))
 }

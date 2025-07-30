@@ -2,13 +2,13 @@ mod check;
 mod common;
 mod extract;
 mod image;
+mod parsers;
 mod rendering;
 mod resources;
 mod text;
-mod parsers;
 
-use crate::pyinterface::resources::Resources;
 use crate::pyinterface::parsers::parse_bool_steps;
+use crate::pyinterface::resources::Resources;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyFloat, PyInt};

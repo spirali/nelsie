@@ -17,6 +17,7 @@ def test_step_value():
     assert a.get_step((3, 9, 9, 9, 9)) == "A"
     assert a.get_step((4, 0, 0)) == "B"
 
+
 def test_parse_bool_steps():
     s = parse_bool_steps("1")
     assert s.values == {1: True, 2: False}

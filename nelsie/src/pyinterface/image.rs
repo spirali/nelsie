@@ -68,7 +68,6 @@ fn create_svg(s: String) -> PyResult<PyImage> {
         height: size.height(),
         image_data: PyImageData::SvgImage(InMemorySvgImage::new(Arc::new(tree))),
     })
-
 }
 
 #[pyfunction]
@@ -96,38 +95,35 @@ pub(crate) fn create_mem_image<'py>(
 }
 
 #[pyfunction]
-pub(crate) fn load_image<'py>(
-    path: &str,
-) -> PyResult<PyImage> {
-    let image_format = if let Some(ext) = path.rsplit_once('.').map(|(_, s)| s.to_ascii_lowercase()) {
+pub(crate) fn load_image<'py>(path: &str) -> PyResult<PyImage> {
+    let image_format = if let Some(ext) = path.rsplit_once('.').map(|(_, s)| s.to_ascii_lowercase())
+    {
         match ext.as_str() {
             "png" => PyImageFormat::Png,
             "jpg" | "jpeg" => PyImageFormat::Jpeg,
             "ora" => PyImageFormat::Ora,
             "svg" => PyImageFormat::Svg,
-            _ => return Err(PyException::new_err(format!("Unknown file format: {path}")))
+            _ => return Err(PyException::new_err(format!("Unknown file format: {path}"))),
         }
     } else {
-        return Err(PyException::new_err(format!("Unknown file format: {path}")))
+        return Err(PyException::new_err(format!("Unknown file format: {path}")));
     };
-    let data = std::fs::read(path).map_err(|_| PyException::new_err(format!("Could not read image file: {path}")))?;
+    let data = std::fs::read(path)
+        .map_err(|_| PyException::new_err(format!("Could not read image file: {path}")))?;
     match image_format {
-        PyImageFormat::Png => {
-            create_png(data)
-        }
-        PyImageFormat::Jpeg => {
-            create_jpeg(data)
-        }
+        PyImageFormat::Png => create_png(data),
+        PyImageFormat::Jpeg => create_jpeg(data),
         PyImageFormat::Ora => {
             todo!()
         }
         PyImageFormat::Svg => {
-            let s = String::from_utf8(data).map_err(|_| PyException::new_err(format!("File cannot be parsed as UTF-8: {path}")))?;
+            let s = String::from_utf8(data).map_err(|_| {
+                PyException::new_err(format!("File cannot be parsed as UTF-8: {path}"))
+            })?;
             create_svg(s)
         }
     }
 }
-
 
 // #[derive(FromPyObject)]
 // pub(crate) struct PyPathImage {

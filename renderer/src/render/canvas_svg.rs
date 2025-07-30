@@ -94,6 +94,7 @@ fn write_raster_image_to_svg(
     xml.attr("y", rect.y);
     xml.attr("width", rect.width);
     xml.attr("height", rect.height);
+    xml.attr("preserveAspectRatio", "none");
     xml.attr_buf("xlink:href", |s| {
         s.push_str("data:image/");
         s.push_str(format);

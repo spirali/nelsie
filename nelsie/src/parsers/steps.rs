@@ -1,7 +1,7 @@
-use std::cmp::{Ordering, Reverse};
-use std::fmt::{Debug, Display, Formatter};
 use itertools::Itertools;
 use smallvec::{smallvec, SmallVec};
+use std::cmp::{Ordering, Reverse};
+use std::fmt::{Debug, Display, Formatter};
 
 pub(crate) type StepIndex = u32;
 
@@ -11,7 +11,6 @@ pub(crate) struct Step {
 }
 
 impl Step {
-
     #[cfg(test)]
     pub fn from_int(index: StepIndex) -> Step {
         Step {
@@ -39,7 +38,6 @@ impl Step {
         self.indices.push(0);
     }
 }
-
 
 impl Display for Step {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -78,18 +76,27 @@ impl Ord for Step {
 }
 
 pub fn parse_step(input: &str) -> crate::Result<(Step, bool, bool)> {
-    let (input, exact) = input.strip_prefix('!').map(|s| (s, true)).unwrap_or((input, false));
-    let (input, silent) = input.strip_suffix('?').map(|s| (s, true)).unwrap_or((input, false));
-    let indices = input.split(".").map(|s| {
-        let v: StepIndex = s.parse().map_err(|_| crate::Error::Parsing("Invalid step definition".to_string()))?;
-        Ok(v)
-    }).collect::<crate::Result<_>>()?;
-    Ok((Step {
-        indices,
-    }, exact, silent))
+    let (input, exact) = input
+        .strip_prefix('!')
+        .map(|s| (s, true))
+        .unwrap_or((input, false));
+    let (input, silent) = input
+        .strip_suffix('?')
+        .map(|s| (s, true))
+        .unwrap_or((input, false));
+    let indices = input
+        .split(".")
+        .map(|s| {
+            let v: StepIndex = s
+                .parse()
+                .map_err(|_| crate::Error::Parsing("Invalid step definition".to_string()))?;
+            Ok(v)
+        })
+        .collect::<crate::Result<_>>()?;
+    Ok((Step { indices }, exact, silent))
 }
 
-pub fn parse_bool_steps(input: &str) -> crate::Result<(Vec<(Step, bool)>, Vec<Step>)>{
+pub fn parse_bool_steps(input: &str) -> crate::Result<(Vec<(Step, bool)>, Vec<Step>)> {
     let mut result = Vec::new();
     let mut named = Vec::new();
     for part in input.split(',') {
@@ -141,7 +148,7 @@ pub fn parse_bool_steps(input: &str) -> crate::Result<(Vec<(Step, bool)>, Vec<St
             r
         }
     });
-    result.dedup_by(|(step1, _), (step2, _) | step1 == step2);
+    result.dedup_by(|(step1, _), (step2, _)| step1 == step2);
     result.dedup_by_key(|a| a.1);
     named.sort_unstable();
     Ok((result, named))

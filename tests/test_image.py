@@ -6,6 +6,7 @@ IMG_PNG = os.path.join(ASSETS_DIR, "testimg.png")
 IMG_JPEG = os.path.join(ASSETS_DIR, "testimg.jpeg")
 IMG_SVG = os.path.join(ASSETS_DIR, "test.svg")
 
+
 @check()
 def test_render_raster_image_native_size(deck):
     slide = deck.new_slide(width=400, height=400)
