@@ -3,8 +3,8 @@ from copy import copy
 
 from nelsie.steps import BoolStepDef
 
-from .image import PathOrImageData, ImageContent, check_image_path_or_data
-from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps
+from .image import PathOrImageData, ImageContent, check_image_path_or_data, normalize_image_path
+from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps, sn_map
 from .basictypes import Position, Size, check_position, check_size, TextAlign, check_text_align, IntOrFloat, Length, \
     LengthAuto, check_length, check_length_auto
 from .nelsie import check_color
@@ -64,6 +64,7 @@ class BoxBuilderMixin:
         sn_check(path_or_data, check_image_path_or_data)
         sv_check(enable_steps, check_is_bool)
         sv_check(shift_steps, check_is_int)
+        path_or_data = sn_map(path_or_data, normalize_image_path)
         box = self.box(**box_args)
         box._content = ImageContent(path_or_data, enable_steps, shift_steps)
         return box

@@ -54,6 +54,12 @@ class InSteps(Generic[T]):
             if value is not None:
                 fn(value)
 
+    def map_fn(self, fn: callable(T)):
+        values = {}
+        for step, value in self.values.items():
+            values[step] = fn(value)
+        return InSteps(values, self.named_steps)
+
     def get_step(self, step: Step, default_value: T | None = None) -> T | None:
         if step in self.values:
             return self.values[step]
@@ -92,9 +98,17 @@ def sn_check(obj, check_fn):
 
 
 def sn_apply(obj, apply_fn):
+    if isinstance(obj, InSteps):
+        obj.call_if_not_none(apply_fn)
     if obj is not None:
         apply_fn(obj)
 
+def sn_map(obj, map_fn):
+    if isinstance(obj, InSteps):
+        obj.map(map_fn)
+    if obj is not None:
+        return map_fn(obj)
+    return None
 
 def get_step(obj: Sn[T], step: Step, default_value: T | None = None) -> T:
     if isinstance(obj, InSteps):

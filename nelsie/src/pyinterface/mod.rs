@@ -20,6 +20,7 @@ fn nelsie(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(check::check_color, m)?)?;
     m.add_function(wrap_pyfunction!(rendering::render, m)?)?;
     m.add_function(wrap_pyfunction!(image::create_mem_image, m)?)?;
+    m.add_function(wrap_pyfunction!(image::load_image, m)?)?;
     m.add_function(wrap_pyfunction!(parse_bool_steps, m)?)?;
     Ok(())
 }

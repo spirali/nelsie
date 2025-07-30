@@ -20,6 +20,57 @@ pub enum PyImageData {
     SvgImage(InMemorySvgImage),
 }
 
+fn create_png(data: Vec<u8>) -> PyResult<PyImage> {
+    let format = imagesize::image_type(data.as_slice())
+        .map_err(|_| PyValueError::new_err("Invalid image format"))?;
+    if imagesize::ImageType::Png != format {
+        return Err(PyValueError::new_err("Data is not an PNG image"));
+    }
+    let size = imagesize::blob_size(data.as_slice())
+        .map_err(|_| PyValueError::new_err("Invalid image format"))?;
+    Ok(PyImage {
+        width: size.width as f32,
+        height: size.height as f32,
+        image_data: PyImageData::BinImage(InMemoryBinImage::new_png(Arc::new(data))),
+    })
+}
+
+fn create_jpeg(data: Vec<u8>) -> PyResult<PyImage> {
+    let format = imagesize::image_type(data.as_slice())
+        .map_err(|_| PyValueError::new_err("Invalid image format"))?;
+    if imagesize::ImageType::Jpeg != format {
+        return Err(PyValueError::new_err("Data is not an JPEG image"));
+    }
+    let size = imagesize::blob_size(data.as_slice())
+        .map_err(|_| PyValueError::new_err("Invalid image format"))?;
+    Ok(PyImage {
+        width: size.width as f32,
+        height: size.height as f32,
+        image_data: PyImageData::BinImage(InMemoryBinImage::new_jpeg(Arc::new(data))),
+    })
+}
+
+fn create_svg(s: String) -> PyResult<PyImage> {
+    let xml_opt = roxmltree::ParsingOptions {
+        allow_dtd: true,
+        ..Default::default()
+    };
+
+    let doc = roxmltree::Document::parse_with_options(&s, xml_opt)
+        .map_err(|_| PyException::new_err("Could not parse SVG as XML file"))?;
+    let options = resvg::usvg::Options::default();
+    let usvg_tree = resvg::usvg::Tree::from_xmltree(&doc, &options)
+        .map_err(|_| PyException::new_err("Could not parse SVG file"))?;
+    let size = usvg_tree.size();
+    let tree = xmltree::Element::parse(s.as_bytes()).unwrap();
+    Ok(PyImage {
+        width: size.width(),
+        height: size.height(),
+        image_data: PyImageData::SvgImage(InMemorySvgImage::new(Arc::new(tree))),
+    })
+
+}
+
 #[pyfunction]
 pub(crate) fn create_mem_image<'py>(
     data: &Bound<'py, PyAny>,
@@ -28,60 +79,55 @@ pub(crate) fn create_mem_image<'py>(
     match image_format {
         PyImageFormat::Png => {
             let data: Vec<u8> = data.extract()?;
-            let format = imagesize::image_type(data.as_slice())
-                .map_err(|_| PyValueError::new_err("Invalid image format"))?;
-            if imagesize::ImageType::Png != format {
-                return Err(PyValueError::new_err("Data is not an PNG image"));
-            }
-            let size = imagesize::blob_size(data.as_slice())
-                .map_err(|_| PyValueError::new_err("Invalid image format"))?;
-            Ok(PyImage {
-                width: size.width as f32,
-                height: size.height as f32,
-                image_data: PyImageData::BinImage(InMemoryBinImage::new_png(Arc::new(data))),
-            })
+            create_png(data)
         }
         PyImageFormat::Jpeg => {
             let data: Vec<u8> = data.extract()?;
-            let format = imagesize::image_type(data.as_slice())
-                .map_err(|_| PyValueError::new_err("Invalid image format"))?;
-            if imagesize::ImageType::Jpeg != format {
-                return Err(PyValueError::new_err("Data is not an Jpeg image"));
-            }
-            let size = imagesize::blob_size(data.as_slice())
-                .map_err(|_| PyValueError::new_err("Invalid image format"))?;
-            Ok(PyImage {
-                width: size.width as f32,
-                height: size.height as f32,
-                image_data: PyImageData::BinImage(InMemoryBinImage::new_jpeg(Arc::new(data))),
-            })
+            create_jpeg(data)
         }
         PyImageFormat::Ora => {
             todo!()
         }
         PyImageFormat::Svg => {
             let s: String = data.extract()?;
-
-            let xml_opt = roxmltree::ParsingOptions {
-                allow_dtd: true,
-                ..Default::default()
-            };
-
-            let doc = roxmltree::Document::parse_with_options(&s, xml_opt)
-                .map_err(|_| PyException::new_err("Could not parse SVG as XML file"))?;
-            let options = resvg::usvg::Options::default();
-            let usvg_tree = resvg::usvg::Tree::from_xmltree(&doc, &options)
-                .map_err(|_| PyException::new_err("Could not parse SVG file"))?;
-            let size = usvg_tree.size();
-            let tree = xmltree::Element::parse(s.as_bytes()).unwrap();
-            Ok(PyImage {
-                width: size.width(),
-                height: size.height(),
-                image_data: PyImageData::SvgImage(InMemorySvgImage::new(Arc::new(tree))),
-            })
+            create_svg(s)
         }
     }
 }
+
+#[pyfunction]
+pub(crate) fn load_image<'py>(
+    path: &str,
+) -> PyResult<PyImage> {
+    let image_format = if let Some(ext) = path.rsplit_once('.').map(|(_, s)| s.to_ascii_lowercase()) {
+        match ext.as_str() {
+            "png" => PyImageFormat::Png,
+            "jpg" | "jpeg" => PyImageFormat::Jpeg,
+            "ora" => PyImageFormat::Ora,
+            "svg" => PyImageFormat::Svg,
+            _ => return Err(PyException::new_err(format!("Unknown file format: {path}")))
+        }
+    } else {
+        return Err(PyException::new_err(format!("Unknown file format: {path}")))
+    };
+    let data = std::fs::read(path).map_err(|_| PyException::new_err(format!("Could not read image file: {path}")))?;
+    match image_format {
+        PyImageFormat::Png => {
+            create_png(data)
+        }
+        PyImageFormat::Jpeg => {
+            create_jpeg(data)
+        }
+        PyImageFormat::Ora => {
+            todo!()
+        }
+        PyImageFormat::Svg => {
+            let s = String::from_utf8(data).map_err(|_| PyException::new_err(format!("File cannot be parsed as UTF-8: {path}")))?;
+            create_svg(s)
+        }
+    }
+}
+
 
 // #[derive(FromPyObject)]
 // pub(crate) struct PyPathImage {

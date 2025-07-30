@@ -39,13 +39,18 @@ def check_image_path_or_data(obj):
         return  # Ok
     raise Exception("Image specification has to be path or tuple [bytes, format]")
 
+def normalize_image_path(path):
+    if isinstance(path, str):
+        return os.path.abspath(path)
+    return path
 
 def _put_into_shared_data(path_or_data: PathOrImageData | None, shared_data):
     if path_or_data is None:
         return
     check_image_path_or_data(path_or_data)
     if isinstance(path_or_data, str):
-        raise Exception("TODO")
+        shared_data[path_or_data] = nelsie_rs.load_image(path_or_data)
+        return
     data, data_type = path_or_data
     key = (id(data), data_type)
     if key not in shared_data:
@@ -67,5 +72,5 @@ class ImageContent:
         if isinstance(path_or_data, tuple):
             key = (id(path_or_data[0]), path_or_data[1])
         else:
-            raise Exception("TODO")
+            key = path_or_data
         return ctx.shared_data[key]
