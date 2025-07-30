@@ -537,6 +537,7 @@ dependencies = [
  "pyo3",
  "renderer",
  "resvg",
+ "smallvec",
  "strict-num",
  "thiserror 2.0.12",
  "xmltree",

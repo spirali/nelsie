@@ -1,6 +1,7 @@
 from typing import TypeVar, Generic, Sequence
 
 from nelsie.utils import check_is_bool
+from . import nelsie as nelsie_rs
 
 T = TypeVar("T")
 
@@ -12,7 +13,7 @@ def check_step(obj):
         if obj < 1:
             raise Exception("Invalid step; must be >= 1")
         return
-    if isinstance(obj, tuple) and len(obj) and all(isinstance(i, int) and i >= 1 for i in obj):
+    if isinstance(obj, tuple) and len(obj) and all(isinstance(i, int) and i >= 0 for i in obj):
         return
     raise Exception("Invalid step")
 
@@ -28,7 +29,7 @@ def step_lte(a, b):
 
 class InSteps(Generic[T]):
 
-    def __init__(self, init_values: dict[Step, T] | Sequence[T] | None = None):
+    def __init__(self, init_values: dict[Step, T] | Sequence[T] | None = None, named_steps=None):
         if init_values is None:
             self.values = {}
         elif isinstance(init_values, dict):
@@ -37,6 +38,7 @@ class InSteps(Generic[T]):
             self.values = init_values
         else:
             self.values = {i: v for i, v in enumerate(init_values, 1)}
+        self.named_steps = named_steps
 
     def s(self, step: Step, value: T) -> "InSteps[T]":
         check_step(step)
@@ -107,7 +109,10 @@ def extract_steps(obj, out: set[Step]):
     if obj is None:
         return
     if isinstance(obj, InSteps):
-        out.update(obj.values.keys())
+        if obj.named_steps is not None:
+            out.update(obj.named_steps.keys())
+        else:
+            out.update(obj.values.keys())
         return
     if isinstance(obj, containers):
         for o in obj:
@@ -123,11 +128,12 @@ def extract_steps(obj, out: set[Step]):
 type BoolStepDef = bool | InSteps[bool] | str
 
 
-def parse_bool_step(value: BoolStepDef) -> Sn[bool]:
+def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
     if isinstance(value, bool):
         return value
     if isinstance(value, str):
-        raise Exception("TODO")
+        steps, named_steps = nelsie_rs.parse_bool_steps(value)
+        return InSteps(steps, named_steps)
     if isinstance(value, InSteps):
         value.call(check_is_bool)
         return value

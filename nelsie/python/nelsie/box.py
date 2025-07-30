@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from copy import copy
 
+from nelsie.steps import BoolStepDef
+
 from .image import PathOrImageData, ImageContent, check_image_path_or_data
-from .steps import Sn, Step, get_step, Sv, sv_check, sn_check
+from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps
 from .basictypes import Position, Size, check_position, check_size, TextAlign, check_text_align, IntOrFloat, Length, \
     LengthAuto, check_length, check_length_auto
 from .nelsie import check_color
@@ -21,6 +23,7 @@ class BoxBuilderMixin:
             x: Sn[Position] = None,
             y: Sn[Position] = None,
             z_level: Sn[int] = None,
+            show: BoolStepDef = True,
             width: Sn[Size] = None,
             height: Sn[Size] = None,
             bg_color: Sn[str] = None,
@@ -35,7 +38,7 @@ class BoxBuilderMixin:
             m_top: Sv[LengthAuto] = 0,
             m_bottom: Sv[LengthAuto] = 0,
     ):
-        box = Box(x=x, y=y, z_level=z_level, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse
+        box = Box(x=x, y=y, z_level=z_level, show=show, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse
                   , p_left=p_left, p_right=p_right, p_top=p_top, p_bottom=p_bottom, m_left=m_left, m_right=m_right
                   , m_top=m_top, m_bottom=m_bottom)
         self.add(box)
@@ -71,6 +74,7 @@ class Box(BoxBuilderMixin):
             *,
             x: Sn[Position] = None,
             y: Sn[Position] = None,
+            show: BoolStepDef = True,
             z_level: Sn[int] = None,
             width: Sn[Size] = None,
             height: Sn[Size] = None,
@@ -103,6 +107,7 @@ class Box(BoxBuilderMixin):
         sv_check(m_top, check_length_auto)
         sv_check(m_bottom, check_length_auto)
 
+        self._show = parse_bool_steps(show)
         self._x = x
         self._y = y
         self._z_level = z_level

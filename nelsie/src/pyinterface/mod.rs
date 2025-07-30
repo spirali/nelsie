@@ -5,8 +5,10 @@ mod image;
 mod rendering;
 mod resources;
 mod text;
+mod parsers;
 
 use crate::pyinterface::resources::Resources;
+use crate::pyinterface::parsers::parse_bool_steps;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyFloat, PyInt};
@@ -18,6 +20,7 @@ fn nelsie(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(check::check_color, m)?)?;
     m.add_function(wrap_pyfunction!(rendering::render, m)?)?;
     m.add_function(wrap_pyfunction!(image::create_mem_image, m)?)?;
+    m.add_function(wrap_pyfunction!(parse_bool_steps, m)?)?;
     Ok(())
 }
 

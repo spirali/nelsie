@@ -1,4 +1,4 @@
-from nelsie.steps import extract_steps
+from nelsie.steps import extract_steps, parse_bool_steps
 from testutils import check
 
 from nelsie import TextStyle, s, InSteps, Box
@@ -16,6 +16,46 @@ def test_step_value():
     assert a.get_step((2, 1)) == "A"
     assert a.get_step((3, 9, 9, 9, 9)) == "A"
     assert a.get_step((4, 0, 0)) == "B"
+
+def test_parse_bool_steps():
+    s = parse_bool_steps("1")
+    assert s.values == {1: True, 2: False}
+    assert s.named_steps == [1]
+    s = parse_bool_steps("1, 2, 3")
+    assert s.values == {1: True, 4: False}
+    assert set(s.named_steps) == {1, 2, 3}
+
+    s = parse_bool_steps("2+")
+    assert s.values == {2: True}
+    assert set(s.named_steps) == {2}
+
+    s = parse_bool_steps("2, 4+")
+    assert s.values == {2: True, 3: False, 4: True}
+    assert set(s.named_steps) == {2, 4}
+
+    s = parse_bool_steps("4, 10-20, 30-40, 50+")
+    assert s.values == {4: True, 5: False, 10: True, 21: False, 30: True, 41: False, 50: True}
+    assert set(s.named_steps) == {4, 10, 20, 30, 40, 50}
+
+    s = parse_bool_steps("2.5.1+")
+    assert s.values == {(2, 5, 1): True}
+    assert set(s.named_steps) == {(2, 5, 1)}
+
+    s = parse_bool_steps("2.5.1")
+    assert s.values == {(2, 5, 1): True, (2, 5, 2): False}
+    assert set(s.named_steps) == {(2, 5, 1)}
+
+    s = parse_bool_steps("!20.50.100")
+    assert s.values == {(20, 50, 100): True, (20, 50, 100, 0): False}
+    assert set(s.named_steps) == {(20, 50, 100)}
+
+    s = parse_bool_steps("3-!6")
+    assert s.values == {3: True, (6, 0): False}
+    assert set(s.named_steps) == {3, 6}
+
+    s = parse_bool_steps("1, 2?, 3, 10-20?")
+    assert s.values == {1: True, 4: False, 10: True, 21: False}
+    assert set(s.named_steps) == {1, 3, 10}
 
 
 def test_extract_steps():
