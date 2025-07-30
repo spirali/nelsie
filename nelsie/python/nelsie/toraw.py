@@ -18,6 +18,7 @@ class RawBox:
     width: Size
     height: Size
     children: list["RawBox"]
+    show: bool = True
     content: Union[None, "TextContent", RawImage] = None
     z_level: int = 0
     bg_color: str | None = None
@@ -62,11 +63,12 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
     return RawBox(
         x=get_step(box._x, step),
         y=get_step(box._y, step),
+        show=get_step(box._show, step, False),
         z_level=ctx.z_level,
         width=get_step(box._width, step),
         height=get_step(box._height, step),
         bg_color=get_step(box._bg_color, step),
-        children=[box_to_raw(child, step, ctx) for child in box._children],
+        children=[box_to_raw(child, step, ctx) for child in box._children if get_step(child._active, step)],
         content=content,
         row=get_step(box._row, step),
         reverse=get_step(box._reverse, step),
@@ -111,7 +113,7 @@ def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[
         y=None,
         width=width,
         height=height,
-        children=[box_to_raw(child, step, ctx) for child in slide.children],
+        children=[box_to_raw(child, step, ctx) for child in slide.children if get_step(child._active, step)],
     )
     return RawPage(
         width=width,

@@ -80,9 +80,7 @@ impl Ord for Step {
 pub fn parse_step(input: &str) -> crate::Result<(Step, bool, bool)> {
     let (input, exact) = input.strip_prefix('!').map(|s| (s, true)).unwrap_or((input, false));
     let (input, silent) = input.strip_suffix('?').map(|s| (s, true)).unwrap_or((input, false));
-    dbg!(input, exact, silent);
     let indices = input.split(".").map(|s| {
-        dbg!(&s);
         let v: StepIndex = s.parse().map_err(|_| crate::Error::Parsing("Invalid step definition".to_string()))?;
         Ok(v)
     }).collect::<crate::Result<_>>()?;

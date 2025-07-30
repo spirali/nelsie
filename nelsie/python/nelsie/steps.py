@@ -110,7 +110,7 @@ def extract_steps(obj, out: set[Step]):
         return
     if isinstance(obj, InSteps):
         if obj.named_steps is not None:
-            out.update(obj.named_steps.keys())
+            out.update(obj.named_steps)
         else:
             out.update(obj.values.keys())
         return
@@ -125,7 +125,7 @@ def extract_steps(obj, out: set[Step]):
             extract_steps(o, out)
 
 
-type BoolStepDef = bool | InSteps[bool] | str
+type BoolStepDef = bool | InSteps[bool] | str | int
 
 
 def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
@@ -137,4 +137,6 @@ def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
     if isinstance(value, InSteps):
         value.call(check_is_bool)
         return value
-    raise Exception("Invalid bool step definition")
+    if isinstance(value, int):
+        return InSteps({value: True, value + 1: False}, (value,))
+    raise Exception(f"Invalid bool step definition: {value!r}")

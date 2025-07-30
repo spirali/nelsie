@@ -24,6 +24,7 @@ class BoxBuilderMixin:
             y: Sn[Position] = None,
             z_level: Sn[int] = None,
             show: BoolStepDef = True,
+            active: BoolStepDef = True,
             width: Sn[Size] = None,
             height: Sn[Size] = None,
             bg_color: Sn[str] = None,
@@ -38,7 +39,7 @@ class BoxBuilderMixin:
             m_top: Sv[LengthAuto] = 0,
             m_bottom: Sv[LengthAuto] = 0,
     ):
-        box = Box(x=x, y=y, z_level=z_level, show=show, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse
+        box = Box(x=x, y=y, z_level=z_level, show=show, active=active, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse
                   , p_left=p_left, p_right=p_right, p_top=p_top, p_bottom=p_bottom, m_left=m_left, m_right=m_right
                   , m_top=m_top, m_bottom=m_bottom)
         self.add(box)
@@ -75,6 +76,7 @@ class Box(BoxBuilderMixin):
             x: Sn[Position] = None,
             y: Sn[Position] = None,
             show: BoolStepDef = True,
+            active: BoolStepDef = True,
             z_level: Sn[int] = None,
             width: Sn[Size] = None,
             height: Sn[Size] = None,
@@ -108,6 +110,7 @@ class Box(BoxBuilderMixin):
         sv_check(m_bottom, check_length_auto)
 
         self._show = parse_bool_steps(show)
+        self._active = parse_bool_steps(active)
         self._x = x
         self._y = y
         self._z_level = z_level

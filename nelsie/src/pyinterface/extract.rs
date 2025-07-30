@@ -126,6 +126,7 @@ enum NodeContent<'py> {
 struct PyNode<'py> {
     x: Option<PyPosition<DimX>>,
     y: Option<PyPosition<DimY>>,
+    show: bool,
     z_level: i32,
     width: Option<PyLengthOrExpr>,
     height: Option<PyLengthOrExpr>,
@@ -182,7 +183,7 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
         node_id,
         width: node.width.map(|x| x.0),
         height: node.height.map(|x| x.0),
-        show: true,
+        show: node.show,
         x: node.x.map(|x| x.expr),
         y: node.y.map(|x| x.expr),
         border_radius: 0.0,

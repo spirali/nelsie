@@ -148,7 +148,13 @@ class SlideDeck:
             steps = set(slide.init_steps)
             extract_steps(slide, steps)
             for step in steps:
-                raw_pages.append(slide_to_raw(slide, step, self, shared_data))
+                if isinstance(step, int):
+                    if step < 1:
+                        continue
+                elif step[0] < 1:
+                    continue
+                page = slide_to_raw(slide, step, self, shared_data)
+                raw_pages.append(page)
         return Document(self.resources, raw_pages)
 
     def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
