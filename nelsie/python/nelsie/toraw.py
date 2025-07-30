@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Union, Literal
 
 from .resources import Resources
-from .basictypes import Position, Size
+from .basictypes import Position, Size, IntOrFloat, Length, LengthAuto
 from .image import RawImage
 from .steps import Step, get_step
 from .textstyle import TextStyle, merge_in_step
@@ -10,18 +10,27 @@ from .box import Box, TextContent
 from .slidedeck import Slide
 from . import nelsie as nelsie_rs
 
+
 @dataclass
 class RawBox:
     x: Position
     y: Position
-    z_level: int
     width: Size
     height: Size
-    bg_color: str | None
-    row: bool
-    reverse: bool
     children: list["RawBox"]
-    content: Union[None, "TextContent", RawImage]
+    content: Union[None, "TextContent", RawImage] = None
+    z_level: int = 0
+    bg_color: str | None = None
+    row: bool = False
+    reverse: bool = False
+    p_left: Length = 0
+    p_right: Length = 0
+    p_top: Length = 0
+    p_bottom: Length = 0
+    m_left: LengthAuto = 0
+    m_right: LengthAuto = 0
+    m_top: LengthAuto = 0
+    m_bottom: LengthAuto = 0
 
 
 @dataclass
@@ -61,6 +70,14 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
         content=content,
         row=get_step(box._row, step),
         reverse=get_step(box._reverse, step),
+        p_left=get_step(box._p_left, step),
+        p_right=get_step(box._p_right, step),
+        p_top=get_step(box._p_top, step),
+        p_bottom=get_step(box._p_bottom, step),
+        m_left=get_step(box._m_left, step),
+        m_right=get_step(box._m_right, step),
+        m_top=get_step(box._m_top, step),
+        m_bottom=get_step(box._m_bottom, step),
     )
 
 
@@ -92,14 +109,9 @@ def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[
     root = RawBox(
         x=None,
         y=None,
-        z_level=0,
         width=width,
         height=height,
-        bg_color=None,
         children=[box_to_raw(child, step, ctx) for child in slide.children],
-        content=None,
-        row=False,
-        reverse=False,
     )
     return RawPage(
         width=width,

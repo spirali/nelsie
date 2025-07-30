@@ -2,15 +2,17 @@ from typing import Literal, cast
 import re
 
 from .layoutexpr import LayoutExpr
+from .utils import int_or_float
 
-Length = int | float | str
-LengthAuto = Length | Literal["auto"]
-Size = Length | LayoutExpr
-Position = Size
-
-num_or_expr = int | float | LayoutExpr
+type IntOrFloat = int | float
+type Length = IntOrFloat | str
+type LengthAuto = Length | Literal["auto"]
+type Size = Length | LayoutExpr
+type Position = Size
 
 length_pattern = re.compile(r"^\s*\d+\s*%?\s*$")
+
+num_or_expr = (int, float, LayoutExpr)
 
 
 def check_position(obj):
@@ -23,7 +25,32 @@ def check_position(obj):
 
 
 def check_size(obj):
-    check_position(obj)
+    if obj is None or isinstance(obj, num_or_expr):
+        return
+    if isinstance(obj, str):
+        if length_pattern.match(obj):
+            return
+    raise Exception("Invalid size definition")
+
+
+def check_length(obj):
+    if isinstance(obj, int_or_float):
+        return
+    if isinstance(obj, str):
+        if length_pattern.match(obj):
+            return
+    raise Exception("Invalid position definition")
+
+
+def check_length_auto(obj):
+    if isinstance(obj, int_or_float):
+        return
+    if isinstance(obj, str):
+        if obj == "auto":
+            return
+        if length_pattern.match(obj):
+            return
+    raise Exception("Invalid position definition")
 
 
 TextAlign = Literal["start", "center", "end"]

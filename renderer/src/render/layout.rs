@@ -180,8 +180,12 @@ impl From<Length> for tf::LengthPercentage {
 impl From<LengthOrAuto> for tf::LengthPercentageAuto {
     fn from(value: LengthOrAuto) -> Self {
         match value {
-            LengthOrAuto::Points { value } => tf::LengthPercentageAuto::Length(value),
-            LengthOrAuto::Fraction { value } => tf::LengthPercentageAuto::Percent(value),
+            LengthOrAuto::Length(Length::Points { value }) => {
+                tf::LengthPercentageAuto::Length(value)
+            }
+            LengthOrAuto::Length(Length::Fraction { value }) => {
+                tf::LengthPercentageAuto::Percent(value)
+            }
             LengthOrAuto::Auto => tf::LengthPercentageAuto::Auto,
         }
     }

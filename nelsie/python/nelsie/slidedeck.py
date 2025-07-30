@@ -1,19 +1,20 @@
-from typing import Literal
+from typing import Literal, Iterable
 
 from .box import BoxBuilderMixin, Box
 from .resources import Resources
-from .steps import Step, Sv, get_step
+from .steps import Step, Sv, get_step, extract_steps
 from . import nelsie as nelsie_rs
 from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, merge_in_step
 
 
 class Slide(BoxBuilderMixin):
-    def __init__(self, width: Sv[float], height: Sv[float], bg_color: Sv[str], name: str):
+    def __init__(self, width: Sv[float], height: Sv[float], bg_color: Sv[str], name: str, init_steps: Iterable[Step]):
         self.width = width
         self.height = height
         self.bg_color = bg_color
         self.name = name
         self.children = []
+        self.init_steps = init_steps
 
         self.text_style = None
         self.code_style = None
@@ -81,6 +82,7 @@ class SlideDeck:
             width: Sv[float | None] = None,
             height: Sv[float | None] = None,
             bg_color: Sv[str | None] = None,
+            init_steps: Iterable[Step] = (1,),
             name: str = "",
     ):
         if width is None:
@@ -89,7 +91,7 @@ class SlideDeck:
             height = self.height
         if bg_color is None:
             bg_color = self.bg_color
-        slide = Slide(width, height, bg_color, name)
+        slide = Slide(width, height, bg_color, name, init_steps)
         self.slides.append(slide)
         return slide
 
@@ -104,7 +106,7 @@ class SlideDeck:
             # debug_layout: bool | str = False,
             # counters: list[str] | None = None,
             # parent_slide: tuple[Slide, int] | None = None,
-            # step_1: bool = True,
+            init_steps: Iterable[Step] = (1,),
             ignore: bool = False,
     ):
         """
@@ -130,6 +132,7 @@ class SlideDeck:
                 height=height,
                 bg_color=bg_color,
                 name=name,
+                init_steps=init_steps,
             )
             fn(slide)
             return slide
@@ -142,8 +145,8 @@ class SlideDeck:
         raw_pages = []
         for slide in self.slides:
             slide.traverse_tree(shared_data)
-            # TODO: gather steps
-            steps = [1]
+            steps = set(slide.init_steps)
+            extract_steps(slide, steps)
             for step in steps:
                 raw_pages.append(slide_to_raw(slide, step, self, shared_data))
         return Document(self.resources, raw_pages)

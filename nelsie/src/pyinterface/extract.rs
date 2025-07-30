@@ -7,7 +7,10 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{Color, LayoutExpr, Length, LengthOrExpr, Node, NodeChild, NodeId, Page, Register, Text};
+use renderer::{
+    Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page, Register,
+    Text,
+};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -38,9 +41,7 @@ impl Dimension for DimY {
     fn parent_size(fraction: f32) -> LayoutExpr {
         LayoutExpr::ParentHeight { fraction }
     }
-
 }
-
 
 #[derive(FromPyObject)]
 struct PyPage<'py> {
@@ -57,9 +58,7 @@ impl<'py> FromPyObject<'py> for PyLengthOrExpr {
         Ok(PyLengthOrExpr(if let Ok(value) = obj.extract::<f32>() {
             LengthOrExpr::points(value)
         } else if let Ok(value) = obj.extract::<&str>() {
-            LengthOrExpr::Length(parse_string_length(
-                value,
-            )?)
+            LengthOrExpr::Length(parse_string_length(value)?)
         } else {
             todo!()
         }))
@@ -72,8 +71,9 @@ struct PyPosition<D: Dimension> {
 }
 
 impl<'py, D: Dimension> FromPyObject<'py> for PyPosition<D> {
-        fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
-            Ok(PyPosition { expr: if let Ok(value) = obj.extract::<f32>() {
+    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+        Ok(PyPosition {
+            expr: if let Ok(value) = obj.extract::<f32>() {
                 D::parent_pos(value)
             } else if let Ok(value) = obj.extract::<&str>() {
                 D::parent_pos(0.0).add(match parse_string_length(value)? {
@@ -83,11 +83,38 @@ impl<'py, D: Dimension> FromPyObject<'py> for PyPosition<D> {
             } else {
                 todo!()
             },
-                _dim: Default::default(),
-            })
+            _dim: Default::default(),
+        })
     }
 }
 
+struct PyLength(Length);
+
+impl<'py> FromPyObject<'py> for PyLength {
+    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+        Ok(PyLength(if let Ok(value) = obj.extract::<f32>() {
+            Length::Points { value: value }
+        } else if let Ok(value) = obj.extract::<&str>() {
+            parse_string_length(value)?
+        } else {
+            return Err(PyValueError::new_err("Invalid length definition"));
+        }))
+    }
+}
+
+struct PyLengthOrAuto(LengthOrAuto);
+
+impl<'py> FromPyObject<'py> for PyLengthOrAuto {
+    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+        Ok(PyLengthOrAuto(if let Ok(value) = obj.extract::<f32>() {
+            LengthOrAuto::Length(Length::Points { value })
+        } else if let Ok(value) = obj.extract::<&str>() {
+            LengthOrAuto::Length(parse_string_length(value)?)
+        } else {
+            return Err(PyValueError::new_err("Invalid length definition"));
+        }))
+    }
+}
 
 #[derive(FromPyObject)]
 enum NodeContent<'py> {
@@ -107,6 +134,14 @@ struct PyNode<'py> {
     reverse: bool,
     children: Bound<'py, PyList>,
     content: Option<NodeContent<'py>>,
+    p_left: PyLength,
+    p_right: PyLength,
+    p_top: PyLength,
+    p_bottom: PyLength,
+    m_left: PyLengthOrAuto,
+    m_right: PyLengthOrAuto,
+    m_top: PyLengthOrAuto,
+    m_bottom: PyLengthOrAuto,
 }
 
 fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2>>(
@@ -167,14 +202,14 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
         grid_template_columns: vec![],
         grid_row: Default::default(),
         grid_column: Default::default(),
-        p_top: Default::default(),
-        p_bottom: Default::default(),
-        p_left: Default::default(),
-        p_right: Default::default(),
-        m_top: Default::default(),
-        m_bottom: Default::default(),
-        m_left: Default::default(),
-        m_right: Default::default(),
+        p_top: node.p_top.0,
+        p_bottom: node.p_bottom.0,
+        p_left: node.p_left.0,
+        p_right: node.p_right.0,
+        m_top: node.m_top.0,
+        m_bottom: node.m_bottom.0,
+        m_left: node.m_left.0,
+        m_right: node.m_right.0,
         bg_color: node.bg_color.map(|x| x.into()),
         z_level: node.z_level,
         content,

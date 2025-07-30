@@ -35,19 +35,18 @@ impl Length {
 
 #[derive(Debug, Copy, Clone)]
 pub enum LengthOrAuto {
-    Points { value: f32 },
-    Fraction { value: f32 },
+    Length(Length),
     Auto,
 }
 
 impl Default for LengthOrAuto {
     fn default() -> Self {
-        LengthOrAuto::Points { value: 0.0f32 }
+        LengthOrAuto::ZERO
     }
 }
 
 impl LengthOrAuto {
-    pub(crate) const ZERO: LengthOrAuto = LengthOrAuto::Points { value: 0.0 };
+    pub(crate) const ZERO: LengthOrAuto = LengthOrAuto::Length(Length::Points { value: 0.0 });
 }
 
 #[derive(Debug, Clone)]

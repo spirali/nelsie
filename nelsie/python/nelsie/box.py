@@ -3,11 +3,12 @@ from copy import copy
 
 from .image import PathOrImageData, ImageContent, check_image_path_or_data
 from .steps import Sn, Step, get_step, Sv, sv_check, sn_check
-from .basictypes import Position, Size, check_position, check_size, TextAlign, check_text_align
+from .basictypes import Position, Size, check_position, check_size, TextAlign, check_text_align, IntOrFloat, Length, \
+    LengthAuto, check_length, check_length_auto
 from .nelsie import check_color
 from .text import TextContent
 from .textstyle import TextStyle, merge_in_step, check_is_text_style
-from .utils import check_is_str, check_is_bool, check_is_int
+from .utils import check_is_str, check_is_bool, check_is_int, check_is_int_or_float
 
 
 class BoxBuilderMixin:
@@ -25,8 +26,18 @@ class BoxBuilderMixin:
             bg_color: Sn[str] = None,
             row: Sv[bool] = False,
             reverse: Sv[bool] = False,
+            p_left: Sv[Length] = 0,
+            p_right: Sv[Length] = 0,
+            p_top: Sv[Length] = 0,
+            p_bottom: Sv[Length] = 0,
+            m_left: Sv[LengthAuto] = 0,
+            m_right: Sv[LengthAuto] = 0,
+            m_top: Sv[LengthAuto] = 0,
+            m_bottom: Sv[LengthAuto] = 0,
     ):
-        box = Box(x=x, y=y, z_level=z_level, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse)
+        box = Box(x=x, y=y, z_level=z_level, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse
+                  , p_left=p_left, p_right=p_right, p_top=p_top, p_bottom=p_bottom, m_left=m_left, m_right=m_right
+                  , m_top=m_top, m_bottom=m_bottom)
         self.add(box)
         return box
 
@@ -39,6 +50,7 @@ class BoxBuilderMixin:
         sn_check(style, check_is_text_style)
         box = self.box(**box_args)
         box._content = TextContent(text, style, align, None, None)
+        return box
 
     def image(self, path_or_data: Sn[PathOrImageData],
               *,
@@ -50,6 +62,7 @@ class BoxBuilderMixin:
         sv_check(shift_steps, check_is_int)
         box = self.box(**box_args)
         box._content = ImageContent(path_or_data, enable_steps, shift_steps)
+        return box
 
 
 class Box(BoxBuilderMixin):
@@ -64,6 +77,14 @@ class Box(BoxBuilderMixin):
             bg_color: Sn[str] = None,
             row: Sv[bool] = False,
             reverse: Sv[bool] = False,
+            p_left: Sv[Length] = 0,
+            p_right: Sv[Length] = 0,
+            p_top: Sv[Length] = 0,
+            p_bottom: Sv[Length] = 0,
+            m_left: Sv[LengthAuto] = 0,
+            m_right: Sv[LengthAuto] = 0,
+            m_top: Sv[LengthAuto] = 0,
+            m_bottom: Sv[LengthAuto] = 0,
     ):
         sn_check(x, check_position)
         sn_check(y, check_position)
@@ -73,7 +94,14 @@ class Box(BoxBuilderMixin):
         sn_check(bg_color, check_color)
         sv_check(row, check_is_bool)
         sv_check(reverse, check_is_bool)
-
+        sv_check(p_left, check_length)
+        sv_check(p_right, check_length)
+        sv_check(p_top, check_length)
+        sv_check(p_bottom, check_length)
+        sv_check(m_left, check_length_auto)
+        sv_check(m_right, check_length_auto)
+        sv_check(m_top, check_length_auto)
+        sv_check(m_bottom, check_length_auto)
 
         self._x = x
         self._y = y
@@ -85,6 +113,14 @@ class Box(BoxBuilderMixin):
         self._children = []
         self._row = row
         self._reverse = reverse
+        self._p_left = p_left
+        self._p_right = p_right
+        self._p_top = p_top
+        self._p_bottom = p_bottom
+        self._m_left = m_left
+        self._m_right = m_right
+        self._m_top = m_top
+        self._m_bottom = m_bottom
 
         self._text_style: Sn[TextStyle] = None
         self._code_style: Sn[TextStyle] = None

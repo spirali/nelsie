@@ -22,6 +22,6 @@ pub use page::Page;
 pub use rectangle::Rectangle;
 pub use resources::Resources;
 pub use text::{FontStretch, Text, TextAlign, TextStyle};
-pub use types::{LayoutExpr, Length, LengthOrExpr, NodeId};
+pub use types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId};
 
 pub type Result<T> = std::result::Result<T, Error>;
