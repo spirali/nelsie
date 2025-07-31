@@ -2,17 +2,27 @@ use crate::pyinterface::resources::Resources;
 use imagesize::size;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::types::{PyAnyMethods, PyList};
-use pyo3::{pyclass, pyfunction, Bound, FromPyObject, PyAny, PyResult, Python};
+use pyo3::{pyclass, pyfunction, pymethods, Bound, FromPyObject, IntoPyObject, PyAny, PyResult, Python};
 use renderer::{InMemoryBinImage, InMemorySvgImage};
 use resvg::usvg::{roxmltree, Error};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
+use itertools::Itertools;
+use crate::parsers::steps::{parse_steps_from_label, Step};
 
 #[pyclass(frozen)]
 pub(crate) struct PyImage {
     pub(crate) width: f32,
     pub(crate) height: f32,
     pub(crate) image_data: PyImageData,
+    pub(crate) named_steps: Vec<Step>,
+}
+
+#[pymethods]
+impl PyImage {
+    fn named_steps<'py>(&self, py: Python<'py>) -> PyResult<Vec<Bound<'py, PyAny>>> {
+        self.named_steps.iter().map(|s| s.into_pyobject(py)).collect::<Result<Vec<_>, _>>()
+    }
 }
 
 pub enum PyImageData {
@@ -32,6 +42,7 @@ fn create_png(data: Vec<u8>) -> PyResult<PyImage> {
         width: size.width as f32,
         height: size.height as f32,
         image_data: PyImageData::BinImage(InMemoryBinImage::new_png(Arc::new(data))),
+        named_steps: Vec::new(),
     })
 }
 
@@ -47,6 +58,7 @@ fn create_jpeg(data: Vec<u8>) -> PyResult<PyImage> {
         width: size.width as f32,
         height: size.height as f32,
         image_data: PyImageData::BinImage(InMemoryBinImage::new_jpeg(Arc::new(data))),
+        named_steps: Vec::new(),
     })
 }
 
@@ -63,10 +75,23 @@ fn create_svg(s: String) -> PyResult<PyImage> {
         .map_err(|_| PyException::new_err("Could not parse SVG file"))?;
     let size = usvg_tree.size();
     let tree = xmltree::Element::parse(s.as_bytes()).unwrap();
+
+    let mut steps = BTreeSet::new();
+    for node in doc.descendants() {
+        if let Some(label) =
+            node.attribute(("http://www.inkscape.org/namespaces/inkscape", "label"))
+        {
+            if let Some((_, named_steps)) = parse_steps_from_label(label) {
+                steps.extend(named_steps);
+            }
+        }
+    }
+    let named_steps = steps.into_iter().collect_vec();
     Ok(PyImage {
         width: size.width(),
         height: size.height(),
         image_data: PyImageData::SvgImage(InMemorySvgImage::new(Arc::new(tree))),
+        named_steps,
     })
 }
 
@@ -155,3 +180,16 @@ impl<'py> FromPyObject<'py> for PyImageFormat {
         })
     }
 }
+
+// fn crawl_svg_for_steps(nodes: &mut Vec<xmltree::XMLNode>, stack: &mut XMLNode::) {
+//     for node in nodes(|node| match node {
+//         xmltree::XMLNode::Element(element) => {
+//             if element.attributes.get("label").is_some_and(|v| v.contains("**")) {
+//                 return true;
+//             }
+//             crawl_svg_for_steps(&mut element.children, stack);
+//             false
+//         }
+//         _ => true,
+//     })
+// }

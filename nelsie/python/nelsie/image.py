@@ -12,10 +12,7 @@ PathOrImageData = str | tuple[bytes | str, ImageFormat]
 known_suffixes = (".png", ".svg", ".jpg", ".jpeg", ".ora")
 known_formats = ("png", "svg", "jpeg", "ora")
 
-
-# An class for opaque Image produced by nelsie_rs
-class RawImage:
-    pass
+RawImage = nelsie_rs.PyImage
 
 def check_image_path_or_data(obj):
     if isinstance(obj, str):

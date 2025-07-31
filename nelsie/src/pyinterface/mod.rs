@@ -13,6 +13,7 @@ use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyFloat, PyInt};
 use pyo3::PyTypeInfo;
+use crate::pyinterface::image::PyImage;
 
 #[pymodule]
 fn nelsie(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -22,6 +23,7 @@ fn nelsie(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(image::create_mem_image, m)?)?;
     m.add_function(wrap_pyfunction!(image::load_image, m)?)?;
     m.add_function(wrap_pyfunction!(parse_bool_steps, m)?)?;
+    m.add_class::<PyImage>()?;
     Ok(())
 }
 

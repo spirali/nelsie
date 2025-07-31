@@ -147,7 +147,7 @@ class SlideDeck:
             slide.traverse_tree(shared_data)
             steps = set(slide.init_steps)
             extract_steps(slide, steps)
-            for step in steps:
+            for step in sorted(steps):
                 if isinstance(step, int):
                     if step < 1:
                         continue

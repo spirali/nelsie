@@ -153,3 +153,12 @@ pub fn parse_bool_steps(input: &str) -> crate::Result<(Vec<(Step, bool)>, Vec<St
     named.sort_unstable();
     Ok((result, named))
 }
+
+
+pub(crate) fn parse_steps_from_label(
+    value: &str
+) -> Option<(Vec<(Step, bool)>, Vec<Step>)> {
+    value
+        .rsplit_once("**")
+        .and_then(|(_, b)| parse_bool_steps(b).ok())
+}

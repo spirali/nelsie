@@ -1,16 +1,31 @@
 use crate::parsers::steps::Step;
 use pyo3::types::{PyDict, PyDictMethods, PyList, PyTuple};
-use pyo3::{pyfunction, Bound, IntoPyObjectExt, PyAny, PyResult, Python};
+use pyo3::{pyfunction, Borrowed, Bound, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python};
 use std::collections::{BTreeMap, HashMap};
 
-fn step_to_pyobj<'py>(py: Python<'py>, step: &Step) -> PyResult<Bound<'py, PyAny>> {
-    let indices = step.indices();
-    Ok(if indices.len() == 1 {
-        indices[0].into_bound_py_any(py)?
-    } else {
-        PyTuple::new(py, indices)?.into_bound_py_any(py)?
-    })
+impl<'a, 'py> IntoPyObject<'py> for &'a Step {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let indices = self.indices();
+        Ok(if indices.len() == 1 {
+            indices[0].into_pyobject(py)?.into_any()
+        } else {
+            PyTuple::new(py, indices)?.into_bound_py_any(py)?
+        })
+    }
 }
+
+// fn step_to_pyobj<'py>(py: Python<'py>, step: &Step) -> PyResult<Bound<'py, PyAny>> {
+//     let indices = step.indices();
+//     Ok(if indices.len() == 1 {
+//         indices[0].into_bound_py_any(py)?
+//     } else {
+//         PyTuple::new(py, indices)?.into_bound_py_any(py)?
+//     })
+// }
 
 #[pyfunction]
 pub(crate) fn parse_bool_steps<'py>(
@@ -21,7 +36,7 @@ pub(crate) fn parse_bool_steps<'py>(
     let (steps, named) = super::super::parsers::steps::parse_bool_steps(input)?;
     let mut result = PyDict::new(py);
     for (step, value) in steps {
-        let s = step_to_pyobj(py, &step)?;
+        let s = step.into_pyobject(py)?.into_any();
         result.set_item(s.clone(), value.into_bound_py_any(py)?)?;
         objs.insert(step, s);
     }
@@ -30,7 +45,7 @@ pub(crate) fn parse_bool_steps<'py>(
         py,
         named.into_iter().map(|step| {
             objs.remove(&step)
-                .unwrap_or_else(|| step_to_pyobj(py, &step).unwrap())
+                .unwrap_or_else(|| step.into_pyobject(py).unwrap())
         }),
     );
 
