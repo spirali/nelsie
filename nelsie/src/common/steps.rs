@@ -1,10 +1,10 @@
 use itertools::Itertools;
+use pyo3::exceptions::PyException;
+use pyo3::types::{PyAnyMethods, PyTuple};
+use pyo3::{Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python};
 use smallvec::{smallvec, SmallVec};
 use std::cmp::{Ordering, Reverse};
 use std::fmt::{Debug, Display, Formatter};
-use pyo3::{Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python};
-use pyo3::exceptions::PyException;
-use pyo3::types::{PyAnyMethods, PyTuple};
 
 pub(crate) type StepIndex = u32;
 
@@ -14,7 +14,6 @@ pub(crate) struct Step {
 }
 
 impl Step {
-
     pub fn new(indices: SmallVec<[StepIndex; 2]>) -> Self {
         Step { indices }
     }
@@ -38,7 +37,6 @@ impl Step {
             indices: indices.into(),
         }
     }
-
 
     pub fn indices(&self) -> &[StepIndex] {
         &self.indices
@@ -120,5 +118,10 @@ impl<'py> FromPyObject<'py> for Step {
 }
 
 pub(crate) fn bool_at_step(steps: &[(Step, bool)], step: &Step) -> bool {
-    steps.iter().filter(|(s, _)| s <= &step).max_by(|(a, _), (b, _)| a.cmp(b)).map(|(_, v)| *v).unwrap_or(false)
+    steps
+        .iter()
+        .filter(|(s, _)| s <= &step)
+        .max_by(|(a, _), (b, _)| a.cmp(b))
+        .map(|(_, v)| *v)
+        .unwrap_or(false)
 }

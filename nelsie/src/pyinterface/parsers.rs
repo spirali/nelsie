@@ -1,8 +1,11 @@
 use crate::common::steps::Step;
-use pyo3::types::{PyAnyMethods, PyDict, PyDictMethods, PyList, PyTuple};
-use pyo3::{pyfunction, Borrowed, Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python};
-use std::collections::{BTreeMap, HashMap};
 use pyo3::exceptions::PyException;
+use pyo3::types::{PyAnyMethods, PyDict, PyDictMethods, PyList, PyTuple};
+use pyo3::{
+    pyfunction, Borrowed, Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr,
+    PyResult, Python,
+};
+use std::collections::{BTreeMap, HashMap};
 
 // fn step_to_pyobj<'py>(py: Python<'py>, step: &Step) -> PyResult<Bound<'py, PyAny>> {
 //     let indices = step.indices();

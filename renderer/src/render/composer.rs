@@ -357,7 +357,12 @@ pub(crate) trait Composer: Sync + Send {
         canvas: Canvas,
         content_map: &ContentMap,
     ) -> crate::Result<()>;
-    fn preprocess_content(&self, resources: &Resources, content_id: ContentId, content: &Content) -> crate::Result<()> {
+    fn preprocess_content(
+        &self,
+        resources: &Resources,
+        content_id: ContentId,
+        content: &Content,
+    ) -> crate::Result<()> {
         Ok(())
     }
 

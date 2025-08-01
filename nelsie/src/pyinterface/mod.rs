@@ -7,13 +7,13 @@ mod rendering;
 mod resources;
 mod text;
 
+use crate::pyinterface::image::LoadedImage;
 use crate::pyinterface::parsers::parse_bool_steps;
 use crate::pyinterface::resources::Resources;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::types::{PyFloat, PyInt};
 use pyo3::PyTypeInfo;
-use crate::pyinterface::image::LoadedImage;
 
 #[pymodule]
 fn nelsie(m: &Bound<'_, PyModule>) -> PyResult<()> {

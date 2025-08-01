@@ -32,13 +32,14 @@ impl InMemorySvgImage {
 
     pub fn as_string(&self) -> String {
         let mut s = Vec::<u8>::new();
-        self.0.write_with_config(
-            &mut s,
-            xmltree::EmitterConfig {
-                write_document_declaration: false,
-                ..Default::default()
-            },
-        )
+        self.0
+            .write_with_config(
+                &mut s,
+                xmltree::EmitterConfig {
+                    write_document_declaration: false,
+                    ..Default::default()
+                },
+            )
             .unwrap();
         String::from_utf8(s).unwrap()
     }
