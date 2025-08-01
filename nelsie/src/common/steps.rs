@@ -14,11 +14,11 @@ pub(crate) struct Step {
 }
 
 impl Step {
-    
+
     pub fn new(indices: SmallVec<[StepIndex; 2]>) -> Self {
         Step { indices }
     }
-    
+
     pub fn from_int(index: StepIndex) -> Step {
         Step {
             indices: smallvec![index],
@@ -119,6 +119,6 @@ impl<'py> FromPyObject<'py> for Step {
     }
 }
 
-pub(crate) fn bool_at_step(steps: Vec<(Step, bool)>, step: Step) -> bool {
+pub(crate) fn bool_at_step(steps: &[(Step, bool)], step: &Step) -> bool {
     steps.iter().filter(|(s, _)| s <= &step).max_by(|(a, _), (b, _)| a.cmp(b)).map(|(_, v)| *v).unwrap_or(false)
 }

@@ -8,7 +8,8 @@ use resvg::usvg::{roxmltree, Error};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
 use itertools::Itertools;
-use crate::parsers::steps::{parse_bool_steps, parse_steps_from_label, Step};
+use crate::common::steps::{bool_at_step, Step};
+use crate::parsers::steps::{parse_bool_steps};
 
 #[pyclass(frozen)]
 pub(crate) struct LoadedImage {
@@ -37,12 +38,8 @@ impl LoadedImage {
                     width: self.width,
                     height: self.height,
                     image_data: PyImageData::SvgImage(layers.iter().filter_map(|layer| {
-                        if layer.steps.is_none_ore(|steps|) {
-
-                        } else {
-                            None
-                        }
-                    })).collect(),
+                        layer.steps.as_ref().is_none_or(|steps| bool_at_step(&steps, &step)).then(|| Some(layer.data.clone()))
+                    }).collect()),
                 })
             }
         }
