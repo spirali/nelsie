@@ -39,7 +39,8 @@ class BoxBuilderMixin:
             m_top: Sv[LengthAuto] = 0,
             m_bottom: Sv[LengthAuto] = 0,
     ):
-        box = Box(x=x, y=y, z_level=z_level, show=show, active=active, width=width, height=height, bg_color=bg_color, row=row, reverse=reverse
+        box = Box(x=x, y=y, z_level=z_level, show=show, active=active, width=width, height=height, bg_color=bg_color,
+                  row=row, reverse=reverse
                   , p_left=p_left, p_right=p_right, p_top=p_top, p_bottom=p_bottom, m_left=m_left, m_right=m_right
                   , m_top=m_top, m_bottom=m_bottom)
         self.add(box)
@@ -166,8 +167,8 @@ class Box(BoxBuilderMixin):
     def add(self, box: "Box"):
         self._children.append(box)
 
-    def traverse_tree(self, shared_data):
+    def traverse_tree(self, shared_data, steps):
         for child in self._children:
-            child.traverse_tree(shared_data)
+            child.traverse_tree(shared_data, steps)
         if self._content is not None:
-            self._content.traverse_tree(shared_data)
+            self._content.traverse_tree(shared_data, steps)

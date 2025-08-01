@@ -48,37 +48,13 @@ impl Canvas {
                     draw_item_to_pdf(&mut pdf_writer, item);
                 }
                 CanvasItem::Content { rect, content_id } => {
-                    if let Some(rf) = content_to_ref.get(content_id) {
-                        pdf_writer.put_x_object(*rf, rect.clone());
-                    } else {
-                        let content = content_map.get(content_id).unwrap();
-                        match content.body() {
-                            ContentBody::Text((text, is_shared)) => {
-                                assert!(!is_shared);
-                                let (width, height) = content.size();
-                                pdf_writer.content.save_state();
-                                pdf_writer.content.transform([
-                                    rect.width / width,
-                                    0.0,
-                                    0.0,
-                                    rect.height / height,
-                                    rect.x,
-                                    rect.y,
-                                ]);
-                                for path in text.paths() {
-                                    path_to_pdf(&mut pdf_writer, path)
-                                }
-                                pdf_writer.content.restore_state();
-                            }
-                            ContentBody::BinImage(_) => {
-                                unreachable!()
-                            }
-                            ContentBody::SvgImage(_) => {
-                                
-                            }
-                        }
-                    }
-                    //}
+                    content_into_pdf(
+                        &mut pdf_writer,
+                        content_map,
+                        content_to_ref,
+                        rect,
+                        *content_id,
+                    );
                 }
             }
             /*                CanvasItem::PngImage { rect, data } | CanvasItem::JpegImage { rect, data } => {
@@ -164,6 +140,58 @@ impl Canvas {
         }
         stream.finish();
         Ok(pdf_writer.chunk)
+    }
+}
+
+fn content_into_pdf(
+    pdf_writer: &mut PdfWriter,
+    content_map: &ContentMap,
+    content_to_ref: &HashMap<ContentId, Ref>,
+    rect: &Rectangle,
+    content_id: ContentId,
+) {
+    if let Some(rf) = content_to_ref.get(&content_id) {
+        pdf_writer.put_x_object(*rf, rect.clone());
+    } else {
+        let content = content_map.get(&content_id).unwrap();
+        match content.body() {
+            ContentBody::Text((text, is_shared)) => {
+                assert!(!is_shared);
+                let (width, height) = content.size();
+                pdf_writer.content.save_state();
+                pdf_writer.content.transform([
+                    rect.width / width,
+                    0.0,
+                    0.0,
+                    rect.height / height,
+                    rect.x,
+                    rect.y,
+                ]);
+                for path in text.paths() {
+                    path_to_pdf(pdf_writer, path)
+                }
+                pdf_writer.content.restore_state();
+            }
+            ContentBody::BinImage(_) | ContentBody::SvgImage(_) => {
+                unreachable!()
+            }
+            ContentBody::Composition(items) => {
+                let (width, height) = content.size();
+                pdf_writer.content.save_state();
+                pdf_writer.content.transform([
+                    rect.width / width,
+                    0.0,
+                    0.0,
+                    rect.height / height,
+                    rect.x,
+                    rect.y,
+                ]);
+                for (r, c_id) in items {
+                    content_into_pdf(pdf_writer, content_map, content_to_ref, r, *c_id);
+                }
+                pdf_writer.content.restore_state();
+            }
+        }
     }
 }
 

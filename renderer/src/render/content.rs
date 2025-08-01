@@ -1,5 +1,5 @@
 use crate::render::text::RenderedText;
-use crate::{ContentId, InMemoryBinImage, InMemorySvgImage};
+use crate::{ContentId, InMemoryBinImage, InMemorySvgImage, Rectangle};
 use std::collections::HashMap;
 
 pub(crate) type ContentMap = HashMap<ContentId, Content>;
@@ -33,4 +33,5 @@ pub(crate) enum ContentBody {
     Text((RenderedText, bool)),
     BinImage(InMemoryBinImage),
     SvgImage(InMemorySvgImage),
+    Composition(Vec<(Rectangle, ContentId)>),
 }

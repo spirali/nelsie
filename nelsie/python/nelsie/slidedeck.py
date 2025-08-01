@@ -22,9 +22,9 @@ class Slide(BoxBuilderMixin):
     def add(self, box: Box):
         self.children.append(box)
 
-    def traverse_tree(self, shared_data):
+    def traverse_tree(self, shared_data, steps: set[Step]):
         for child in self.children:
-            child.traverse_tree(shared_data)
+            child.traverse_tree(shared_data, steps)
 
 
 class SlideDeck:
@@ -144,8 +144,8 @@ class SlideDeck:
         shared_data = {}
         raw_pages = []
         for slide in self.slides:
-            slide.traverse_tree(shared_data)
             steps = set(slide.init_steps)
+            slide.traverse_tree(shared_data, steps)
             extract_steps(slide, steps)
             for step in sorted(steps):
                 if isinstance(step, int):

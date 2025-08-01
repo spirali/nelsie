@@ -7,7 +7,10 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page, Rectangle, Register, Text};
+use renderer::{
+    Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page,
+    Rectangle, Register, Text,
+};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -161,24 +164,47 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
         .content
         .map(|content| -> PyResult<_> {
             Ok(match content {
-                NodeContent::Text(text) => register.register_text(text.try_into()?),
+                NodeContent::Text(text) => Some(register.register_text(text.try_into()?)),
                 NodeContent::Image(image) => {
                     let image = image.get();
                     match &image.image_data {
-                        PyImageData::BinImage(img) => {
-                            register.register_bin_image(img.clone(), image.width, image.height)
-                        }
+                        PyImageData::BinImage(img) => Some(register.register_bin_image(
+                            img.clone(),
+                            image.width,
+                            image.height,
+                        )),
                         PyImageData::SvgImage(img) => {
-                            let items: Vec<_> = img.iter().map(|layer| {
-                                (Rectangle::new(0.0, 0.0, image.width, image.height), register.register_svg_image(layer.clone(), image.width, image.height))
-                            }).collect();
-                            todo!()
+                            let items: Vec<_> = img
+                                .iter()
+                                .map(|layer| {
+                                    (
+                                        Rectangle::new(0.0, 0.0, image.width, image.height),
+                                        register.register_svg_image(
+                                            layer.clone(),
+                                            image.width,
+                                            image.height,
+                                        ),
+                                    )
+                                })
+                                .collect();
+                            if items.is_empty() {
+                                None
+                            } else if items.len() == 1 {
+                                Some(items[0].1)
+                            } else {
+                                Some(register.register_composition(
+                                    image.width,
+                                    image.height,
+                                    items,
+                                ))
+                            }
                         }
                     }
                 }
             })
         })
-        .transpose()?;
+        .transpose()?
+        .flatten();
     Ok(Node {
         node_id,
         width: node.width.map(|x| x.0),

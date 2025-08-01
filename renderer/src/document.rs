@@ -10,7 +10,7 @@ use crate::render::text::{RenderedText, TextContext, render_text};
 use crate::resources::Resources;
 use crate::text::Text;
 use crate::utils::fileutils::ensure_directory;
-use crate::{Color, InMemoryBinImage, InMemorySvgImage, NodeId, Page};
+use crate::{Color, InMemoryBinImage, InMemorySvgImage, NodeId, Page, Rectangle};
 use itertools::Itertools;
 use miniz_oxide::deflate::CompressionLevel;
 use parley::{FontContext, LayoutContext};
@@ -26,6 +26,7 @@ pub struct Register {
     texts: HashMap<Text, (ContentId, u32)>,
     bin_images: HashMap<InMemoryBinImage, (ContentId, f32, f32)>,
     svg_images: HashMap<InMemorySvgImage, (ContentId, usize, f32, f32)>,
+    compositions: Vec<(ContentId, f32, f32, Vec<(Rectangle, ContentId)>)>,
 }
 
 impl Register {
@@ -36,6 +37,7 @@ impl Register {
             texts: HashMap::new(),
             bin_images: HashMap::new(),
             svg_images: HashMap::new(),
+            compositions: Vec::new(),
         }
     }
 
@@ -78,6 +80,17 @@ impl Register {
             .or_insert_with(|| (self.content_id_counter.bump(), 0, width, height));
         entry.1 += 1;
         entry.0
+    }
+
+    pub fn register_composition(
+        &mut self,
+        width: f32,
+        height: f32,
+        items: Vec<(Rectangle, ContentId)>,
+    ) -> ContentId {
+        let content_id = self.content_id_counter.bump();
+        self.compositions.push((content_id, width, height, items));
+        content_id
     }
 }
 
@@ -177,7 +190,18 @@ impl Document {
             );
             let texts = texts?;
             let images = images?;
-            let content_map: HashMap<_, _> = texts.into_iter().chain(images.into_iter()).collect();
+            let content_map: HashMap<_, _> = texts
+                .into_iter()
+                .chain(images.into_iter())
+                .chain(self.register.compositions.iter().map(
+                    |(content_id, width, height, items)| {
+                        (
+                            *content_id,
+                            Content::new(*width, *height, ContentBody::Composition(items.clone())),
+                        )
+                    },
+                ))
+                .collect();
 
             composer.preprocessing_finished();
 

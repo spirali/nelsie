@@ -4,7 +4,7 @@ use crate::render::draw::DrawItem;
 use crate::render::svgpath::{svg_ellipse, svg_path, svg_rect};
 use crate::render::text::RenderedText;
 use crate::utils::sxml::SimpleXmlWriter;
-use crate::{InMemoryBinImage, Rectangle};
+use crate::{ContentId, InMemoryBinImage, Rectangle};
 use std::io::Write;
 
 impl Canvas {
@@ -35,24 +35,7 @@ impl Canvas {
                 } => render_svg_image_into_svg(&mut writer, data.as_str(), &rect, *width, *height),*/
                 /*CanvasItem::Text { text, x, y } => render_text_into_svg(&mut writer, &text, x, y),*/
                 CanvasItem::Content { rect, content_id } => {
-                    let content = content_map.get(content_id).unwrap();
-                    match content.body() {
-                        ContentBody::Text((text, _is_shared)) => {
-                            let (width, height) = content.size();
-                            render_text_into_svg(&mut writer, text, rect, width, height);
-                        }
-                        ContentBody::BinImage(image) => {
-                            let (format, data) = match image {
-                                InMemoryBinImage::Png(data) => ("png", data),
-                                InMemoryBinImage::Jpeg(data) => ("jpeg", data),
-                            };
-                            write_raster_image_to_svg(rect, format, data, &mut writer);
-                        }
-                        ContentBody::SvgImage(image) => {
-                            let (width, height) = content.size();
-                            render_svg_image_into_svg(&mut writer, &image.as_string(), rect, width, height);
-                        }
-                    }
+                    render_content_to_svg(&mut writer, content_map, &rect, *content_id);
                 }
                 CanvasItem::DrawItem(item) => write_draw_item_to_svg(&mut writer, item),
                 /*CanvasItem::Video { rect, video } => {
@@ -157,4 +140,36 @@ fn render_svg_image_into_svg(
     write_g_transform(writer, rect, width, height);
     writer.text_raw(data);
     writer.end("g");
+}
+
+fn render_content_to_svg(
+    writer: &mut SimpleXmlWriter,
+    content_map: &ContentMap,
+    rect: &Rectangle,
+    content_id: ContentId,
+) {
+    let content = content_map.get(&content_id).unwrap();
+    let (width, height) = content.size();
+    match content.body() {
+        ContentBody::Text((text, _is_shared)) => {
+            render_text_into_svg(writer, text, rect, width, height);
+        }
+        ContentBody::BinImage(image) => {
+            let (format, data) = match image {
+                InMemoryBinImage::Png(data) => ("png", data),
+                InMemoryBinImage::Jpeg(data) => ("jpeg", data),
+            };
+            write_raster_image_to_svg(rect, format, data, writer);
+        }
+        ContentBody::SvgImage(image) => {
+            render_svg_image_into_svg(writer, &image.as_string(), rect, width, height);
+        }
+        ContentBody::Composition(items) => {
+            write_g_transform(writer, rect, width, height);
+            for (rect, content_id) in items {
+                render_content_to_svg(writer, content_map, rect, *content_id);
+            }
+            writer.end("g")
+        }
+    }
 }

@@ -1,8 +1,8 @@
+use crate::common::steps::Step;
 use itertools::Itertools;
 use smallvec::{smallvec, SmallVec};
 use std::cmp::{Ordering, Reverse};
 use std::fmt::{Debug, Display, Formatter};
-use crate::common::steps::Step;
 
 pub fn parse_step(input: &str) -> crate::Result<(Step, bool, bool)> {
     let (input, exact) = input
@@ -22,7 +22,7 @@ pub fn parse_step(input: &str) -> crate::Result<(Step, bool, bool)> {
             Ok(v)
         })
         .collect::<crate::Result<_>>()?;
-    Ok((Step { indices }, exact, silent))
+    Ok((Step::new(indices), exact, silent))
 }
 
 pub fn parse_bool_steps(input: &str) -> crate::Result<(Vec<(Step, bool)>, Vec<Step>)> {

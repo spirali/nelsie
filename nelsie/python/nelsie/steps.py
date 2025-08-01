@@ -3,6 +3,10 @@ from typing import TypeVar, Generic, Sequence
 from nelsie.utils import check_is_bool
 from . import nelsie as nelsie_rs
 
+from . import nelsie as nelsie_rs
+
+LoadedImage = nelsie_rs.LoadedImage
+
 T = TypeVar("T")
 
 Step = int | tuple[int]
@@ -103,12 +107,14 @@ def sn_apply(obj, apply_fn):
     if obj is not None:
         apply_fn(obj)
 
+
 def sn_map(obj, map_fn):
     if isinstance(obj, InSteps):
         obj.map(map_fn)
     if obj is not None:
         return map_fn(obj)
     return None
+
 
 def get_step(obj: Sn[T], step: Step, default_value: T | None = None) -> T:
     if isinstance(obj, InSteps):

@@ -23,5 +23,5 @@ class TextContent:
             syntax_theme=get_step(self.syntax_theme, step),
         )
 
-    def traverse_tree(self, shared_data):
+    def traverse_tree(self, shared_data, steps):
         pass
