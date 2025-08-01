@@ -2,84 +2,7 @@ use itertools::Itertools;
 use smallvec::{smallvec, SmallVec};
 use std::cmp::{Ordering, Reverse};
 use std::fmt::{Debug, Display, Formatter};
-
-pub(crate) type StepIndex = u32;
-
-#[derive(Eq, PartialEq, Clone, Default)]
-pub(crate) struct Step {
-    indices: SmallVec<[StepIndex; 2]>,
-}
-
-impl Step {
-    pub fn from_int(index: StepIndex) -> Step {
-        Step {
-            indices: smallvec![index],
-        }
-    }
-
-    pub fn from_slice(indices: &[StepIndex]) -> Step {
-        assert!(!indices.is_empty());
-        Step {
-            indices: indices.into(),
-        }
-    }
-
-    pub fn from_vec(indices: Vec<StepIndex>) -> Step {
-        assert!(!indices.is_empty());
-        Step {
-            indices: indices.into(),
-        }
-    }
-
-
-    pub fn indices(&self) -> &[StepIndex] {
-        &self.indices
-    }
-
-    pub fn next(&mut self) {
-        *self.indices.last_mut().unwrap() += 1;
-    }
-
-    pub fn first_substep(&mut self) {
-        self.indices.push(0);
-    }
-}
-
-impl Display for Step {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        for (i, v) in self.indices.iter().enumerate() {
-            if i > 0 {
-                write!(f, ".")?;
-            }
-            write!(f, "{}", v)?;
-        }
-        Ok(())
-    }
-}
-
-impl Debug for Step {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        Display::fmt(self, f)
-    }
-}
-
-impl PartialOrd<Self> for Step {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for Step {
-    fn cmp(&self, other: &Self) -> Ordering {
-        for (a, b) in self.indices.iter().zip(&other.indices) {
-            match a.cmp(b) {
-                Ordering::Equal => continue,
-                x => return x,
-            }
-        }
-        self.indices.len().cmp(&other.indices.len())
-    }
-}
+use crate::common::steps::Step;
 
 pub fn parse_step(input: &str) -> crate::Result<(Step, bool, bool)> {
     let (input, exact) = input
@@ -93,7 +16,7 @@ pub fn parse_step(input: &str) -> crate::Result<(Step, bool, bool)> {
     let indices = input
         .split(".")
         .map(|s| {
-            let v: StepIndex = s
+            let v: u32 = s
                 .parse()
                 .map_err(|_| crate::Error::Parsing("Invalid step definition".to_string()))?;
             Ok(v)
@@ -159,13 +82,3 @@ pub fn parse_bool_steps(input: &str) -> crate::Result<(Vec<(Step, bool)>, Vec<St
     named.sort_unstable();
     Ok((result, named))
 }
-
-
-pub(crate) fn parse_steps_from_label(
-    value: &str
-) -> Option<(Vec<(Step, bool)>, Vec<Step>)> {
-    value
-        .rsplit_once("**")
-        .and_then(|(_, b)| parse_bool_steps(b).ok())
-}
-
