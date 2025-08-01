@@ -1,16 +1,13 @@
 use crate::parsers::length::parse_string_length;
 use crate::pyinterface::common::PyColor;
-use crate::pyinterface::image::{PyImage, PyImageData, PyImageFormat};
+use crate::pyinterface::image::{LoadedImage, PyImage, PyImageData, PyImageFormat};
 use crate::pyinterface::text::PyTextContent;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{
-    Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page, Register,
-    Text,
-};
+use renderer::{Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page, Rectangle, Register, Text};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -172,7 +169,10 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
                             register.register_bin_image(img.clone(), image.width, image.height)
                         }
                         PyImageData::SvgImage(img) => {
-                            register.register_svg_image(img.clone(), image.width, image.height)
+                            let items: Vec<_> = img.iter().map(|layer| {
+                                (Rectangle::new(0.0, 0.0, image.width, image.height), register.register_svg_image(layer.clone(), image.width, image.height))
+                            }).collect();
+                            todo!()
                         }
                     }
                 }

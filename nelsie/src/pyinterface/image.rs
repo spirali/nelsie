@@ -8,29 +8,70 @@ use resvg::usvg::{roxmltree, Error};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
 use itertools::Itertools;
-use crate::parsers::steps::{parse_steps_from_label, Step};
+use crate::parsers::steps::{parse_bool_steps, parse_steps_from_label, Step};
+
+#[pyclass(frozen)]
+pub(crate) struct LoadedImage {
+    pub(crate) width: f32,
+    pub(crate) height: f32,
+    pub(crate) image_data: LoadedImageData,
+    pub(crate) named_steps: Vec<Step>,
+}
+
+#[pymethods]
+impl LoadedImage {
+    fn named_steps<'py>(&self, py: Python<'py>) -> PyResult<Vec<Bound<'py, PyAny>>> {
+        self.named_steps.iter().map(|s| s.into_pyobject(py)).collect::<Result<Vec<_>, _>>()
+    }
+    fn at_step<'py>(&self, step: Step) -> PyResult<PyImage> {
+        match &self.image_data {
+            LoadedImageData::BinImage(data) => {
+                Ok(PyImage {
+                    width: self.width,
+                    height: self.height,
+                    image_data: PyImageData::BinImage(data.clone()),
+                })
+            }
+            LoadedImageData::SvgImage(layers) => {
+                Ok(PyImage {
+                    width: self.width,
+                    height: self.height,
+                    image_data: PyImageData::SvgImage(layers.iter().filter_map(|layer| {
+                        if layer.steps.is_none_ore(|steps|) {
+
+                        } else {
+                            None
+                        }
+                    })).collect(),
+                })
+            }
+        }
+    }
+}
 
 #[pyclass(frozen)]
 pub(crate) struct PyImage {
     pub(crate) width: f32,
     pub(crate) height: f32,
     pub(crate) image_data: PyImageData,
-    pub(crate) named_steps: Vec<Step>,
 }
 
-#[pymethods]
-impl PyImage {
-    fn named_steps<'py>(&self, py: Python<'py>) -> PyResult<Vec<Bound<'py, PyAny>>> {
-        self.named_steps.iter().map(|s| s.into_pyobject(py)).collect::<Result<Vec<_>, _>>()
-    }
+struct SvgLayer {
+    steps: Option<Vec<(Step, bool)>>,
+    data: InMemorySvgImage,
+}
+
+pub enum LoadedImageData {
+    BinImage(InMemoryBinImage),
+    SvgImage(Vec<SvgLayer>),
 }
 
 pub enum PyImageData {
     BinImage(InMemoryBinImage),
-    SvgImage(InMemorySvgImage),
+    SvgImage(Vec<InMemorySvgImage>),
 }
 
-fn create_png(data: Vec<u8>) -> PyResult<PyImage> {
+fn create_png(data: Vec<u8>) -> PyResult<LoadedImage> {
     let format = imagesize::image_type(data.as_slice())
         .map_err(|_| PyValueError::new_err("Invalid image format"))?;
     if imagesize::ImageType::Png != format {
@@ -38,15 +79,15 @@ fn create_png(data: Vec<u8>) -> PyResult<PyImage> {
     }
     let size = imagesize::blob_size(data.as_slice())
         .map_err(|_| PyValueError::new_err("Invalid image format"))?;
-    Ok(PyImage {
+    Ok(LoadedImage {
         width: size.width as f32,
         height: size.height as f32,
-        image_data: PyImageData::BinImage(InMemoryBinImage::new_png(Arc::new(data))),
+        image_data: LoadedImageData::BinImage(InMemoryBinImage::new_png(Arc::new(data))),
         named_steps: Vec::new(),
     })
 }
 
-fn create_jpeg(data: Vec<u8>) -> PyResult<PyImage> {
+fn create_jpeg(data: Vec<u8>) -> PyResult<LoadedImage> {
     let format = imagesize::image_type(data.as_slice())
         .map_err(|_| PyValueError::new_err("Invalid image format"))?;
     if imagesize::ImageType::Jpeg != format {
@@ -54,15 +95,15 @@ fn create_jpeg(data: Vec<u8>) -> PyResult<PyImage> {
     }
     let size = imagesize::blob_size(data.as_slice())
         .map_err(|_| PyValueError::new_err("Invalid image format"))?;
-    Ok(PyImage {
+    Ok(LoadedImage {
         width: size.width as f32,
         height: size.height as f32,
-        image_data: PyImageData::BinImage(InMemoryBinImage::new_jpeg(Arc::new(data))),
+        image_data: LoadedImageData::BinImage(InMemoryBinImage::new_jpeg(Arc::new(data))),
         named_steps: Vec::new(),
     })
 }
 
-fn create_svg(s: String) -> PyResult<PyImage> {
+fn create_svg(s: String) -> PyResult<LoadedImage> {
     let xml_opt = roxmltree::ParsingOptions {
         allow_dtd: true,
         ..Default::default()
@@ -74,24 +115,38 @@ fn create_svg(s: String) -> PyResult<PyImage> {
     let usvg_tree = resvg::usvg::Tree::from_xmltree(&doc, &options)
         .map_err(|_| PyException::new_err("Could not parse SVG file"))?;
     let size = usvg_tree.size();
-    let tree = xmltree::Element::parse(s.as_bytes()).unwrap();
+    let mut tree = xmltree::Element::parse(s.as_bytes()).unwrap();
 
-    let mut steps = BTreeSet::new();
-    for node in doc.descendants() {
-        if let Some(label) =
-            node.attribute(("http://www.inkscape.org/namespaces/inkscape", "label"))
-        {
-            if let Some((_, named_steps)) = parse_steps_from_label(label) {
-                steps.extend(named_steps);
-            }
+    // let mut steps = BTreeSet::new();
+    // for node in doc.descendants() {
+    //     if let Some(label) =
+    //         node.attribute(("http://www.inkscape.org/namespaces/inkscape", "label"))
+    //     {
+    //         if let Some((_, named_steps)) = parse_steps_from_label(label) {
+    //             steps.extend(named_steps);
+    //         }
+    //     }
+    // }
+    // let named_steps = steps.into_iter().collect_vec();
+
+    let mut result = Vec::new();
+    let mut named_steps = BTreeSet::new();
+    loop {
+        if let Some(cut) = split_tree(&mut tree)? {
+            result.push(SvgLayer { steps: None, data: InMemorySvgImage::new(Arc::new(cut.before))});
+            result.push(SvgLayer { steps: Some(cut.steps), data:InMemorySvgImage::new(Arc::new(cut.stepped_tree))});
+            named_steps.extend(cut.named_steps);
+        } else {
+            result.push(SvgLayer { steps: None, data: InMemorySvgImage::new(Arc::new(tree))});
+            break
         }
     }
-    let named_steps = steps.into_iter().collect_vec();
-    Ok(PyImage {
+
+    Ok(LoadedImage {
         width: size.width(),
         height: size.height(),
-        image_data: PyImageData::SvgImage(InMemorySvgImage::new(Arc::new(tree))),
-        named_steps,
+        image_data: LoadedImageData::SvgImage(result),
+        named_steps: named_steps.into_iter().collect_vec(),
     })
 }
 
@@ -99,7 +154,7 @@ fn create_svg(s: String) -> PyResult<PyImage> {
 pub(crate) fn create_mem_image<'py>(
     data: &Bound<'py, PyAny>,
     image_format: PyImageFormat,
-) -> PyResult<PyImage> {
+) -> PyResult<LoadedImage> {
     match image_format {
         PyImageFormat::Png => {
             let data: Vec<u8> = data.extract()?;
@@ -120,7 +175,7 @@ pub(crate) fn create_mem_image<'py>(
 }
 
 #[pyfunction]
-pub(crate) fn load_image<'py>(path: &str) -> PyResult<PyImage> {
+pub(crate) fn load_image<'py>(path: &str) -> PyResult<LoadedImage> {
     let image_format = if let Some(ext) = path.rsplit_once('.').map(|(_, s)| s.to_ascii_lowercase())
     {
         match ext.as_str() {
@@ -181,15 +236,51 @@ impl<'py> FromPyObject<'py> for PyImageFormat {
     }
 }
 
-// fn crawl_svg_for_steps(nodes: &mut Vec<xmltree::XMLNode>, stack: &mut XMLNode::) {
-//     for node in nodes(|node| match node {
-//         xmltree::XMLNode::Element(element) => {
-//             if element.attributes.get("label").is_some_and(|v| v.contains("**")) {
-//                 return true;
-//             }
-//             crawl_svg_for_steps(&mut element.children, stack);
-//             false
-//         }
-//         _ => true,
-//     })
-// }
+struct Cut {
+    before: xmltree::Element,
+    stepped_tree: xmltree::Element,
+    steps: Vec<(Step, bool)>,
+    named_steps: Vec<Step>
+}
+
+fn split_tree(element: &mut xmltree::Element) -> crate::Result<Option<Cut>> {
+    for (i, node) in element.children.iter_mut().enumerate() {
+        match node {
+            xmltree::XMLNode::Element(e) => {
+                if let Some(step_def) = e.attributes.get("label").and_then(|v| v.rsplit_once("**").map(|x| x.1)) {
+                    let (steps, named_steps) = parse_bool_steps(step_def)?;
+                    element.attributes.remove("label");
+                    let mut children = std::mem::take(&mut element.children);
+                    let mut e1 = element.clone();
+                    let mut e2 = element.clone();
+                    element.children = children.split_off(i + 1);
+                    e2.children = vec![children.pop().unwrap()];
+                    e1.children = children;
+                    return Ok(Some(Cut {
+                        before: e1,
+                        stepped_tree: e2,
+                        steps,
+                        named_steps
+                    }))
+                }
+                if let Some(cut) = split_tree(e)? {
+                    let mut children = std::mem::take(&mut element.children);
+                    let mut e1 = element.clone();
+                    let mut e2 = element.clone();
+                    element.children = children.split_off(i + 1);
+                    e2.children = vec![xmltree::XMLNode::Element(cut.stepped_tree)];
+                    e1.children = children;
+                    e1.children.push(xmltree::XMLNode::Element(cut.before));
+                    return Ok(Some(Cut {
+                        before: e1,
+                        stepped_tree: e2,
+                        steps: cut.steps,
+                        named_steps: cut.named_steps
+                    }))
+                }
+            }
+            _ => {}
+        }
+    }
+    Ok(None)
+}

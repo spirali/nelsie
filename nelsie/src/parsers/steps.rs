@@ -11,20 +11,26 @@ pub(crate) struct Step {
 }
 
 impl Step {
-    #[cfg(test)]
     pub fn from_int(index: StepIndex) -> Step {
         Step {
             indices: smallvec![index],
         }
     }
 
-    #[cfg(test)]
     pub fn from_slice(indices: &[StepIndex]) -> Step {
         assert!(!indices.is_empty());
         Step {
             indices: indices.into(),
         }
     }
+
+    pub fn from_vec(indices: Vec<StepIndex>) -> Step {
+        assert!(!indices.is_empty());
+        Step {
+            indices: indices.into(),
+        }
+    }
+
 
     pub fn indices(&self) -> &[StepIndex] {
         &self.indices
@@ -162,3 +168,4 @@ pub(crate) fn parse_steps_from_label(
         .rsplit_once("**")
         .and_then(|(_, b)| parse_bool_steps(b).ok())
 }
+

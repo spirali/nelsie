@@ -1,7 +1,8 @@
 use crate::parsers::steps::Step;
-use pyo3::types::{PyDict, PyDictMethods, PyList, PyTuple};
-use pyo3::{pyfunction, Borrowed, Bound, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python};
+use pyo3::types::{PyAnyMethods, PyDict, PyDictMethods, PyList, PyTuple};
+use pyo3::{pyfunction, Borrowed, Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python};
 use std::collections::{BTreeMap, HashMap};
+use pyo3::exceptions::PyException;
 
 impl<'a, 'py> IntoPyObject<'py> for &'a Step {
     type Target = PyAny;
@@ -17,6 +18,22 @@ impl<'a, 'py> IntoPyObject<'py> for &'a Step {
         })
     }
 }
+
+impl<'py> FromPyObject<'py> for Step {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        if let Ok(v) = ob.extract::<u32>() {
+            return Ok(Step::from_int(v));
+        }
+        if let Ok(v) = ob.extract::<Vec<u32>>() {
+            if v.is_empty() {
+                return Err(PyException::new_err("Step cannot be an empty sequence"));
+            }
+            return Ok(Step::from_vec(v));
+        }
+        Err(PyException::new_err("Invalid step definition"))
+    }
+}
+
 
 // fn step_to_pyobj<'py>(py: Python<'py>, step: &Step) -> PyResult<Bound<'py, PyAny>> {
 //     let indices = step.indices();
