@@ -2,7 +2,7 @@ use crate::pyinterface::common::PyColor;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::types::PyAnyMethods;
 use pyo3::{Bound, FromPyObject, PyAny, PyErr, PyResult};
-use renderer::{FontStretch, Text, TextAlign, TextStyle};
+use renderer::{FontStretch, SyntaxHighlightSettings, Text, TextAlign, TextStyle};
 use std::sync::Arc;
 use strict_num::PositiveF32;
 
@@ -104,6 +104,8 @@ pub(crate) struct PyTextContent {
     pub(crate) text: String,
     pub(crate) style: PyTextStyle,
     pub(crate) align: PyTextAlign,
+    pub(crate) syntax_language: Option<String>,
+    pub(crate) syntax_theme: Option<String>,
 }
 
 impl TryFrom<PyTextContent> for Text {
@@ -111,12 +113,20 @@ impl TryFrom<PyTextContent> for Text {
 
     fn try_from(value: PyTextContent) -> Result<Self, Self::Error> {
         let style = value.style.try_into()?;
-        Ok(Text {
+        let syntax_highlight = if let (Some(language), Some(theme)) = (value.syntax_language, value.syntax_theme) {
+            Some(SyntaxHighlightSettings {
+                language,
+                theme
+            })
+        } else {
+            None
+    };
+    Ok(Text {
             text: value.text,
             style,
             styling: None,
             text_align: value.align.into(),
-            syntax_highlight: None,
+            syntax_highlight,
         })
     }
 }

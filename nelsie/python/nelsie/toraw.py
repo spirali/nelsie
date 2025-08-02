@@ -38,6 +38,8 @@ class RawBox:
 class ToRawContext:
     text_style: TextStyle
     code_style: TextStyle
+    code_theme: str
+    code_language: str | None
     shared_data: dict[int, bytes]
     z_level: int = 0
 
@@ -48,8 +50,10 @@ class ToRawContext:
         return ToRawContext(
             text_style=merge_in_step(self.text_style, box._text_style, step),
             code_style=merge_in_step(self.code_style, box._code_style, step),
+            code_theme=self.code_theme,
+            code_language=self.code_language,
             shared_data=self.shared_data,
-            z_level=z_level
+            z_level=z_level,
         )
 
 
@@ -96,18 +100,22 @@ class Document:
         self.pages = pages
         self.resources = resources
 
-    def render(self, path: str | None, format: Literal["pdf", "png", "svg"] = "pdf", compression_level: int = 1,
-               n_threads: int | None = None):
-        nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level,
-                         n_threads)
+    def render(
+        self,
+        path: str | None,
+        format: Literal["pdf", "png", "svg"] = "pdf",
+        compression_level: int = 1,
+        n_threads: int | None = None,
+    ):
+        nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level, n_threads)
 
 
 def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[int, bytes]) -> RawPage:
     width = get_step(slide.width, step, deck.width)
     height = get_step(slide.height, step, deck.height)
-    text_style = merge_in_step(deck.text_style, slide.text_style, step)
-    code_style = merge_in_step(deck.code_style, slide.code_style, step)
-    ctx = ToRawContext(text_style, code_style, shared_data)
+    text_style = merge_in_step(deck._text_style, slide._text_style, step)
+    code_style = merge_in_step(deck._code_style, slide._code_style, step)
+    ctx = ToRawContext(text_style, code_style, deck.default_code_theme, deck.default_code_language, shared_data)
     root = RawBox(
         x=None,
         y=None,

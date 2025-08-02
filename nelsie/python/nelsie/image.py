@@ -13,7 +13,8 @@ known_formats = ("png", "svg", "jpeg", "ora")
 
 
 class RawImage:
-    """ Dummy type for nelsie.image.RawImage"""
+    """Dummy type for nelsie.image.RawImage"""
+
     pass
 
 

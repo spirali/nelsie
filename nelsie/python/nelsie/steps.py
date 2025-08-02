@@ -32,7 +32,6 @@ def step_lte(a, b):
 
 
 class InSteps(Generic[T]):
-
     def __init__(self, init_values: dict[Step, T] | Sequence[T] | None = None, named_steps=None):
         if init_values is None:
             self.values = {}
@@ -140,7 +139,7 @@ def extract_steps(obj, out: set[Step]):
     if isinstance(obj, dict):
         for o in obj.values():
             extract_steps(o, out)
-    elif hasattr(obj, '__dict__'):
+    elif hasattr(obj, "__dict__"):
         for o in obj.__dict__.values():
             extract_steps(o, out)
 

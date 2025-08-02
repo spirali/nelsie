@@ -21,7 +21,7 @@ pub use node::{ContentId, Node, NodeChild};
 pub use page::Page;
 pub use rectangle::Rectangle;
 pub use resources::Resources;
-pub use text::{FontStretch, Text, TextAlign, TextStyle};
+pub use text::{FontStretch, Text, TextAlign, TextStyle, SyntaxHighlightSettings};
 pub use types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId};
 
 pub type Result<T> = std::result::Result<T, Error>;

@@ -5,7 +5,7 @@ from nelsie import TextStyle
 
 @check(n_slides=2)
 def test_code_rust_syntax_highlight(deck):
-    deck.update_style("code", TextStyle(size=12))
+    deck.code_style = TextStyle(size=12)
     slide = deck.new_slide(width=300, height=150)
     slide.code(
         """

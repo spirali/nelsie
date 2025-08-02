@@ -5,8 +5,19 @@ from nelsie.steps import BoolStepDef
 
 from .image import PathOrImageData, ImageContent, check_image_path_or_data, normalize_image_path
 from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps, sn_map
-from .basictypes import Position, Size, check_position, check_size, TextAlign, check_text_align, IntOrFloat, Length, \
-    LengthAuto, check_length, check_length_auto
+from .basictypes import (
+    Position,
+    Size,
+    check_position,
+    check_size,
+    TextAlign,
+    check_text_align,
+    IntOrFloat,
+    Length,
+    LengthAuto,
+    check_length,
+    check_length_auto,
+)
 from .nelsie import check_color
 from .text import TextContent
 from .textstyle import TextStyle, merge_in_step, check_is_text_style
@@ -14,54 +25,98 @@ from .utils import check_is_str, check_is_bool, check_is_int, check_is_int_or_fl
 
 
 class BoxBuilderMixin:
+
     def add(self, box: "Box"):
         raise NotImplementedError
 
     def box(
-            self,
-            *,
-            x: Sn[Position] = None,
-            y: Sn[Position] = None,
-            z_level: Sn[int] = None,
-            show: BoolStepDef = True,
-            active: BoolStepDef = True,
-            width: Sn[Size] = None,
-            height: Sn[Size] = None,
-            bg_color: Sn[str] = None,
-            row: Sv[bool] = False,
-            reverse: Sv[bool] = False,
-            p_left: Sv[Length] = 0,
-            p_right: Sv[Length] = 0,
-            p_top: Sv[Length] = 0,
-            p_bottom: Sv[Length] = 0,
-            m_left: Sv[LengthAuto] = 0,
-            m_right: Sv[LengthAuto] = 0,
-            m_top: Sv[LengthAuto] = 0,
-            m_bottom: Sv[LengthAuto] = 0,
+        self,
+        *,
+        x: Sn[Position] = None,
+        y: Sn[Position] = None,
+        z_level: Sn[int] = None,
+        show: BoolStepDef = True,
+        active: BoolStepDef = True,
+        width: Sn[Size] = None,
+        height: Sn[Size] = None,
+        bg_color: Sn[str] = None,
+        row: Sv[bool] = False,
+        reverse: Sv[bool] = False,
+        p_left: Sv[Length] = 0,
+        p_right: Sv[Length] = 0,
+        p_top: Sv[Length] = 0,
+        p_bottom: Sv[Length] = 0,
+        m_left: Sv[LengthAuto] = 0,
+        m_right: Sv[LengthAuto] = 0,
+        m_top: Sv[LengthAuto] = 0,
+        m_bottom: Sv[LengthAuto] = 0,
     ):
-        box = Box(x=x, y=y, z_level=z_level, show=show, active=active, width=width, height=height, bg_color=bg_color,
-                  row=row, reverse=reverse
-                  , p_left=p_left, p_right=p_right, p_top=p_top, p_bottom=p_bottom, m_left=m_left, m_right=m_right
-                  , m_top=m_top, m_bottom=m_bottom)
+        box = Box(
+            x=x,
+            y=y,
+            z_level=z_level,
+            show=show,
+            active=active,
+            width=width,
+            height=height,
+            bg_color=bg_color,
+            row=row,
+            reverse=reverse,
+            p_left=p_left,
+            p_right=p_right,
+            p_top=p_top,
+            p_bottom=p_bottom,
+            m_left=m_left,
+            m_right=m_right,
+            m_top=m_top,
+            m_bottom=m_bottom,
+        )
         self.add(box)
         return box
 
-    def text(self, text: Sv[str], style: Sn[TextStyle] = None, align: Sv[TextAlign] = "start", strip: bool = True,
-             **box_args):
+    def text(
+        self,
+        text: Sv[str],
+        style: Sn[TextStyle] = None,
+        *,
+        align: Sv[TextAlign] = "start",
+        strip: bool = True,
+        **box_args,
+    ):
         if strip and isinstance(text, str):
             text = text.strip()
         sv_check(text, check_is_str)
         sv_check(align, check_text_align)
         sn_check(style, check_is_text_style)
         box = self.box(**box_args)
-        box._content = TextContent(text, style, align, None, None)
+        box._content = TextContent(text, style, align, False, None, None)
         return box
 
-    def image(self, path_or_data: Sn[PathOrImageData],
-              *,
-              enable_steps: Sv[bool] = True,
-              shift_steps: Sv[int] = 0,
-              **box_args):
+    def code(
+        self,
+        text: Sv[str],
+        language: Sn[str] = None,
+        style: Sn[TextStyle] = None,
+        *,
+        align: Sv[TextAlign] = "start",
+        strip: bool = True,
+        theme: Sn[str] = None,
+        **box_args,
+    ):
+        if strip and isinstance(text, str):
+            text = text.strip()
+        sv_check(text, check_is_str)
+        sv_check(align, check_text_align)
+        sn_check(style, check_is_text_style)
+        sn_check(language, check_is_str)
+        sn_check(theme, check_is_str)
+        box = self.box(**box_args)
+        box._content = TextContent(text, style, align, True, language, theme)
+        return box
+
+    def image(
+        self, path_or_data: Sn[PathOrImageData], *, enable_steps: Sv[bool] = True, shift_steps: Sv[int] = 0, **box_args
+    ):
         sn_check(path_or_data, check_image_path_or_data)
         sv_check(enable_steps, check_is_bool)
         sv_check(shift_steps, check_is_int)
@@ -73,26 +128,26 @@ class BoxBuilderMixin:
 
 class Box(BoxBuilderMixin):
     def __init__(
-            self,
-            *,
-            x: Sn[Position] = None,
-            y: Sn[Position] = None,
-            show: BoolStepDef = True,
-            active: BoolStepDef = True,
-            z_level: Sn[int] = None,
-            width: Sn[Size] = None,
-            height: Sn[Size] = None,
-            bg_color: Sn[str] = None,
-            row: Sv[bool] = False,
-            reverse: Sv[bool] = False,
-            p_left: Sv[Length] = 0,
-            p_right: Sv[Length] = 0,
-            p_top: Sv[Length] = 0,
-            p_bottom: Sv[Length] = 0,
-            m_left: Sv[LengthAuto] = 0,
-            m_right: Sv[LengthAuto] = 0,
-            m_top: Sv[LengthAuto] = 0,
-            m_bottom: Sv[LengthAuto] = 0,
+        self,
+        *,
+        x: Sn[Position] = None,
+        y: Sn[Position] = None,
+        show: BoolStepDef = True,
+        active: BoolStepDef = True,
+        z_level: Sn[int] = None,
+        width: Sn[Size] = None,
+        height: Sn[Size] = None,
+        bg_color: Sn[str] = None,
+        row: Sv[bool] = False,
+        reverse: Sv[bool] = False,
+        p_left: Sv[Length] = 0,
+        p_right: Sv[Length] = 0,
+        p_top: Sv[Length] = 0,
+        p_bottom: Sv[Length] = 0,
+        m_left: Sv[LengthAuto] = 0,
+        m_right: Sv[LengthAuto] = 0,
+        m_top: Sv[LengthAuto] = 0,
+        m_bottom: Sv[LengthAuto] = 0,
     ):
         sn_check(x, check_position)
         sn_check(y, check_position)
