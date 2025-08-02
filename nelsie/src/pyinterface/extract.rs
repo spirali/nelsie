@@ -7,10 +7,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{
-    Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page,
-    Rectangle, Register, Text,
-};
+use renderer::{Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page, Rectangle, Register, Resources, Text};
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
@@ -157,14 +154,25 @@ fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2
     })
 }
 
-fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
+fn check_font_or_fail(font: &str, resources: &mut Resources) -> PyResult<()> {
+    if !resources.check_font(font) {
+        return Err(PyValueError::new_err(format!("Font '{font}' not found.")));
+    }
+    Ok(())
+}
+
+fn obj_to_node(obj: Bound<PyAny>, register: &mut Register, resources: &mut Resources) -> PyResult<Node> {
     let node_id = register.new_node_id();
     let node: PyNode = obj.extract()?;
     let content = node
         .content
         .map(|content| -> PyResult<_> {
             Ok(match content {
-                NodeContent::Text(text) => Some(register.register_text(text.try_into()?)),
+                NodeContent::Text(text) => {
+                    let text: Text = text.try_into()?;
+                    text.style.font.as_ref().map(|f| check_font_or_fail(&f, resources)).transpose()?;
+                    Some(register.register_text(text))
+                },
                 NodeContent::Image(image) => {
                     let image = image.get();
                     match &image.image_data {
@@ -251,16 +259,16 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
             .try_iter()?
             .map(|child| {
                 let child = child?;
-                Ok(NodeChild::Node(obj_to_node(child, register)?))
+                Ok(NodeChild::Node(obj_to_node(child, register, resources)?))
             })
             .collect::<PyResult<Vec<NodeChild>>>()?,
     })
 }
 
-pub fn obj_to_page(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Page> {
+pub fn obj_to_page(obj: Bound<PyAny>, register: &mut Register, resources: &mut Resources) -> PyResult<Page> {
     let py_page: PyPage = obj.extract()?;
     Ok(Page::new(
-        obj_to_node(py_page.root, register)?,
+        obj_to_node(py_page.root, register, resources)?,
         py_page.width,
         py_page.height,
         py_page.bg_color.into(),

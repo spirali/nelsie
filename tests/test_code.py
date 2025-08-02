@@ -5,7 +5,7 @@ from nelsie import TextStyle
 
 @check(n_slides=2)
 def test_code_rust_syntax_highlight(deck):
-    deck.code_style = TextStyle(size=12)
+    deck.code_style = deck.code_style.merge(TextStyle(size=12))
     slide = deck.new_slide(width=300, height=150)
     slide.code(
         """
@@ -37,7 +37,7 @@ fn main() {
 
 @check()
 def test_code_syntax_highlight_with_styles(deck):
-    deck.update_style("code", TextStyle(size=12))
+    deck.code_style = deck.code_style.merge(TextStyle(size=12))
     deck.set_style("s1", TextStyle(size=16, color="green"))
     deck.set_style("s2", TextStyle(size=16, color="orange"))
     slide = deck.new_slide(width=300, height=210)

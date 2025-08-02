@@ -118,8 +118,10 @@ def sn_map(obj, map_fn):
 def get_step(obj: Sn[T], step: Step, default_value: T | None = None) -> T:
     if isinstance(obj, InSteps):
         return obj.get_step(step, default_value)
-    return obj
-
+    if obj is None:
+        return default_value
+    else:
+        return obj
 
 containers = (list, tuple, set)
 

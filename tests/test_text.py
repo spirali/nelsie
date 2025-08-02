@@ -19,9 +19,10 @@ def test_text_update():
 
 
 def test_text_invalid_font(deck):
-    s1 = TextStyle(font_family="Nonexisting font")
+    s1 = TextStyle(font="Nonexisting font")
+    deck.new_slide().text("Hello", style=s1)
     with pytest.raises(Exception, match="Font 'Nonexisting font' not found"):
-        deck.new_slide().text("Hello", style=s1)
+        deck.render("out.pdf")
 
 
 @check()

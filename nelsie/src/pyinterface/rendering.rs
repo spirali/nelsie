@@ -15,7 +15,7 @@ use std::sync::Arc;
 #[pyfunction]
 pub(crate) fn render<'py>(
     py: Python<'py>,
-    resources: &Resources,
+    resources: &mut Resources,
     pages: &Bound<'py, PyList>,
     path: Option<&'py str>,
     format: &str,
@@ -25,7 +25,7 @@ pub(crate) fn render<'py>(
     let mut register = Register::new();
     let pages: Vec<_> = pages
         .into_iter()
-        .map(|obj| obj_to_page(obj, &mut register))
+        .map(|obj| obj_to_page(obj, &mut register, &mut resources.resources))
         .collect::<PyResult<Vec<_>>>()?;
     let doc = Document::new(pages, register);
 

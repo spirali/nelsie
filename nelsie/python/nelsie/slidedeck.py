@@ -99,7 +99,7 @@ class SlideDeck:
     @text_style.setter
     def text_style(self, value: TextStyle):
         check_is_text_style(value)
-        self._text_style = value
+        self._text_style = DEFAULT_TEXT_STYLE.merge(value)
 
     @property
     def code_style(self):

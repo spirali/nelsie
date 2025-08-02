@@ -115,22 +115,12 @@ impl Resources {
         Ok(())
     }
 
-    /*pub fn check_font(&mut self, family_name: &str) -> crate::Result<FontData> {
-        if GenericFamily::parse(family_name).is_some()
+    pub fn check_font(&mut self, family_name: &str) -> bool {
+        GenericFamily::parse(family_name).is_some()
             || self
             .font_context
             .collection
             .family_id(family_name)
             .is_some()
-        {
-            Ok(FontData {
-                family_name: family_name.to_string(),
-            })
-        } else {
-            Err(NelsieError::Generic(format!(
-                "Font '{}' not found.",
-                family_name
-            )))
-        }
-    }*/
+    }
 }

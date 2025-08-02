@@ -47,9 +47,18 @@ class ToRawContext:
         z_level = get_step(box._z_level, step)
         if z_level is None:
             z_level = self.z_level
+
+        text_style = self.text_style
+        if box._text_style is not None:
+           text_style = merge_in_step(text_style, box._text_style, step)
+
+        code_style = self.code_style
+        if box._code_style is not None:
+            text_style = merge_in_step(code_style, box._code_style, step)
+
         return ToRawContext(
-            text_style=merge_in_step(self.text_style, box._text_style, step),
-            code_style=merge_in_step(self.code_style, box._code_style, step),
+            text_style=text_style,
+            code_style=code_style,
             code_theme=self.code_theme,
             code_language=self.code_language,
             shared_data=self.shared_data,
@@ -111,8 +120,8 @@ class Document:
 
 
 def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[int, bytes]) -> RawPage:
-    width = get_step(slide.width, step, deck.width)
-    height = get_step(slide.height, step, deck.height)
+    width = get_step(slide.width, step)
+    height = get_step(slide.height, step)
     text_style = merge_in_step(deck._text_style, slide._text_style, step)
     code_style = merge_in_step(deck._code_style, slide._code_style, step)
     ctx = ToRawContext(text_style, code_style, deck.default_code_theme, deck.default_code_language, shared_data)

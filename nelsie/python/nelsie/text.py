@@ -20,8 +20,6 @@ class TextContent:
         else:
             style = self.style
         style = merge_in_step(ctx.text_style, style, step)
-        print(ctx.code_theme, self.syntax_theme)
-        print(get_step(self.syntax_theme, step, ctx.code_theme))
         return TextContent(
             text=get_step(self.text, step),
             style=style,
