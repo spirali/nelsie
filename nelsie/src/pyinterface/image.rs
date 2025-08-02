@@ -12,6 +12,7 @@ use renderer::{InMemoryBinImage, InMemorySvgImage};
 use resvg::usvg::{roxmltree, Error};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
+use xmltree::XMLNode;
 
 #[pyclass(frozen)]
 pub(crate) struct LoadedImage {
@@ -36,10 +37,15 @@ impl LoadedImage {
                 height: self.height,
                 image_data: PyImageData::BinImage(data.clone()),
             }),
-            LoadedImageData::SvgImage(layers) => Ok(PyImage {
+            LoadedImageData::SvgImage(data) => Ok(PyImage {
                 width: self.width,
                 height: self.height,
-                image_data: PyImageData::SvgImage(
+                image_data: PyImageData::SvgImage(data.clone()),
+            }),
+            LoadedImageData::FragmentedSvgImage(layers) => Ok(PyImage {
+                width: self.width,
+                height: self.height,
+                image_data: PyImageData::FragmentedSvgImage(
                     layers
                         .iter()
                         .filter_map(|layer| {
@@ -70,12 +76,14 @@ struct SvgLayer {
 
 pub enum LoadedImageData {
     BinImage(InMemoryBinImage),
-    SvgImage(Vec<SvgLayer>),
+    SvgImage(InMemorySvgImage),
+    FragmentedSvgImage(Vec<SvgLayer>),
 }
 
 pub enum PyImageData {
     BinImage(InMemoryBinImage),
-    SvgImage(Vec<InMemorySvgImage>),
+    SvgImage(InMemorySvgImage),
+    FragmentedSvgImage(Vec<InMemorySvgImage>),
 }
 
 fn create_png(data: Vec<u8>) -> PyResult<LoadedImage> {
@@ -110,7 +118,24 @@ fn create_jpeg(data: Vec<u8>) -> PyResult<LoadedImage> {
     })
 }
 
-fn create_svg(s: String) -> PyResult<LoadedImage> {
+fn check_is_non_empty(element: &xmltree::Element) -> bool {
+    match element.name.as_str() {
+        "g" | "svg" => {}
+        "namedview" | "defs" => return false,
+        _ => return true,
+    }
+    element.children.iter().any(|node| {
+       match node {
+           XMLNode::Element(e) => {
+               check_is_non_empty(e)
+           }
+           XMLNode::Comment(_) => false,
+           XMLNode::CData(_) | XMLNode::Text(_) | XMLNode::ProcessingInstruction(_, _) => true,
+       }
+    })
+}
+
+fn create_svg(s: String, enable_steps: bool) -> PyResult<LoadedImage> {
     let xml_opt = roxmltree::ParsingOptions {
         allow_dtd: true,
         ..Default::default()
@@ -136,40 +161,57 @@ fn create_svg(s: String) -> PyResult<LoadedImage> {
     // }
     // let named_steps = steps.into_iter().collect_vec();
 
-    let mut result = Vec::new();
-    let mut named_steps = BTreeSet::new();
-    loop {
-        if let Some(cut) = split_tree(&mut tree)? {
-            result.push(SvgLayer {
-                steps: None,
-                data: InMemorySvgImage::new(Arc::new(cut.before)),
-            });
-            result.push(SvgLayer {
-                steps: Some(cut.steps),
-                data: InMemorySvgImage::new(Arc::new(cut.stepped_tree)),
-            });
-            named_steps.extend(cut.named_steps);
-        } else {
-            result.push(SvgLayer {
-                steps: None,
-                data: InMemorySvgImage::new(Arc::new(tree)),
-            });
-            break;
+    if enable_steps {
+        let mut result = Vec::new();
+        let mut named_steps = BTreeSet::new();
+        loop {
+            if let Some(cut) = split_tree(&mut tree)? {
+                if check_is_non_empty(&cut.before) {
+                    result.push(SvgLayer {
+                        steps: None,
+                        data: InMemorySvgImage::new(Arc::new(cut.before)),
+                    });
+                }
+                if check_is_non_empty(&cut.stepped_tree) {
+                    result.push(SvgLayer {
+                        steps: Some(cut.steps),
+                        data: InMemorySvgImage::new(Arc::new(cut.stepped_tree)),
+                    });
+                }
+                named_steps.extend(cut.named_steps);
+            } else {
+                if check_is_non_empty(&tree) {
+                    result.push(SvgLayer {
+                        steps: None,
+                        data: InMemorySvgImage::new(Arc::new(tree)),
+                    });
+                }
+                break;
+            }
         }
+        Ok(LoadedImage {
+            width: size.width(),
+            height: size.height(),
+            image_data: LoadedImageData::FragmentedSvgImage(result),
+            named_steps: named_steps.into_iter().collect_vec(),
+        })
+    } else {
+        Ok(LoadedImage {
+            width: size.width(),
+            height: size.height(),
+            image_data: LoadedImageData::SvgImage(InMemorySvgImage::new(Arc::new(tree))),
+            named_steps: Vec::new(),
+        })
     }
 
-    Ok(LoadedImage {
-        width: size.width(),
-        height: size.height(),
-        image_data: LoadedImageData::SvgImage(result),
-        named_steps: named_steps.into_iter().collect_vec(),
-    })
+
 }
 
 #[pyfunction]
 pub(crate) fn create_mem_image<'py>(
     data: &Bound<'py, PyAny>,
     image_format: PyImageFormat,
+    enable_steps: bool,
 ) -> PyResult<LoadedImage> {
     match image_format {
         PyImageFormat::Png => {
@@ -185,13 +227,13 @@ pub(crate) fn create_mem_image<'py>(
         }
         PyImageFormat::Svg => {
             let s: String = data.extract()?;
-            create_svg(s)
+            create_svg(s, enable_steps)
         }
     }
 }
 
 #[pyfunction]
-pub(crate) fn load_image<'py>(path: &str) -> PyResult<LoadedImage> {
+pub(crate) fn load_image<'py>(path: &str, enable_steps: bool) -> PyResult<LoadedImage> {
     let image_format = if let Some(ext) = path.rsplit_once('.').map(|(_, s)| s.to_ascii_lowercase())
     {
         match ext.as_str() {
@@ -216,7 +258,7 @@ pub(crate) fn load_image<'py>(path: &str) -> PyResult<LoadedImage> {
             let s = String::from_utf8(data).map_err(|_| {
                 PyException::new_err(format!("File cannot be parsed as UTF-8: {path}"))
             })?;
-            create_svg(s)
+            create_svg(s, enable_steps)
         }
     }
 }

@@ -173,7 +173,12 @@ fn obj_to_node(obj: Bound<PyAny>, register: &mut Register) -> PyResult<Node> {
                             image.width,
                             image.height,
                         )),
-                        PyImageData::SvgImage(img) => {
+                        PyImageData::SvgImage(img) => Some(register.register_svg_image(
+                            img.clone(),
+                            image.width,
+                            image.height,
+                        )),
+                        PyImageData::FragmentedSvgImage(img) => {
                             let items: Vec<_> = img
                                 .iter()
                                 .map(|layer| {

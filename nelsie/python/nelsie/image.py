@@ -46,19 +46,19 @@ def normalize_image_path(path):
     return path
 
 
-def _put_into_shared_data(path_or_data: PathOrImageData | None, shared_data, steps):
+def _put_into_shared_data(path_or_data: PathOrImageData | None, content, shared_data, steps):
     if path_or_data is None:
         return
     check_image_path_or_data(path_or_data)
     if isinstance(path_or_data, str):
-        image = nelsie_rs.load_image(path_or_data)
+        image = nelsie_rs.load_image(path_or_data, content.enable_steps)
         steps.update(image.named_steps())
         shared_data[path_or_data] = image
         return
     data, data_type = path_or_data
     key = (id(data), data_type)
     if key not in shared_data:
-        image = nelsie_rs.create_mem_image(data, data_type)
+        image = nelsie_rs.create_mem_image(data, data_type, content.enable_steps)
         steps.update(image.named_steps())
         shared_data[key] = image
 
@@ -70,7 +70,7 @@ class ImageContent:
     shift_steps: Sv[int]
 
     def traverse_tree(self, shared_data, steps: set[Step]):
-        sn_apply(self.path_or_data, lambda path_or_data: _put_into_shared_data(path_or_data, shared_data, steps))
+        sn_apply(self.path_or_data, lambda path_or_data: _put_into_shared_data(path_or_data, self, shared_data, steps))
 
     def to_raw(self, step: Step, ctx):
         path_or_data = get_step(self.path_or_data, step)
