@@ -14,7 +14,6 @@ use std::collections::HashMap;
 use std::default::Default;
 use std::sync::Arc;
 use svg2pdf::usvg;
-//pub(crate) type PdfImageCache = HashMap<ByAddress<Arc<Vec<u8>>>, (Ref, Ref)>;
 
 impl Canvas {
     pub fn into_pdf_page(
@@ -26,7 +25,6 @@ impl Canvas {
         content_map: &ContentMap,
         content_to_ref: &HashMap<ContentId, Ref>,
     ) -> crate::Result<Chunk> {
-        // First reference get from allocator is already preregistered as page reference
         let mut pdf_writer = PdfWriter::new(ref_allocator);
         pdf_writer.content.save_state();
         let [r, g, b] = self.bg_color.as_f32s();

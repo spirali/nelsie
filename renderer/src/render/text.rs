@@ -26,6 +26,14 @@ impl RenderedText {
     pub fn paths(&self) -> &[DrawPath] {
         &self.paths
     }
+
+    pub fn line_layouts(&self) -> &[Rectangle] {
+        &self.line_rects
+    }
+
+    pub fn intext_rects(&self) -> &HashMap<InlineId, Rectangle> {
+        &self.inline_rects
+    }
 }
 
 pub(crate) struct TextContext {
@@ -89,6 +97,7 @@ pub fn render_text(
         }
         line_rects.push(Rectangle::new(min_x, line_y, max_x - min_x, line_height));
     }
+
     Ok((
         RenderedText {
             paths,
