@@ -39,16 +39,16 @@ class Slide(BoxBuilderMixin):
 
 class SlideDeck:
     def __init__(
-            self,
-            *,
-            width: float = 1024,
-            height: float = 768,
-            bg_color: str = "white",
-            text_style: TextStyle | None = None,
-            code_style: TextStyle = DEFAULT_CODE_STYLE,
-            resources: Resources | None = None,
-            default_code_theme: str = "InspiredGitHub",
-            default_code_language: str | None = None,
+        self,
+        *,
+        width: float = 1024,
+        height: float = 768,
+        bg_color: str = "white",
+        text_style: TextStyle | None = None,
+        code_style: TextStyle = DEFAULT_CODE_STYLE,
+        resources: Resources | None = None,
+        default_code_theme: str = "InspiredGitHub",
+        default_code_language: str | None = None,
     ):
         """
         A top-level class of Nelsie. It represents a set of slides.
@@ -120,12 +120,12 @@ class SlideDeck:
             self._text_styles[name] = old_style.merge(style)
 
     def new_slide(
-            self,
-            width: Sv[float | None] = None,
-            height: Sv[float | None] = None,
-            bg_color: Sv[str | None] = None,
-            init_steps: Iterable[Step] = (1,),
-            name: str = "",
+        self,
+        width: Sv[float | None] = None,
+        height: Sv[float | None] = None,
+        bg_color: Sv[str | None] = None,
+        init_steps: Iterable[Step] = (1,),
+        name: str = "",
     ):
         if width is None:
             width = self.width
@@ -138,18 +138,18 @@ class SlideDeck:
         return slide
 
     def slide(
-            self,
-            *,
-            width: float | None = None,
-            height: float | None = None,
-            bg_color: str | None = None,
-            name: str = "",
-            # debug_steps: bool = False,
-            # debug_layout: bool | str = False,
-            # counters: list[str] | None = None,
-            # parent_slide: tuple[Slide, int] | None = None,
-            init_steps: Iterable[Step] = (1,),
-            ignore: bool = False,
+        self,
+        *,
+        width: float | None = None,
+        height: float | None = None,
+        bg_color: str | None = None,
+        name: str = "",
+        # debug_steps: bool = False,
+        # debug_layout: bool | str = False,
+        # counters: list[str] | None = None,
+        # parent_slide: tuple[Slide, int] | None = None,
+        init_steps: Iterable[Step] = (1,),
+        ignore: bool = False,
     ):
         """
         Decorator for creating new slide.
@@ -202,11 +202,11 @@ class SlideDeck:
         return Document(self.resources, raw_pages)
 
     def render(
-            self,
-            path: str | None,
-            format: Literal["pdf", "png", "svg"] = "pdf",
-            compression_level: int = 1,
-            n_threads: int | None = None,
+        self,
+        path: str | None,
+        format: Literal["pdf", "png", "svg"] = "pdf",
+        compression_level: int = 1,
+        n_threads: int | None = None,
     ):
         doc = self._create_doc()
         return doc.render(path, format, compression_level, n_threads)

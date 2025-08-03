@@ -15,6 +15,7 @@ from . import nelsie as nelsie_rs
 
 @dataclass
 class RawBox:
+    node_id: int
     x: Position
     y: Position
     width: Size
@@ -88,11 +89,17 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
     if box._text_styles is not None:
         ctx = copy(ctx)
         ctx.text_style_stack.append(box._text_styles)
+    z_level = get_step(box._z_level, step)
+    if z_level is not None:
+        ctx = copy(ctx)
+        ctx.z_level = z_level
     if box._content:
         content = box._content.to_raw(step, ctx)
     else:
         content = None
+
     return RawBox(
+        node_id=id(box),
         x=get_step(box._x, step),
         y=get_step(box._y, step),
         show=get_step(box._show, step, False),
@@ -129,11 +136,11 @@ class Document:
         self.resources = resources
 
     def render(
-            self,
-            path: str | None,
-            format: Literal["pdf", "png", "svg"] = "pdf",
-            compression_level: int = 1,
-            n_threads: int | None = None,
+        self,
+        path: str | None,
+        format: Literal["pdf", "png", "svg"] = "pdf",
+        compression_level: int = 1,
+        n_threads: int | None = None,
     ):
         nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level, n_threads)
 
@@ -146,6 +153,7 @@ def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[
         stack.append(slide._text_styles)
     ctx = ToRawContext(stack, deck.default_code_theme, deck.default_code_language, shared_data)
     root = RawBox(
+        node_id=id(slide),
         x=None,
         y=None,
         width=width,

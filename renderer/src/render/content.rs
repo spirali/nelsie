@@ -1,6 +1,7 @@
 use crate::render::text::RenderedText;
 use crate::{ContentId, InMemoryBinImage, InMemorySvgImage, Rectangle};
 use std::collections::HashMap;
+use std::sync::Arc;
 
 pub(crate) type ContentMap = HashMap<ContentId, Content>;
 
@@ -27,10 +28,17 @@ impl Content {
     pub fn body(&self) -> &ContentBody {
         &self.body
     }
+
+    pub fn as_text(&self) -> Option<&Arc<RenderedText>> {
+        match &self.body {
+            ContentBody::Text((text, _)) => Some(text),
+            _ => None,
+        }
+    }
 }
 
 pub(crate) enum ContentBody {
-    Text((RenderedText, bool)),
+    Text((Arc<RenderedText>, bool)),
     BinImage(InMemoryBinImage),
     SvgImage(InMemorySvgImage),
     Composition(Vec<(Rectangle, ContentId)>),

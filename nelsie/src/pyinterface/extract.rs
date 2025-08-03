@@ -1,6 +1,7 @@
 use crate::parsers::length::parse_string_length;
 use crate::pyinterface::common::PyColor;
 use crate::pyinterface::image::{LoadedImage, PyImage, PyImageData, PyImageFormat};
+use crate::pyinterface::layoutexpr::extract_layout_expr;
 use crate::pyinterface::text::PyTextContent;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::PyValueError;
@@ -60,7 +61,7 @@ impl<'py> FromPyObject<'py> for PyLengthOrExpr {
         } else if let Ok(value) = obj.extract::<&str>() {
             LengthOrExpr::Length(parse_string_length(value)?)
         } else {
-            todo!()
+            LengthOrExpr::Expr(extract_layout_expr(obj)?)
         }))
     }
 }
@@ -81,7 +82,7 @@ impl<'py, D: Dimension> FromPyObject<'py> for PyPosition<D> {
                     Length::Fraction { value } => D::parent_size(0.0).add(D::parent_size(value)),
                 })
             } else {
-                todo!()
+                extract_layout_expr(obj)?
             },
             _dim: Default::default(),
         })
@@ -124,6 +125,7 @@ enum NodeContent<'py> {
 
 #[derive(FromPyObject)]
 struct PyNode<'py> {
+    node_id: usize,
     x: Option<PyPosition<DimX>>,
     y: Option<PyPosition<DimY>>,
     show: bool,
@@ -169,7 +171,6 @@ fn obj_to_node(
     register: &mut Register,
     resources: &mut Resources,
 ) -> PyResult<Node> {
-    let node_id = register.new_node_id();
     let node: PyNode = obj.extract()?;
     let content = node
         .content
@@ -230,7 +231,7 @@ fn obj_to_node(
         .transpose()?
         .flatten();
     Ok(Node {
-        node_id,
+        node_id: NodeId::new(node.node_id),
         width: node.width.map(|x| x.0),
         height: node.height.map(|x| x.0),
         show: node.show,

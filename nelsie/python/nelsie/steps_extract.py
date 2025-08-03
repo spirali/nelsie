@@ -7,6 +7,7 @@ from .slidedeck import Slide
 containers = (list, tuple, set)
 known_classes = (TextContent, TextStyle, Slide, Box)
 
+
 def extract_steps(obj, out: set[Step]):
     if obj is None:
         return

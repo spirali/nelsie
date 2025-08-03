@@ -18,7 +18,7 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 pub struct Register {
     node_id_counter: NodeId,
@@ -39,11 +39,6 @@ impl Register {
             svg_images: HashMap::new(),
             compositions: Vec::new(),
         }
-    }
-
-    #[inline]
-    pub fn new_node_id(&mut self) -> NodeId {
-        self.node_id_counter.bump()
     }
 
     pub fn register_text(&mut self, text: Text) -> ContentId {
@@ -146,7 +141,7 @@ impl Document {
                                 let content = Content::new(
                                     width,
                                     height,
-                                    ContentBody::Text((rtext, *count > 1)),
+                                    ContentBody::Text((Arc::new(rtext), *count > 1)),
                                 );
                                 composer.preprocess_content(resources, *content_id, &content)?;
                                 Ok((*content_id, content))

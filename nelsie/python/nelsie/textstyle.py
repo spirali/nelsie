@@ -77,7 +77,9 @@ def merge_in_step(text_style: Sn[TextStyle], other: Sn[TextStyle], step: Step) -
 def check_is_text_style(obj):
     check_is_type(obj, TextStyle)
 
+
 str_or_text_style = (TextStyle, str)
+
 
 def check_is_str_or_text_style(obj):
     check_is_type(obj, str_or_text_style)

@@ -2,6 +2,7 @@ mod check;
 mod common;
 mod extract;
 mod image;
+mod layoutexpr;
 mod parsers;
 mod rendering;
 mod resources;

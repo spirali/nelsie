@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 from copy import copy
 
-
 from .image import PathOrImageData, ImageContent, check_image_path_or_data, normalize_image_path
 from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps, sn_map, BoolStepDef
 from .basictypes import (
@@ -21,6 +20,7 @@ from .nelsie import check_color
 from .text import TextContent
 from .textstyle import TextStyle, merge_in_step, check_is_text_style, check_is_str_or_text_style
 from .utils import check_is_str, check_is_bool, check_is_int, check_is_int_or_float
+from .layoutexpr import LayoutExpr
 
 
 class BoxBuilderMixin:
@@ -170,6 +170,128 @@ class BoxBuilderMixin:
         else:
             raise Exception("Non-primitive style cannot be updated; use set_style instead")
 
+    def x(self, width_fraction: IntOrFloat = 0) -> LayoutExpr:
+        """
+        Get an expression with X coordinate relative to the box.
+        """
+        check_is_int_or_float(width_fraction)
+        node_id = self.get_box().node_id
+        expr = LayoutExpr.x(node_id)
+        if width_fraction == 0:
+            return expr
+        return expr + LayoutExpr.width(node_id, width_fraction)
+
+    def y(self, height_fraction: IntOrFloat = 0) -> LayoutExpr:
+        """
+        Get an expression with Y coordinate relative to the box.
+        """
+        check_is_int_or_float(width_fraction)
+        node_id = self.get_box().node_id
+        expr = LayoutExpr.y(node_id)
+        if height_fraction == 0:
+            return expr
+        return expr + LayoutExpr.height(node_id, height_fraction)
+
+    def width(self, fraction: IntOrFloat = 1.0) -> LayoutExpr:
+        """
+        Get an expression with width of the parent box.
+        """
+        check_is_int_or_float(fraction)
+        node_id = self.get_box().node_id
+        return LayoutExpr.width(node_id, fraction)
+
+    def height(self, fraction: IntOrFloat = 1.0) -> LayoutExpr:
+        """
+        Get an expression with height of the parent box.
+        """
+        check_is_int_or_float(fraction)
+        node_id = self.get_box().node_id
+        return LayoutExpr.height(node_id, fraction)
+
+    def line_x(self, line_idx: int, width_fraction: IntOrFloat = 0) -> LayoutExpr:
+        """
+        Get an expression with X coordinate of a given line of text in the box.
+        """
+        check_is_int_or_float(width_fraction)
+        check_is_int(line_idx)
+        node_id = id(self)
+        expr = LayoutExpr.line_x(node_id, line_idx)
+        if width_fraction == 0:
+            return expr
+        return expr + LayoutExpr.line_width(node_id, line_idx, width_fraction)
+
+    def line_y(self, line_idx: int, height_fraction: IntOrFloat = 0) -> LayoutExpr:
+        """
+        Get an expression with Y coordinate of a given line of text in the box.
+        """
+        check_is_int_or_float(height_fraction)
+        check_is_int(line_idx)
+        node_id = id(self)
+        expr = LayoutExpr.line_y(node_id, line_idx)
+        if height_fraction == 0:
+            return expr
+        return expr + LayoutExpr.line_height(node_id, line_idx, height_fraction)
+
+    def line_width(self, line_idx: int, fraction: IntOrFloat = 1.0) -> LayoutExpr:
+        """
+        Get an expression with a width of a given line of text in the box.
+        """
+        check_is_int_or_float(fraction)
+        check_is_int(line_idx)
+        node_id = id(self)
+        return LayoutExpr.line_width(node_id, line_idx, fraction)
+
+    def line_height(self, line_idx: int, fraction: IntOrFloat = 1.0) -> LayoutExpr:
+        """
+        Get an expression with a height of a given line of text in the box.
+        """
+        check_is_int_or_float(fraction)
+        check_is_int(line_idx)
+        node_id = id(self)
+        return LayoutExpr.line_height(node_id, line_idx, fraction)
+
+    def inline_x(self, anchor_id: int, width_fraction: IntOrFloat = 0) -> LayoutExpr:
+        """
+        Get an expression with X coordinate of a given text anchor in the box.
+        """
+        check_is_int_or_float(width_fraction)
+        check_is_int(anchor_id)
+        node_id = id(self)
+        expr = LayoutExpr.inline_x(node_id, anchor_id)
+        if width_fraction == 0:
+            return expr
+        return expr + LayoutExpr.text_anchor_width(node_id, anchor_id, width_fraction)
+
+    def inline_y(self, anchor_id: int, height_fraction: IntOrFloat = 0) -> LayoutExpr:
+        """
+        Get an expression with Y coordinate of a given text anchor in the box.
+        """
+        check_is_int_or_float(height_fraction)
+        check_is_int(anchor_id)
+        node_id = id(self)
+        expr = LayoutExpr.inline_y(node_id, anchor_id)
+        if height_fraction == 0:
+            return expr
+        return expr + LayoutExpr.text_anchor_height(node_id, anchor_id, height_fraction)
+
+    def inline_width(self, anchor_id: int, fraction: IntOrFloat = 1.0) -> LayoutExpr:
+        """
+        Get an expression with a height of a given text anchor in the box.
+        """
+        check_is_int_or_float(fraction)
+        check_is_int(anchor_id)
+        node_id = id(self)
+        return LayoutExpr.inline_width(node_id, anchor_id, fraction)
+
+    def inline_height(self, anchor_id: int, fraction: IntOrFloat = 1.0) -> LayoutExpr:
+        """
+        Get an expression with a height of a given text anchor in the box.
+        """
+        check_is_int_or_float(fraction)
+        check_is_int(anchor_id)
+        node_id = id(self)
+        return LayoutExpr.inline_height(node_id, anchor_id, fraction)
+
 
 class Box(BoxBuilderMixin):
     def __init__(
@@ -234,6 +356,7 @@ class Box(BoxBuilderMixin):
 
         self._text_styles: dict[str, Sn[TextStyle]] | None = None
 
+    """
     def x(self, x: Sn[Position]):
         check_position(x)
         self._x = x
@@ -262,6 +385,7 @@ class Box(BoxBuilderMixin):
         if bg_color:
             check_color(bg_color)
         self._bg_color = bg_color
+    """
 
     def add(self, box: "Box"):
         self._children.append(box)

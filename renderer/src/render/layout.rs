@@ -14,12 +14,18 @@ pub(crate) struct LayoutData {
     pub(crate) text: Option<Arc<RenderedText>>,
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub(crate) struct ComputedLayout {
     node_layout: HashMap<NodeId, LayoutData>,
 }
 
 impl ComputedLayout {
+    pub fn new(capacity: usize) -> Self {
+        ComputedLayout {
+            node_layout: HashMap::with_capacity(capacity),
+        }
+    }
+
     fn _layout(&self, node_id: NodeId) -> &LayoutData {
         self.node_layout(node_id)
             .unwrap_or_else(|| panic!("Node {node_id:?} not found, ordering not correct?"))
@@ -36,14 +42,20 @@ impl ComputedLayout {
             LayoutExpr::Y { node_id } => self._rect(*node_id).y,
             LayoutExpr::Width { node_id, fraction } => self._rect(*node_id).width * fraction,
             LayoutExpr::Height { node_id, fraction } => self._rect(*node_id).height * fraction,
-            LayoutExpr::Sum { expressions } => {
-                expressions.iter().map(|e| self.eval(e, parent_node)).sum()
+            LayoutExpr::Add { expressions } => {
+                self.eval(&expressions.0, parent_node) + self.eval(&expressions.1, parent_node)
+            }
+            LayoutExpr::Sub { expressions } => {
+                self.eval(&expressions.0, parent_node) - self.eval(&expressions.1, parent_node)
+            }
+            LayoutExpr::Mul { expressions } => {
+                self.eval(&expressions.0, parent_node) * self.eval(&expressions.1, parent_node)
             }
             LayoutExpr::ParentX { shift } => self._rect(parent_node).x + shift,
             LayoutExpr::ParentY { shift } => self._rect(parent_node).y + shift,
             LayoutExpr::ParentWidth { fraction } => self._rect(parent_node).width * fraction,
             LayoutExpr::ParentHeight { fraction } => self._rect(parent_node).height * fraction,
-            /*LayoutExpr::LineX { node_id, line_idx } => {
+            LayoutExpr::LineX { node_id, line_idx } => {
                 let layout = self._layout(*node_id);
                 layout
                     .text
@@ -94,51 +106,50 @@ impl ComputedLayout {
                     })
                     .unwrap_or(0.0)
                     * fraction
-            }*/
-            /*LayoutExpr::InTextAnchorX { node_id, anchor_id } => {
-                let layout = self._layout(*node_id);
-                layout
-                    .text
-                    .as_ref()
-                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.x))
-                    .unwrap_or(0.0)
-                    + layout.rect.x
-            }
-            LayoutExpr::InTextAnchorY { node_id, anchor_id } => {
-                let layout = self._layout(*node_id);
-                layout
-                    .text
-                    .as_ref()
-                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.y))
-                    .unwrap_or(0.0)
-                    + layout.rect.y
-            }
-            LayoutExpr::InTextAnchorWidth {
-                node_id,
-                anchor_id,
-                fraction,
-            } => {
-                let layout = self._layout(*node_id);
-                layout
-                    .text
-                    .as_ref()
-                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.width))
-                    .unwrap_or(0.0)
-                    * fraction
-            }
-            LayoutExpr::InTextAnchorHeight {
-                node_id,
-                anchor_id,
-                fraction,
-            } => {
-                let layout = self._layout(*node_id);
-                layout
-                    .text
-                    .as_ref()
-                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.height))
-                    .unwrap_or(0.0)
-                    * fraction
-            }*/
+            } /*LayoutExpr::InTextAnchorX { node_id, anchor_id } => {
+                  let layout = self._layout(*node_id);
+                  layout
+                      .text
+                      .as_ref()
+                      .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.x))
+                      .unwrap_or(0.0)
+                      + layout.rect.x
+              }
+              LayoutExpr::InTextAnchorY { node_id, anchor_id } => {
+                  let layout = self._layout(*node_id);
+                  layout
+                      .text
+                      .as_ref()
+                      .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.y))
+                      .unwrap_or(0.0)
+                      + layout.rect.y
+              }
+              LayoutExpr::InTextAnchorWidth {
+                  node_id,
+                  anchor_id,
+                  fraction,
+              } => {
+                  let layout = self._layout(*node_id);
+                  layout
+                      .text
+                      .as_ref()
+                      .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.width))
+                      .unwrap_or(0.0)
+                      * fraction
+              }
+              LayoutExpr::InTextAnchorHeight {
+                  node_id,
+                  anchor_id,
+                  fraction,
+              } => {
+                  let layout = self._layout(*node_id);
+                  layout
+                      .text
+                      .as_ref()
+                      .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.height))
+                      .unwrap_or(0.0)
+                      * fraction
+              }*/
         }
     }
 
@@ -250,7 +261,7 @@ fn gather_taffy_layout<'b>(
     parent: Option<&Node>,
     taffy: &tf::TaffyTree,
     tf_node: tf::NodeId,
-    out: &mut BTreeMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>,
+    out: &mut HashMap<NodeId, (Option<NodeId>, &'b Node, Rectangle)>,
 ) {
     let layout_rect = taffy.layout(tf_node).unwrap();
     out.insert(
@@ -276,10 +287,12 @@ fn compute_layout_helper(
     taffy: &mut tf::TaffyTree,
     node: &Node,
     parent: Option<&Node>,
+    node_id_order: &mut Vec<NodeId>,
 ) -> tf::NodeId {
+    node_id_order.push(node.node_id);
     let tf_children: Vec<_> = node
         .child_nodes()
-        .map(|child| compute_layout_helper(render_ctx, taffy, child, Some(node)))
+        .map(|child| compute_layout_helper(render_ctx, taffy, child, Some(node), node_id_order))
         .collect();
 
     let w = node.width.as_ref();
@@ -408,16 +421,19 @@ fn compute_layout_helper(
 pub fn compute_page_layout(render_ctx: &mut RenderContext, page: &Page) -> ComputedLayout {
     let mut taffy = tf::TaffyTree::new();
     taffy.disable_rounding();
-    let tf_node = compute_layout_helper(render_ctx, &mut taffy, &page.node, None);
+    let mut node_id_order = Vec::with_capacity(16);
+    let tf_node =
+        compute_layout_helper(render_ctx, &mut taffy, &page.node, None, &mut node_id_order);
     let size = tf::Size {
         width: tf::AvailableSpace::Definite(page.width),
         height: tf::AvailableSpace::Definite(page.height),
     };
     taffy.compute_layout(tf_node, size).unwrap();
-    let mut node_entries = BTreeMap::new();
+    let mut node_entries = HashMap::with_capacity(node_id_order.len());
     gather_taffy_layout(&page.node, None, &taffy, tf_node, &mut node_entries);
-    let mut result = ComputedLayout::default();
-    for (parent_id, node, rect) in node_entries.values() {
+    let mut result = ComputedLayout::new(node_id_order.len());
+    for node_id in node_id_order {
+        let (parent_id, node, rect) = node_entries.get(&node_id).unwrap();
         let (parent_x, parent_y) = parent_id
             .map(|node_id| {
                 let r = &result.node_layout(node_id).unwrap().rect;
@@ -450,8 +466,12 @@ pub fn compute_page_layout(render_ctx: &mut RenderContext, page: &Page) -> Compu
                         .and_then(|v| v.as_expr().map(|v| result.eval(v, parent_id)))
                         .unwrap_or(rect.height),
                 },
-                //text_layout: text_layouts.remove(&node.node_id),
-                text: None, // todo!(), // config.text_cache.get(node.node_id).cloned(),
+                text: node.content.and_then(|content_id| {
+                    render_ctx
+                        .content_map
+                        .get(&content_id)
+                        .and_then(|c| c.as_text().cloned())
+                }),
             },
         );
     }
