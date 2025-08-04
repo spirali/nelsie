@@ -263,24 +263,24 @@ def test_text_anchor_points(deck):
             align=align,
         )
         slide.box(
-            x=t.text_anchor_x(1),
-            y=t.text_anchor_y(1),
-            width=t.text_anchor_width(1),
-            height=t.text_anchor_height(1),
+            x=t.inline_x(1),
+            y=t.inline_y(1),
+            width=t.inline_width(1),
+            height=t.inline_height(1),
             bg_color="orange",
         )
         slide.box(
-            x=t.text_anchor_x(2),
-            y=t.text_anchor_y(2),
-            width=t.text_anchor_width(2),
-            height=t.text_anchor_height(2),
+            x=t.inline_x(2),
+            y=t.inline_y(2),
+            width=t.inline_width(2),
+            height=t.inline_height(2),
             bg_color="gray",
         )
         slide.box(
-            x=t.text_anchor_x(100),
-            y=t.text_anchor_y(100),
-            width=t.text_anchor_width(100),
-            height=t.text_anchor_height(100),
+            x=t.inline_x(100),
+            y=t.inline_y(100),
+            width=t.inline_width(100),
+            height=t.inline_height(100),
             bg_color="cyan",
         )
 
@@ -323,7 +323,7 @@ def test_text_boxes(deck):
     t = slide.text("Line 1\nL~123{ine} 2!", z_level=1)
 
     t.line_box(1, bg_color="green", z_level=0)
-    t.text_anchor_box(123, bg_color="orange", z_level=0)
+    t.inline_box(123, bg_color="orange", z_level=0)
 
 
 @check()
@@ -336,14 +336,14 @@ def test_text_anchors_space_prefix(deck):
         z_level=2,
         strip=False,
     )
-    t.text_anchor_box(1, bg_color="orange", z_level=1)
+    t.inline_box(1, bg_color="orange", z_level=1)
 
     t = slide.text(
         "Hello ~1{world!}",
         z_level=2,
         strip=False,
     )
-    t.text_anchor_box(1, bg_color="orange", z_level=1)
+    t.inline_box(1, bg_color="orange", z_level=1)
 
 
 @check()
@@ -351,29 +351,22 @@ def test_text_anchors_styled_space_prefix(deck):
     deck.update_style("code", TextStyle(size=22))
     deck.set_style("s1", TextStyle(size=2))
     deck.set_style("s2", TextStyle(size=44))
-    slide = deck.new_slide(width=200, height=100)
-    t = slide.text("""~s1{   }~s2{ }~11{C}""", z_level=2)
-    t.line_box(0, bg_color="gray", z_level=0)
-    t.text_anchor_box(11, bg_color="orange", z_level=1)
+    slide = deck.new_slide(width=200, height=120)
+    t = slide.text("""~s1{   }~s2{ }~11{C}""", z_level=3)
+    t.line_box(0, bg_color="blue", z_level=0)
+    t.inline_box(11, bg_color="orange", z_level=1)
     t = slide.text("""~s1{ }~s2{        }~s1{ }~11{C}""", z_level=2)
     t.line_box(0, bg_color="gray", z_level=0)
-    t.text_anchor_box(11, bg_color="orange", z_level=1)
+    t.inline_box(11, bg_color="orange", z_level=1)
 
 
 @check(n_slides=3)
 def test_text_in_steps(deck):
     slide = deck.new_slide(width=200, height=100)
-    slide.text(InSteps(["one", "two", "three"]))
+    slide.text(StepVal("one").at(2, "two").at(3, "three"))
 
 
-@check(n_slides=3)
-def test_array_text_in_steps(deck):
-    slide = deck.new_slide(width=100, height=30)
-    slide.set_style("default", TextStyle(size=12))
-    slide.text(["Hello ", InSteps(["world", "Nelsie", "user"]), " ", InSteps({2: "!"})])
-
-
-def test_set_generic_families(deck):
+def test_set_generic_families():
     res = new_resources()
     res.set_monospace("DejaVu Sans")
     res.set_sans_serif("DejaVu Sans")

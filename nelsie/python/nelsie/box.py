@@ -292,6 +292,31 @@ class BoxBuilderMixin:
         node_id = id(self)
         return LayoutExpr.inline_height(node_id, anchor_id, fraction)
 
+    def line_box(self, line_idx: int, **box_args):
+        """
+        Creates a new box over a text line in the box
+        """
+        return self.box(
+            x=self.line_x(line_idx),
+            y=self.line_y(line_idx),
+            width=self.line_width(line_idx),
+            height=self.line_height(line_idx),
+            **box_args,
+        )
+
+    def inline_box(self, anchor_id: int, **box_args):
+        """
+        Creates a new box over a inline text anchor in the box
+        """
+
+        return self.box(
+            x=self.inline_x(anchor_id),
+            y=self.inline_y(anchor_id),
+            width=self.inline_width(anchor_id),
+            height=self.inline_height(anchor_id),
+            **box_args,
+        )
+
 
 class Box(BoxBuilderMixin):
     def __init__(
