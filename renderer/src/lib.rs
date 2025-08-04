@@ -22,7 +22,8 @@ pub use page::Page;
 pub use rectangle::Rectangle;
 pub use resources::Resources;
 pub use text::{
-    FontStretch, ParsingChars, SyntaxHighlightSettings, Text, TextAlign, TextStyle, TextStyling,
+    FontStretch, InlineId, ParsingChars, SyntaxHighlightSettings, Text, TextAlign, TextStyle,
+    TextStyling,
 };
 pub use types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId};
 

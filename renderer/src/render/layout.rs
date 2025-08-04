@@ -106,50 +106,57 @@ impl ComputedLayout {
                     })
                     .unwrap_or(0.0)
                     * fraction
-            } /*LayoutExpr::InTextAnchorX { node_id, anchor_id } => {
-                  let layout = self._layout(*node_id);
-                  layout
-                      .text
-                      .as_ref()
-                      .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.x))
-                      .unwrap_or(0.0)
-                      + layout.rect.x
-              }
-              LayoutExpr::InTextAnchorY { node_id, anchor_id } => {
-                  let layout = self._layout(*node_id);
-                  layout
-                      .text
-                      .as_ref()
-                      .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.y))
-                      .unwrap_or(0.0)
-                      + layout.rect.y
-              }
-              LayoutExpr::InTextAnchorWidth {
-                  node_id,
-                  anchor_id,
-                  fraction,
-              } => {
-                  let layout = self._layout(*node_id);
-                  layout
-                      .text
-                      .as_ref()
-                      .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.width))
-                      .unwrap_or(0.0)
-                      * fraction
-              }
-              LayoutExpr::InTextAnchorHeight {
-                  node_id,
-                  anchor_id,
-                  fraction,
-              } => {
-                  let layout = self._layout(*node_id);
-                  layout
-                      .text
-                      .as_ref()
-                      .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.height))
-                      .unwrap_or(0.0)
-                      * fraction
-              }*/
+            }
+            LayoutExpr::InlineX {
+                node_id,
+                inline_id: anchor_id,
+            } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text
+                    .as_ref()
+                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.x))
+                    .unwrap_or(0.0)
+                    + layout.rect.x
+            }
+            LayoutExpr::InlineY {
+                node_id,
+                inline_id: anchor_id,
+            } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text
+                    .as_ref()
+                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.y))
+                    .unwrap_or(0.0)
+                    + layout.rect.y
+            }
+            LayoutExpr::InlineWidth {
+                node_id,
+                inline_id: anchor_id,
+                fraction,
+            } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text
+                    .as_ref()
+                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.width))
+                    .unwrap_or(0.0)
+                    * fraction
+            }
+            LayoutExpr::InlineHeight {
+                node_id,
+                inline_id: anchor_id,
+                fraction,
+            } => {
+                let layout = self._layout(*node_id);
+                layout
+                    .text
+                    .as_ref()
+                    .and_then(|tl| tl.intext_rects().get(anchor_id).map(|a| a.height))
+                    .unwrap_or(0.0)
+                    * fraction
+            }
         }
     }
 

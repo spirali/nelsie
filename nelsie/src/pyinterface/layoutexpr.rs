@@ -2,7 +2,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::pybacked::PyBackedStr;
 use pyo3::types::PyAnyMethods;
 use pyo3::{intern, Bound, FromPyObject, PyAny, PyResult, Python};
-use renderer::{LayoutExpr, NodeId};
+use renderer::{InlineId, LayoutExpr, NodeId};
 
 // #[derive(Debug)]
 // pub(crate) struct PyLayoutExpr(LayoutExpr);
@@ -48,14 +48,14 @@ pub(crate) fn extract_layout_expr(obj: &Bound<PyAny>) -> PyResult<LayoutExpr> {
         "y" => Ok(LayoutExpr::Y {
             node_id: NodeId::new(v0.extract()?),
         }),
-        /*"width" => Ok(LayoutExpr::Width {
-            node_id: NodeId::new(obj.get_item(1)?.extract()?),
-            fraction: obj.get_item(2)?.extract()?,
+        "width" => Ok(LayoutExpr::Width {
+            node_id: NodeId::new(v0.extract()?),
+            fraction: v1.extract()?,
         }),
         "height" => Ok(LayoutExpr::Height {
-            node_id: NodeId::new(obj.get_item(1)?.extract()?),
-            fraction: obj.get_item(2)?.extract()?,
-        }),*/
+            node_id: NodeId::new(v0.extract()?),
+            fraction: v1.extract()?,
+        }),
         "line_x" => Ok(LayoutExpr::LineX {
             node_id: NodeId::new(v0.extract()?),
             line_idx: v1.extract()?,
@@ -74,24 +74,24 @@ pub(crate) fn extract_layout_expr(obj: &Bound<PyAny>) -> PyResult<LayoutExpr> {
             line_idx: v1.extract()?,
             fraction: obj.getattr(arg2)?.extract()?,
         }),
-        /*"anchor_x" => Ok(LayoutExpr::InTextAnchorX {
-            node_id: NodeId::new(obj.get_item(1)?.extract()?),
-            anchor_id: obj.get_item(2)?.extract()?,
+        "inline_x" => Ok(LayoutExpr::InlineX {
+            node_id: NodeId::new(v0.extract()?),
+            inline_id: InlineId::new(v1.extract()?),
         }),
-        "anchor_y" => Ok(LayoutExpr::InTextAnchorY {
-            node_id: NodeId::new(obj.get_item(1)?.extract()?),
-            anchor_id: obj.get_item(2)?.extract()?,
+        "inline_y" => Ok(LayoutExpr::InlineY {
+            node_id: NodeId::new(v0.extract()?),
+            inline_id: InlineId::new(v1.extract()?),
         }),
-        "anchor_width" => Ok(LayoutExpr::InTextAnchorWidth {
-            node_id: NodeId::new(obj.get_item(1)?.extract()?),
-            anchor_id: obj.get_item(2)?.extract()?,
-            fraction: obj.get_item(3)?.extract()?,
+        "inline_width" => Ok(LayoutExpr::InlineWidth {
+            node_id: NodeId::new(v0.extract()?),
+            inline_id: InlineId::new(v1.extract()?),
+            fraction: obj.getattr(arg2)?.extract()?,
         }),
-        "anchor_height" => Ok(LayoutExpr::InTextAnchorHeight {
-            node_id: NodeId::new(obj.get_item(1)?.extract()?),
-            anchor_id: obj.get_item(2)?.extract()?,
-            fraction: obj.get_item(3)?.extract()?,
-        }),*/
+        "inline_height" => Ok(LayoutExpr::InlineHeight {
+            node_id: NodeId::new(v0.extract()?),
+            inline_id: InlineId::new(v1.extract()?),
+            fraction: obj.getattr(arg2)?.extract()?,
+        }),
         _ => Err(PyValueError::new_err("Invalid expression")),
     }
 }

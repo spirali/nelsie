@@ -1,3 +1,5 @@
+use crate::text::InlineId;
+
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub struct NodeId(usize);
 
@@ -131,24 +133,24 @@ pub enum LayoutExpr {
         line_idx: u32,
         fraction: f32,
     },
-    /*    InTextAnchorX {
+    InlineX {
         node_id: NodeId,
-        anchor_id: InTextBoxId,
+        inline_id: InlineId,
     },
-    InTextAnchorY {
+    InlineY {
         node_id: NodeId,
-        anchor_id: InTextBoxId,
+        inline_id: InlineId,
     },
-    InTextAnchorWidth {
+    InlineWidth {
         node_id: NodeId,
-        anchor_id: InTextBoxId,
+        inline_id: InlineId,
         fraction: f32,
     },
-    InTextAnchorHeight {
+    InlineHeight {
         node_id: NodeId,
-        anchor_id: InTextBoxId,
+        inline_id: InlineId,
         fraction: f32,
-    },*/
+    },
     Add {
         expressions: Box<(LayoutExpr, LayoutExpr)>,
     },

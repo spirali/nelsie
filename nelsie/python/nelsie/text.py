@@ -27,8 +27,10 @@ class TextContent:
     syntax_language: Sn[str]
     syntax_theme: Sn[str]
 
-    def to_raw(self, step: Step, ctx) -> RawText:
-        text = self.text
+    def to_raw(self, step: Step, ctx) -> RawText | None:
+        text = get_step(self.text, step)
+        if text is None:
+            return None
         if self.parse_styles:
             style_names = ctx.get_style_names()
             text_styles = {}
