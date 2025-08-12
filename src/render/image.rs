@@ -53,7 +53,7 @@ fn tree_to_svg(tree: &xmltree::Element) -> String {
     String::from_utf8(s).unwrap()
 }
 
-fn crawl_svg_for_step(nodes: &mut Vec<xmltree::XMLNode>, step: &Step) {
+/*fn crawl_svg_for_step(nodes: &mut Vec<xmltree::XMLNode>, step: &Step) {
     nodes.retain_mut(|node| match node {
         xmltree::XMLNode::Element(element) => {
             for (key, value) in &element.attributes {
@@ -85,7 +85,7 @@ fn prepare_svg_tree_for_step(
     crawl_svg_for_step(&mut tree.children, &step);
 
     tree_to_svg(&tree)
-}
+}*/
 
 pub(crate) fn render_image_to_canvas(
     image: &NodeContentImage,

@@ -5,6 +5,7 @@ from conftest import ASSETS_DIR
 IMG_PNG = os.path.join(ASSETS_DIR, "testimg.png")
 IMG_JPEG = os.path.join(ASSETS_DIR, "testimg.jpeg")
 IMG_SVG = os.path.join(ASSETS_DIR, "test.svg")
+IMG_SVG_WITH_DEFS = os.path.join(ASSETS_DIR, "with_defs.svg")
 
 
 @check()
@@ -44,6 +45,12 @@ def test_render_svg_image_steps(deck):
 def test_render_svg_image_no_steps(deck):
     slide = deck.new_slide(width=420, height=400)
     slide.image(IMG_SVG, width="90%", enable_steps=False)
+
+
+@check(n_slides=2)
+def test_render_svg_with_defs(deck):
+    slide = deck.new_slide(width=300, height=300)
+    slide.image(IMG_SVG_WITH_DEFS, width="90%")
 
 
 @check(n_slides=6)
