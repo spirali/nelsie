@@ -145,6 +145,13 @@ fn create_svg(s: String, enable_steps: bool) -> PyResult<LoadedImage> {
     let size = usvg_tree.size();
     let mut tree = xmltree::Element::parse(s.as_bytes()).unwrap();
 
+    let defs = tree
+        .children
+        .extract_if(.., |child| match child {
+            XMLNode::Element(e) if e.name == "defs" => true,
+            _ => false,
+        })
+        .next();
     // let mut steps = BTreeSet::new();
     // for node in doc.descendants() {
     //     if let Some(label) =
@@ -157,31 +164,31 @@ fn create_svg(s: String, enable_steps: bool) -> PyResult<LoadedImage> {
     // }
     // let named_steps = steps.into_iter().collect_vec();
 
+    let add = |mut tree: xmltree::Element,
+               result: &mut Vec<_>,
+               defs: &Option<XMLNode>,
+               steps: Option<Vec<(Step, bool)>>| {
+        if check_is_non_empty(&tree) {
+            if let Some(defs) = defs {
+                tree.children.insert(0, defs.clone());
+            }
+            result.push(SvgLayer {
+                steps,
+                data: InMemorySvgImage::new(Arc::new(tree)),
+            })
+        }
+    };
+
     if enable_steps {
         let mut result = Vec::new();
         let mut named_steps = BTreeSet::new();
         loop {
             if let Some(cut) = split_tree(&mut tree)? {
-                if check_is_non_empty(&cut.before) {
-                    result.push(SvgLayer {
-                        steps: None,
-                        data: InMemorySvgImage::new(Arc::new(cut.before)),
-                    });
-                }
-                if check_is_non_empty(&cut.stepped_tree) {
-                    result.push(SvgLayer {
-                        steps: Some(cut.steps),
-                        data: InMemorySvgImage::new(Arc::new(cut.stepped_tree)),
-                    });
-                }
+                add(cut.before, &mut result, &defs, None);
+                add(cut.stepped_tree, &mut result, &defs, Some(cut.steps));
                 named_steps.extend(cut.named_steps);
             } else {
-                if check_is_non_empty(&tree) {
-                    result.push(SvgLayer {
-                        steps: None,
-                        data: InMemorySvgImage::new(Arc::new(tree)),
-                    });
-                }
+                add(tree, &mut result, &defs, None);
                 break;
             }
         }
