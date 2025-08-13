@@ -21,6 +21,7 @@ pub use node::{ContentId, Node, NodeChild};
 pub use page::Page;
 pub use rectangle::Rectangle;
 pub use resources::Resources;
+pub use shapes::{FillAndStroke, Shape, ShapeRect, Stroke};
 pub use text::{
     FontStretch, InlineId, ParsingChars, SyntaxHighlightSettings, Text, TextAlign, TextStyle,
     TextStyling,

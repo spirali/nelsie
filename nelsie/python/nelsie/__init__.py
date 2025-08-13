@@ -2,7 +2,7 @@ from .resources import Resources
 from .slidedeck import SlideDeck, Slide
 from .box import Box, BoxBuilderMixin
 from .textstyle import FontStretch, TextStyle
-from .shapes import Arrow, Path, Stroke
+from .shapes import Arrow, Path, Stroke, Rect, Point, Oval
 from .steps import StepVal
 
 __all__ = [
@@ -15,6 +15,9 @@ __all__ = [
     "TextStyle",
     "Arrow",
     "Path",
+    "Rect",
+    "Point",
+    "Oval",
     "Stroke",
     "StepVal",
 ]

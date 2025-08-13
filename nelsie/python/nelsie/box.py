@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from copy import copy
+from typing import Union
 
 from .image import PathOrImageData, ImageContent, check_image_path_or_data, normalize_image_path
-from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps, sn_map, BoolStepDef
+from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps, sn_map, BoolStepDef, StepVal, sn_apply
 from .basictypes import (
     Position,
     Size,
@@ -21,10 +22,11 @@ from .text import TextContent
 from .textstyle import TextStyle, merge_in_step, check_is_text_style, check_is_str_or_text_style
 from .utils import check_is_str, check_is_bool, check_is_int, check_is_int_or_float
 from .layoutexpr import LayoutExpr
+from .shapes import Rect, Oval, Path
 
 
 class BoxBuilderMixin:
-    def add(self, box: "Box"):
+    def add(self, box: Union[Path, Rect, Oval, "Box"]):
         raise NotImplementedError
 
     def _set_style(self, name: str, style: Sn[TextStyle]):
@@ -412,14 +414,13 @@ class Box(BoxBuilderMixin):
         self._bg_color = bg_color
     """
 
-    def add(self, box: "Box"):
+    def add(self, box):
         self._children.append(box)
 
     def traverse_tree(self, shared_data, steps):
         for child in self._children:
             child.traverse_tree(shared_data, steps)
-        if self._content is not None:
-            self._content.traverse_tree(shared_data, steps)
+        traverse_children(self._children, shared_data, steps)
 
     def _set_style(self, name: str, style: Sn[TextStyle]):
         if self._text_styles is None:
@@ -430,3 +431,11 @@ class Box(BoxBuilderMixin):
         if self._text_styles is None:
             return None
         return self._text_styles.get(name)
+
+
+def traverse_children(children, shared_data, steps):
+    for child in children:
+        if isinstance(child, Box):
+            child.traverse_tree(shared_data, steps)
+        if isinstance(child, StepVal):
+            sn_apply(child, lambda c: c.traverse_tree(shared_data, steps) if isinstance(c, Box) else None)

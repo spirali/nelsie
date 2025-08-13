@@ -1,10 +1,11 @@
 use crate::render::canvas::Canvas;
+use crate::render::draw::{DrawPath, DrawRect};
 use crate::render::layout::ComputedLayout;
 use crate::types::LayoutExpr;
-use crate::{Color, NodeId};
+use crate::{Color, NodeId, Rectangle};
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Stroke {
+pub struct Stroke {
     pub color: Color,
     pub width: f32,
     pub dash_array: Option<Vec<f32>>,
@@ -12,7 +13,7 @@ pub(crate) struct Stroke {
 }
 
 #[derive(Clone, Debug, PartialEq, Default)]
-pub(crate) struct FillAndStroke {
+pub struct FillAndStroke {
     pub fill_color: Option<Color>,
     pub stroke: Option<Stroke>,
 }
@@ -33,7 +34,60 @@ impl FillAndStroke {
 }
 
 #[derive(Debug)]
-pub(crate) struct Arrow {
+pub struct ShapeRect {
+    pub x1: LayoutExpr,
+    pub y1: LayoutExpr,
+    pub x2: LayoutExpr,
+    pub y2: LayoutExpr,
+    pub z_level: i32,
+    pub fill_and_stroke: FillAndStroke,
+}
+
+impl ShapeRect {
+    pub fn new(
+        x1: LayoutExpr,
+        y1: LayoutExpr,
+        x2: LayoutExpr,
+        y2: LayoutExpr,
+        z_level: i32,
+        fill_and_stroke: FillAndStroke,
+    ) -> Self {
+        ShapeRect {
+            x1,
+            y1,
+            x2,
+            y2,
+            z_level,
+            fill_and_stroke,
+        }
+    }
+
+    pub(crate) fn eval(&self, layout: &ComputedLayout, parent_id: NodeId) -> DrawRect {
+        let x1 = layout.eval(&self.x1, parent_id);
+        let y1 = layout.eval(&self.y1, parent_id);
+        let x2 = layout.eval(&self.x2, parent_id);
+        let y2 = layout.eval(&self.y2, parent_id);
+        DrawRect {
+            rectangle: Rectangle {
+                x: x1,
+                y: y1,
+                width: x2 - x1,
+                height: y2 - y1,
+            },
+            fill_and_stroke: self.fill_and_stroke.clone(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum Shape {
+    Rect(ShapeRect),
+    Oval(ShapeRect),
+    Path(Path),
+}
+
+#[derive(Debug)]
+pub struct Arrow {
     pub size: f32,
     pub angle: f32,
     pub color: Option<Color>,
@@ -42,7 +96,7 @@ pub(crate) struct Arrow {
 }
 
 #[derive(Debug)]
-pub(crate) enum PathPart {
+pub enum PathPart {
     Move {
         x: LayoutExpr,
         y: LayoutExpr,
@@ -81,7 +135,7 @@ impl PathPart {
 }
 
 #[derive(Debug, Default)]
-pub(crate) struct Path {
+pub struct Path {
     pub fill_and_stroke: FillAndStroke,
     pub parts: Vec<PathPart>,
     pub arrow_start: Option<Arrow>,

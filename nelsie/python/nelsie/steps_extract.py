@@ -3,9 +3,10 @@ from .textstyle import TextStyle
 from .text import TextContent
 from .box import Box
 from .slidedeck import Slide
+from .shapes import Path, Rect, Oval, Stroke, Arrow
 
 containers = (list, tuple, set)
-known_classes = (TextContent, TextStyle, Slide, Box)
+known_classes = (TextContent, TextStyle, Slide, Box, Path, Rect, Oval, Stroke, Arrow)
 
 
 def extract_steps(obj, out: set[Step]):

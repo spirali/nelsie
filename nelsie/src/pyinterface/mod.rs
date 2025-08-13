@@ -6,6 +6,7 @@ mod layoutexpr;
 mod parsers;
 mod rendering;
 mod resources;
+mod shapes;
 mod text;
 
 use crate::pyinterface::image::LoadedImage;

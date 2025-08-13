@@ -5,7 +5,7 @@ from copy import copy
 from .resources import Resources
 from .basictypes import Position, Size, IntOrFloat, Length, LengthAuto
 from .image import RawImage
-from .steps import Step, get_step, Sv, Sn
+from .steps import Step, get_step, Sv, Sn, StepVal
 from .text import RawText
 from .textstyle import TextStyle, merge_in_step
 from .box import Box, TextContent
@@ -145,6 +145,22 @@ class Document:
         nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level, n_threads)
 
 
+def children_to_raw(children, step: Step, ctx: ToRawContext):
+    result = []
+    for child in children:
+        child = get_step(child, step)
+        if child is None:
+            continue
+        if isinstance(child, Box) and get_step(child._active, step):
+            result.append(box_to_raw(child, step, ctx))
+        else:
+            raw = child.to_raw(step, ctx)
+            if raw is not None:
+                result.append(raw)
+
+    return result
+
+
 def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[int, bytes]) -> RawPage:
     width = get_step(slide.width, step)
     height = get_step(slide.height, step)
@@ -158,7 +174,7 @@ def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[
         y=None,
         width=width,
         height=height,
-        children=[box_to_raw(child, step, ctx) for child in slide.children if get_step(child._active, step)],
+        children=children_to_raw(slide.children, step, ctx),
     )
     return RawPage(
         width=width,

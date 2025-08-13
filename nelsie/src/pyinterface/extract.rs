@@ -2,12 +2,13 @@ use crate::parsers::length::parse_string_length;
 use crate::pyinterface::common::PyColor;
 use crate::pyinterface::image::{LoadedImage, PyImage, PyImageData, PyImageFormat};
 use crate::pyinterface::layoutexpr::extract_layout_expr;
+use crate::pyinterface::shapes::{DimX, DimY, PyPosition, PyRect};
 use crate::pyinterface::text::PyTextContent;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
-use pyo3::{Bound, FromPyObject, PyAny, PyResult};
+use pyo3::{intern, Bound, FromPyObject, PyAny, PyResult};
 use renderer::{
     Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page,
     Rectangle, Register, Resources, Text,
@@ -15,34 +16,6 @@ use renderer::{
 use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::Arc;
-
-trait Dimension {
-    fn parent_pos(shift: f32) -> LayoutExpr;
-    fn parent_size(fraction: f32) -> LayoutExpr;
-}
-
-struct DimX;
-struct DimY;
-
-impl Dimension for DimX {
-    fn parent_pos(shift: f32) -> LayoutExpr {
-        LayoutExpr::ParentX { shift }
-    }
-
-    fn parent_size(fraction: f32) -> LayoutExpr {
-        LayoutExpr::ParentWidth { fraction }
-    }
-}
-
-impl Dimension for DimY {
-    fn parent_pos(shift: f32) -> LayoutExpr {
-        LayoutExpr::ParentY { shift }
-    }
-
-    fn parent_size(fraction: f32) -> LayoutExpr {
-        LayoutExpr::ParentHeight { fraction }
-    }
-}
 
 #[derive(FromPyObject)]
 struct PyPage<'py> {
@@ -63,29 +36,6 @@ impl<'py> FromPyObject<'py> for PyLengthOrExpr {
         } else {
             LengthOrExpr::Expr(extract_layout_expr(obj)?)
         }))
-    }
-}
-
-struct PyPosition<D: Dimension> {
-    expr: LayoutExpr,
-    _dim: PhantomData<D>,
-}
-
-impl<'py, D: Dimension> FromPyObject<'py> for PyPosition<D> {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
-        Ok(PyPosition {
-            expr: if let Ok(value) = obj.extract::<f32>() {
-                D::parent_pos(value)
-            } else if let Ok(value) = obj.extract::<&str>() {
-                D::parent_pos(0.0).add(match parse_string_length(value)? {
-                    Length::Points { value } => D::parent_pos(value),
-                    Length::Fraction { value } => D::parent_size(0.0).add(D::parent_size(value)),
-                })
-            } else {
-                extract_layout_expr(obj)?
-            },
-            _dim: Default::default(),
-        })
     }
 }
 
@@ -230,6 +180,9 @@ fn obj_to_node(
         })
         .transpose()?
         .flatten();
+
+    let i_node_id = intern!(obj.py(), "node_id");
+
     Ok(Node {
         node_id: NodeId::new(node.node_id),
         width: node.width.map(|x| x.0),
@@ -271,7 +224,12 @@ fn obj_to_node(
             .try_iter()?
             .map(|child| {
                 let child = child?;
-                Ok(NodeChild::Node(obj_to_node(child, register, resources)?))
+                Ok(if child.hasattr(i_node_id)? {
+                    NodeChild::Node(obj_to_node(child, register, resources)?)
+                } else {
+                    let rect: PyRect = child.extract()?;
+                    NodeChild::Shape(rect.into_shape())
+                })
             })
             .collect::<PyResult<Vec<NodeChild>>>()?,
     })

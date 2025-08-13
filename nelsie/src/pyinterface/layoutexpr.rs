@@ -2,7 +2,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::pybacked::PyBackedStr;
 use pyo3::types::PyAnyMethods;
 use pyo3::{intern, Bound, FromPyObject, PyAny, PyResult, Python};
-use renderer::{InlineId, LayoutExpr, NodeId};
+use renderer::{InlineId, LayoutExpr, LengthOrExpr, NodeId};
 
 // #[derive(Debug)]
 // pub(crate) struct PyLayoutExpr(LayoutExpr);
@@ -15,6 +15,9 @@ use renderer::{InlineId, LayoutExpr, NodeId};
 //
 // impl<'py> FromPyObject<'py> for PyLayoutExpr {
 //     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+//         Ok(crate::pyinterface::extract::PyLengthOrExpr(if let Ok(value) = obj.extract::<f32>() {
+//             LengthOrExpr::points(value)
+//         } else if let Ok(value) = obj.extract::<&str>() {
 //         extract_layout_expr(ob.getattr("_expr")?).map(PyLayoutExpr)
 //     }
 // }

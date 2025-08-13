@@ -1,3 +1,4 @@
+use crate::shapes::Shape;
 use crate::text::Text;
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
 use crate::{Color, NodeId};
@@ -12,7 +13,7 @@ use taffy::{
 #[derive(Debug)]
 pub enum NodeChild {
     Node(Node),
-    //    Draw(Drawing),
+    Shape(Shape),
 }
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
@@ -98,7 +99,7 @@ impl Node {
     pub fn child_nodes(&self) -> impl Iterator<Item = &Node> {
         self.children.iter().filter_map(|child| match child {
             NodeChild::Node(node) => Some(node),
-            //NodeChild::Draw(_) => None,
+            NodeChild::Shape(_) => None,
         })
     }
 
