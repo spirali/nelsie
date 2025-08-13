@@ -2,6 +2,7 @@ from typing import TypeVar, Generic, Sequence
 
 from .utils import check_is_bool
 from . import nelsie as nelsie_rs
+from functools import cmp_to_key
 
 LoadedImage = nelsie_rs.LoadedImage
 
@@ -27,6 +28,19 @@ def step_lte(a, b):
         if isinstance(b, int):
             b = (b,)
     return a <= b
+
+def step_compare(a, b):
+    if isinstance(a, int) ^ isinstance(b, int):
+        if isinstance(a, int):
+            a = (a,)
+        if isinstance(b, int):
+            b = (b,)
+    if a < b:
+        return -1
+    elif a > b:
+        return 1
+    else:
+        return 0
 
 
 class StepVal(Generic[T]):
@@ -69,6 +83,13 @@ class StepVal(Generic[T]):
                 result = self.values[i]
                 current_step = i
         return result
+
+    def __repr__(self):
+        v = f"<StepVal "
+        for step, value in sorted(self.values.items(), key=cmp_to_key(step_compare)):
+            v += f"{step}={value!r}, "
+        v += ">"
+        return v
 
 
 type Sv[T] = T | StepVal[T]
@@ -121,7 +142,7 @@ def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
         return value
     if isinstance(value, str):
         steps, named_steps = nelsie_rs.parse_bool_steps(value)
-        return StepVal(steps, named_steps)
+        return StepVal(init_values=steps, named_steps=named_steps)
     if isinstance(value, StepVal):
         value.call(check_is_bool)
         return value

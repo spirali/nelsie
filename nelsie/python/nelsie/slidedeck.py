@@ -2,11 +2,12 @@ from typing import Literal, Iterable
 
 from nelsie.utils import check_is_int_or_float, check_is_type, check_is_str
 
-from .box import BoxBuilderMixin, Box
+from .box import BoxBuilderMixin, Box, traverse_children
 from .resources import Resources
-from .steps import Step, Sv, get_step, Sn
+from .steps import Step, Sv, get_step, Sn, StepVal, sn_apply
 from . import nelsie as nelsie_rs
 from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, merge_in_step, check_is_text_style
+from .shapes import Path, Rect, Oval
 
 
 class Slide(BoxBuilderMixin):
@@ -20,7 +21,7 @@ class Slide(BoxBuilderMixin):
 
         self._text_styles = None
 
-    def add(self, box: Box):
+    def add(self, box):
         self.children.append(box)
 
     def _set_style(self, name: str, style: Sn[TextStyle]):
@@ -33,8 +34,7 @@ class Slide(BoxBuilderMixin):
             return self._text_styles.get(name)
 
     def traverse_tree(self, shared_data, steps: set[Step]):
-        for child in self.children:
-            child.traverse_tree(shared_data, steps)
+        traverse_children(self.children, shared_data, steps)
 
 
 class SlideDeck:

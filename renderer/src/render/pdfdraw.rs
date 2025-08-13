@@ -1,6 +1,6 @@
 use crate::render::canvas::Link;
 use crate::render::composer_pdf::PdfRefAllocator;
-use crate::render::draw::{DrawItem, DrawPath, DrawPathPart, DrawRect};
+use crate::render::draw::{DrawItem, DrawPath, DrawPathPart, DrawRect, PathBuilder};
 use crate::shapes::FillAndStroke;
 use crate::{Color, Rectangle};
 use pdf_writer::types::{ActionType, AnnotationType};
@@ -180,8 +180,7 @@ fn draw_fill_and_stroke(pdf_writer: &mut PdfWriter, fill_and_stroke: &FillAndStr
 }
 
 fn draw_ellipse_to_pdf(pdf_writer: &mut PdfWriter, item: &DrawRect) {
-    todo!()
-    /*let mut builder = PathBuilder::new(item.fill_and_stroke.clone());
+    let mut builder = PathBuilder::new(item.fill_and_stroke.clone());
     let rx = item.rectangle.width / 2.0;
     let ry = item.rectangle.height / 2.0;
     let cx = item.rectangle.x + rx;
@@ -192,7 +191,7 @@ fn draw_ellipse_to_pdf(pdf_writer: &mut PdfWriter, item: &DrawRect) {
     builder.arc_to(rx, ry, 0.0, false, true, cx, cy - ry);
     builder.arc_to(rx, ry, 0.0, false, true, cx + rx, cy);
     builder.close();
-    path_body_to_pdf(pdf_ctx, &builder.build())*/
+    path_to_pdf(pdf_writer, &builder.build())
 }
 
 /*fn draw_video_to_pdf(

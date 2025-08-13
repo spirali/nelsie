@@ -1,8 +1,10 @@
 use crate::node::{Node, NodeChild};
 use crate::render::canvas::{Canvas, Link};
 use crate::render::context::RenderContext;
+use crate::render::draw::DrawItem;
 use crate::render::layout::{ComputedLayout, compute_page_layout};
 use crate::shapes::FillAndStroke;
+use crate::{NodeId, Shape, ShapeRect};
 use std::collections::BTreeSet;
 
 pub(crate) fn render_node(
@@ -56,6 +58,21 @@ pub(crate) fn render_node(
                 todo!()
                 //self.draw(step, node.node_id, draw)
             }*/
+            NodeChild::Shape(shape) => match shape {
+                Shape::Rect(rect) => render_rect(canvas, rect, layout, node.node_id),
+                Shape::Oval(rect) => render_oval(canvas, rect, layout, node.node_id),
+                Shape::Path(_) => todo!(),
+            },
         }
     }
+}
+
+fn render_rect(canvas: &mut Canvas, rect: &ShapeRect, layout: &ComputedLayout, parent_id: NodeId) {
+    let draw_rect = rect.eval(layout, parent_id);
+    canvas.add_draw_item(rect.z_level, DrawItem::Rect(draw_rect));
+}
+
+fn render_oval(canvas: &mut Canvas, rect: &ShapeRect, layout: &ComputedLayout, parent_id: NodeId) {
+    let draw_rect = rect.eval(layout, parent_id);
+    canvas.add_draw_item(rect.z_level, DrawItem::Oval(draw_rect));
 }

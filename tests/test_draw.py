@@ -1,6 +1,23 @@
+from nelsie.shapes import Point
 from testutils import check
 
-from nelsie import Arrow, InSteps, Path, Stroke, TextStyle
+from nelsie import Arrow, Path, Stroke, TextStyle, Rect, Stroke, Oval
+
+
+@check(n_slides=2)
+def test_render_rect(deck):
+    s = deck.new_slide(width=75, height=90)
+    s.add(Rect(Point(10, 20), Point(60, 35), fill_color="red", show="2"))
+    s.add(Rect(Point(10, 45), Point(60, 55), stroke=Stroke(color="blue", width=5.0)))
+    s.add(Rect(Point(10, 65), Point(60, 40), stroke=Stroke(color="green", width=2.0), fill_color="yellow", z_level=-1))
+
+
+@check(n_slides=2)
+def test_render_oval(deck):
+    s = deck.new_slide(width=75, height=90)
+    s.add(Oval(Point(10, 20), Point(60, 35), fill_color="red", show="2"))
+    s.add(Oval(Point(10, 45), Point(60, 55), stroke=Stroke(color="blue", width=5.0)))
+    s.add(Oval(Point(10, 40), Point(60, 65), stroke=Stroke(color="green", width=2.0), fill_color="yellow", z_level=-1))
 
 
 @check()
