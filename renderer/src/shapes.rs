@@ -1,8 +1,10 @@
 use crate::render::canvas::Canvas;
-use crate::render::draw::{DrawPath, DrawRect};
+use crate::render::draw::{DrawPath, DrawRect, PathBuilder};
 use crate::render::layout::ComputedLayout;
 use crate::types::LayoutExpr;
 use crate::{Color, NodeId, Rectangle};
+use crate::render::arrows::create_arrow;
+//use crate::render::arrows::{create_arrow, move_point_for_arrow};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Stroke {
@@ -140,59 +142,74 @@ pub struct Path {
     pub parts: Vec<PathPart>,
     pub arrow_start: Option<Arrow>,
     pub arrow_end: Option<Arrow>,
+    pub z_level: i32,
 }
 
 impl Path {
-    pub(crate) fn render_to_canvas(
+    pub(crate) fn eval(
+        &self,
         layout: &ComputedLayout,
         parent_id: NodeId,
-        canvas: &mut Canvas,
-    ) {
-        todo!()
-        // let mut builder = PathBuilder::new(path.fill_and_stroke.clone());
-        // for (i, part) in path.parts.iter().enumerate() {
-        //     let (sx, sy) = crate::render::paths::move_point_for_arrow(layout, parent_id, path, i).unwrap_or((0.0, 0.0));
-        //     match part {
-        //         PathPart::Move { x, y } => {
-        //             builder.move_to(
-        //                 layout.eval(x, parent_id) + sx,
-        //                 layout.eval(y, parent_id) + sy,
-        //             );
-        //         }
-        //         PathPart::Line { x, y } => {
-        //             builder.line_to(
-        //                 layout.eval(x, parent_id) + sx,
-        //                 layout.eval(y, parent_id) + sy,
-        //             );
-        //         }
-        //         PathPart::Quad { x1, y1, x, y } => builder.quad_to(
-        //             layout.eval(x1, parent_id),
-        //             layout.eval(y1, parent_id),
-        //             layout.eval(x, parent_id),
-        //             layout.eval(y, parent_id),
-        //         ),
-        //         PathPart::Cubic {
-        //             x1,
-        //             y1,
-        //             x2,
-        //             y2,
-        //             x,
-        //             y,
-        //         } => builder.cubic_to(
-        //             layout.eval(x1, parent_id),
-        //             layout.eval(y1, parent_id),
-        //             layout.eval(x2, parent_id),
-        //             layout.eval(y2, parent_id),
-        //             layout.eval(x, parent_id),
-        //             layout.eval(y, parent_id),
-        //         ),
-        //         PathPart::Close => builder.close(),
-        //         PathPart::Oval { .. } => { /* Ignoring Oval, it has to be first if it used */ }
-        //     }
+    ) -> (Option<DrawPath>, Option<DrawPath>, Option<DrawPath>) {
+        let mut builder = PathBuilder::new(self.fill_and_stroke.clone());
+        for (i, part) in self.parts.iter().enumerate() {
+            match part {
+                PathPart::Move { x, y } => {
+                    builder.move_to(
+                        layout.eval(x, parent_id),
+                        layout.eval(y, parent_id),
+                    );
+                }
+                PathPart::Line { x, y } => {
+                    builder.line_to(
+                        layout.eval(x, parent_id),
+                        layout.eval(y, parent_id),
+                    );
+                }
+                PathPart::Quad { x1, y1, x, y } => builder.quad_to(
+                    layout.eval(x1, parent_id),
+                    layout.eval(y1, parent_id),
+                    layout.eval(x, parent_id),
+                    layout.eval(y, parent_id),
+                ),
+                PathPart::Cubic {
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    x,
+                    y,
+                } => builder.cubic_to(
+                    layout.eval(x1, parent_id),
+                    layout.eval(y1, parent_id),
+                    layout.eval(x2, parent_id),
+                    layout.eval(y2, parent_id),
+                    layout.eval(x, parent_id),
+                    layout.eval(y, parent_id),
+                ),
+                PathPart::Close => builder.close(),
+            }
+        }
+        let mut path = builder.build();
+        if path.parts.is_empty() {
+            return (None, None, None)
+        }
+        let arrow1 = self.arrow_start.as_ref().and_then(|a| {
+            let mut i = path.parts.iter_mut();
+            create_arrow(a, i.next().unwrap(), i.next().as_deref(), path.fill_and_stroke.stroke.as_ref().map(|s| s.color))
+        });
+        let arrow2 = self.arrow_end.as_ref().and_then(|a| {
+            let mut i = path.parts.iter_mut().rev();
+            create_arrow(a, i.next().unwrap(), i.next().as_deref(), path.fill_and_stroke.stroke.as_ref().map(|s| s.color))
+        });
+        (Some(path), arrow1, arrow2)
+        // let arrow_start = create_arrow(self, layout, parent_id, true);
+        // let arrow_end = create_arrow(self, layout, parent_id, true);
+        //
+        // (builder.build(),
+        //     create_arrow(path, layout, parent_id, true);
+        //     create_arrow(path, layout, parent_id, false);
+        // )
         // }
-        // canvas.add_draw_item(DrawItem::Path(builder.build()));
-        // crate::render::paths::create_arrow(canvas, path, layout, parent_id, true);
-        // crate::render::paths::create_arrow(canvas, path, layout, parent_id, false);
-        //}
     }
 }

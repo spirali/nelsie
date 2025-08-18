@@ -107,7 +107,7 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
         width=get_step(box._width, step),
         height=get_step(box._height, step),
         bg_color=get_step(box._bg_color, step),
-        children=[box_to_raw(child, step, ctx) for child in box._children if get_step(child._active, step)],
+        children=children_to_raw(box._children, step, ctx),
         content=content,
         row=get_step(box._row, step),
         reverse=get_step(box._reverse, step),

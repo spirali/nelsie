@@ -1,9 +1,11 @@
 use crate::parsers::length::parse_string_length;
 use crate::pyinterface::common::PyColor;
 use crate::pyinterface::layoutexpr::extract_layout_expr;
-use pyo3::types::PyAnyMethods;
+use pyo3::exceptions::PyValueError;
+use pyo3::types::{PyAnyMethods, PyIterator, PyList};
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
-use renderer::{FillAndStroke, LayoutExpr, Length, Shape, ShapeRect, Stroke};
+use renderer::Path;
+use renderer::{Arrow, FillAndStroke, LayoutExpr, Length, PathPart, Shape, ShapeRect, Stroke};
 use std::marker::PhantomData;
 
 pub(crate) trait Dimension {
@@ -80,9 +82,9 @@ impl From<PyStroke> for Stroke {
 pub(crate) struct PyRect {
     shape: u32,
     x1: PyPosition<DimX>,
-    y1: PyPosition<DimX>,
+    y1: PyPosition<DimY>,
     x2: PyPosition<DimX>,
-    y2: PyPosition<DimX>,
+    y2: PyPosition<DimY>,
     z_level: i32,
     stroke: Option<PyStroke>,
     fill_color: Option<PyColor>,
@@ -106,5 +108,98 @@ impl PyRect {
         } else {
             Shape::Rect(rect)
         }
+    }
+}
+
+#[derive(FromPyObject)]
+pub(crate) struct PyArrow {
+    size: f32,
+    angle: f32,
+    color: Option<PyColor>,
+    stroke_width: Option<f32>,
+    inner_point: Option<f32>,
+}
+
+impl From<PyArrow> for Arrow {
+    fn from(value: PyArrow) -> Self {
+        Arrow {
+            size: value.size,
+            angle: value.angle,
+            color: value.color.map(|v| v.into()),
+            stroke_width: value.stroke_width,
+            inner_point: value.inner_point,
+        }
+    }
+}
+
+#[derive(FromPyObject)]
+pub(crate) struct PyPath<'py> {
+    commands: Bound<'py, PyList>,
+    points: Bound<'py, PyList>,
+    z_level: i32,
+    stroke: Option<PyStroke>,
+    fill_color: Option<PyColor>,
+    arrow_start: Option<PyArrow>,
+    arrow_end: Option<PyArrow>,
+}
+
+impl<'py> PyPath<'py> {
+    pub fn into_shape(self) -> PyResult<Shape> {
+        let extract_x = |itr: &mut Bound<PyIterator>| -> PyResult<LayoutExpr> {
+            let obj = itr
+                .next()
+                .ok_or_else(|| PyValueError::new_err("Invalid point length"))??;
+            Ok(obj.extract::<PyPosition<DimX>>()?.expr)
+        };
+        let extract_y = |itr: &mut Bound<PyIterator>| -> PyResult<LayoutExpr> {
+            let obj = itr
+                .next()
+                .ok_or_else(|| PyValueError::new_err("Invalid point length"))??;
+            Ok(obj.extract::<PyPosition<DimY>>()?.expr)
+        };
+
+        let mut points = self.points.try_iter()?;
+        let parts = self
+            .commands
+            .try_iter()?
+            .map(|cmd| {
+                Ok(match cmd?.extract::<&str>()? {
+                    "move" => PathPart::Move {
+                        x: extract_x(&mut points)?,
+                        y: extract_y(&mut points)?,
+                    },
+                    "line" => PathPart::Line {
+                        x: extract_x(&mut points)?,
+                        y: extract_y(&mut points)?,
+                    },
+                    "quad" => PathPart::Quad {
+                        x1: extract_x(&mut points)?,
+                        y1: extract_y(&mut points)?,
+                        x: extract_x(&mut points)?,
+                        y: extract_y(&mut points)?,
+                    },
+                    "cubic" => PathPart::Cubic {
+                        x1: extract_x(&mut points)?,
+                        y1: extract_y(&mut points)?,
+                        x2: extract_x(&mut points)?,
+                        y2: extract_y(&mut points)?,
+                        x: extract_x(&mut points)?,
+                        y: extract_y(&mut points)?,
+                    },
+                    "close" => PathPart::Close,
+                    cmd => return Err(PyValueError::new_err(format!("Invalid command: '{cmd}'"))),
+                })
+            })
+            .collect::<PyResult<Vec<_>>>()?;
+        Ok(Shape::Path(Path {
+            parts,
+            fill_and_stroke: FillAndStroke {
+                fill_color: self.fill_color.map(|x| x.into()),
+                stroke: self.stroke.map(|x| x.into()),
+            },
+            arrow_start: self.arrow_start.map(|x| x.into()),
+            arrow_end: self.arrow_end.map(|x| x.into()),
+            z_level: self.z_level,
+        }))
     }
 }

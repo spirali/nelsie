@@ -22,7 +22,7 @@ from .text import TextContent
 from .textstyle import TextStyle, merge_in_step, check_is_text_style, check_is_str_or_text_style
 from .utils import check_is_str, check_is_bool, check_is_int, check_is_int_or_float
 from .layoutexpr import LayoutExpr
-from .shapes import Rect, Oval, Path
+from .shapes import Rect, Oval, Path, Point
 
 
 class BoxBuilderMixin:
@@ -177,7 +177,7 @@ class BoxBuilderMixin:
         Get an expression with X coordinate relative to the box.
         """
         check_is_int_or_float(width_fraction)
-        node_id = self.get_box().node_id
+        node_id = id(self)
         expr = LayoutExpr.x(node_id)
         if width_fraction == 0:
             return expr
@@ -187,19 +187,25 @@ class BoxBuilderMixin:
         """
         Get an expression with Y coordinate relative to the box.
         """
-        check_is_int_or_float(width_fraction)
-        node_id = self.get_box().node_id
+        check_is_int_or_float(height_fraction)
+        node_id = id(self)
         expr = LayoutExpr.y(node_id)
         if height_fraction == 0:
             return expr
         return expr + LayoutExpr.height(node_id, height_fraction)
+
+    def p(self, x: IntOrFloat = 0, y: IntOrFloat = 0) -> Point:
+        """
+        Get an expression with X and Y padding relative to the box.
+        """
+        return Point(self.x(x), self.y(y))
 
     def width(self, fraction: IntOrFloat = 1.0) -> LayoutExpr:
         """
         Get an expression with width of the parent box.
         """
         check_is_int_or_float(fraction)
-        node_id = self.get_box().node_id
+        node_id = id(self)
         return LayoutExpr.width(node_id, fraction)
 
     def height(self, fraction: IntOrFloat = 1.0) -> LayoutExpr:
@@ -207,7 +213,7 @@ class BoxBuilderMixin:
         Get an expression with height of the parent box.
         """
         check_is_int_or_float(fraction)
-        node_id = self.get_box().node_id
+        node_id = id(self)
         return LayoutExpr.height(node_id, fraction)
 
     def line_x(self, line_idx: int, width_fraction: IntOrFloat = 0) -> LayoutExpr:
@@ -233,6 +239,9 @@ class BoxBuilderMixin:
         if height_fraction == 0:
             return expr
         return expr + LayoutExpr.line_height(node_id, line_idx, height_fraction)
+
+    def line_p(self, line_idx: int, x: IntOrFloat = 0, y: IntOrFloat = 0) -> Point:
+        return Point(self.line_x(line_idx, x), self.line_y(line_idx, y))
 
     def line_width(self, line_idx: int, fraction: IntOrFloat = 1.0) -> LayoutExpr:
         """
@@ -275,6 +284,9 @@ class BoxBuilderMixin:
         if height_fraction == 0:
             return expr
         return expr + LayoutExpr.text_anchor_height(node_id, anchor_id, height_fraction)
+
+    def inline_p(self, anchor_id: int, x: IntOrFloat = 0, y: IntOrFloat = 0) -> Point:
+        return Point(self.inline_x(anchor_id, x), self.inline_y(anchor_id, y))
 
     def inline_width(self, anchor_id: int, fraction: IntOrFloat = 1.0) -> LayoutExpr:
         """
@@ -418,8 +430,8 @@ class Box(BoxBuilderMixin):
         self._children.append(box)
 
     def traverse_tree(self, shared_data, steps):
-        for child in self._children:
-            child.traverse_tree(shared_data, steps)
+        if self._content is not None:
+            self._content.traverse_tree(shared_data, steps)
         traverse_children(self._children, shared_data, steps)
 
     def _set_style(self, name: str, style: Sn[TextStyle]):
@@ -437,5 +449,5 @@ def traverse_children(children, shared_data, steps):
     for child in children:
         if isinstance(child, Box):
             child.traverse_tree(shared_data, steps)
-        if isinstance(child, StepVal):
+        elif isinstance(child, StepVal):
             sn_apply(child, lambda c: c.traverse_tree(shared_data, steps) if isinstance(c, Box) else None)

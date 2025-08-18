@@ -4,7 +4,7 @@ use crate::render::context::RenderContext;
 use crate::render::draw::DrawItem;
 use crate::render::layout::{ComputedLayout, compute_page_layout};
 use crate::shapes::FillAndStroke;
-use crate::{NodeId, Shape, ShapeRect};
+use crate::{NodeId, Path, Shape, ShapeRect};
 use std::collections::BTreeSet;
 
 pub(crate) fn render_node(
@@ -54,14 +54,10 @@ pub(crate) fn render_node(
     for child in &node.children {
         match child {
             NodeChild::Node(node) => render_node(render_ctx, node, layout, canvas),
-            /*NodeChild::Draw(draw) => {
-                todo!()
-                //self.draw(step, node.node_id, draw)
-            }*/
             NodeChild::Shape(shape) => match shape {
                 Shape::Rect(rect) => render_rect(canvas, rect, layout, node.node_id),
                 Shape::Oval(rect) => render_oval(canvas, rect, layout, node.node_id),
-                Shape::Path(_) => todo!(),
+                Shape::Path(path) => render_path(canvas, path, layout, node.node_id),
             },
         }
     }
@@ -75,4 +71,17 @@ fn render_rect(canvas: &mut Canvas, rect: &ShapeRect, layout: &ComputedLayout, p
 fn render_oval(canvas: &mut Canvas, rect: &ShapeRect, layout: &ComputedLayout, parent_id: NodeId) {
     let draw_rect = rect.eval(layout, parent_id);
     canvas.add_draw_item(rect.z_level, DrawItem::Oval(draw_rect));
+}
+
+fn render_path(canvas: &mut Canvas, path: &Path, layout: &ComputedLayout, parent_id: NodeId) {
+    let (draw_path, arrow1, arrow2) = path.eval(layout, parent_id);
+    if let Some(draw_path) = draw_path {
+        canvas.add_draw_item(path.z_level, DrawItem::Path(draw_path));
+    }
+    if let Some(arrow) = arrow1 {
+        canvas.add_draw_item(path.z_level, DrawItem::Path(arrow));
+    }
+    if let Some(arrow) = arrow2 {
+        canvas.add_draw_item(path.z_level, DrawItem::Path(arrow));
+    }
 }

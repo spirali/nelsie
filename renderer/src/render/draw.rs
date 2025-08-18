@@ -1,4 +1,4 @@
-use crate::Rectangle;
+use crate::{PathPart, Rectangle};
 use crate::shapes::FillAndStroke;
 
 #[derive(Debug)]
@@ -41,10 +41,31 @@ pub(crate) enum DrawPathPart {
     Close,
 }
 
+impl DrawPathPart {
+    pub fn main_point(&self) -> Option<(f32, f32)> {
+        match self {
+            DrawPathPart::Move { x, y }
+            | DrawPathPart::Line { x, y }
+            | DrawPathPart::Quad { x, y, .. }
+            | DrawPathPart::Cubic { x, y, .. } => Some((*x, *y)),
+            DrawPathPart::Close => None,
+        }
+    }
+    pub fn main_point_mut(&mut self) -> Option<(&mut f32, &mut f32)> {
+        match self {
+            DrawPathPart::Move { x, y }
+            | DrawPathPart::Line { x, y }
+            | DrawPathPart::Quad { x, y, .. }
+            | DrawPathPart::Cubic { x, y, .. } => Some((x, y)),
+            DrawPathPart::Close => None,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub(crate) struct DrawPath {
-    parts: Vec<DrawPathPart>,
-    fill_and_stroke: FillAndStroke,
+    pub(crate) parts: Vec<DrawPathPart>,
+    pub(crate) fill_and_stroke: FillAndStroke,
 }
 
 impl DrawPath {
@@ -137,7 +158,6 @@ impl PathBuilder {
             }
         }
     }
-
 
     pub fn close(&mut self) {
         self.0.parts.push(DrawPathPart::Close);

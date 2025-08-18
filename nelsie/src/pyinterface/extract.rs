@@ -2,7 +2,7 @@ use crate::parsers::length::parse_string_length;
 use crate::pyinterface::common::PyColor;
 use crate::pyinterface::image::{LoadedImage, PyImage, PyImageData, PyImageFormat};
 use crate::pyinterface::layoutexpr::extract_layout_expr;
-use crate::pyinterface::shapes::{DimX, DimY, PyPosition, PyRect};
+use crate::pyinterface::shapes::{DimX, DimY, PyPath, PyPosition, PyRect};
 use crate::pyinterface::text::PyTextContent;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::PyValueError;
@@ -182,6 +182,7 @@ fn obj_to_node(
         .flatten();
 
     let i_node_id = intern!(obj.py(), "node_id");
+    let i_shape = intern!(obj.py(), "shape");
 
     Ok(Node {
         node_id: NodeId::new(node.node_id),
@@ -226,9 +227,12 @@ fn obj_to_node(
                 let child = child?;
                 Ok(if child.hasattr(i_node_id)? {
                     NodeChild::Node(obj_to_node(child, register, resources)?)
-                } else {
+                } else if child.hasattr(i_shape)? {
                     let rect: PyRect = child.extract()?;
                     NodeChild::Shape(rect.into_shape())
+                } else {
+                    let path: PyPath = child.extract()?;
+                    NodeChild::Shape(path.into_shape()?)
                 })
             })
             .collect::<PyResult<Vec<NodeChild>>>()?,
