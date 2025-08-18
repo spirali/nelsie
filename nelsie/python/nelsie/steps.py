@@ -29,6 +29,7 @@ def step_lte(a, b):
             b = (b,)
     return a <= b
 
+
 def step_compare(a, b):
     if isinstance(a, int) ^ isinstance(b, int):
         if isinstance(a, int):

@@ -2,6 +2,8 @@ import os
 from dataclasses import dataclass
 from typing import Sequence
 
+from nelsie.basictypes import IntOrFloat
+
 from .basictypes import (
     AlignItems,
     AlignContent,
@@ -446,52 +448,54 @@ class BoxBuilder:
             **box_args,
         )
 
-    def x(self, width_fraction: float | int | None = None) -> LayoutExpr:
+    def x(self, width_fraction: IntOrFloat = 0) -> LayoutExpr:
         """
         Get an expression with X coordinate relative to the box.
         """
 
         node_id = self.get_box().node_id
         expr = LayoutExpr.x(node_id)
-        if width_fraction is None:
+        if width_fraction == 0:
             return expr
         return expr + LayoutExpr.width(node_id, width_fraction)
 
-    def y(self, height_fraction: float | int | None = None) -> LayoutExpr:
+    def y(self, height_fraction: IntOrFloat = 0) -> LayoutExpr:
         """
         Get an expression with Y coordinate relative to the box.
         """
         node_id = self.get_box().node_id
         expr = LayoutExpr.y(node_id)
-        if height_fraction is None:
+        if height_fraction == 0:
             return expr
         return expr + LayoutExpr.height(node_id, height_fraction)
 
-    def width(self, fraction: float | int = 1.0) -> LayoutExpr:
+    def p(self, x: , y):
+
+    def width(self, fraction: IntOrFloat = 1.0) -> LayoutExpr:
         """
         Get an expression with width of the parent box.
         """
         node_id = self.get_box().node_id
         return LayoutExpr.width(node_id, fraction)
 
-    def height(self, fraction: float | int = 1.0) -> LayoutExpr:
+    def height(self, fraction: IntOrFloat = 1.0) -> LayoutExpr:
         """
         Get an expression with height of the parent box.
         """
         node_id = self.get_box().node_id
         return LayoutExpr.height(node_id, fraction)
 
-    def line_x(self, line_idx: int, width_fraction: float | int | None = None) -> LayoutExpr:
+    def line_x(self, line_idx: int, width_fraction: IntOrFloat = 0) -> LayoutExpr:
         """
         Get an expression with X coordinate of a given line of text in the box.
         """
         node_id = self.get_box().node_id
         expr = LayoutExpr.line_x(node_id, line_idx)
-        if width_fraction is None:
+        if width_fraction is :
             return expr
         return expr + LayoutExpr.line_width(node_id, line_idx, width_fraction)
 
-    def line_y(self, line_idx: int, height_fraction: float | int | None = None) -> LayoutExpr:
+    def line_y(self, line_idx: int, height_fraction: IntOrFloat = 0) -> LayoutExpr:
         """
         Get an expression with Y coordinate of a given line of text in the box.
         """
