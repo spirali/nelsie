@@ -3,12 +3,22 @@ from typing import Union, Literal
 from copy import copy
 
 from .resources import Resources
-from .basictypes import Position, Size, IntOrFloat, Length, LengthAuto
+from .basictypes import (
+    Position,
+    Size,
+    IntOrFloat,
+    Length,
+    LengthAuto,
+    AlignContent,
+    AlignItems,
+    GridTemplate,
+    GridPosition,
+)
 from .image import RawImage
 from .steps import Step, get_step, Sv, Sn, StepVal
 from .text import RawText
 from .textstyle import TextStyle, merge_in_step
-from .box import Box, TextContent
+from .box import Box, TextContent, GridOptions
 from .slidedeck import Slide
 from . import nelsie as nelsie_rs
 
@@ -35,6 +45,16 @@ class RawBox:
     m_right: LengthAuto = 0
     m_top: LengthAuto = 0
     m_bottom: LengthAuto = 0
+    flex_grow: float = 0.0
+    flex_shrink: float = 1.0
+    align_items: AlignItems = None
+    align_self: AlignItems = None
+    justify_self: AlignItems = None
+    align_content: AlignContent = None
+    justify_content: AlignContent = None
+    gap_x: Sv[Length] = 0
+    gap_y: Sv[Length] = 0
+    grid: GridOptions = None
 
 
 @dataclass
@@ -98,6 +118,17 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
     else:
         content = None
 
+    grid = box._grid
+    if grid is not None:
+        grid = get_step(grid, step)
+        if grid is not None:
+            grid = GridOptions(
+                template_rows=get_step(grid.template_rows, step, ()),
+                template_columns=get_step(grid.template_columns, step, ()),
+                row=get_step(grid.row, step, "auto"),
+                column=get_step(grid.column, step, "auto"),
+            )
+
     return RawBox(
         node_id=id(box),
         x=get_step(box._x, step),
@@ -119,6 +150,16 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
         m_right=get_step(box._m_right, step),
         m_top=get_step(box._m_top, step),
         m_bottom=get_step(box._m_bottom, step),
+        flex_grow=get_step(box._flex_grow, step),
+        flex_shrink=get_step(box._flex_shrink, step),
+        align_items=get_step(box._align_items, step),
+        align_self=get_step(box._align_self, step),
+        justify_self=get_step(box._justify_self, step),
+        align_content=get_step(box._align_content, step),
+        justify_content=get_step(box._justify_content, step),
+        gap_x=get_step(box._gap_x, step),
+        gap_y=get_step(box._gap_y, step),
+        grid=grid,
     )
 
 
@@ -133,6 +174,7 @@ class RawPage:
 class Document:
     def __init__(self, resources: Resources, pages: list[RawPage]):
         self.pages = pages
+        print(pages[0].root)
         self.resources = resources
 
     def render(

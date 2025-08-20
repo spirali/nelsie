@@ -2,6 +2,7 @@ from dataclasses import dataclass
 
 from nelsie.nelsie import check_color
 
+from .basictypes import check_position
 from .layoutexpr import LayoutExpr, IntOrFloatOrLayoutExpr, check_int_or_float_or_layout_expr
 from .steps import Sv, Sn, get_step, Step, sv_check, sn_check, BoolStepDef, parse_bool_steps
 from .utils import check_is_int_or_float, check_is_type, check_is_int
@@ -15,11 +16,12 @@ class Point:
     y: Sv[IntOrFloatOrLayoutExpr]
 
     def __post_init__(self):
-        sv_check(self.x, check_int_or_float_or_layout_expr)
-        sv_check(self.y, check_int_or_float_or_layout_expr)
+        sv_check(self.x, check_position)
+        sv_check(self.y, check_position)
 
     def move_by(self, x: IntOrFloatOrLayoutExpr, y: IntOrFloatOrLayoutExpr) -> "Point":
         return Point(self.x + x, self.y + y)
+
 
 def check_is_point(obj):
     check_is_type(obj, Point)

@@ -4,6 +4,7 @@ from typing import Union
 
 from .image import PathOrImageData, ImageContent, check_image_path_or_data, normalize_image_path
 from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps, sn_map, BoolStepDef, StepVal, sn_apply
+
 from .basictypes import (
     Position,
     Size,
@@ -16,6 +17,12 @@ from .basictypes import (
     LengthAuto,
     check_length,
     check_length_auto,
+    AlignItems,
+    AlignContent,
+    GridTemplate,
+    GridPosition,
+    check_align_content,
+    check_align_items,
 )
 from .nelsie import check_color
 from .text import TextContent
@@ -23,6 +30,14 @@ from .textstyle import TextStyle, merge_in_step, check_is_text_style, check_is_s
 from .utils import check_is_str, check_is_bool, check_is_int, check_is_int_or_float
 from .layoutexpr import LayoutExpr
 from .shapes import Rect, Oval, Path, Point
+
+
+@dataclass
+class GridOptions:
+    template_rows: Sv[GridTemplate] = ()
+    template_columns: Sv[GridTemplate] = ()
+    row: Sn[GridPosition] = None
+    column: Sn[GridPosition] = None
 
 
 class BoxBuilderMixin:
@@ -56,6 +71,16 @@ class BoxBuilderMixin:
         m_right: Sv[LengthAuto] = 0,
         m_top: Sv[LengthAuto] = 0,
         m_bottom: Sv[LengthAuto] = 0,
+        flex_grow: Sv[float] = 0.0,
+        flex_shrink: Sv[float] = 1.0,
+        align_items: Sn[AlignItems] = None,
+        align_self: Sn[AlignItems] = None,
+        justify_self: Sn[AlignItems] = None,
+        align_content: Sn[AlignContent] = None,
+        justify_content: Sn[AlignContent] = None,
+        gap_x: Sv[Length] = 0,
+        gap_y: Sv[Length] = 0,
+        grid: Sn[GridOptions] = None,
     ):
         box = Box(
             x=x,
@@ -76,6 +101,16 @@ class BoxBuilderMixin:
             m_right=m_right,
             m_top=m_top,
             m_bottom=m_bottom,
+            flex_grow=flex_grow,
+            flex_shrink=flex_shrink,
+            align_items=align_items,
+            align_self=align_self,
+            justify_self=justify_self,
+            align_content=align_content,
+            justify_content=justify_content,
+            gap_x=gap_x,
+            gap_y=gap_y,
+            grid=grid,
         )
         self.add(box)
         return box
@@ -354,6 +389,16 @@ class Box(BoxBuilderMixin):
         m_right: Sv[LengthAuto] = 0,
         m_top: Sv[LengthAuto] = 0,
         m_bottom: Sv[LengthAuto] = 0,
+        flex_grow: Sv[float] = 0.0,
+        flex_shrink: Sv[float] = 1.0,
+        align_items: Sn[AlignItems] = None,
+        align_self: Sn[AlignItems] = None,
+        justify_self: Sn[AlignItems] = None,
+        align_content: Sn[AlignContent] = None,
+        justify_content: Sn[AlignContent] = None,
+        gap_x: Sv[Length] = 0,
+        gap_y: Sv[Length] = 0,
+        grid: Sn[GridOptions] = None,
     ):
         sn_check(x, check_position)
         sn_check(y, check_position)
@@ -371,6 +416,16 @@ class Box(BoxBuilderMixin):
         sv_check(m_right, check_length_auto)
         sv_check(m_top, check_length_auto)
         sv_check(m_bottom, check_length_auto)
+
+        sv_check(flex_grow, check_is_int_or_float)
+        sv_check(flex_shrink, check_is_int_or_float)
+        sv_check(gap_x, check_length)
+        sv_check(gap_y, check_length)
+        sn_check(align_items, check_align_items)
+        sn_check(align_self, check_align_items)
+        sn_check(justify_self, check_align_items)
+        sn_check(align_content, check_align_content)
+        sn_check(justify_content, check_align_content)
 
         self._show = parse_bool_steps(show)
         self._active = parse_bool_steps(active)
@@ -393,38 +448,140 @@ class Box(BoxBuilderMixin):
         self._m_top = m_top
         self._m_bottom = m_bottom
 
+        self._flex_grow = flex_grow
+        self._flex_shrink = flex_shrink
+        self._align_items = align_items
+        self._align_self = align_self
+        self._justify_self = justify_self
+        self._align_content = align_content
+        self._justify_content = justify_content
+        self._gap_x = gap_x
+        self._gap_y = gap_y
+        self._grid = grid
+
         self._text_styles: dict[str, Sn[TextStyle]] | None = None
 
-    """
-    def x(self, x: Sn[Position]):
-        check_position(x)
-        self._x = x
+    def margin(
+        self,
+        all: Sn[LengthAuto] = None,
+        *,
+        x: Sn[LengthAuto] = None,
+        y: Sn[LengthAuto] = None,
+        left: Sn[LengthAuto] = None,
+        right: Sn[LengthAuto] = None,
+        top: Sn[LengthAuto] = None,
+        bottom: Sn[LengthAuto] = None,
+    ):
+        if all is not None:
+            sn_check(all, check_length_auto)
+            self._m_top = all
+            self._m_bottom = all
+            self._m_left = all
+            self._m_right = all
 
-    def y(self, y: Sn[Position]):
-        check_position(y)
-        self._y = y
+        if x is not None:
+            sn_check(x, check_length_auto)
+            self._m_left = x
+            self._m_right = x
 
-    def z_level(self, z_level: Sn[int]):
-        check_is_int(z_level)
-        self._z_level = z_level
+        if y is not None:
+            sn_check(y, check_length_auto)
+            self._m_top = y
+            self._m_bottom = y
 
-    def row(self, row: Sv[bool]):
-        sv_check(row, check_is_bool)
-        self._row = row
+        if left is not None:
+            sn_check(left, check_length_auto)
+            self._m_left = left
 
-    def width(self, width: Sn[Size]):
-        check_size(width)
-        self._width = width
+        if right is not None:
+            sn_check(right, check_length_auto)
+            self._m_right = right
 
-    def height(self, height: Sn[Size]):
-        check_size(height)
-        self._height = height
+        if top is not None:
+            sn_check(top, check_length_auto)
+            self._m_top = top
 
-    def bg_color(self, bg_color: Sn[str]):
-        if bg_color:
-            check_color(bg_color)
-        self._bg_color = bg_color
-    """
+        if bottom is not None:
+            sn_check(bottom, check_length_auto)
+            self._m_bottom = bottom
+        return self
+
+    def padding(
+        self,
+        all: Sn[LengthAuto] = None,
+        *,
+        x: Sn[LengthAuto] = None,
+        y: Sn[LengthAuto] = None,
+        left: Sn[LengthAuto] = None,
+        right: Sn[LengthAuto] = None,
+        top: Sn[LengthAuto] = None,
+        bottom: Sn[LengthAuto] = None,
+    ):
+        if all is not None:
+            sn_check(all, check_length)
+            self._p_top = all
+            self._p_bottom = all
+            self._p_left = all
+            self._p_right = all
+
+        if x is not None:
+            sn_check(x, check_length)
+            self._p_left = x
+            self._p_right = x
+
+        if y is not None:
+            sn_check(y, check_length)
+            self._p_top = y
+            self._p_bottom = y
+
+        if left is not None:
+            sn_check(left, check_length)
+            self._p_left = left
+
+        if right is not None:
+            sn_check(right, check_length)
+            self._p_right = right
+
+        if top is not None:
+            sn_check(top, check_length)
+            self._p_top = top
+
+        if bottom is not None:
+            sn_check(bottom, check_length)
+            self._p_bottom = bottom
+        return self
+
+    #
+    # """
+    #     def x(self, x: Sn[Position]):
+    #         check_position(x)
+    #         self._x = x
+    #
+    #     def y(self, y: Sn[Position]):
+    #         check_position(y)
+    #         self._y = y
+    #
+    #     def z_level(self, z_level: Sn[int]):
+    #         check_is_int(z_level)
+    #         self._z_level = z_level
+    #
+    #     def row(self, row: Sv[bool]):
+    #         sv_check(row, check_is_bool)
+    #         self._row = row
+    #
+    #     def width(self, width: Sn[Size]):
+    #         check_size(width)
+    #         self._width = width
+    #
+    #     def height(self, height: Sn[Size]):
+    #         check_size(height)
+    #         self._height = height
+    #
+    #     def bg_color(self, bg_color: Sn[str]):
+    #         if bg_color:
+    #             check_color(bg_color)
+    #         self._bg_color = bg_color
+    #     """
 
     def add(self, box):
         self._children.append(box)

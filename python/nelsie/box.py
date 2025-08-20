@@ -1,13 +1,12 @@
 import os
 from dataclasses import dataclass
-from typing import Sequence
+from typing import Sequence, Literal
 
 from nelsie.basictypes import IntOrFloat
 
 from .basictypes import (
     AlignItems,
     AlignContent,
-    FlexWrap,
     Length,
     LengthAuto,
     Position,
@@ -328,10 +327,7 @@ class BoxBuilder:
         align_content: AlignContentSteps = None,
         justify_content: AlignContentSteps = None,
         gap: tuple[Length, Length] | InSteps[tuple[Length, Length]] = (0.0, 0.0),
-        grid_template_rows: GridTemplate = (),
-        grid_template_columns: GridTemplate = (),
-        grid_row: GridPosition = "auto",
-        grid_column: GridPosition = "auto",
+        grid: Sn[GridOptions] = None,
         bg_color: str | None | InSteps[str | None] = None,
         url: None | str | InSteps[None | str] = None,
         name: str = "",
