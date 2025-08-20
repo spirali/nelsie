@@ -1,4 +1,4 @@
-from typing import Literal, cast
+from typing import Literal, cast, Sequence
 import re
 
 from .layoutexpr import LayoutExpr
@@ -74,6 +74,14 @@ AlignItems = Literal[
     "baseline",
 ]
 
+ALIGN_ITEMS = ("start", "end", "flex-start", "flex-end", "flex-end", "center", "stretch", "baseline")
+
+
+def check_align_items(align):
+    if align not in ALIGN_ITEMS:
+        raise ValueError("Invalid align items value")
+
+
 AlignContent = Literal[
     "start",
     "end",
@@ -87,7 +95,27 @@ AlignContent = Literal[
     "space-around",
 ]
 
-FlexWrap = Literal["nowrap", "wrap", "wrap-reverse"]
+ALIGN_CONTENT = (
+    "start",
+    "end",
+    "flex-start",
+    "flex-end",
+    "flex-end",
+    "center",
+    "stretch",
+    "space-between",
+    "space-evenly",
+    "space-around",
+)
+
+
+def check_align_content(align):
+    if align not in ALIGN_CONTENT:
+        raise ValueError("Invalid align content value")
+
+
+GridTemplate = Sequence[IntOrFloat | str]
+GridPosition = int | str | tuple[int | str]
 
 
 def parse_debug_layout(value: bool | str) -> str | None:

@@ -3,6 +3,7 @@ from typing import TypeVar, Generic, Sequence
 from .utils import check_is_bool
 from . import nelsie as nelsie_rs
 from functools import cmp_to_key
+from copy import copy
 
 LoadedImage = nelsie_rs.LoadedImage
 
@@ -74,6 +75,9 @@ class StepVal(Generic[T]):
             values[step] = fn(value)
         return StepVal(values, self.named_steps)
 
+    def copy(self):
+        return StepVal(init_values=self.values.copy(), named_steps=copy(self.named_steps))
+
     def get_step(self, step: Step, default_value: T | None = None) -> T | None:
         if step in self.values:
             return self.values[step]
@@ -84,6 +88,12 @@ class StepVal(Generic[T]):
                 result = self.values[i]
                 current_step = i
         return result
+
+    def is_defined_for(self, step: Step) -> bool:
+        for i in self.values:
+            if step_lte(i, step):
+                return True
+        return False
 
     def __repr__(self):
         v = f"<StepVal "
@@ -150,3 +160,25 @@ def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
     if isinstance(value, int):
         return StepVal(init_values={value: True, value + 1: False})
     raise Exception(f"Invalid bool step definition: {value!r}")
+
+
+#
+# def set_values(left: Sn[T], right: Sn[T]) -> T:
+#     if right is None:
+#         return left
+#     if left is None:
+#         return right
+#     if not isinstance(right, StepVal):
+#         return right
+#     if not isinstance(left, StepVal):
+#         if right.is_defined_for(1):
+#             return right
+#         right = right.copy()
+#         right.at(1, left)
+#         return right
+#     else:
+#         right = right.copy()
+#         for step, value in left.values.items():
+#             if not right.is_defined_for(step):
+#                 right.at(step, value)
+#         return right

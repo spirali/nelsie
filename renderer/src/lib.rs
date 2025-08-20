@@ -27,5 +27,5 @@ pub use text::{
     TextStyling,
 };
 pub use types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId};
-
+pub use taffy;
 pub type Result<T> = std::result::Result<T, Error>;
