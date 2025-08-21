@@ -20,9 +20,16 @@ class Slide(BoxBuilderMixin):
         self.init_steps = init_steps
 
         self._text_styles = None
+        self._extra_steps = None
 
     def add(self, box):
         self.children.append(box)
+
+    def insert_step(self, step: Step):
+        if self._extra_steps is None:
+            self._extra_steps = set()
+        self._extra_steps.add(step)
+
 
     def _set_style(self, name: str, style: Sn[TextStyle]):
         if self._text_styles is None:
@@ -191,6 +198,8 @@ class SlideDeck:
             steps = set(slide.init_steps)
             slide.traverse_tree(shared_data, steps)
             extract_steps(slide, steps)
+            if slide._extra_steps:
+                steps.update(slide._extra_steps)
             for step in sorted(steps):
                 if isinstance(step, int):
                     if step < 1:
