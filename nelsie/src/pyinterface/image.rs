@@ -30,7 +30,7 @@ impl LoadedImage {
             .map(|s| s.into_pyobject(py))
             .collect::<Result<Vec<_>, _>>()
     }
-    fn at_step<'py>(&self, step: Step) -> PyResult<PyImage> {
+    fn get<'py>(&self, step: Option<Step>) -> PyResult<PyImage> {
         match &self.image_data {
             LoadedImageData::BinImage(data) => Ok(PyImage {
                 width: self.width,
@@ -52,7 +52,7 @@ impl LoadedImage {
                             layer
                                 .steps
                                 .as_ref()
-                                .is_none_or(|steps| bool_at_step(&steps, &step))
+                                .is_none_or(|steps| if let Some(s) = step.as_ref() { bool_at_step(&steps, s) } else { true })
                                 .then(|| layer.data.clone())
                         })
                         .collect(),
@@ -131,7 +131,7 @@ fn check_is_non_empty(element: &xmltree::Element) -> bool {
     })
 }
 
-fn create_svg(s: String, enable_steps: bool) -> PyResult<LoadedImage> {
+fn create_svg(s: String) -> PyResult<LoadedImage> {
     let xml_opt = roxmltree::ParsingOptions {
         allow_dtd: true,
         ..Default::default()
@@ -179,7 +179,6 @@ fn create_svg(s: String, enable_steps: bool) -> PyResult<LoadedImage> {
         }
     };
 
-    if enable_steps {
         let mut result = Vec::new();
         let mut named_steps = BTreeSet::new();
         loop {
@@ -198,21 +197,12 @@ fn create_svg(s: String, enable_steps: bool) -> PyResult<LoadedImage> {
             image_data: LoadedImageData::FragmentedSvgImage(result),
             named_steps: named_steps.into_iter().collect_vec(),
         })
-    } else {
-        Ok(LoadedImage {
-            width: size.width(),
-            height: size.height(),
-            image_data: LoadedImageData::SvgImage(InMemorySvgImage::new(Arc::new(tree))),
-            named_steps: Vec::new(),
-        })
-    }
 }
 
 #[pyfunction]
 pub(crate) fn create_mem_image<'py>(
     data: &Bound<'py, PyAny>,
     image_format: PyImageFormat,
-    enable_steps: bool,
 ) -> PyResult<LoadedImage> {
     match image_format {
         PyImageFormat::Png => {
@@ -228,13 +218,13 @@ pub(crate) fn create_mem_image<'py>(
         }
         PyImageFormat::Svg => {
             let s: String = data.extract()?;
-            create_svg(s, enable_steps)
+            create_svg(s)
         }
     }
 }
 
 #[pyfunction]
-pub(crate) fn load_image<'py>(path: &str, enable_steps: bool) -> PyResult<LoadedImage> {
+pub(crate) fn load_image<'py>(path: &str) -> PyResult<LoadedImage> {
     let image_format = if let Some(ext) = path.rsplit_once('.').map(|(_, s)| s.to_ascii_lowercase())
     {
         match ext.as_str() {
@@ -259,7 +249,7 @@ pub(crate) fn load_image<'py>(path: &str, enable_steps: bool) -> PyResult<Loaded
             let s = String::from_utf8(data).map_err(|_| {
                 PyException::new_err(format!("File cannot be parsed as UTF-8: {path}"))
             })?;
-            create_svg(s, enable_steps)
+            create_svg(s)
         }
     }
 }

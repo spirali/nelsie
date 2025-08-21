@@ -30,7 +30,6 @@ class Slide(BoxBuilderMixin):
             self._extra_steps = set()
         self._extra_steps.add(step)
 
-
     def _set_style(self, name: str, style: Sn[TextStyle]):
         if self._text_styles is None:
             self._text_styles = {}
