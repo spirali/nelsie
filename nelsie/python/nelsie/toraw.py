@@ -174,7 +174,6 @@ class RawPage:
 class Document:
     def __init__(self, resources: Resources, pages: list[RawPage]):
         self.pages = pages
-        print(pages[0].root)
         self.resources = resources
 
     def render(

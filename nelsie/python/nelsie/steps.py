@@ -162,7 +162,39 @@ def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
     raise Exception(f"Invalid bool step definition: {value!r}")
 
 
-#
+def shift_step(step: Step, shift: Step) -> Step:
+    if shift == 0:
+        return step
+    if isinstance(step, int):
+        if isinstance(shift, int):
+            return step + shift
+        else:
+            return shift[:-1] + (shift[-1] + step,)
+    else:
+        return shift[:-1] + (shift[-1] + step[0],) + step[1:]
+
+
+def unshift_step(step: Step, shift: Step) -> Step | None:
+    if shift == 0:
+        return step
+    if isinstance(step, int):
+        if isinstance(shift, int):
+            step -= shift
+            if step < 1:
+                return None
+            return step
+        else:
+            s = shift[-1] - step
+            if s < 1:
+                return None
+            return shift[:-1] + (s,)
+    else:
+        s = shift[-1] - step[0]
+        if s < 1:
+            return None
+        return shift[:-1] + (s,) + step[1:]
+
+
 # def set_values(left: Sn[T], right: Sn[T]) -> T:
 #     if right is None:
 #         return left

@@ -59,7 +59,7 @@ def test_render_svg_image_shift(deck):
     box = slide.box(width="90%", height="80%", bg_color="gray")
     slide.insert_step(2)
     slide.insert_step(3)
-    box.image("test.svg", width="80%", shift_steps=2)
+    box.image(IMG_SVG, width="80%", shift_steps=2)
 
 
 @check(n_slides=3)

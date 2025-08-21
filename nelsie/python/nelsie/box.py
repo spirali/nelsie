@@ -178,7 +178,7 @@ class BoxBuilderMixin:
         return box
 
     def image(
-        self, path_or_data: Sn[PathOrImageData], *, enable_steps: Sv[bool] = True, shift_steps: Sv[int] = 0, **box_args
+        self, path_or_data: Sn[PathOrImageData], *, enable_steps: Sv[bool] = True, shift_steps: int = 0, **box_args
     ):
         sn_check(path_or_data, check_image_path_or_data)
         sv_check(enable_steps, check_is_bool)

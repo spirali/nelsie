@@ -214,7 +214,6 @@ def test_show_next_last_keywords(deck):
     slide.box(show=3).text("Jump")
     slide.box(show="last").text("Last2")
     slide.box(show="next").text("Next2")
-    print(slide.get_steps())
 
 
 @check(n_slides=4)
