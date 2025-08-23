@@ -325,6 +325,30 @@ fn obj_to_node(
                                     items,
                                 ))
                             }
+                        },
+                        PyImageData::Ora(img) => {
+                            let items: Vec<_> = img
+                                .iter()
+                                .map(|(rectangle, layer)| {
+                                    (
+                                        rectangle.clone(),
+                                        register.register_bin_image(
+                                            layer.clone(),
+                                            image.width,
+                                            image.height,
+                                        ),
+                                    )
+                                })
+                                .collect();
+                            if items.is_empty() {
+                                None
+                            } else {
+                                Some(register.register_composition(
+                                    image.width,
+                                    image.height,
+                                    items,
+                                ))
+                            }
                         }
                     }
                 }
