@@ -6,6 +6,7 @@ IMG_PNG = os.path.join(ASSETS_DIR, "testimg.png")
 IMG_JPEG = os.path.join(ASSETS_DIR, "testimg.jpeg")
 IMG_SVG = os.path.join(ASSETS_DIR, "test.svg")
 IMG_SVG_WITH_DEFS = os.path.join(ASSETS_DIR, "with_defs.svg")
+IMG_ORA = os.path.join(ASSETS_DIR, "test.ora")
 
 
 @check()
@@ -66,27 +67,27 @@ def test_render_svg_image_shift(deck):
 def test_render_ora_image_steps(deck):
     slide = deck.new_slide(width=250, height=250)
     box = slide.box(bg_color="gray")
-    box.image("test.ora")
+    box.image(IMG_ORA)
 
 
 @check(n_slides=1)
 def test_render_ora_image_no_steps(deck):
     slide = deck.new_slide(width=250, height=250)
     box = slide.box(bg_color="gray")
-    box.image("test.ora", enable_steps=False)
+    box.image(IMG_ORA, enable_steps=False)
 
 
 @check(n_slides=1)
 def test_render_ora_image_scale(deck):
     slide = deck.new_slide(width=400, height=400)
-    slide.image("test.ora", width="80%", enable_steps=False, bg_color="gray")
-    slide.image("test.ora", height="20%", enable_steps=False, bg_color="gray")
+    slide.image(IMG_ORA, width="80%", enable_steps=False, bg_color="gray")
+    slide.image(IMG_ORA, height="20%", enable_steps=False, bg_color="gray")
 
 
 @check()
 def test_svg_image_dtd(deck):
     slide = deck.new_slide(width=40, height=40)
-    slide.image("knight_with_dtd.svg")
+    slide.image(os.path.join(ASSETS_DIR, "knight_with_dtd.svg"))
 
 
 @check(n_slides=5)
@@ -104,11 +105,11 @@ def test_image_path_in_steps(deck):
 @check()
 def test_inline_image(deck):
     slide = deck.new_slide(width=200, height=200)
-    with open(os.path.join(ASSETS_DIR, "testimg.png"), "rb") as f:
+    with open(IMG_PNG, "rb") as f:
         png_data = f.read()
-    with open(os.path.join(ASSETS_DIR, "testimg.jpeg"), "rb") as f:
+    with open(IMG_JPEG, "rb") as f:
         jpeg_data = f.read()
-    with open(os.path.join(ASSETS_DIR, "test.svg"), "r") as f:
+    with open(IMG_SVG, "r") as f:
         svg_data = f.read()
     slide.image((png_data, "png"), height="30%")
     slide.image((jpeg_data, "jpeg"), height="30%")

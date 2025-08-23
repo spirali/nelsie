@@ -1,6 +1,7 @@
 use crate::common::steps::{bool_at_step, Step};
 use crate::parsers::steps::parse_bool_steps;
 use crate::pyinterface::resources::Resources;
+use super::ora::create_ora;
 use imagesize::size;
 use itertools::Itertools;
 use pyo3::exceptions::{PyException, PyValueError};
@@ -8,7 +9,7 @@ use pyo3::types::{PyAnyMethods, PyList};
 use pyo3::{
     pyclass, pyfunction, pymethods, Bound, FromPyObject, IntoPyObject, PyAny, PyResult, Python,
 };
-use renderer::{InMemoryBinImage, InMemorySvgImage};
+use renderer::{InMemoryBinImage, InMemorySvgImage, Rectangle};
 use resvg::usvg::{roxmltree, Error};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::Arc;
@@ -37,12 +38,12 @@ impl LoadedImage {
                 height: self.height,
                 image_data: PyImageData::BinImage(data.clone()),
             }),
-            LoadedImageData::SvgImage(data) => Ok(PyImage {
+            LoadedImageData::Svg(data) => Ok(PyImage {
                 width: self.width,
                 height: self.height,
                 image_data: PyImageData::SvgImage(data.clone()),
             }),
-            LoadedImageData::FragmentedSvgImage(layers) => Ok(PyImage {
+            LoadedImageData::FragmentedSvg(layers) => Ok(PyImage {
                 width: self.width,
                 height: self.height,
                 image_data: PyImageData::FragmentedSvgImage(
@@ -58,6 +59,22 @@ impl LoadedImage {
                         .collect(),
                 ),
             }),
+            LoadedImageData::Ora(layers) => Ok(PyImage {
+                   width: self.width,
+                   height: self.height,
+                   image_data: PyImageData::Ora(
+                       layers
+                       .iter()
+                       .filter_map(|layer| {
+                                   layer
+                                   .steps
+                                   .as_ref()
+                                   .is_none_or(|steps| if let Some(s) = step.as_ref() { bool_at_step(&steps, s) } else { true })
+                                   .then(|| (layer.rectangle.clone(), layer.data.clone()))
+                                   })
+                       .collect(),
+                   ),
+               })
         }
     }
 }
@@ -74,16 +91,24 @@ struct SvgLayer {
     data: InMemorySvgImage,
 }
 
-pub enum LoadedImageData {
-    BinImage(InMemoryBinImage),
-    SvgImage(InMemorySvgImage),
-    FragmentedSvgImage(Vec<SvgLayer>),
+pub(crate) struct OraLayer {
+    pub(crate) steps: Option<Vec<(Step, bool)>>,
+    pub(crate) rectangle: Rectangle,
+    pub(crate) data: InMemoryBinImage,
 }
 
-pub enum PyImageData {
+pub(crate) enum LoadedImageData {
+    BinImage(InMemoryBinImage),
+    Svg(InMemorySvgImage),
+    FragmentedSvg(Vec<SvgLayer>),
+    Ora(Vec<OraLayer>),
+}
+
+pub(crate) enum PyImageData {
     BinImage(InMemoryBinImage),
     SvgImage(InMemorySvgImage),
     FragmentedSvgImage(Vec<InMemorySvgImage>),
+    Ora(Vec<(Rectangle, InMemoryBinImage)>)
 }
 
 fn create_png(data: Vec<u8>) -> PyResult<LoadedImage> {
@@ -117,6 +142,7 @@ fn create_jpeg(data: Vec<u8>) -> PyResult<LoadedImage> {
         named_steps: Vec::new(),
     })
 }
+
 
 fn check_is_non_empty(element: &xmltree::Element) -> bool {
     match element.name.as_str() {
@@ -194,7 +220,7 @@ fn create_svg(s: String) -> PyResult<LoadedImage> {
         Ok(LoadedImage {
             width: size.width(),
             height: size.height(),
-            image_data: LoadedImageData::FragmentedSvgImage(result),
+            image_data: LoadedImageData::FragmentedSvg(result),
             named_steps: named_steps.into_iter().collect_vec(),
         })
 }
@@ -242,9 +268,7 @@ pub(crate) fn load_image<'py>(path: &str) -> PyResult<LoadedImage> {
     match image_format {
         PyImageFormat::Png => create_png(data),
         PyImageFormat::Jpeg => create_jpeg(data),
-        PyImageFormat::Ora => {
-            todo!()
-        }
+        PyImageFormat::Ora => Ok(create_ora(data)?),
         PyImageFormat::Svg => {
             let s = String::from_utf8(data).map_err(|_| {
                 PyException::new_err(format!("File cannot be parsed as UTF-8: {path}"))

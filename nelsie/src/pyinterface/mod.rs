@@ -8,6 +8,7 @@ mod rendering;
 mod resources;
 mod shapes;
 mod text;
+mod ora;
 
 use crate::pyinterface::image::LoadedImage;
 use crate::pyinterface::parsers::parse_bool_steps;

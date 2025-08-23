@@ -10,6 +10,8 @@ pub enum NelsieError {
     Parsing(String),
     #[error("{0}")]
     Generic(String),
+    #[error(transparent)]
+    Zip(#[from] zip::result::ZipError),
 }
 
 impl NelsieError {
