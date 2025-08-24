@@ -2,7 +2,7 @@ use crate::color::Color;
 use crate::node::Node;
 use crate::render::canvas::Canvas;
 use crate::render::context::RenderContext;
-use crate::render::layout::compute_page_layout;
+use crate::render::layout::{compute_page_layout, ComputedLayout};
 use crate::render::node::render_node;
 use std::collections::BTreeSet;
 
@@ -23,11 +23,7 @@ impl Page {
         }
     }
 
-    pub(crate) fn render_to_canvas(&self, render_ctx: &mut RenderContext) -> Canvas {
-        log::debug!("Creating layout");
-        let layout = compute_page_layout(render_ctx, self);
-        log::debug!("Layout {:?}", layout);
-
+    pub(crate) fn render_to_canvas(&self, render_ctx: &mut RenderContext, layout: &ComputedLayout) -> Canvas {
         let mut canvas = Canvas::new(self.width, self.height, self.bg_color);
         render_node(render_ctx, &self.node, &layout, &mut canvas);
         canvas.finish();

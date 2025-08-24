@@ -263,7 +263,7 @@ class SlideDeck:
         verbose: int = 1,
         compression_level: int = 1,
         n_threads: int | None = None,
-    ) -> None | list[bytes]:
+    ) -> None | list:
         """
         Render slides
 

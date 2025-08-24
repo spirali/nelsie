@@ -349,6 +349,7 @@ use crate::render::content::{Content, ContentMap};
 use crate::{ContentId, Resources};
 use resvg::{tiny_skia, usvg};
 use std::sync::Mutex;
+use crate::render::layout::ComputedLayout;
 
 pub(crate) trait Composer: Sync + Send {
     fn add_page(
@@ -356,6 +357,7 @@ pub(crate) trait Composer: Sync + Send {
         page_idx: usize,
         canvas: Canvas,
         content_map: &ContentMap,
+        compute_layout: &ComputedLayout,
     ) -> crate::Result<()>;
     fn preprocess_content(
         &self,
@@ -395,6 +397,7 @@ impl Composer for SvgWriteComposer<'_> {
         page_idx: usize,
         canvas: Canvas,
         content_map: &ContentMap,
+        _layout: &ComputedLayout,
     ) -> crate::Result<()> {
         let svg = canvas.as_svg(content_map)?;
         let final_path = self.path.join(path_name(page_idx, "svg", self.n_pages));
@@ -425,6 +428,7 @@ impl Composer for PngWriteComposer<'_> {
         page_idx: usize,
         canvas: Canvas,
         content_map: &ContentMap,
+        _layout: &ComputedLayout,
     ) -> crate::Result<()> {
         let svg = canvas.as_svg(content_map)?;
         let data = svg_to_png(&self.resources, &svg)?;
@@ -456,6 +460,7 @@ impl Composer for SvgCollectorComposer {
         page_idx: usize,
         canvas: Canvas,
         content_map: &ContentMap,
+        _layout: &ComputedLayout,
     ) -> crate::Result<()> {
         let svg = canvas.as_svg(content_map)?;
         self.pages.lock().unwrap()[page_idx] = svg;
@@ -487,6 +492,7 @@ impl<'a> Composer for PngCollectorComposer<'a> {
         page_idx: usize,
         canvas: Canvas,
         content_map: &ContentMap,
+        _layout: &ComputedLayout,
     ) -> crate::Result<()> {
         let svg = canvas.as_svg(content_map)?;
         let data = svg_to_png(self.resources, &svg)?;

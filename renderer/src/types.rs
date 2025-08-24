@@ -8,9 +8,9 @@ impl NodeId {
         NodeId(node_id)
     }
 
-    // pub fn as_u32(self) -> u32 {
-    //     self.0
-    // }
+    pub fn as_usize(self) -> usize {
+        self.0
+    }
     //
     // pub fn bump(&mut self) -> NodeId {
     //     self.0 += 1;

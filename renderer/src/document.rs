@@ -19,6 +19,9 @@ use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use pdf_writer::Finish;
+use crate::layout_info::{LayoutInfoComposer, PageLayout};
+use crate::render::layout::compute_page_layout;
 
 pub struct Register {
     node_id_counter: NodeId,
@@ -207,8 +210,9 @@ impl Document {
                     let mut render_ctx = RenderContext {
                         content_map: &content_map,
                     };
-                    let canvas = page.render_to_canvas(&mut render_ctx);
-                    composer.add_page(page_idx, canvas, &render_ctx.content_map)
+                    let layout = compute_page_layout(&mut render_ctx, &page);
+                    let canvas = page.render_to_canvas(&mut render_ctx, &layout);
+                    composer.add_page(page_idx, canvas, &render_ctx.content_map, &layout)
                 })
         })
     }
@@ -272,6 +276,13 @@ impl Document {
         options: &RenderingOptions,
     ) -> crate::Result<Vec<Vec<u8>>> {
         let mut composer = PngCollectorComposer::new(resources, self.pages.len());
+        self.render(resources, options, &mut composer)?;
+        Ok(composer.finish())
+    }
+
+    pub fn render_layout_info(&self, resources: &Resources, options: &RenderingOptions,
+    ) -> crate::Result<Vec<PageLayout>> {
+        let mut composer = LayoutInfoComposer::new(self.pages.len());
         self.render(resources, options, &mut composer)?;
         Ok(composer.finish())
     }
