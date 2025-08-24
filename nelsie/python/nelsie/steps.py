@@ -31,18 +31,10 @@ def step_lte(a, b):
     return a <= b
 
 
-def step_compare(a, b):
-    if isinstance(a, int) ^ isinstance(b, int):
-        if isinstance(a, int):
-            a = (a,)
-        if isinstance(b, int):
-            b = (b,)
-    if a < b:
-        return -1
-    elif a > b:
-        return 1
-    else:
-        return 0
+def step_compare_key(a):
+    if isinstance(a, int):
+        return (a,)
+    return a
 
 
 class StepVal(Generic[T]):
@@ -97,7 +89,7 @@ class StepVal(Generic[T]):
 
     def __repr__(self):
         v = f"<StepVal "
-        for step, value in sorted(self.values.items(), key=cmp_to_key(step_compare)):
+        for step, value in sorted(self.values.items(), key=step_compare_key):
             v += f"{step}={value!r}, "
         v += ">"
         return v
@@ -158,7 +150,7 @@ def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
         value.call(check_is_bool)
         return value
     if isinstance(value, int):
-        return StepVal(init_values={value: True, value + 1: False})
+        return StepVal(init_values={value: True, value + 1: False}, named_steps=(value,))
     raise Exception(f"Invalid bool step definition: {value!r}")
 
 

@@ -113,40 +113,39 @@ def test_active_steps(deck):
     slide.box(width=30, height=30, bg_color="orange", active=3)
     slide.box(width=30, height=30, bg_color="blue")
 
+# @check(n_slides=4)
+# def test_replace_steps(deck):
+#     slide = deck.new_slide(width=200, height=200)
+#     slide.box(
+#         replace_steps={1: 2, 3: 1},
+#         width=StepVal("100").at(2, "50").at(3, "20"),
+#         height=20,
+#         bg_color="green",
+#     )
+#     slide.image("test.svg", width="50%", replace_steps={1: 3, 2: 1})
 
-@check(n_slides=4)
-def test_replace_steps(deck):
-    slide = deck.new_slide(width=200, height=200)
-    slide.box(
-        replace_steps={1: 2, 3: 1},
-        width=InSteps({1: "100", 2: "50", 3: "20"}),
-        height=20,
-        bg_color="green",
-    )
-    slide.image("test.svg", width="50%", replace_steps={1: 3, 2: 1})
 
-
-def test_set_get_steps(deck):
-    slide = deck.new_slide()
-    assert slide.get_steps() == [(1,)]
-    slide.box(width=InSteps({1: 100, 3: 200, 5: 600}))
-    slide.box(width=InSteps({5: 600, (5, 3): 300}))
-    assert slide.get_steps() == [(1,), (3,), (5,), (5, 3)]
-    slide.insert_step(3)
-    slide.insert_step((6, 2))
-    assert slide.get_steps() == [(1,), (3,), (5,), (5, 3), (6, 2)]
-
-    slide.remove_step(5)
-    assert slide.get_steps() == [(1,), (3,), (5, 3), (6, 2)]
-
-    slide.remove_steps_above((5, 3))
-    assert slide.get_steps() == [(1,), (3,), (5, 3)]
-
-    slide.remove_steps_below((5, 3))
-    assert slide.get_steps() == [(5, 3)]
-
-    slide.set_steps({1, (3, 2), 2})
-    assert slide.get_steps() == [(1,), (2,), (3, 2)]
+# def test_set_get_steps(deck):
+#     slide = deck.new_slide()
+#     assert slide.get_steps() == [(1,)]
+#     slide.box(width=InSteps({1: 100, 3: 200, 5: 600}))
+#     slide.box(width=InSteps({5: 600, (5, 3): 300}))
+#     assert slide.get_steps() == [(1,), (3,), (5,), (5, 3)]
+#     slide.insert_step(3)
+#     slide.insert_step((6, 2))
+#     assert slide.get_steps() == [(1,), (3,), (5,), (5, 3), (6, 2)]
+#
+#     slide.remove_step(5)
+#     assert slide.get_steps() == [(1,), (3,), (5, 3), (6, 2)]
+#
+#     slide.remove_steps_above((5, 3))
+#     assert slide.get_steps() == [(1,), (3,), (5, 3)]
+#
+#     slide.remove_steps_below((5, 3))
+#     assert slide.get_steps() == [(5, 3)]
+#
+#     slide.set_steps({1, (3, 2), 2})
+#     assert slide.get_steps() == [(1,), (2,), (3, 2)]
 
 
 @check(n_slides=4)

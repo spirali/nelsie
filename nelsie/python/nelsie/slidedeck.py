@@ -1,10 +1,11 @@
+from functools import cmp_to_key
 from typing import Literal, Iterable
 
 from nelsie.utils import check_is_int_or_float, check_is_type, check_is_str
 
 from .box import BoxBuilderMixin, Box, traverse_children
 from .resources import Resources
-from .steps import Step, Sv, get_step, Sn, StepVal, sn_apply
+from .steps import Step, Sv, get_step, Sn, StepVal, sn_apply, step_compare_key
 from . import nelsie as nelsie_rs
 from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, merge_in_step, check_is_text_style
 from .shapes import Path, Rect, Oval
@@ -199,7 +200,7 @@ class SlideDeck:
             extract_steps(slide, steps)
             if slide._extra_steps:
                 steps.update(slide._extra_steps)
-            for step in sorted(steps):
+            for step in sorted(steps, key=step_compare_key):
                 if isinstance(step, int):
                     if step < 1:
                         continue
