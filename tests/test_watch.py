@@ -39,7 +39,7 @@ deck.render("out.pdf")"""
         hash1 = make_hash()
         assert p.poll() is None
 
-        copy_image("testimg.png")
+        copy_image("testimg2.jpeg")
         time.sleep(1.0)
         hash2 = make_hash()
         assert hash1.hexdigest() == hash2.hexdigest()

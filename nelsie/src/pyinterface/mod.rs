@@ -9,6 +9,7 @@ mod resources;
 mod shapes;
 mod text;
 mod ora;
+mod watch;
 
 use crate::pyinterface::image::LoadedImage;
 use crate::pyinterface::parsers::parse_bool_steps;
@@ -26,6 +27,7 @@ fn nelsie(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(image::create_mem_image, m)?)?;
     m.add_function(wrap_pyfunction!(image::load_image, m)?)?;
     m.add_function(wrap_pyfunction!(parse_bool_steps, m)?)?;
+    m.add_function(wrap_pyfunction!(watch::watch, m)?)?;
     m.add_class::<LoadedImage>()?;
     Ok(())
 }

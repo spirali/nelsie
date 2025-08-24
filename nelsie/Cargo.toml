@@ -20,3 +20,4 @@ itertools = "0.14"
 strict-num = "*"
 imagesize = { version = "0.14", default-features = false, features = ["jpeg", "png"] }
 zip = { version = "2", default-features = false, features = ["deflate"] }
+notify = "8"
