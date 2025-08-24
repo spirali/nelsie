@@ -4,6 +4,7 @@ from typing import Literal
 
 from .steps import Sv, Sn, Step, get_step, sn_apply, shift_step, unshift_step
 from . import nelsie as nelsie_rs
+from .watch import watch_path
 
 ImageFormat = Literal["png", "svg", "jpeg", "ora"]
 PathOrImageData = str | tuple[bytes | str, ImageFormat]
@@ -40,9 +41,10 @@ def check_image_path_or_data(obj):
     raise Exception("Image specification has to be path or tuple [bytes, format]")
 
 
-def normalize_image_path(path):
+def normalize_and_watch_image_path(path):
     if isinstance(path, str):
-        return os.path.abspath(path)
+        path = os.path.abspath(path)
+        watch_path(path)
     return path
 
 
