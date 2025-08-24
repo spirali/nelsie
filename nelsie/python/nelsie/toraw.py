@@ -192,8 +192,9 @@ def children_to_raw(children, step: Step, ctx: ToRawContext):
         child = get_step(child, step)
         if child is None:
             continue
-        if isinstance(child, Box) and get_step(child._active, step):
-            result.append(box_to_raw(child, step, ctx))
+        if isinstance(child, Box):
+            if get_step(child._active, step):
+                result.append(box_to_raw(child, step, ctx))
         else:
             raw = child.to_raw(step, ctx)
             if raw is not None:
