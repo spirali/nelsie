@@ -1,4 +1,6 @@
 import os
+
+from nelsie import StepVal
 from testutils import check
 from conftest import ASSETS_DIR
 
@@ -95,9 +97,9 @@ def test_image_path_in_steps(deck):
     slide = deck.new_slide(width=150, height=150)
     slide.image(None)
     slide.image(
-        InSteps({1: "testimg.jpeg", 2: "testimg.png", 4: None, 5: "testimg.jpeg"}),
+        StepVal(IMG_JPEG).at(2, IMG_PNG).at(4, None).at(5, IMG_JPEG),
         width=100,
-        height=100,
+        # height=100,
     )
     slide.insert_step(3)
 

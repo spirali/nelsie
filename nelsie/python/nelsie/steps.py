@@ -69,7 +69,7 @@ class StepVal(Generic[T]):
             if value is not None:
                 fn(value)
 
-    def map_fn(self, fn: callable(T)) -> "StepVal[T]":
+    def map(self, fn: callable(T)) -> "StepVal[T]":
         values = {}
         for step, value in self.values.items():
             values[step] = fn(value)
@@ -124,7 +124,7 @@ def sn_check(obj, check_fn):
 def sn_apply(obj, apply_fn):
     if isinstance(obj, StepVal):
         obj.call_if_not_none(apply_fn)
-    if obj is not None:
+    elif obj is not None:
         apply_fn(obj)
 
 
