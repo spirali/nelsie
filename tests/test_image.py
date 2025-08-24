@@ -92,6 +92,7 @@ def test_svg_image_dtd(deck):
     slide.image(os.path.join(ASSETS_DIR, "knight_with_dtd.svg"), width="40")
     print(deck.render(None, "layout"))
 
+
 @check(n_slides=5)
 def test_image_path_in_steps(deck):
     slide = deck.new_slide(width=150, height=150)
