@@ -1,11 +1,13 @@
-from nelsie.steps import extract_steps, parse_bool_steps
+from nelsie.steps import parse_bool_steps
+
+from nelsie.steps_extract import extract_steps
 from testutils import check
 
-from nelsie import TextStyle, s, InSteps, Box
+from nelsie import TextStyle, StepVal, Box
 
 
 def test_step_value():
-    a = s().s(2, "A").s(4, "B")
+    a = StepVal().at(2, "A").at(4, "B")
     assert a.get_step(1) is None
     assert a.get_step(2) == "A"
     assert a.get_step(3) == "A"
@@ -66,8 +68,8 @@ def test_extract_steps():
         assert out == target
 
     check(None, set())
-    a = s().s(2, "A").s(4, "B")
-    b = s().s(4, "A").s(5, "B")
+    a = StepVal().at(2, "A").at(4, "B")
+    b = StepVal().at(4, "A").at(5, "B")
     check(a, {2, 4})
     check([4, 5, 6, a, b], {2, 4, 5})
     check(a, {2, 4})
@@ -80,8 +82,8 @@ def test_render_steps(deck):
     slide = deck.new_slide()
     slide.box(
         width=100,
-        height=s("75%").s(2, "25%"),
-        bg_color=InSteps(["red", "green", "blue"]),
+        height=StepVal("75%").at(2, "25%"),
+        bg_color=StepVal("red").at(2, "green").at(3, "blue"),
     )
 
 
@@ -90,8 +92,8 @@ def test_render_substeps(deck):
     slide = deck.new_slide(init_steps=())
     slide.box(
         width=100,
-        height=InSteps({(2, 3, 1): "75%", (2, 3, 2): "25%"}),
-        bg_color=InSteps({(2, 3, 1): "red", (2, 3, 2): "green", 4: "blue"}),
+        height=StepVal().at((2, 3, 1), "75%").at((2, 3, 2), "25%"),
+        bg_color=StepVal().at((2, 3, 1), "red").at((2, 3, 2), "green").at(4, "blue"),
     )
 
 
