@@ -72,7 +72,7 @@ def _put_into_shared_data(path_or_data: PathOrImageData | None, content, shared_
 @dataclass
 class ImageContent:
     path_or_data: Sn[PathOrImageData]
-    enable_steps: Sv[bool]
+    enable_steps: bool
     shift_steps: int
 
     def traverse_tree(self, shared_data, steps: set[Step]):

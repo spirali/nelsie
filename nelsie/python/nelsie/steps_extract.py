@@ -1,3 +1,4 @@
+from .image import ImageContent
 from .steps import StepVal, Step
 from .textstyle import TextStyle
 from .text import TextContent
@@ -6,7 +7,7 @@ from .slidedeck import Slide
 from .shapes import Path, Rect, Oval, Stroke, Arrow
 
 containers = (list, tuple, set)
-known_classes = (TextContent, TextStyle, Slide, Box, Path, Rect, Oval, Stroke, Arrow)
+known_classes = (Slide, Box, TextContent, TextStyle, ImageContent, Path, Rect, Oval, Stroke, Arrow)
 
 
 def extract_steps(obj, out: set[Step]):
