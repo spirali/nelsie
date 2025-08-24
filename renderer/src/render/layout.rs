@@ -26,6 +26,10 @@ impl ComputedLayout {
         }
     }
 
+    pub fn iter(&self) -> impl Iterator<Item=(&NodeId, &LayoutData)> {
+        self.node_layout.iter()
+    }
+
     fn _layout(&self, node_id: NodeId) -> &LayoutData {
         self.node_layout(node_id)
             .unwrap_or_else(|| panic!("Node {node_id:?} not found, ordering not correct?"))

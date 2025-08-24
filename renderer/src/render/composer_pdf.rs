@@ -13,6 +13,7 @@ use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicI32, Ordering};
+use crate::render::layout::ComputedLayout;
 
 pub(crate) struct PdfComposer {
     chunks: Mutex<Vec<Chunk>>,
@@ -73,6 +74,7 @@ impl<'a> Composer for PdfComposer {
         page_idx: usize,
         canvas: Canvas,
         content_map: &ContentMap,
+        _layout: &ComputedLayout,
     ) -> crate::Result<()> {
         let page = canvas.into_pdf_page(
             &self.ref_allocator,

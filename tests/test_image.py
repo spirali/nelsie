@@ -87,8 +87,8 @@ def test_render_ora_image_scale(deck):
 @check()
 def test_svg_image_dtd(deck):
     slide = deck.new_slide(width=40, height=40)
-    slide.image(os.path.join(ASSETS_DIR, "knight_with_dtd.svg"))
-
+    slide.image(os.path.join(ASSETS_DIR, "knight_with_dtd.svg"), width="40")
+    print(deck.render(None, "layout"))
 
 @check(n_slides=5)
 def test_image_path_in_steps(deck):

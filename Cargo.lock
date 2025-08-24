@@ -906,6 +906,7 @@ dependencies = [
  "pdf-writer",
  "rayon",
  "resvg",
+ "serde",
  "skrifa 0.31.3",
  "smallvec",
  "svg2pdf",
