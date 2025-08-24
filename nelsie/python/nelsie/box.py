@@ -115,6 +115,16 @@ class BoxBuilderMixin:
         self.add(box)
         return box
 
+    def overlay(self, **box_args):
+        """
+        Create a new box that spans over the box
+        """
+        box_args.setdefault("x", 0)
+        box_args.setdefault("y", 0)
+        box_args.setdefault("width", "100%")
+        box_args.setdefault("height", "100%")
+        return self.box(**box_args)
+
     def text(
         self,
         text: Sv[str],
