@@ -38,7 +38,8 @@ impl<'a> PdfWriter<'a> {
         self.gs_resources.insert(key, (name, rf));
     }
 
-    pub fn put_x_object(&mut self, rf: Ref, rect: Rectangle) {
+    pub fn put_x_object(&mut self, rf: Ref, rect: Rectangle, orig_w: f32, orig_h: f32) {
+        let rect = rect.fit_content_with_aspect_ratio(orig_w, orig_h);
         let name = self.new_name();
         self.content
             .save_state()

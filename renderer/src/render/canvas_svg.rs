@@ -159,10 +159,12 @@ fn render_content_to_svg(
                 InMemoryBinImage::Png(data) => ("png", data),
                 InMemoryBinImage::Jpeg(data) => ("jpeg", data),
             };
-            write_raster_image_to_svg(rect, format, data, writer);
+            let rect = rect.fit_content_with_aspect_ratio(width, height);
+            write_raster_image_to_svg(&rect, format, data, writer);
         }
         ContentBody::SvgImage(image) => {
-            render_svg_image_into_svg(writer, &image.as_string(), rect, width, height);
+            let rect = rect.fit_content_with_aspect_ratio(width, height);
+            render_svg_image_into_svg(writer, &image.as_string(), &rect, width, height);
         }
         ContentBody::Composition(items) => {
             write_g_transform(writer, rect, width, height);

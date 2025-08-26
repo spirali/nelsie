@@ -48,4 +48,21 @@ impl Rectangle {
             DrawItem::Path(builder.build())
         }
     }
+
+    pub(crate) fn fit_content_with_aspect_ratio(&self, orig_w: f32, orig_h: f32) -> Rectangle {
+        let target_w = self.width;
+        let target_h = self.height;
+        let orig_aspect = orig_w / orig_h;
+        let target_aspect = target_w / target_h;
+
+        let (new_w, new_h) = if orig_aspect > target_aspect {
+            (target_w, target_w / orig_aspect)
+        } else {
+            (target_h * orig_aspect, target_h)
+        };
+        let x = self.x + (target_w - new_w) / 2.0;
+        let y = self.y + (target_h - new_h) / 2.0;
+        Rectangle::new(x, y, new_w, new_h)
+    }
+
 }
