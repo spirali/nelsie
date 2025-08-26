@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Union, Literal
 from copy import copy
 
+from .counters import CounterStorage
 from .resources import Resources
 from .basictypes import (
     Position,
@@ -63,6 +64,7 @@ class ToRawContext:
     code_theme: str
     code_language: str | None
     shared_data: dict[int, bytes]
+    counters: CounterStorage
     z_level: int = 0
 
     def get_text_style(self, name: str, step: Step):
@@ -203,13 +205,13 @@ def children_to_raw(children, step: Step, ctx: ToRawContext):
     return result
 
 
-def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[int, bytes]) -> RawPage:
+def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[int, bytes], counter_storage: CounterStorage) -> RawPage:
     width = get_step(slide.width, step)
     height = get_step(slide.height, step)
     stack = [deck._text_styles]
     if slide._text_styles is not None:
         stack.append(slide._text_styles)
-    ctx = ToRawContext(stack, deck.default_code_theme, deck.default_code_language, shared_data)
+    ctx = ToRawContext(stack, deck.default_code_theme, deck.default_code_language, shared_data, counter_storage)
     root = RawBox(
         node_id=id(slide),
         x=None,

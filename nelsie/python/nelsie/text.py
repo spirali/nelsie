@@ -52,7 +52,7 @@ class TextContent:
             style = merge_in_step(code_style, style, step)
         default_style = ctx.get_text_style("default", step)
         style = merge_in_step(default_style, style, step)
-        return RawText(
+        raw_text = RawText(
             text=get_step(self.text, step),
             style=style,
             align=get_step(self.align, step),
@@ -61,6 +61,7 @@ class TextContent:
             named_styles=text_styles,
             style_delimiters=self.style_delimiters if self.parse_styles else None,
         )
+        return raw_text
 
     def traverse_tree(self, shared_data, steps):
         pass

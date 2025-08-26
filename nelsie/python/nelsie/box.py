@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from copy import copy
-from typing import Union
+from typing import Union, Sequence
 
 from .image import PathOrImageData, ImageContent, check_image_path_or_data, normalize_and_watch_image_path
 from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps, sn_map, BoolStepDef, StepVal, sn_apply

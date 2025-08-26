@@ -169,8 +169,7 @@ class BoxBuilder:
             align,
             None,
             None,
-            strip,
-            parse_counters,
+            strip
         )
 
     def code(
@@ -185,7 +184,6 @@ class BoxBuilder:
         tab_width: int = 4,
         align: TextAlign = "start",
         strip: bool = True,
-        parse_counters: bool = False,
         **box_args,
     ):
         """
@@ -207,7 +205,6 @@ class BoxBuilder:
             language,
             theme,
             strip,
-            parse_counters,
         )
 
     def _text_box(
@@ -222,7 +219,6 @@ class BoxBuilder:
         language,
         theme,
         strip,
-        parse_counters,
     ):
         def text_preprocess(x):
             if strip:
@@ -254,7 +250,6 @@ class BoxBuilder:
             text_align=align,
             syntax_language=language,
             syntax_theme=theme,
-            parse_counters=parse_counters,
         )
         return self.box(_content=text_content, **box_args)
 
