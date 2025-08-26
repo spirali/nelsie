@@ -18,7 +18,7 @@ def test_render_raster_image_native_size(deck):
     slide.image(IMG_JPEG)
 
 
-@check(n_slides=5)
+@check(n_slides=6)
 def test_render_raster_image_forced_size(deck):
     slide = deck.new_slide(width=420, height=400)
     slide.image(IMG_PNG, width="100%", height="100%")
@@ -36,6 +36,10 @@ def test_render_raster_image_forced_size(deck):
 
     slide = deck.new_slide(width=400, height=400)
     slide.image(IMG_PNG, height="80%", bg_color="gray")
+
+    slide = deck.new_slide(width=420, height=400)
+    box = slide.box(width="100%", height="40")
+    box.image(IMG_SVG, width="100%", height="100%", enable_steps=False)
 
 
 @check(n_slides=4)

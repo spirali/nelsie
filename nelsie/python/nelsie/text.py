@@ -40,6 +40,8 @@ class TextContent:
                     if style is None:
                         style = TextStyle()
                     text_styles[name] = style
+        else:
+            text_styles = None
 
         style = get_step(self.style, step)
         if isinstance(style, str):

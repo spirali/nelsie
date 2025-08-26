@@ -176,6 +176,7 @@ fn content_into_pdf(
             }
             ContentBody::Composition(items) => {
                 let (width, height) = content.size();
+                let rect = rect.fit_content_with_aspect_ratio(width, height);
                 pdf_writer.content.save_state();
                 pdf_writer.content.transform([
                     rect.width / width,

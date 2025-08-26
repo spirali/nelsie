@@ -150,24 +150,23 @@ fn render_content_to_svg(
 ) {
     let content = content_map.get(&content_id).unwrap();
     let (width, height) = content.size();
+    let rect = rect.fit_content_with_aspect_ratio(width, height);
     match content.body() {
         ContentBody::Text((text, _is_shared)) => {
-            render_text_into_svg(writer, text, rect, width, height);
+            render_text_into_svg(writer, text, &rect, width, height);
         }
         ContentBody::BinImage(image) => {
             let (format, data) = match image {
                 InMemoryBinImage::Png(data) => ("png", data),
                 InMemoryBinImage::Jpeg(data) => ("jpeg", data),
             };
-            let rect = rect.fit_content_with_aspect_ratio(width, height);
             write_raster_image_to_svg(&rect, format, data, writer);
         }
         ContentBody::SvgImage(image) => {
-            let rect = rect.fit_content_with_aspect_ratio(width, height);
             render_svg_image_into_svg(writer, &image.as_string(), &rect, width, height);
         }
         ContentBody::Composition(items) => {
-            write_g_transform(writer, rect, width, height);
+            write_g_transform(writer, &rect, width, height);
             for (rect, content_id) in items {
                 render_content_to_svg(writer, content_map, rect, *content_id);
             }
