@@ -28,6 +28,8 @@ skrifa = "*" # Lets us give a version specified in parley
 kurbo = "*" # Lets us give a version specified in parley -> penico -> kurbo
 by_address = "1"
 smallvec = "1"
+indicatif = "0.18"
+
 serde = {  version = "1.0", features = ["derive"] }
 
 #imagesize = "0.13"

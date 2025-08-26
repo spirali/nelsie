@@ -184,8 +184,9 @@ class Document:
         format: Literal["pdf", "png", "svg", "layout"] = "pdf",
         compression_level: int = 1,
         n_threads: int | None = None,
+        progressbar: bool = True,
     ):
-        return nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level, n_threads)
+        return nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level, n_threads, progressbar)
 
 
 def children_to_raw(children, step: Step, ctx: ToRawContext):
