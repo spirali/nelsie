@@ -358,8 +358,7 @@ class BoxBuilderMixin:
         height = self.line_height(line_idx)
         if n_lines != 1:
             check_is_int(line_idx)
-            return height * n_lines
-
+            height = height * n_lines
         return self.box(
             x=self.line_x(line_idx),
             y=self.line_y(line_idx),

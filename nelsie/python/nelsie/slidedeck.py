@@ -226,8 +226,10 @@ class SlideDeck:
         self,
         path: str | None,
         format: Literal["pdf", "png", "svg"] = "pdf",
+        *,
         compression_level: int = 1,
         n_threads: int | None = None,
+        progressbar: bool = True,
     ):
         doc = self._create_doc()
-        return doc.render(path, format, compression_level, n_threads)
+        return doc.render(path, format, compression_level, n_threads, progressbar)

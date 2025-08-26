@@ -100,6 +100,7 @@ pub struct Document {
 pub struct RenderingOptions {
     pub compression_level: u8,
     pub n_threads: Option<usize>,
+    pub progressbar: bool,
 }
 
 impl Document {
@@ -122,6 +123,10 @@ impl Document {
             thread_pool_builder = thread_pool_builder.num_threads(n_threads);
         }
         let thread_pool = thread_pool_builder.build().unwrap();
+        let progressbar = options.progressbar.then(|| {
+            let total = self.register.texts.len() + self.register.bin_images.len() + self.register.svg_images.len() + self.pages.len();
+            indicatif::ProgressBar::new(total as u64)
+        });
         thread_pool.install(|| {
             let (texts, images) = rayon::join(
                 || {
@@ -147,6 +152,9 @@ impl Document {
                                     ContentBody::Text((Arc::new(rtext), *count > 1)),
                                 );
                                 composer.preprocess_content(resources, *content_id, &content)?;
+                                if let Some(p) = &progressbar {
+                                    p.inc(1);
+                                }
                                 Ok((*content_id, content))
                             },
                         )
@@ -180,9 +188,16 @@ impl Document {
                         image_contents
                             .par_iter()
                             .try_for_each(|(content_id, content)| {
-                                composer.preprocess_content(resources, *content_id, &content)
+                                let r = composer.preprocess_content(resources, *content_id, &content);
+                                if let Some(p) = &progressbar {
+                                    p.inc(1);
+                                }
+                                r
                             })?;
+                    } else if let Some(p) = &progressbar {
+                        p.inc(image_contents.len() as u64);
                     }
+
                     crate::Result::Ok(image_contents)
                 },
             );
@@ -203,7 +218,7 @@ impl Document {
 
             composer.preprocessing_finished();
 
-            self.pages
+            let r = self.pages
                 .par_iter()
                 .enumerate()
                 .try_for_each(|(page_idx, page)| {
@@ -212,8 +227,16 @@ impl Document {
                     };
                     let layout = compute_page_layout(&mut render_ctx, &page);
                     let canvas = page.render_to_canvas(&mut render_ctx, &layout);
-                    composer.add_page(page_idx, canvas, &render_ctx.content_map, &layout)
-                })
+                    let r = composer.add_page(page_idx, canvas, &render_ctx.content_map, &layout);
+                    if let Some(p) = &progressbar {
+                        p.inc(1);
+                    }
+                    r
+                });
+            if let Some(p) = progressbar {
+                p.finish();
+            }
+            r
         })
     }
 

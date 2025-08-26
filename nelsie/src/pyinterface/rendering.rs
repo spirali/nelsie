@@ -19,6 +19,7 @@ pub(crate) fn render<'py>(
     format: &str,
     compression_level: u8,
     n_threads: Option<usize>,
+    progressbar: bool,
 ) -> PyResult<Bound<'py, PyAny>> {
     let mut register = Register::new();
     let pages: Vec<_> = pages
@@ -30,6 +31,7 @@ pub(crate) fn render<'py>(
     let options = RenderingOptions {
         compression_level,
         n_threads,
+        progressbar,
     };
     let result = py.allow_threads(|| run_rendering(resources, &options, path, format, doc))?;
     Ok(match result {
