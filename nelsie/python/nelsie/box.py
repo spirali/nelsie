@@ -351,15 +351,20 @@ class BoxBuilderMixin:
         node_id = id(self)
         return LayoutExpr.inline_height(node_id, anchor_id, fraction)
 
-    def line_box(self, line_idx: int, **box_args):
+    def line_box(self, line_idx: int, n_lines: int = 1, **box_args):
         """
         Creates a new box over a text line in the box
         """
+        height = self.line_height(line_idx)
+        if n_lines != 1:
+            check_is_int(line_idx)
+            return height * n_lines
+
         return self.box(
             x=self.line_x(line_idx),
             y=self.line_y(line_idx),
             width=self.line_width(line_idx),
-            height=self.line_height(line_idx),
+            height=height,
             **box_args,
         )
 
