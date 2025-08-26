@@ -148,10 +148,11 @@ fn content_into_pdf(
     rect: &Rectangle,
     content_id: ContentId,
 ) {
+    let content = content_map.get(&content_id).unwrap();
     if let Some(rf) = content_to_ref.get(&content_id) {
-        pdf_writer.put_x_object(*rf, rect.clone());
+        let (width, height) = content.size();
+        pdf_writer.put_x_object(*rf, rect.clone(), width, height);
     } else {
-        let content = content_map.get(&content_id).unwrap();
         match content.body() {
             ContentBody::Text((text, is_shared)) => {
                 assert!(!is_shared);
