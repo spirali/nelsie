@@ -49,6 +49,14 @@ fn extract_layout_expr(obj: Bound<PyAny>) -> PyResult<LayoutExpr> {
                     .collect::<PyResult<Vec<LayoutExpr>>>()?,
             })
         }
+        "sum" => {
+            let len = obj.len()?;
+            Ok(LayoutExpr::Sum {
+                expressions: (1..len)
+                    .map(|idx| extract_layout_expr(obj.get_item(idx)?))
+                    .collect::<PyResult<Vec<LayoutExpr>>>()?,
+            })
+        }
         "line_x" => Ok(LayoutExpr::LineX {
             node_id: NodeId::new(obj.get_item(1)?.extract()?),
             line_idx: obj.get_item(2)?.extract()?,

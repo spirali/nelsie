@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Sequence
 
 from .utils import check_is_type
 
@@ -23,6 +23,10 @@ class LayoutExpr:
     def __sub__(self, other: IntOrFloatOrLayoutExpr):
         check_int_or_float_or_layout_expr(other)
         return LayoutExpr("-", self, other)
+
+    @staticmethod
+    def max(expressions: Sequence["LayoutExpr"]):
+        return LayoutExpr("max", expressions)
 
     @staticmethod
     def x(node_id):

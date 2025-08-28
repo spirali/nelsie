@@ -55,6 +55,9 @@ impl ComputedLayout {
             LayoutExpr::Mul { expressions } => {
                 self.eval(&expressions.0, parent_node) * self.eval(&expressions.1, parent_node)
             }
+            LayoutExpr::Max { expressions } => {
+                expressions.iter().map(|e| self.eval(e, parent_node)).fold(0.0, |a, b| a.max(b))
+            }
             LayoutExpr::ParentX { shift } => self._rect(parent_node).x + shift,
             LayoutExpr::ParentY { shift } => self._rect(parent_node).y + shift,
             LayoutExpr::ParentWidth { fraction } => self._rect(parent_node).width * fraction,
