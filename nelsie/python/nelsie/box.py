@@ -359,10 +359,13 @@ class BoxBuilderMixin:
         if n_lines != 1:
             check_is_int(line_idx)
             height = height * n_lines
+            width = LayoutExpr.max([self.line_width(line_idx + i) for i in range(n_lines)])
+        else:
+            width = self.line_width(line_idx)
         return self.box(
             x=self.line_x(line_idx),
             y=self.line_y(line_idx),
-            width=self.line_width(line_idx),
+            width=width,
             height=height,
             **box_args,
         )
@@ -596,6 +599,12 @@ class Box(BoxBuilderMixin):
     #             check_color(bg_color)
     #         self._bg_color = bg_color
     #     """
+
+    def draw_line(self, p1, p2, **path_args):
+        path = Path(**path_args)
+        path.move_to(p1)
+        path.line_to(p2)
+        return self.add(path)
 
     def add(self, box):
         self._children.append(box)

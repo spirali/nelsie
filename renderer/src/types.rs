@@ -160,6 +160,9 @@ pub enum LayoutExpr {
     Mul {
         expressions: Box<(LayoutExpr, LayoutExpr)>,
     },
+    Max {
+        expressions: Vec<LayoutExpr>,
+    },
 }
 
 impl LayoutExpr {
@@ -174,6 +177,13 @@ impl LayoutExpr {
     pub fn add(self, other: LayoutExpr) -> LayoutExpr {
         LayoutExpr::Add {
             expressions: Box::new((self, other)),
+        }
+    }
+
+    #[inline]
+    pub fn max(expressions: Vec<LayoutExpr>) -> LayoutExpr {
+        LayoutExpr::Max {
+            expressions,
         }
     }
 

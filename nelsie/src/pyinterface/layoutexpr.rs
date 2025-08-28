@@ -95,6 +95,12 @@ pub(crate) fn extract_layout_expr(obj: &Bound<PyAny>) -> PyResult<LayoutExpr> {
             inline_id: InlineId::new(v1.extract()?),
             fraction: obj.getattr(arg2)?.extract()?,
         }),
+        "max" => Ok(LayoutExpr::max(
+            {
+                let v: Vec<Bound<PyAny>> = v0.extract()?;
+                v.into_iter().map(|obj| extract_layout_expr(&obj)).collect::<PyResult<_>>()?
+            }
+        )),
         _ => Err(PyValueError::new_err("Invalid expression")),
     }
 }
