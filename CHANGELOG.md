@@ -1,3 +1,22 @@
+# v0.20.0
+
+## New features
+
+* Most of Nelsie is rewritten from scratch. Render is now faster and produce smaller PDFs (especialy with repeated texts and fragmented SVGs).
+* `StepVal` (previously `InSteps`) could be used much more places, including paramters of `TextStyle` or `Stroke`, etc.
+* Class `Point` introduced as shortcut for two layout expressions for x and y.
+* Method of `.p` that returns `Point` in the box
+* Layout expressions now supports multiplication, subtraction and max operator
+* `line_box` now has an optinal parameter `n_lines`
+
+## Changes
+
+* `InSteps` replaced with new class `StepVal`
+* `text_anchor_*` renamed to `inline_*`
+* `Path` methods like `*_to` now takes `Point` instead of two parameters `x` and `y`
+* `TextStyle.font_family` renamed to `TextStyle.font`
+
+
 # v0.16.0
 
 ## New features

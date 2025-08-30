@@ -79,16 +79,16 @@ if ~2{__name__ == "__main__"}:
         parse_styles=True,
         z_level=2,
     )
-    t.text_anchor_box(1, bg_color="orange", z_level=0)
-    t.text_anchor_box(2, bg_color="orange", z_level=0)
+    t.inline_box(1, bg_color="orange", z_level=0)
+    t.inline_box(2, bg_color="orange", z_level=0)
 
-    t.text_anchor_box(100, bg_color="orange", z_level=1)
-    t.text_anchor_box(101, bg_color="red", z_level=1)
-    t.text_anchor_box(102, bg_color="green", z_level=0)
-    t.text_anchor_box(103, bg_color="blue", z_level=1)
+    t.inline_box(100, bg_color="orange", z_level=1)
+    t.inline_box(101, bg_color="red", z_level=1)
+    t.inline_box(102, bg_color="green", z_level=0)
+    t.inline_box(103, bg_color="blue", z_level=1)
 
-    t.text_anchor_box(10, bg_color="blue", z_level=1)
-    t.text_anchor_box(11, bg_color="blue", z_level=1)
+    t.inline_box(10, bg_color="blue", z_level=1)
+    t.inline_box(11, bg_color="blue", z_level=1)
 
 
 @check()
