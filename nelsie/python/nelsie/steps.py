@@ -187,6 +187,14 @@ def unshift_step(step: Step, shift: Step) -> Step | None:
         return shift[:-1] + (s,) + step[1:]
 
 
+def is_visible(step: Step) -> bool:
+    if isinstance(step, int):
+        if step < 1:
+            return False
+    elif step[0] < 1:
+        return False
+    return True
+
 # def set_values(left: Sn[T], right: Sn[T]) -> T:
 #     if right is None:
 #         return left

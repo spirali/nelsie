@@ -3,7 +3,7 @@ from nelsie.steps import parse_bool_steps
 from nelsie.steps_extract import extract_steps
 from testutils import check
 
-from nelsie import TextStyle, StepVal, Box
+from nelsie import TextStyle, StepVal, Box, SlideCounter
 
 
 def test_step_value():
@@ -113,6 +113,7 @@ def test_active_steps(deck):
     slide.box(width=30, height=30, bg_color="orange", active=3)
     slide.box(width=30, height=30, bg_color="blue")
 
+
 # @check(n_slides=4)
 # def test_replace_steps(deck):
 #     slide = deck.new_slide(width=200, height=200)
@@ -153,81 +154,77 @@ def test_step_global_counter(deck):
     deck.set_style("default", TextStyle(size=12))
     deck.set_style("g", TextStyle(color="green"))
     deck.set_style("r", TextStyle(color="red"))
-    slide = deck.new_slide(width=100, height=40)
-    slide.text(
-        "$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)",
-        parse_counters=True,
-        bg_color="gray",
-    )
+
+    def add_counter(slide, current, total):
+        slide = slide.copy()
+
+        n_slide = current["global"].slide
+        n_slide_total = total["global"].slide
+
+        n_page = current["global"].page
+        n_page_total = total["global"].page
+
+        slide.text(
+            f"{n_slide}/{n_slide_total}  {n_page}/{n_page_total}",
+            bg_color="gray",
+        )
+
+        return slide
+
+    slide = deck.new_slide(width=100, height=40, postprocess_fn=add_counter)
     slide.insert_step(2)
-    slide = deck.new_slide(width=400, height=100)
-    slide.text(
-        "$(global_slide)/$(global_slides)  $(global_page)/$(global_pages)",
-        bg_color="gray",
-    )
-    slide = deck.new_slide(width=100, height=40)
-    slide.text(
-        "$(global_slide)/$(global_slides) ~g{!!!} ~r{$(global_page)}/$(global_pages) ~g{!!!}",
-        parse_counters=True,
-        bg_color="gray",
-    )
+    deck.new_slide(width=100, height=40)
+    deck.new_slide(width=100, height=40, postprocess_fn=add_counter)
 
 
 @check(n_slides=8)
 def test_step_other_counter(deck):
-    def create_slide(counters=None, color="black"):
-        slide = deck.new_slide(width=100, height=40, counters=counters)
+    def add_counter(slide, current, total):
+        slide = slide.copy()
+
+        n_slide = current["my"].slide
+        n_slide_total = total["my"].slide
+
+        n_page = current["my"].page
+        n_page_total = total["my"].page
+
         slide.text(
-            "$(my_slide)/$(my_slides)  $(my_page)/$(my_pages)",
-            style=TextStyle(color=color),
-            parse_counters=True,
+            f"{n_slide}/{n_slide_total}  {n_page}/{n_page_total}",
             bg_color="gray",
         )
         return slide
 
+    def create_slide(counters=None):
+        return deck.new_slide(width=100, height=40, counters=counters, postprocess_fn=add_counter)
+        # slide.text(
+        #     "$(my_slide)/$(my_slides)  $(my_page)/$(my_pages)",
+        #     style=TextStyle(color=color),
+        #     parse_counters=True,
+        #     bg_color="gray",
+        # )
+
     deck.set_style("default", TextStyle(size=12))
     create_slide()
-    create_slide(counters=["my"], color="red")
+    create_slide(counters=["my"])
     create_slide(counters=["other"])
-    slide = create_slide(counters=["my"], color="blue")
+    slide = create_slide(counters=["my"])
     slide.insert_step(2)
     slide.insert_step(3)
     slide = create_slide()
     slide.insert_step(2)
 
 
-@check()
-def test_step_split_counter(deck):
-    deck.set_style("default", TextStyle(size=12))
-    deck.set_style("g", TextStyle(color="green"))
-    slide = deck.new_slide(width=100, height=40)
-    slide.text(">>$(global_~g{page)<}<", bg_color="gray", parse_counters=True)
-
-
-@check(n_slides=4)
-def test_show_next_last_keywords(deck):
-    deck.set_style("default", TextStyle(size=12))
-    slide = deck.new_slide(width=100, height=100)
-    slide.box(show="last").text("Last")
-    slide.box(show="next").text("Next")
-    slide.box(show="last+").text("Last+")
-    slide.box(show="next+").text("Next+")
-    slide.box(show=3).text("Jump")
-    slide.box(show="last").text("Last2")
-    slide.box(show="next").text("Next2")
-
-
-@check(n_slides=4)
-def test_active_next_last_keywords(deck):
-    deck.set_style("default", TextStyle(size=12))
-    slide = deck.new_slide(width=100, height=100)
-    slide.box(active="last").text("Last")
-    slide.box(active="next").text("Next")
-    slide.box(active="last+").text("Last+")
-    slide.box(active="next+").text("Next+")
-    slide.box(active=3).text("Jump")
-    slide.box(active="last").text("Last2")
-    slide.box(active="next").text("Next2")
+def test_slide_counter(deck):
+    c = SlideCounter()
+    assert c.last() == 1
+    assert c.last() == 1
+    assert c.last_p() == "1+"
+    assert c.next_p() == "2+"
+    assert c.next() == 3
+    assert c.last() == 3
+    c.set(10)
+    assert c.last() == 10
+    assert c.next_p() == "11+"
 
 
 @check(n_slides=8)
