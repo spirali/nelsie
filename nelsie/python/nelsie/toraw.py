@@ -16,22 +16,25 @@ from .basictypes import (
     GridPosition,
 )
 from .image import RawImage
-from .steps import Step, get_step, Sv, Sn, StepVal
+from .steps import Step, get_step, Sv, Sn, StepVal, step_to_str
 from .text import RawText
 from .textstyle import TextStyle, merge_in_step
 from .box import Box, TextContent, GridOptions
 from .slidedeck import Slide
 from . import nelsie as nelsie_rs
 
+DEBUG_STEPS_FRAME_HEIGHT = 20
+DEBUG_STEPS_FRAME_FONT_SIZE = 15
+
 
 @dataclass
 class RawBox:
     node_id: int
-    x: Position
-    y: Position
-    width: Size
-    height: Size
     children: list["RawBox"]
+    x: Position | None = None
+    y: Position | None = None
+    width: Size | None = None
+    height: Size | None = None
     show: bool = True
     content: Union[None, RawText, RawImage] = None
     z_level: int = 0
@@ -178,15 +181,16 @@ class Document:
         self.resources = resources
 
     def render(
-            self,
-            path: str | None,
-            format: Literal["pdf", "png", "svg", "layout"] = "pdf",
-            compression_level: int = 1,
-            n_threads: int | None = None,
-            progressbar: bool = True,
+        self,
+        path: str | None,
+        format: Literal["pdf", "png", "svg", "layout"] = "pdf",
+        compression_level: int = 1,
+        n_threads: int | None = None,
+        progressbar: bool = True,
     ):
-        return nelsie_rs.render(self.resources._resources, self.pages, path, format, compression_level, n_threads,
-                                progressbar)
+        return nelsie_rs.render(
+            self.resources._resources, self.pages, path, format, compression_level, n_threads, progressbar
+        )
 
 
 def children_to_raw(children, step: Step, ctx: ToRawContext):
@@ -206,8 +210,14 @@ def children_to_raw(children, step: Step, ctx: ToRawContext):
     return result
 
 
-def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[int, bytes],
-                 current_counter: CounterStorage, total_counter: CounterStorage) -> RawPage:
+def slide_to_raw(
+    slide: Slide,
+    step: Step,
+    deck: "SlideDeck",
+    shared_data: dict[int, bytes],
+    current_counter: CounterStorage,
+    total_counter: CounterStorage,
+) -> RawPage:
     if slide.postprocess_fn:
         slide = slide.postprocess_fn(slide, current_counter, total_counter)
     width = get_step(slide.width, step)
@@ -218,15 +228,47 @@ def slide_to_raw(slide: Slide, step: Step, deck: "SlideDeck", shared_data: dict[
     ctx = ToRawContext(stack, deck.default_code_theme, deck.default_code_language, shared_data)
     root = RawBox(
         node_id=id(slide),
-        x=None,
-        y=None,
         width=width,
         height=height,
         children=children_to_raw(slide.children, step, ctx),
     )
+    if slide.debug_steps:
+        height += DEBUG_STEPS_FRAME_HEIGHT
+        root = RawBox(
+            node_id=0,
+            width=width,
+            height=height,
+            children=[
+                root,
+                debug_steps_frame(step),
+            ],
+        )
     return RawPage(
         width=width,
         height=height,
         bg_color=get_step(slide.bg_color, step, deck.bg_color),
         root=root,
+    )
+
+
+def debug_steps_frame(step: Step) -> RawBox:
+    return RawBox(
+        node_id=1,
+        width="100%",
+        height=DEBUG_STEPS_FRAME_HEIGHT,
+        bg_color="black",
+        children=[
+            RawBox(
+                node_id=2,
+                children=[],
+                content=RawText(
+                    step_to_str(step),
+                    TextStyle(
+                        size=DEBUG_STEPS_FRAME_FONT_SIZE,
+                        font="monospace",
+                        color="white",
+                    ),
+                ),
+            )
+        ],
     )

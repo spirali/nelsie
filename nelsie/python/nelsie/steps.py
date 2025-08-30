@@ -37,6 +37,12 @@ def step_compare_key(a):
     return a
 
 
+def step_to_str(step: Step) -> str:
+    if isinstance(step, int):
+        return str(step)
+    return ".".join(map(str, step))
+
+
 class StepVal(Generic[T]):
     def __init__(self, init_value: T | None = None, named_steps=None, init_values=None):
         if init_values is not None:
@@ -194,6 +200,7 @@ def is_visible(step: Step) -> bool:
     elif step[0] < 1:
         return False
     return True
+
 
 # def set_values(left: Sn[T], right: Sn[T]) -> T:
 #     if right is None:

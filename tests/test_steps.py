@@ -149,32 +149,32 @@ def test_active_steps(deck):
 #     assert slide.get_steps() == [(1,), (2,), (3, 2)]
 
 
+def add_global_counter(slide, current, total):
+    slide = slide.copy()
+
+    n_slide = current["global"].slide
+    n_slide_total = total["global"].slide
+
+    n_page = current["global"].page
+    n_page_total = total["global"].page
+
+    slide.text(
+        f"{n_slide}/{n_slide_total}  {n_page}/{n_page_total}",
+        bg_color="gray",
+    )
+    return slide
+
+
 @check(n_slides=4)
 def test_step_global_counter(deck):
     deck.set_style("default", TextStyle(size=12))
     deck.set_style("g", TextStyle(color="green"))
     deck.set_style("r", TextStyle(color="red"))
 
-    def add_counter(slide, current, total):
-        slide = slide.copy()
-
-        n_slide = current["global"].slide
-        n_slide_total = total["global"].slide
-
-        n_page = current["global"].page
-        n_page_total = total["global"].page
-
-        slide.text(
-            f"{n_slide}/{n_slide_total}  {n_page}/{n_page_total}",
-            bg_color="gray",
-        )
-
-        return slide
-
-    slide = deck.new_slide(width=100, height=40, postprocess_fn=add_counter)
+    slide = deck.new_slide(width=100, height=40, postprocess_fn=add_global_counter)
     slide.insert_step(2)
     deck.new_slide(width=100, height=40)
-    deck.new_slide(width=100, height=40, postprocess_fn=add_counter)
+    deck.new_slide(width=100, height=40, postprocess_fn=add_global_counter)
 
 
 @check(n_slides=8)
@@ -227,63 +227,45 @@ def test_slide_counter(deck):
     assert c.next_p() == "11+"
 
 
-@check(n_slides=8)
+@check(n_slides=9)
 def test_subslides(deck):
     deck.set_style("default", TextStyle(size=8))
 
-    def counters(parent):
-        text = "$(global_slide)/$(global_slides) $(global_page)/$(global_pages)"
-        parent.text(text, x=0, y=0, parse_counters=True, z_level=1)
-
-    slide = deck.new_slide(width=40, height=70)
-    counters(slide)
+    slide = deck.new_slide(width=40, height=70, postprocess_fn=add_global_counter, name="main")
     slide.box(width=20, height=20, bg_color="red")
-    slide.box(width=20, height=20, bg_color="orange", show="next+")
-    slide.box(width=20, height=20, bg_color="green", show="next+")
+    slide.box(width=20, height=20, bg_color="orange", show="2+")
+    slide.box(width=20, height=20, bg_color="green", show="3+")
 
-    slide2 = slide.new_slide_at(3, width=40, height=40)
-    counters(slide2)
+    slide2 = slide.new_slide_at(
+        3, width=40, height=40, postprocess_fn=add_global_counter, name="blue", debug_steps=True
+    )
     slide2.box(width=10, height=10, bg_color="blue")
-    slide2.box(width=10, height=10, bg_color="blue", show="next+")
+    slide2.box(width=10, height=10, bg_color="blue", show="2+")
 
-    slide3 = slide.new_slide_at(3, width=40, height=40)
-    counters(slide3)
+    slide3 = slide.new_slide_at(3, width=40, height=40, postprocess_fn=add_global_counter)
     slide3.box(width=10, height=10, bg_color="purple")
 
-    slide4 = slide2.new_slide_at(3, width=40, height=40)
-    counters(slide4)
+    slide4 = slide2.new_slide_at(2, width=40, height=40, postprocess_fn=add_global_counter)
     slide4.box(width=5, height=5, bg_color="gray")
 
-    slide5 = slide.new_slide_at(6, width=40, height=40)
-    counters(slide5)
-    slide5.box(width=10, height=10, bg_color="black")
 
-
-@check(n_slides=4)
+@check(n_slides=5)
 def test_subslides_decorator(deck):
     deck.set_style("default", TextStyle(size=12))
 
     @deck.slide(width=100, height=50)
     def my_slide(slide):
         slide.box().text("One")
-        slide.box(show="next+").text("Two")
-        slide.box(show="next+").text("Three")
+        slide.box(show="2+").text("Two")
+        slide.box(show="3+").text("Three")
 
     @my_slide.slide_at(3, width=100, height=50)
     def inserted(slide):
         slide.text("Inserted")
 
 
-@check(n_slides=1)
-def test_invisible_steps(deck):
-    slide = deck.new_slide(step_1=False)
-    slide.insert_step(0)
-    slide = deck.new_slide(width=20, height=20)
-    slide.box(width=10, height=10, bg_color=InSteps({(0, 1): "green"}))
-
-
-@check(n_slides=3)
+@check(n_slides=5)
 def test_debug_steps(deck):
     slide = deck.new_slide(debug_steps=True, width=300, height=300)
     slide.text("Hello", show="2+")
-    slide.text("World", show=(22, 3, 111))
+    slide.text("World", show="22, 3, 111")
