@@ -9,7 +9,6 @@ class PageCounter:
 
 
 class CounterStorage:
-
     def __init__(self):
         self.global_counter = PageCounter()
         self.counters = {"global": self.global_counter}

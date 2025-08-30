@@ -9,9 +9,9 @@ from .basictypes import TextAlign
 class RawText:
     text: str
     style: TextStyle
-    align: TextAlign
-    syntax_language: str | None
-    syntax_theme: str | None
+    align: TextAlign = "start"
+    syntax_language: str | None = None
+    syntax_theme: str | None = None
     named_styles: dict[str, TextStyle] | None = None
     style_delimiters: str | None = None
 
