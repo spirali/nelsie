@@ -30,7 +30,6 @@ class TextContent:
     text_align: int
     syntax_language: str | None
     syntax_theme: str | None
-    parse_counters: bool
 
 
 PathOrData = str | None | tuple[bytes, str]

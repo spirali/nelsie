@@ -4,6 +4,7 @@ from .box import Box, BoxBuilderMixin, GridOptions
 from .textstyle import FontStretch, TextStyle
 from .shapes import Arrow, Path, Stroke, Rect, Point, Oval
 from .steps import StepVal
+from .slidecounter import SlideCounter
 
 __all__ = [
     "Resources",
@@ -21,4 +22,5 @@ __all__ = [
     "Stroke",
     "StepVal",
     "GridOptions",
+    "SlideCounter",
 ]

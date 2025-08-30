@@ -1,21 +1,25 @@
 from copy import copy
 from dataclasses import dataclass
 from functools import cmp_to_key
-from typing import Literal, Iterable, Sequence
+from typing import Literal, Iterable, Sequence, Callable
 
 from nelsie.utils import check_is_int_or_float, check_is_type, check_is_str
 
 from .box import BoxBuilderMixin, Box, traverse_children
 from .counters import CounterStorage
 from .resources import Resources
-from .steps import Step, Sv, get_step, Sn, StepVal, sn_apply, step_compare_key
+from .steps import Step, Sv, get_step, Sn, StepVal, sn_apply, step_compare_key, is_visible
 from . import nelsie as nelsie_rs
 from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, merge_in_step, check_is_text_style
 from .shapes import Path, Rect, Oval
 
+type SlideCallback = Callable[["Slide", CounterStorage, CounterStorage], "Slide"]
+
 
 class Slide(BoxBuilderMixin):
-    def __init__(self, width: Sv[float], height: Sv[float], bg_color: Sv[str], name: str, init_steps: Iterable[Step], counters: Sequence[str]):
+    def __init__(self, width: Sv[float], height: Sv[float], bg_color: Sv[str], name: str, init_steps: Iterable[Step],
+                 counters: Sequence[str],
+                 postprocess_fn: SlideCallback | None = None):
         self.width = width
         self.height = height
         self.bg_color = bg_color
@@ -23,6 +27,7 @@ class Slide(BoxBuilderMixin):
         self.children = []
         self.init_steps = init_steps
         self.counters = counters
+        self.postprocess_fn = postprocess_fn
 
         self._text_styles = None
         self._extra_steps = None
@@ -47,19 +52,27 @@ class Slide(BoxBuilderMixin):
     def traverse_tree(self, shared_data, steps: set[Step]):
         traverse_children(self.children, shared_data, steps)
 
+    def copy(self):
+        """
+        Return copy of slide that is safe to add new boxes into it
+        """
+        slide = copy(self)
+        slide.children = slide.children[:]
+        return slide
+
 
 class SlideDeck:
     def __init__(
-        self,
-        *,
-        width: float = 1024,
-        height: float = 768,
-        bg_color: str = "white",
-        text_style: TextStyle | None = None,
-        code_style: TextStyle = DEFAULT_CODE_STYLE,
-        resources: Resources | None = None,
-        default_code_theme: str = "InspiredGitHub",
-        default_code_language: str | None = None,
+            self,
+            *,
+            width: float = 1024,
+            height: float = 768,
+            bg_color: str = "white",
+            text_style: TextStyle | None = None,
+            code_style: TextStyle = DEFAULT_CODE_STYLE,
+            resources: Resources | None = None,
+            default_code_theme: str = "InspiredGitHub",
+            default_code_language: str | None = None,
     ):
         """
         A top-level class of Nelsie. It represents a set of slides.
@@ -131,14 +144,15 @@ class SlideDeck:
             self._text_styles[name] = old_style.merge(style)
 
     def new_slide(
-        self,
+            self,
             *,
-        width: Sv[float | None] = None,
-        height: Sv[float | None] = None,
-        name: str = "",
-        bg_color: Sv[str | None] = None,
-        init_steps: Iterable[Step] = (1,),
-        counters = (),
+            width: Sv[float | None] = None,
+            height: Sv[float | None] = None,
+            name: str = "",
+            bg_color: Sv[str | None] = None,
+            init_steps: Iterable[Step] = (1,),
+            counters=(),
+            postprocess_fn: SlideCallback | None = None
     ):
         if width is None:
             width = self.width
@@ -146,24 +160,25 @@ class SlideDeck:
             height = self.height
         if bg_color is None:
             bg_color = self.bg_color
-        slide = Slide(width, height, bg_color, name, init_steps, counters)
+        slide = Slide(width, height, bg_color, name, init_steps, counters, postprocess_fn)
         self.slides.append(slide)
         return slide
 
     def slide(
-        self,
-        *,
-        width: float | None = None,
-        height: float | None = None,
-        name: str = "",
-        bg_color: str | None = None,
-        # debug_steps: bool = False,
-        # debug_layout: bool | str = False,
-        # counters: list[str] | None = None,
-        # parent_slide: tuple[Slide, int] | None = None,
-        init_steps: Iterable[Step] = (1,),
-        ignore: bool = False,
-        counters: Sequence[str] = (),
+            self,
+            *,
+            width: float | None = None,
+            height: float | None = None,
+            name: str = "",
+            bg_color: str | None = None,
+            # debug_steps: bool = False,
+            # debug_layout: bool | str = False,
+            # counters: list[str] | None = None,
+            # parent_slide: tuple[Slide, int] | None = None,
+            init_steps: Iterable[Step] = (1,),
+            ignore: bool = False,
+            counters: Sequence[str] = (),
+            postprocess_fn: SlideCallback | None = None
     ):
         """
         Decorator for creating new slide.
@@ -190,6 +205,7 @@ class SlideDeck:
                 name=name,
                 init_steps=init_steps,
                 counters=counters,
+                postprocess_fn=postprocess_fn,
             )
             fn(slide)
             return slide
@@ -202,7 +218,9 @@ class SlideDeck:
 
         shared_data = {}
         raw_pages = []
-        counter_storage = CounterStorage()
+        total_counter = CounterStorage()
+
+        slide_steps = {}
 
         for slide in self.slides:
             steps = set(slide.init_steps)
@@ -210,26 +228,32 @@ class SlideDeck:
             extract_steps(slide, steps)
             if slide._extra_steps:
                 steps.update(slide._extra_steps)
-            counter_storage.increment_slide()
-            for step in sorted(steps, key=step_compare_key):
-                if isinstance(step, int):
-                    if step < 1:
-                        continue
-                elif step[0] < 1:
-                    continue
-                counter_storage.increment_page()
-                page = slide_to_raw(slide, step, self, shared_data, counter_storage)
+            steps = [s for s in steps if is_visible(s)]
+            steps.sort(key=step_compare_key)
+            slide_steps[slide] = steps
+            total_counter.increment_page(slide.counters, len(steps))
+            total_counter.increment_slide(slide.counters)
+
+        current_counter = CounterStorage()
+
+        for slide in self.slides:
+            steps = slide_steps[slide]
+            current_counter.increment_slide(slide.counters)
+            for step in steps:
+                current_counter.increment_page(slide.counters)
+                page = slide_to_raw(slide, step, self, shared_data, current_counter, total_counter)
                 raw_pages.append(page)
+
         return Document(self.resources, raw_pages)
 
     def render(
-        self,
-        path: str | None,
-        format: Literal["pdf", "png", "svg"] = "pdf",
-        *,
-        compression_level: int = 1,
-        n_threads: int | None = None,
-        progressbar: bool = True,
+            self,
+            path: str | None,
+            format: Literal["pdf", "png", "svg"] = "pdf",
+            *,
+            compression_level: int = 1,
+            n_threads: int | None = None,
+            progressbar: bool = True,
     ):
         doc = self._create_doc()
         return doc.render(path, format, compression_level, n_threads, progressbar)
