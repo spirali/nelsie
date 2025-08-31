@@ -7,13 +7,13 @@ DEFAULT_BULLETS = ("•", "⁃", "‣")
 
 class ListBox(BoxBuilderMixin):
     def __init__(
-            self,
-            parent_box: Box,
-            list_type: str | Callable = "unordered",
-            style="default",
-            indent_size=15,
-            initial_counter_value=1,
-            _counters=None,
+        self,
+        parent_box: Box,
+        list_type: str | Callable = "unordered",
+        style="default",
+        indent_size=15,
+        initial_counter_value=1,
+        _counters=None,
     ):
         self.main_box = parent_box.box(align_items="start")
         self.style = style

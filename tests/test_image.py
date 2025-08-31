@@ -12,6 +12,7 @@ IMG_ORA = os.path.join(ASSETS_DIR, "test.ora")
 IMG_TIGHT = os.path.join(ASSETS_DIR, "tight.png")
 IMG_TIGHT_ORA = os.path.join(ASSETS_DIR, "tight.ora")
 
+
 @check()
 def test_render_raster_image_native_size(deck):
     slide = deck.new_slide(width=400, height=400)
