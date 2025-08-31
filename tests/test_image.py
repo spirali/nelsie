@@ -9,7 +9,8 @@ IMG_JPEG = os.path.join(ASSETS_DIR, "testimg.jpeg")
 IMG_SVG = os.path.join(ASSETS_DIR, "test.svg")
 IMG_SVG_WITH_DEFS = os.path.join(ASSETS_DIR, "with_defs.svg")
 IMG_ORA = os.path.join(ASSETS_DIR, "test.ora")
-
+IMG_TIGHT = os.path.join(ASSETS_DIR, "tight.png")
+IMG_TIGHT_ORA = os.path.join(ASSETS_DIR, "tight.ora")
 
 @check()
 def test_render_raster_image_native_size(deck):
@@ -40,6 +41,14 @@ def test_render_raster_image_forced_size(deck):
     slide = deck.new_slide(width=420, height=400)
     box = slide.box(width="100%", height="40")
     box.image(IMG_SVG, width="100%", height="100%", enable_steps=False)
+
+
+@check(n_slides=2)
+def test_render_raster_image_tight_forced_size(deck):
+    slide = deck.new_slide(width=100, height=100)
+    slide.image(IMG_TIGHT, width="100%", height="100%")
+    slide = deck.new_slide(width=100, height=100)
+    slide.image(IMG_TIGHT_ORA, width="100%", height="100%")
 
 
 @check(n_slides=4)
