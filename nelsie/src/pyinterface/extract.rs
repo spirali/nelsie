@@ -334,8 +334,8 @@ fn obj_to_node(
                                         rectangle.clone(),
                                         register.register_bin_image(
                                             layer.clone(),
-                                            image.width,
-                                            image.height,
+                                            rectangle.width,
+                                            rectangle.height,
                                         ),
                                     )
                                 })
