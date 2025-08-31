@@ -81,6 +81,8 @@ class BoxBuilderMixin:
         gap_x: Sv[Length] = 0,
         gap_y: Sv[Length] = 0,
         grid: Sn[GridOptions] = None,
+        name: str = "",
+        debug_layout: bool | str | None = None,
     ):
         box = Box(
             x=x,
@@ -111,6 +113,8 @@ class BoxBuilderMixin:
             gap_x=gap_x,
             gap_y=gap_y,
             grid=grid,
+            name=name,
+            debug_layout=debug_layout,
         )
         self.add(box)
         return box
@@ -416,6 +420,8 @@ class Box(BoxBuilderMixin):
         gap_x: Sv[Length] = 0,
         gap_y: Sv[Length] = 0,
         grid: Sn[GridOptions] = None,
+        name: str = "",
+        debug_layout: bool | str | None = None,
     ):
         sn_check(x, check_position)
         sn_check(y, check_position)
@@ -443,6 +449,11 @@ class Box(BoxBuilderMixin):
         sn_check(justify_self, check_align_items)
         sn_check(align_content, check_align_content)
         sn_check(justify_content, check_align_content)
+
+        check_is_str(name)
+
+        if isinstance(debug_layout, str):
+            check_color(debug_layout)
 
         self._show = parse_bool_steps(show)
         self._active = parse_bool_steps(active)
@@ -475,7 +486,8 @@ class Box(BoxBuilderMixin):
         self._gap_x = gap_x
         self._gap_y = gap_y
         self._grid = grid
-
+        self._debug_layout = debug_layout
+        self.name = name
         self._text_styles: dict[str, Sn[TextStyle]] | None = None
 
     def margin(

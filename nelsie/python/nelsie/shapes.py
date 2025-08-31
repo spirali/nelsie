@@ -56,8 +56,8 @@ def check_is_stroke(obj):
 class RawRect:
     shape: int  # 0 = rect, 1 = oval
     x1: IntOrFloatOrLayoutExpr
-    x2: IntOrFloatOrLayoutExpr
     y1: IntOrFloatOrLayoutExpr
+    x2: IntOrFloatOrLayoutExpr
     y2: IntOrFloatOrLayoutExpr
     z_level: int
     stroke: Stroke | None

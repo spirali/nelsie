@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Union, Literal
 from copy import copy
 
@@ -16,6 +16,7 @@ from .basictypes import (
     GridPosition,
 )
 from .image import RawImage
+from .shapes import RawRect, Stroke
 from .steps import Step, get_step, Sv, Sn, StepVal, step_to_str
 from .text import RawText
 from .textstyle import TextStyle, merge_in_step
@@ -25,12 +26,15 @@ from . import nelsie as nelsie_rs
 
 DEBUG_STEPS_FRAME_HEIGHT = 20
 DEBUG_STEPS_FRAME_FONT_SIZE = 15
+DEBUG_LAYOUT_Z_LEVEL = 999999
+DEBUG_LAYOUT_FONT_SIZE = 8
+DEBUG_LAYOUT_DEFAULT_COLOR = "#ff00ff"
 
 
 @dataclass
 class RawBox:
     node_id: int
-    children: list["RawBox"]
+    children: list[Union["RawBox", "RawRect", "RawText", "RawImage"]]
     x: Position | None = None
     y: Position | None = None
     width: Size | None = None
@@ -68,6 +72,8 @@ class ToRawContext:
     code_language: str | None
     shared_data: dict[int, bytes]
     z_level: int = 0
+    debug_layout: str | bool = False
+    debug_layout_boxes: list = field(default_factory=list)
 
     def get_text_style(self, name: str, step: Step):
         result = None
@@ -132,6 +138,12 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
                 row=get_step(grid.row, step, "auto"),
                 column=get_step(grid.column, step, "auto"),
             )
+
+    debug_layout = box._debug_layout
+    if debug_layout is None:
+        debug_layout = ctx.debug_layout
+    if debug_layout:
+        ctx.debug_layout_boxes.append(box)
 
     return RawBox(
         node_id=id(box),
@@ -211,6 +223,7 @@ def children_to_raw(children, step: Step, ctx: ToRawContext):
 
 
 def slide_to_raw(
+    resources: Resources,
     slide: Slide,
     step: Step,
     deck: "SlideDeck",
@@ -225,16 +238,27 @@ def slide_to_raw(
     stack = [deck._text_styles]
     if slide._text_styles is not None:
         stack.append(slide._text_styles)
-    ctx = ToRawContext(stack, deck.default_code_theme, deck.default_code_language, shared_data)
+    ctx = ToRawContext(stack, deck.default_code_theme, deck.default_code_language, shared_data, slide.debug_layout)
     root = RawBox(
         node_id=id(slide),
         width=width,
         height=height,
         children=children_to_raw(slide.children, step, ctx),
     )
+    page = RawPage(
+        width=width,
+        height=height,
+        bg_color=get_step(slide.bg_color, step, deck.bg_color),
+        root=root,
+    )
+    if ctx.debug_layout_boxes:
+        temp_doc = Document(resources, [page])
+        layout = temp_doc.render(None, "layout")[0]
+        for box in ctx.debug_layout_boxes:
+            insert_debug_layout_frame(ctx, box, layout, root)
     if slide.debug_steps:
         height += DEBUG_STEPS_FRAME_HEIGHT
-        root = RawBox(
+        page.root = RawBox(
             node_id=0,
             width=width,
             height=height,
@@ -243,12 +267,7 @@ def slide_to_raw(
                 debug_steps_frame(step),
             ],
         )
-    return RawPage(
-        width=width,
-        height=height,
-        bg_color=get_step(slide.bg_color, step, deck.bg_color),
-        root=root,
-    )
+    return page
 
 
 def debug_steps_frame(step: Step) -> RawBox:
@@ -272,3 +291,57 @@ def debug_steps_frame(step: Step) -> RawBox:
             )
         ],
     )
+
+
+def insert_debug_layout_frame(ctx: ToRawContext, box: Box, layout: dict, target_box: RawBox):
+    box_layout = layout[id(box)]
+    x = box_layout["x"]
+    y = box_layout["y"]
+    width = box_layout["width"]
+    height = box_layout["height"]
+
+    color = DEBUG_LAYOUT_DEFAULT_COLOR
+    if isinstance(ctx.debug_layout, str):
+        color = ctx.debug_layout
+    if isinstance(box._debug_layout, str):
+        color = box._debug_layout
+
+    w = max(1, width)
+    h = max(1, height)
+
+    item = RawRect(
+        shape=0,
+        x1=x,
+        y1=y,
+        x2=x + w,
+        y2=y + h,
+        z_level=DEBUG_LAYOUT_Z_LEVEL,
+        stroke=Stroke(color=color, width=1, dash_array=[5, 2]),
+        fill_color=None,
+    )
+    target_box.children.append(item)
+
+    text_w = f"{width:.2f}".rstrip("0").rstrip(".")
+    text_h = f"{height:.2f}".rstrip("0").rstrip(".")
+
+    if box.name:
+        text = f"{box.name} [{text_w}x{text_h}]"
+    else:
+        text = f"[{text_w}x{text_h}]"
+
+    item = RawBox(
+        node_id=id(item),
+        children=[],
+        z_level=DEBUG_LAYOUT_Z_LEVEL,
+        x=x + 1,
+        y=y + 1,
+        content=RawText(
+            text,
+            TextStyle(
+                size=DEBUG_LAYOUT_FONT_SIZE,
+                font="monospace",
+                color=color,
+            ),
+        ),
+    )
+    target_box.children.append(item)
