@@ -8,13 +8,17 @@
 * Method of `.p` that returns `Point` in the box
 * Layout expressions now supports multiplication, subtraction and max operator
 * `line_box` now has an optinal parameter `n_lines`
+* Box can be created as stand-alone object later added into slide via .add(box)
+* Rect and Oval classes for simpler creating simple shapes
 
 ## Changes
 
+* `.draw` is removed. Use `.add` to add shapes into box 
 * `InSteps` replaced with new class `StepVal`
 * `text_anchor_*` renamed to `inline_*`
 * `Path` methods like `*_to` now takes `Point` instead of two parameters `x` and `y`
 * `TextStyle.font_family` renamed to `TextStyle.font`
+* Inserting video into slides is now disabled
 
 
 # v0.16.0
