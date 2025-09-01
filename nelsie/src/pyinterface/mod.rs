@@ -3,12 +3,12 @@ mod common;
 mod extract;
 mod image;
 mod layoutexpr;
+mod ora;
 mod parsers;
 mod rendering;
 mod resources;
 mod shapes;
 mod text;
-mod ora;
 mod watch;
 
 use crate::pyinterface::image::LoadedImage;
@@ -16,8 +16,6 @@ use crate::pyinterface::parsers::parse_bool_steps;
 use crate::pyinterface::resources::Resources;
 use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
-use pyo3::types::{PyFloat, PyInt};
-use pyo3::PyTypeInfo;
 
 #[pymodule]
 fn nelsie(m: &Bound<'_, PyModule>) -> PyResult<()> {

@@ -25,5 +25,3 @@ impl RendererError {
         RendererError::Parsing(message.into())
     }
 }
-
-pub type Result<T> = std::result::Result<T, RendererError>;

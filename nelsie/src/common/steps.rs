@@ -1,9 +1,8 @@
-use itertools::Itertools;
 use pyo3::exceptions::PyException;
 use pyo3::types::{PyAnyMethods, PyTuple};
 use pyo3::{Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python};
 use smallvec::{smallvec, SmallVec};
-use std::cmp::{Ordering, Reverse};
+use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
 
 pub(crate) type StepIndex = u32;
@@ -24,6 +23,7 @@ impl Step {
         }
     }
 
+    #[cfg(test)]
     pub fn from_slice(indices: &[StepIndex]) -> Step {
         assert!(!indices.is_empty());
         Step {
@@ -87,7 +87,7 @@ impl Ord for Step {
     }
 }
 
-impl<'a, 'py> IntoPyObject<'py> for &'a Step {
+impl<'py> IntoPyObject<'py> for &Step {
     type Target = PyAny;
     type Output = Bound<'py, Self::Target>;
     type Error = PyErr;
@@ -120,7 +120,7 @@ impl<'py> FromPyObject<'py> for Step {
 pub(crate) fn bool_at_step(steps: &[(Step, bool)], step: &Step) -> bool {
     steps
         .iter()
-        .filter(|(s, _)| s <= &step)
+        .filter(|(s, _)| s <= step)
         .max_by(|(a, _), (b, _)| a.cmp(b))
         .map(|(_, v)| *v)
         .unwrap_or(false)

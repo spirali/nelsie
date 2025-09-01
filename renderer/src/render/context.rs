@@ -1,8 +1,4 @@
-use crate::ContentId;
-use crate::render::content::{Content, ContentMap};
-use crate::render::text::TextContext;
-use crate::resources::Resources;
-use std::collections::HashMap;
+use crate::render::content::ContentMap;
 
 pub(crate) struct RenderContext<'a> {
     //pub resources: &'a Resources,

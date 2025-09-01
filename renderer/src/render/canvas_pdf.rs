@@ -1,19 +1,11 @@
-use crate::render::canvas::{Canvas, CanvasItem, Link};
+use crate::render::canvas::{Canvas, CanvasItem};
 
 use crate::render::composer_pdf::PdfRefAllocator;
 use crate::render::content::{ContentBody, ContentMap};
-use crate::render::draw::{DrawItem, DrawPath, DrawPathPart, DrawRect, PathBuilder};
 use crate::render::pdfdraw::{PdfWriter, annotations_to_pdf, draw_item_to_pdf, path_to_pdf};
-use crate::shapes::FillAndStroke;
-use crate::{Color, ContentId, Rectangle};
-use pdf_writer::types::{
-    ActionType, AnnotationType, MediaClipType, RenditionOperation, RenditionType, TempFileType,
-};
-use pdf_writer::{Chunk, Content, Filter, Finish, Name, Rect, Ref, Str};
+use crate::{ContentId, Rectangle};
+use pdf_writer::{Chunk, Filter, Finish, Name, Rect, Ref};
 use std::collections::HashMap;
-use std::default::Default;
-use std::sync::Arc;
-use svg2pdf::usvg;
 
 impl Canvas {
     pub fn into_pdf_page(
@@ -154,17 +146,4 @@ fn content_into_pdf(
             }
         }
     }
-}
-
-fn renumber_into(
-    chunk: &Chunk,
-    target: &mut Chunk,
-    alloc_ref: &mut PdfRefAllocator,
-    top_ref: Ref,
-) -> Ref {
-    let mut map = HashMap::<Ref, Ref>::new();
-    chunk.renumber_into(target, |r| {
-        *map.entry(r).or_insert_with(|| alloc_ref.bump())
-    });
-    *map.get(&top_ref).unwrap()
 }

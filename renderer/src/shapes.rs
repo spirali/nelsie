@@ -1,9 +1,8 @@
-use crate::render::canvas::Canvas;
+use crate::render::arrows::create_arrow;
 use crate::render::draw::{DrawPath, DrawRect, PathBuilder};
 use crate::render::layout::ComputedLayout;
 use crate::types::LayoutExpr;
 use crate::{Color, NodeId, Rectangle};
-use crate::render::arrows::create_arrow;
 //use crate::render::arrows::{create_arrow, move_point_for_arrow};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -152,19 +151,13 @@ impl Path {
         parent_id: NodeId,
     ) -> (Option<DrawPath>, Option<DrawPath>, Option<DrawPath>) {
         let mut builder = PathBuilder::new(self.fill_and_stroke.clone());
-        for (i, part) in self.parts.iter().enumerate() {
+        for part in &self.parts {
             match part {
                 PathPart::Move { x, y } => {
-                    builder.move_to(
-                        layout.eval(x, parent_id),
-                        layout.eval(y, parent_id),
-                    );
+                    builder.move_to(layout.eval(x, parent_id), layout.eval(y, parent_id));
                 }
                 PathPart::Line { x, y } => {
-                    builder.line_to(
-                        layout.eval(x, parent_id),
-                        layout.eval(y, parent_id),
-                    );
+                    builder.line_to(layout.eval(x, parent_id), layout.eval(y, parent_id));
                 }
                 PathPart::Quad { x1, y1, x, y } => builder.quad_to(
                     layout.eval(x1, parent_id),
@@ -192,15 +185,25 @@ impl Path {
         }
         let mut path = builder.build();
         if path.parts.is_empty() {
-            return (None, None, None)
+            return (None, None, None);
         }
         let arrow1 = self.arrow_start.as_ref().and_then(|a| {
             let mut i = path.parts.iter_mut();
-            create_arrow(a, i.next().unwrap(), i.next().as_deref(), path.fill_and_stroke.stroke.as_ref().map(|s| s.color))
+            create_arrow(
+                a,
+                i.next().unwrap(),
+                i.next().as_deref(),
+                path.fill_and_stroke.stroke.as_ref().map(|s| s.color),
+            )
         });
         let arrow2 = self.arrow_end.as_ref().and_then(|a| {
             let mut i = path.parts.iter_mut().rev();
-            create_arrow(a, i.next().unwrap(), i.next().as_deref(), path.fill_and_stroke.stroke.as_ref().map(|s| s.color))
+            create_arrow(
+                a,
+                i.next().unwrap(),
+                i.next().as_deref(),
+                path.fill_and_stroke.stroke.as_ref().map(|s| s.color),
+            )
         });
         (Some(path), arrow1, arrow2)
         // let arrow_start = create_arrow(self, layout, parent_id, true);

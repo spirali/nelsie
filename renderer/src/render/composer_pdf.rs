@@ -1,11 +1,11 @@
 use crate::render::canvas::Canvas;
-use crate::render::composer::{Composer, PngCollectingComposer};
+use crate::render::composer::Composer;
 use crate::render::content::{Content, ContentBody, ContentMap};
+use crate::render::layout::ComputedLayout;
 use crate::render::pdfdraw::{PdfWriter, init_pdf, path_to_pdf};
 use crate::render::text::RenderedText;
 use crate::{ContentId, InMemoryBinImage, InMemorySvgImage, Resources};
 use image::GenericImageView;
-use itertools::Itertools;
 use miniz_oxide::deflate::{CompressionLevel, compress_to_vec_zlib};
 use pdf_writer::{Chunk, Filter, Finish, Rect, Ref};
 use std::borrow::Cow;
@@ -13,7 +13,6 @@ use std::collections::HashMap;
 use std::ops::DerefMut;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicI32, Ordering};
-use crate::render::layout::ComputedLayout;
 
 pub(crate) struct PdfComposer {
     chunks: Mutex<Vec<Chunk>>,
@@ -68,7 +67,7 @@ impl PdfComposer {
     }
 }
 
-impl<'a> Composer for PdfComposer {
+impl Composer for PdfComposer {
     fn add_page(
         &self,
         page_idx: usize,
@@ -294,7 +293,6 @@ pub fn create_image_xobject(
 
             (Filter::FlateDecode, Cow::Owned(encoded), mask, w, h)
         }
-        _ => panic!("unsupported image format"),
     };
 
     let (image_ref, mask_ref) = pdf_ref_allocator.bump_pair();

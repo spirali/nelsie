@@ -1,6 +1,5 @@
 use crate::render::draw::DrawItem;
 use crate::{Color, ContentId, Rectangle};
-use std::sync::Arc;
 
 #[derive(Debug)]
 pub(crate) enum CanvasItem {

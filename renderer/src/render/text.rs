@@ -131,25 +131,22 @@ fn styled_text_to_parley(
     builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(
         font.as_ref().map(|x| x.as_str()).unwrap_or("sans-serif"),
     ))));
-    builder.push_default(StyleProperty::Brush(color.clone().unwrap_or_default()));
+    builder.push_default(StyleProperty::Brush((*color).unwrap_or_default()));
     builder.push_default(StyleProperty::FontSize(
-        size.clone().map(|x| x.get()).unwrap_or(16.0),
+        (*size).map(|x| x.get()).unwrap_or(16.0),
     ));
     builder.push_default(StyleProperty::LineHeight(
-        line_spacing.clone().map(|x| x.get()).unwrap_or(1.0),
+        (*line_spacing).map(|x| x.get()).unwrap_or(1.0),
     ));
     builder.push_default(StyleProperty::FontWeight(FontWeight::new(
-        weight.clone().unwrap_or(400) as f32,
+        (*weight).unwrap_or(400) as f32,
     )));
-    builder.push_default(StyleProperty::Underline(
-        underline.clone().unwrap_or_default(),
-    ));
+    builder.push_default(StyleProperty::Underline((*underline).unwrap_or_default()));
     builder.push_default(StyleProperty::Strikethrough(
-        line_through.clone().unwrap_or_default(),
+        (*line_through).unwrap_or_default(),
     ));
     builder.push_default(StyleProperty::FontWidth(
-        stretch
-            .clone()
+        (*stretch)
             .map(font_stretch_to_parley)
             .unwrap_or(FontWidth::NORMAL),
     ));

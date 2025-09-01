@@ -1,16 +1,16 @@
 use crate::pyinterface::common::PyColor;
-use pyo3::exceptions::{PyException, PyValueError};
+use pyo3::exceptions::PyValueError;
 use pyo3::types::PyAnyMethods;
 use pyo3::{Bound, FromPyObject, PyAny, PyErr, PyResult};
 use renderer::{
     FontStretch, ParsingChars, SyntaxHighlightSettings, Text, TextAlign, TextStyle, TextStyling,
 };
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::sync::Arc;
 use strict_num::PositiveF32;
 
 #[derive(FromPyObject)]
-struct PyTextStyle {
+pub(crate) struct PyTextStyle {
     font: Option<String>,
     color: Option<PyColor>,
     size: Option<f32>,
@@ -82,7 +82,7 @@ impl TryFrom<PyTextStyle> for TextStyle {
 //     syntax_theme: Sn[str]
 // """
 
-struct PyTextAlign(TextAlign);
+pub(crate) struct PyTextAlign(TextAlign);
 
 impl<'py> FromPyObject<'py> for PyTextAlign {
     fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {

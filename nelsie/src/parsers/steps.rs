@@ -1,8 +1,7 @@
 use crate::common::steps::Step;
-use itertools::Itertools;
-use smallvec::{smallvec, SmallVec};
-use std::cmp::{Ordering, Reverse};
-use std::fmt::{Debug, Display, Formatter};
+use std::cmp::Ordering;
+
+type BoolStepVal = (Vec<(Step, bool)>, Vec<Step>);
 
 pub fn parse_step(input: &str) -> crate::Result<(Step, bool, bool)> {
     let (input, exact) = input
@@ -25,7 +24,7 @@ pub fn parse_step(input: &str) -> crate::Result<(Step, bool, bool)> {
     Ok((Step::new(indices), exact, silent))
 }
 
-pub fn parse_bool_steps(input: &str) -> crate::Result<(Vec<(Step, bool)>, Vec<Step>)> {
+pub fn parse_bool_steps(input: &str) -> crate::Result<BoolStepVal> {
     let mut result = Vec::new();
     let mut named = Vec::new();
     for part in input.split(',') {
@@ -72,7 +71,7 @@ pub fn parse_bool_steps(input: &str) -> crate::Result<(Vec<(Step, bool)>, Vec<St
     result.sort_unstable_by(|(step1, onoff1), (step2, onoff2)| {
         let r = step1.cmp(step2);
         if r == Ordering::Equal {
-            onoff1.cmp(&onoff2).reverse()
+            onoff1.cmp(onoff2).reverse()
         } else {
             r
         }

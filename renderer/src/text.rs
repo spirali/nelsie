@@ -1,6 +1,5 @@
 use crate::Color;
 use resvg::usvg::PositiveF32;
-use std::collections::HashMap;
 use std::num::ParseIntError;
 use std::str::FromStr;
 use std::sync::Arc;

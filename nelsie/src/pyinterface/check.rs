@@ -1,6 +1,7 @@
 use pyo3::exceptions::PyException;
 use pyo3::types::PyAnyMethods;
 use pyo3::{pyfunction, Bound, PyAny, PyResult};
+use std::str::FromStr;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -10,8 +11,5 @@ pub(crate) fn check_color<'py>(obj: &Bound<'py, PyAny>) -> PyResult<()> {
             return Ok(());
         }
     }
-    Err(PyException::new_err(format!(
-        "Invalid color: '{}'",
-        obj.to_string()
-    )))
+    Err(PyException::new_err(format!("Invalid color: '{}'", obj)))
 }

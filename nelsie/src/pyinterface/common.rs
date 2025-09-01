@@ -1,6 +1,7 @@
 use pyo3::types::PyAnyMethods;
 use pyo3::{Bound, FromPyObject, PyAny, PyResult};
 use renderer::Color;
+use std::str::FromStr;
 
 pub(crate) struct PyColor(Color);
 

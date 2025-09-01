@@ -35,7 +35,7 @@ impl Canvas {
                 } => render_svg_image_into_svg(&mut writer, data.as_str(), &rect, *width, *height),*/
                 /*CanvasItem::Text { text, x, y } => render_text_into_svg(&mut writer, &text, x, y),*/
                 CanvasItem::Content { rect, content_id } => {
-                    render_content_to_svg(&mut writer, content_map, &rect, *content_id);
+                    render_content_to_svg(&mut writer, content_map, rect, *content_id);
                 }
                 CanvasItem::DrawItem(item) => write_draw_item_to_svg(&mut writer, item),
                 /*CanvasItem::Video { rect, video } => {
@@ -110,7 +110,7 @@ fn write_g_transform(writer: &mut SimpleXmlWriter, rect: &Rectangle, width: f32,
     writer.begin("g");
     writer.attr_buf("transform", |s| {
         write!(s, "translate({},{})", rect.x, rect.y).unwrap();
-        if scale_x < 0.999999 || scale_x > 1.000001 || scale_y < 0.999999 || scale_y > 1.000001 {
+        if !(0.999999..=1.000001).contains(&scale_x) || !(0.999999..=1.000001).contains(&scale_y) {
             write!(s, ",scale({},{})", scale_x, scale_y).unwrap()
         }
     });
