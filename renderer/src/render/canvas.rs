@@ -9,16 +9,6 @@ pub(crate) enum CanvasItem {
         content_id: ContentId,
     },
     DrawItem(DrawItem),
-    /*DrawItems(Vec<DrawItem>),
-    Text {
-        text: Arc<RenderedText>,
-        x: f32,
-        y: f32,
-    },
-    Video {
-        rect: Rectangle,
-        video: Arc<Video>,
-    },*/
 }
 
 #[derive(Debug)]

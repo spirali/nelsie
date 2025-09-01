@@ -66,15 +66,16 @@ class RawBox:
     border_radius: IntOrFloat = 0
     url: str | None = None
 
+
 @dataclass
 class ToRawContext:
     text_style_stack: list[dict[str, Sn[TextStyle]]]
     code_theme: str
     code_language: str | None
     shared_data: dict[int, bytes]
-    z_level: int = 0
     debug_layout: str | bool = False
     debug_layout_boxes: list = field(default_factory=list)
+    z_level: int = 0
 
     def get_text_style(self, name: str, step: Step):
         result = None
@@ -243,7 +244,13 @@ def slide_to_raw(
     stack = [deck._text_styles]
     if slide._text_styles is not None:
         stack.append(slide._text_styles)
-    ctx = ToRawContext(stack, deck.default_code_theme, deck.default_code_language, shared_data, slide.debug_layout)
+    ctx = ToRawContext(
+        text_style_stack=stack,
+        code_theme=deck.default_code_theme,
+        code_language=deck.default_code_language,
+        shared_data=shared_data,
+        debug_layout=slide.debug_layout,
+    )
     root = RawBox(
         node_id=id(slide),
         width=width,
