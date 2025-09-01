@@ -1,5 +1,5 @@
 use crate::render::canvas::Canvas;
-use crate::render::composer::{Composer, PngCollectorComposer};
+use crate::render::composer::{Composer, PngCollectingComposer};
 use crate::render::content::{Content, ContentBody, ContentMap};
 use crate::render::pdfdraw::{PdfWriter, init_pdf, path_to_pdf};
 use crate::render::text::RenderedText;

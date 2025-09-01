@@ -1,7 +1,7 @@
 use crate::NodeChild::Node;
 use crate::node::ContentId;
 use crate::render::composer::{
-    Composer, PngCollectorComposer, PngWriteComposer, SvgCollectorComposer, SvgWriteComposer,
+    Composer, PngCollectingComposer, PngWriteComposer, SvgCollectingComposer, SvgWriteComposer,
 };
 use crate::render::composer_pdf::PdfComposer;
 use crate::render::content::{Content, ContentBody, ContentMap};
@@ -288,7 +288,7 @@ impl Document {
         resources: &Resources,
         options: &RenderingOptions,
     ) -> crate::Result<Vec<String>> {
-        let mut composer = SvgCollectorComposer::new(self.pages.len());
+        let mut composer = SvgCollectingComposer::new(self.pages.len());
         self.render(resources, options, &mut composer)?;
         Ok(composer.finish())
     }
@@ -298,7 +298,7 @@ impl Document {
         resources: &Resources,
         options: &RenderingOptions,
     ) -> crate::Result<Vec<Vec<u8>>> {
-        let mut composer = PngCollectorComposer::new(resources, self.pages.len());
+        let mut composer = PngCollectingComposer::new(resources, self.pages.len());
         self.render(resources, options, &mut composer)?;
         Ok(composer.finish())
     }

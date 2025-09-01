@@ -438,11 +438,11 @@ impl Composer for PngWriteComposer<'_> {
     }
 }
 
-pub(crate) struct SvgCollectorComposer {
+pub(crate) struct SvgCollectingComposer {
     pages: Mutex<Vec<String>>,
 }
 
-impl SvgCollectorComposer {
+impl SvgCollectingComposer {
     pub fn new(n_pages: usize) -> Self {
         Self {
             pages: Mutex::new(vec![String::new(); n_pages]),
@@ -454,7 +454,7 @@ impl SvgCollectorComposer {
     }
 }
 
-impl Composer for SvgCollectorComposer {
+impl Composer for SvgCollectingComposer {
     fn add_page(
         &self,
         page_idx: usize,
@@ -468,12 +468,12 @@ impl Composer for SvgCollectorComposer {
     }
 }
 
-pub(crate) struct PngCollectorComposer<'a> {
+pub(crate) struct PngCollectingComposer<'a> {
     pages: Mutex<Vec<Vec<u8>>>,
     resources: &'a Resources,
 }
 
-impl<'a> PngCollectorComposer<'a> {
+impl<'a> PngCollectingComposer<'a> {
     pub fn new(resources: &'a Resources, n_pages: usize) -> Self {
         Self {
             pages: Mutex::new(vec![Vec::new(); n_pages]),
@@ -486,7 +486,7 @@ impl<'a> PngCollectorComposer<'a> {
     }
 }
 
-impl<'a> Composer for PngCollectorComposer<'a> {
+impl<'a> Composer for PngCollectingComposer<'a> {
     fn add_page(
         &self,
         page_idx: usize,

@@ -203,6 +203,8 @@ class Document:
         n_threads: int | None = None,
         progressbar: bool = True,
     ):
+        if path is not None:
+            path = str(path)
         return nelsie_rs.render(
             self.resources._resources, self.pages, path, format, compression_level, n_threads, progressbar
         )
