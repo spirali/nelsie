@@ -81,6 +81,7 @@ class BoxBuilderMixin:
         gap_x: Sv[Length] = 0,
         gap_y: Sv[Length] = 0,
         grid: Sn[GridOptions] = None,
+        border_radius: Sv[IntOrFloat] = 0,
         name: str = "",
         debug_layout: bool | str | None = None,
     ):
@@ -114,6 +115,7 @@ class BoxBuilderMixin:
             gap_y=gap_y,
             grid=grid,
             name=name,
+            border_radius=border_radius,
             debug_layout=debug_layout,
         )
         self.add(box)
@@ -420,6 +422,7 @@ class Box(BoxBuilderMixin):
         gap_x: Sv[Length] = 0,
         gap_y: Sv[Length] = 0,
         grid: Sn[GridOptions] = None,
+        border_radius: Sv[IntOrFloat] = 0,
         name: str = "",
         debug_layout: bool | str | None = None,
     ):
@@ -449,6 +452,7 @@ class Box(BoxBuilderMixin):
         sn_check(justify_self, check_align_items)
         sn_check(align_content, check_align_content)
         sn_check(justify_content, check_align_content)
+        sv_check(border_radius, check_is_int_or_float)
 
         check_is_str(name)
 
@@ -487,6 +491,7 @@ class Box(BoxBuilderMixin):
         self._gap_y = gap_y
         self._grid = grid
         self._debug_layout = debug_layout
+        self._border_radius = border_radius
         self.name = name
         self._text_styles: dict[str, Sn[TextStyle]] | None = None
 
