@@ -64,5 +64,14 @@ impl Rectangle {
         let y = self.y + (target_h - new_h) / 2.0;
         Rectangle::new(x, y, new_w, new_h)
     }
+    
+    pub(crate) fn invert_y_axis(&self, height: f32) -> Rectangle {
+        Rectangle::new(
+            self.x,
+            height - self.y - self.height,
+            self.width,
+            self.height,
+        )
+    }
 
 }

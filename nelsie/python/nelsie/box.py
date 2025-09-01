@@ -82,6 +82,7 @@ class BoxBuilderMixin:
         gap_y: Sv[Length] = 0,
         grid: Sn[GridOptions] = None,
         border_radius: Sv[IntOrFloat] = 0,
+        url: Sn[str] = None,
         name: str = "",
         debug_layout: bool | str | None = None,
     ):
@@ -117,6 +118,7 @@ class BoxBuilderMixin:
             name=name,
             border_radius=border_radius,
             debug_layout=debug_layout,
+            url=url
         )
         self.add(box)
         return box
@@ -423,6 +425,7 @@ class Box(BoxBuilderMixin):
         gap_y: Sv[Length] = 0,
         grid: Sn[GridOptions] = None,
         border_radius: Sv[IntOrFloat] = 0,
+        url: Sn[str] = None,
         name: str = "",
         debug_layout: bool | str | None = None,
     ):
@@ -453,7 +456,7 @@ class Box(BoxBuilderMixin):
         sn_check(align_content, check_align_content)
         sn_check(justify_content, check_align_content)
         sv_check(border_radius, check_is_int_or_float)
-
+        sn_check(url, check_is_str)
         check_is_str(name)
 
         if isinstance(debug_layout, str):
@@ -492,6 +495,7 @@ class Box(BoxBuilderMixin):
         self._grid = grid
         self._debug_layout = debug_layout
         self._border_radius = border_radius
+        self._url = url
         self.name = name
         self._text_styles: dict[str, Sn[TextStyle]] | None = None
 

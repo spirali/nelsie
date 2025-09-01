@@ -27,7 +27,7 @@ def test_box_border_radius(deck):
 
 @check()
 def test_pdf_url(deck):
-    # Mostly just smoke test, as I do not know how to test annotations in resulting PDF
+    # Mostly just smoke test, as I do not know how to test annotations in the resulting PDF
     slide = deck.new_slide(width=100, height=100)
     slide.box(
         x=65,

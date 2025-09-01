@@ -64,7 +64,7 @@ class RawBox:
     gap_y: Length = 0
     grid: GridOptions = None
     border_radius: IntOrFloat = 0
-
+    url: str | None = None
 
 @dataclass
 class ToRawContext:
@@ -178,6 +178,7 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
         gap_y=get_step(box._gap_y, step),
         border_radius=get_step(box._border_radius, step),
         grid=grid,
+        url=get_step(box._url, step),
     )
 
 

@@ -248,6 +248,7 @@ struct PyNode<'py> {
     gap_x: PyLength,
     gap_y: PyLength,
     grid: Option<PyGridOptions>,
+    url: Option<String>,
 }
 
 fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2>>(
@@ -402,7 +403,7 @@ fn obj_to_node(
         bg_color: node.bg_color.map(|x| x.into()),
         z_level: node.z_level,
         content,
-        url: None,
+        url: node.url,
         children: node
             .children
             .try_iter()?
