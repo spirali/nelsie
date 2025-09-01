@@ -5,7 +5,11 @@ from nelsie import (
     TextStyle,
     Resources,
     Stroke,
-    InSteps,
+    StepVal,
+    Point,
+    Oval,
+    Rect,
+    GridOptions
 )
 
 resources = Resources()
@@ -15,7 +19,7 @@ deck = SlideDeck(resources=resources)
 COLOR1 = "#333"
 COLOR2 = "#ddccdd"
 
-deck.update_style("default", TextStyle(font_family="Karla", color=COLOR1))
+deck.update_style("default", TextStyle(font="Karla", color=COLOR1))
 deck.set_style("highlight", TextStyle(color="#cc99cc", weight=700))
 deck.set_style("title", TextStyle(size=64))
 
@@ -30,7 +34,7 @@ def intro(slide):
     title_box.text("Nelsie", style=TextStyle(size=64, weight=800), m_bottom=15)
     title_box.text("Framework for Creating Slides", style=TextStyle(size=44))
 
-    slide.set_style("email", slide.get_style("monospace").merge(TextStyle(size=18)))
+    slide.set_style("email", TextStyle(font="monospace", size=18))
     slide.text("Ada Böhm\n~email{ada@kreatrix.org}", m_bottom=50, align="center")
 
 
@@ -84,10 +88,10 @@ def in_steps(slide):
 
     semaphore = slide.box(width=100, height=300, bg_color="gray")
     semaphore.box(
-        y=InSteps({1: 20, 2: 110, 3: 210}),
+        y=StepVal(20).at(2, 110).at(3, 210),
         width=80,
         height=80,
-        bg_color=InSteps({1: "red", 2: "orange", 3: "green"}),
+        bg_color=StepVal("red").at(2, "orange").at(3, "green"),
     )
 
 
@@ -171,12 +175,14 @@ def text_pointers1(slide):
     text = slide.code(CODE_EXAMPLE, language="py")
 
     arrow = Arrow(size=20)
-    slide.draw(
+    a = text.line_p(3, 1, 0.5)
+    b = text.line_p(9, 1, 0.5)
+    slide.add(
         Path(stroke=Stroke(color="orange", width=5), arrow_end=arrow)
-        .move_to(text.line_x(3, 1) + 5, text.line_y(3, 0.5))
-        .line_to(text.line_x(9, 1) + 50, text.line_y(3, 0.5))
-        .line_to(text.line_x(9, 1) + 50, text.line_y(9, 0.5))
-        .line_to(text.line_x(9, 1) + 5, text.line_y(9, 0.5))
+        .move_to(a.move_by(5, 0))
+        .line_to(Point(b.x + 50, a.y))
+        .line_to(b.move_by(50, 0))
+        .line_to(b.move_by(5, 0))
     )
 
 
@@ -201,11 +207,11 @@ def text_pointers2(slide):
     )
     comment.text("Comment", style=TextStyle(color="white"))
 
-    slide.draw(
+    slide.add(
         Path(fill_color="green")
-        .move_to(text.line_x(5, 1.0) + 5, text.line_y(5, 0.5))
-        .line_to(comment.x(0.1), comment.y(0.25))
-        .line_to(comment.x(0.1), comment.y(0.75))
+        .move_to(text.line_p(5, 1.0, 0.5).move_by(5, 0))
+        .line_to(comment.p(0.1, 0.25))
+        .line_to(comment.p(0.1, 0.85))
     )
 
 
@@ -234,19 +240,19 @@ deck.render("slides.pdf")
     )
 
     for anchor_id in 1, 2:
-        text.text_anchor_box(anchor_id, bg_color="#aaa", z_level=-1)
+        text.inline_box(anchor_id, bg_color="#aaa", z_level=-1)
 
     arrow = Arrow(size=15)
-    slide.draw(
-        [
+    slide.add(
+        
             Path(stroke=Stroke(color="green", width=5), arrow_end=arrow)
-            .move_to(text.text_anchor_x(2, 0) - 20, text.text_anchor_y(2, 1) + 20)
-            .line_to(text.text_anchor_x(2, 0), text.text_anchor_y(2, 1)),
+            .move_to(text.inline_p(2, 0, 1).move_by(-20, 20))
+            .line_to(text.inline_p(2, 0, 1)))
+    slide.add(
             Path(stroke=Stroke(color="green", width=5), arrow_end=arrow)
-            .move_to(text.text_anchor_x(2, 1) + 20, text.text_anchor_y(2, 1) + 20)
-            .line_to(text.text_anchor_x(2, 1), text.text_anchor_y(2, 1)),
-        ]
-    )
+            .move_to(text.inline_p(2, 1, 1).move_by(20, 20))
+            .line_to(text.inline_p(2, 1, 1)))
+        
 
 
 # Overwriting styles in syntax highlight #################################
@@ -280,7 +286,7 @@ def hello_world(~1{slide}):
 
 @deck.slide()
 def console_demo(slide):
-    slide.set_style("shell", slide.get_style("code").merge(TextStyle(color="white", size=24)))
+    slide.set_style("shell", TextStyle(font="monospace", color="white", size=24))
     slide.set_style("prompt", TextStyle(color="#aaaaff"))
     slide.set_style("cmd", TextStyle(color="yellow"))
 
@@ -307,38 +313,31 @@ def shapes(slide):
     slide.text("Shapes", "title", m_bottom=40)
 
     box = slide.box(width=700, height=100, m_bottom=60)
-    rect = (
-        Path(stroke=Stroke(color="red", width=5))
-        .move_to(0, 0)
-        .line_to(100, 0)
-        .line_to(100, 100)
-        .line_to(0, 100)
-        .close()
-    )
-    triangle = Path(fill_color="green").move_to(200, 100).line_to(250, 0).line_to(300, 100)
-    circle = Path.oval(400, 0, 500, 100, fill_color="blue")
+    rect = Rect(Point(0, 0), Point(100, 100), stroke=Stroke(color="red", width=5))
+    box.add(rect)
+    triangle = Path(fill_color="green").move_to(Point(200, 100)).line_to(Point(250, 0)).line_to(Point(300, 100))
+    box.add(triangle)
+    circle = Oval(Point(400, 0), Point(500, 100), fill_color="blue")
+    box.add(circle)
 
     rounded_box = (
         Path(stroke=Stroke(color="orange", width=5))
-        .move_to(650, 0)
-        .quad_to(700, 0, 700, 50)
-        .quad_to(700, 100, 650, 100)
-        .quad_to(700, 100, 650, 100)
-        .quad_to(600, 100, 600, 50)
-        .line_to(650, 50)
+        .move_to(Point(650, 0))
+        .quad_to(Point(700, 0), Point(700, 50))
+        .quad_to(Point(700, 100), Point(650, 100))
+        .quad_to(Point(700, 100), Point(650, 100))
+        .quad_to(Point(600, 100), Point(600, 50))
+        .line_to(Point(650, 50))
     )
-    box.draw([rect, triangle, rounded_box, circle])
+    box.add(rounded_box)
 
     box = slide.box(width=700, height=70, m_bottom=60)
-    box.draw(
-        [
-            Path(stroke=Stroke(color="black", width=10, dash_array=[10])).move_to(0, 0).line_to(700, 0),
-            Path(stroke=Stroke(color="black", width=10, dash_array=[10, 20], dash_offset=15))
-            .move_to(0, 30)
-            .line_to(700, 30),
-            Path(stroke=Stroke(color="black", width=10, dash_array=[30, 10, 5, 10])).move_to(0, 60).line_to(700, 60),
-        ]
-    )
+    box.add(Path(stroke=Stroke(color="black", width=10, dash_array=[10])).move_to(Point(0, 0)).line_to(Point(700, 0)))
+    box.add(Path(stroke=Stroke(color="black", width=10, dash_array=[10, 20], dash_offset=15))
+            .move_to(Point(0, 30))
+            .line_to(Point(700, 30)))
+    box.add(Path(stroke=Stroke(color="black", width=10, dash_array=[30, 10, 5, 10])).move_to(Point(0, 60)).line_to(Point(700, 60)))
+    
 
     box = slide.box(width=700, height=220)
     arrow1 = Arrow(size=30)
@@ -347,45 +346,49 @@ def shapes(slide):
     arrow4 = Arrow(size=30, inner_point=2.4)
     arrow5 = Arrow(size=30, stroke_width=5)
 
-    box.draw(
-        [
+    box.add(
+        
             Path(
                 stroke=Stroke(color="black", width=5),
                 arrow_start=arrow1,
                 arrow_end=arrow1,
             )
-            .move_to(0, 0)
-            .line_to(700, 0),
+            .move_to(Point(0, 0))
+            .line_to(Point(700, 0)))
+    box.add(
             Path(
                 stroke=Stroke(color="black", width=5),
                 arrow_start=arrow2,
                 arrow_end=arrow2,
             )
-            .move_to(0, 50)
-            .line_to(700, 50),
+            .move_to(Point(0, 50))
+            .line_to(Point(700, 50)))
+    box.add(
             Path(
                 stroke=Stroke(color="black", width=5),
                 arrow_start=arrow3,
                 arrow_end=arrow3,
             )
-            .move_to(0, 100)
-            .line_to(700, 100),
+            .move_to(Point(0, 100))
+            .line_to(Point(700, 100)))
+    box.add(
             Path(
                 stroke=Stroke(color="black", width=5),
                 arrow_start=arrow4,
                 arrow_end=arrow4,
             )
-            .move_to(0, 150)
-            .line_to(700, 150),
+            .move_to(Point(0, 150))
+            .line_to(Point(700, 150))
+    )
+    box.add(
             Path(
                 stroke=Stroke(color="black", width=5),
                 arrow_start=arrow5,
                 arrow_end=arrow5,
             )
-            .move_to(0, 200)
-            .line_to(700, 200),
-        ]
-    )
+            .move_to(Point(0, 200))
+            .line_to(Point(700, 200)))
+    
 
 
 # Path demo ##########################################
@@ -427,33 +430,35 @@ def path_demo(slide):
     )
     child2.text("Child 2", style=TextStyle(color="white"))
     arrow = Arrow(20)
-    x0, y0 = root.x(1), root.y(0.5)
-    x1, y1 = child1.x(0), child1.y(0.5)
-    x2, y2 = child2.x(0), child2.y(0.5)
+    p0 = root.p(1, 0.5)
+    p1 = child1.p(0, 0.5)
+    p2 = child2.p(0, 0.5)
 
-    x1a, y1a = child1.x(1), child1.y(0.5)
-    x1b, y1b = child1.x(0.5), child1.y(0)
+    a = child1.p(1, 0.5)
+    b = child1.p(0.5, 0)
 
-    slide.draw(
-        [
+    slide.add(
+        
             Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
-            .move_to(x0, y0)
-            .cubic_to(x0 + 300, y0, x1 - 300, y1, x1, y1),
-            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow).move_to(x0, y0).quad_to(x2 - 100, y2, x2, y2),
+            .move_to(p0)
+            .cubic_to(p0.move_by(300, 0), p1.move_by(-300, 0), p1))
+    slide.add(
+            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow).move_to(p0).quad_to(p2.move_by(-100, 0), p2))
+    slide.add(
             Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
-            .move_to(x1a, y1a)
-            .quad_to(x1a + 50, y1a, x1a + 50, y1a - 50)
-            .cubic_to(x1a + 50, y1a - 100, x1b, y1b - 100, x1b, y1b),
-        ]
+            .move_to(a)
+            .quad_to(a.move_by(50, 0), a.move_by(50, -50))
+            .cubic_to(a.move_by(50, -100), b.move_by(0, -100), b),
     )
+    
 
     box = slide.box(x=680, y="50%")
-    box.draw(
+    box.add(
         Path(stroke=Stroke(color="#777", width=2), fill_color="orange")
-        .move_to(40, 0)
-        .line_to(80, 40)
-        .line_to(40, 80)
-        .line_to(0, 40)
+        .move_to(Point(40, 0))
+        .line_to(Point(80, 40))
+        .line_to(Point(40, 80))
+        .line_to(Point(0, 40))
         .close()
     )
 
@@ -477,25 +482,26 @@ def grid_demo(slide):
     # Draw the table
     table = slide.box(
         width="70%",
-        grid_template_columns=["2fr", "1fr", 130],
-        grid_template_rows=[50] + [40] * (len(data) - 1),
+        grid=GridOptions(
+        template_columns=["2fr", "1fr", 130],
+        template_rows=[50] + [40] * (len(data) - 1)),
         bg_color="#ddd",
     )
     header_style = TextStyle(weight=800)
-    table.box(grid_column=(1, 4), grid_row=1, bg_color="#fbc")
+    table.box(grid=GridOptions(column=(1, 4), row=1), bg_color="#fbc")
     for i in range(2, len(data) + 1, 2):
-        table.box(grid_column=(1, 4), grid_row=i, bg_color="#eee")
-    column1 = table.box(grid_column=2, grid_row=(1, len(data) + 1))
+        table.box(grid=GridOptions(column=(1, 4), row=i), bg_color="#eee")
+    column1 = table.box(grid=GridOptions(column=2, row=(1, len(data) + 1)))
     stroke = Stroke(color="#888", width=2)
-    column1.draw(Path(stroke=stroke).move_to(0, 0).line_to(0, "100%"))
-    column1.draw(Path(stroke=stroke).move_to("100%", 0).line_to("100%", "100%"))
+    column1.add(Path(stroke=stroke).move_to(Point(0, 0)).line_to(Point(0, "100%")))
+    column1.add(Path(stroke=stroke).move_to(Point("100%", 0)).line_to(Point("100%", "100%")))
 
     # Fill the table with data
     for i, row in enumerate(data, 1):
         s = header_style if i == 1 else None
-        table.box(grid_column=1, grid_row=i).text(row[0], s)
-        table.box(grid_column=2, grid_row=i, row=True, justify_content="end", m_right=30).text(str(row[1]), s)
-        table.box(grid_column=3, grid_row=i, row=True, justify_content="start", m_left=30).text(row[2], s)
+        table.box(grid=GridOptions(column=1, row=i)).text(row[0], s)
+        table.box(grid=GridOptions(column=2, row=i), row=True, justify_content="end", m_right=30).text(str(row[1]), s)
+        table.box(grid=GridOptions(column=3, row=i), row=True, justify_content="start", m_left=30).text(row[2], s)
 
 
 # Chessboard demo ##########################################
@@ -514,11 +520,11 @@ def chess_board(slide):
             tiles[(j, i)] = b.overlay(z_level=0)
 
     # Draw arrow
-    slide.overlay(show="1-3", z_level=1).draw(
+    slide.overlay(show="1-3", z_level=1).add(
         Path(stroke=Stroke(color="black", width=15), arrow_end=Arrow(30))
-        .move_to(tiles[(3, 4)].x(0.5), tiles[(3, 4)].y(0.5))
-        .line_to(tiles[(3, 2)].x(0.5), tiles[(3, 2)].y(0.5))
-        .line_to(tiles[(4, 2)].x(0.5), tiles[(4, 2)].y(0.5))
+        .move_to(tiles[(3, 4)].p(0.5, 0.5))
+        .line_to(tiles[(3, 2)].p(0.5, 0.5))
+        .line_to(tiles[(4, 2)].p(0.5, 0.5))
     )
 
     # Draw knight
@@ -543,19 +549,19 @@ def links(slide):
 # Video
 
 
-@deck.slide()
-def video(slide):
-    slide.text("Embedded video (click to play*)", "title")
-    row = slide.box(row=True, m_top=30)
-    box1 = row.box()
-    box1.video("assets/video.mp4", cover_image="../../docs/imgs/nelsie-logo.jpg", width=450, height=400)
-    box1.text("Without controls")
-    box2 = row.box()
-    box2.video(
-        "assets/video.mp4", cover_image="../../docs/imgs/nelsie-logo.jpg", width=450, height=400, show_controls=True
-    )
-    box2.text("With controls")
-    slide.text("* This functionally depends on pdf viewer", TextStyle(color="gray"), m_top=30)
+# @deck.slide()
+# def video(slide):
+#     slide.text("Embedded video (click to play*)", "title")
+#     row = slide.box(row=True, m_top=30)
+#     box1 = row.box()
+#     box1.video("assets/video.mp4", cover_image="../../docs/imgs/nelsie-logo.jpg", width=450, height=400)
+#     box1.text("Without controls")
+#     box2 = row.box()
+#     box2.video(
+#         "assets/video.mp4", cover_image="../../docs/imgs/nelsie-logo.jpg", width=450, height=400, show_controls=True
+#     )
+#     box2.text("With controls")
+#     slide.text("* This functionally depends on pdf viewer", TextStyle(color="gray"), m_top=30)
 
 
 # Debugging frames ##########################################
@@ -577,7 +583,7 @@ def debugging_frames(slide):
     title_box.text("Nelsie", style=TextStyle(size=64, weight=800), m_bottom=15)
     title_box.text("Framework for Creating Slides", style=TextStyle(size=44))
 
-    slide.set_style("email", slide.get_style("monospace").merge(TextStyle(size=18)))
+    slide.set_style("email", TextStyle(font="monospace", size=18))
     slide.text("Ada Böhm\n~email{ada@kreatrix.org}", m_bottom=50, align="center")
 
     slide.text(x="65%", y="20%", text="Debugging\nframes", style="title")
