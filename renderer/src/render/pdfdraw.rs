@@ -153,13 +153,12 @@ pub(crate) fn annotations_to_pdf(
     annotation_ids: &mut Vec<Ref>,
 ) {
     for link in links {
-        let rect = link.rect();
         let annotation_id = pdf_writer.alloc_ref.bump();
         let mut annotation = pdf_writer.chunk.annotation(annotation_id);
         annotation_ids.push(annotation_id);
         annotation.subtype(AnnotationType::Link);
         annotation.border(0.0, 0.0, 0.0, None);
-        annotation.rect(pdf_rect(rect));
+        annotation.rect(pdf_rect(&link.rect().invert_y_axis(height)));
         annotation
             .action()
             .action_type(ActionType::Uri)
