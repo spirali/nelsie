@@ -118,7 +118,7 @@ class BoxBuilderMixin:
             name=name,
             border_radius=border_radius,
             debug_layout=debug_layout,
-            url=url
+            url=url,
         )
         self.add(box)
         return box

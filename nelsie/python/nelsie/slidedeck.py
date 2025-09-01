@@ -227,6 +227,7 @@ class SlideDeck:
         counters: Sequence[str] = (),
         postprocess_fn: SlideCallback | None = None,
         debug_steps: bool = False,
+        debug_layout: bool = False,
     ):
         """
         Decorator for creating new slide.
@@ -255,6 +256,7 @@ class SlideDeck:
                 counters=counters,
                 postprocess_fn=postprocess_fn,
                 debug_steps=debug_steps,
+                debug_layout=debug_layout,
             )
             fn(slide)
             return slide
@@ -301,7 +303,9 @@ class SlideDeck:
                             if not parent_inserted:
                                 parent_inserted = True
                                 current_counter.increment_page(slide.counters)
-                                page = slide_to_raw(slide, step, self, shared_data, current_counter, total_counter)
+                                page = slide_to_raw(
+                                    self.resources, slide, step, self, shared_data, current_counter, total_counter
+                                )
                                 raw_pages.append(page)
                             process_slide(s)
                 current_counter.increment_page(slide.counters)

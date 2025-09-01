@@ -55,46 +55,6 @@ impl Canvas {
                     );
                 }
             }
-            /*                CanvasItem::PngImage { rect, data } | CanvasItem::JpegImage { rect, data } => {
-                    let (img_ref, _) = cache.get(&ByAddress(data)).unwrap();
-                    pdf_ctx.put_x_object(*img_ref, rect, self.height);
-                }
-                CanvasItem::SvgImage {
-                    rect,
-                    data,
-                    width: _,
-                    height: _,
-                } => {
-                    let options = usvg::Options {
-                        fontdb: resources.font_db.as_ref().unwrap().clone(),
-                        ..Default::default()
-                    };
-                    let tree = usvg::Tree::from_str(&data, &options)?;
-                    let (svg_chunk, svg_ref) =
-                        svg2pdf::to_chunk(&tree, svg2pdf::ConversionOptions::default()).map_err(
-                            |e| NelsieError::generic_err(format!("PDF conversion error: {}", e)),
-                        )?;
-                    let svg_ref =
-                        renumber_into(&svg_chunk, &mut pdf_ctx.chunk, pdf_ctx.alloc_ref, svg_ref);
-                    pdf_ctx.put_x_object(svg_ref, rect, self.height);
-                }
-                CanvasItem::Text { text, x, y } => {
-                    for path in text.paths() {
-                        path_to_pdf_at(&mut pdf_ctx, path, x, y, self.height)
-                    }
-                }
-                CanvasItem::Video { rect, video } => {
-                    draw_video_to_pdf(
-                        &mut pdf_ctx,
-                        &rect,
-                        &video,
-                        self.height,
-                        page_ref,
-                        cache,
-                        &mut annotation_ids,
-                    )?;
-                }
-            }*/
         }
         pdf_writer.content.restore_state();
 
@@ -157,6 +117,7 @@ fn content_into_pdf(
             ContentBody::Text((text, is_shared)) => {
                 assert!(!is_shared);
                 let (width, height) = content.size();
+                let rect = rect.fit_content_with_aspect_ratio(width, height);
                 pdf_writer.content.save_state();
                 pdf_writer.content.transform([
                     rect.width / width,
