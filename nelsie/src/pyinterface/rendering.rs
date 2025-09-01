@@ -4,7 +4,7 @@ use crate::pyinterface::resources::Resources;
 use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::types::{PyAnyMethods, PyDict, PyDictMethods, PyList, PyNone};
-use pyo3::{pyfunction, Bound, FromPyObject, IntoPyObjectExt, Py, PyAny, PyObject, PyResult, Python};
+use pyo3::{pyfunction, Bound, FromPyObject, IntoPyObjectExt, Py, PyAny, PyErr, PyObject, PyResult, Python};
 use renderer::{Color, Document, LengthOrExpr, Node, NodeChild, NodeId, Page, PageLayout, Register, RenderingOptions};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -47,12 +47,18 @@ pub(crate) fn render<'py>(
             }).collect::<PyResult<HashMap<_, _>>>()).collect::<PyResult<Vec<_>>>()?;
             v.into_bound_py_any(py)?
         }
+        RenderingOutput::SingleBinOutput(output) => output.into_bound_py_any(py)?,
+        RenderingOutput::ManyBinOutputs(outputs) => outputs.into_bound_py_any(py)?,
+        RenderingOutput::ManyStringOutputs(outputs) => outputs.into_bound_py_any(py)?,
     })
 }
 
 enum RenderingOutput {
     None,
-    LayoutInfo(Vec<PageLayout>)
+    LayoutInfo(Vec<PageLayout>),
+    SingleBinOutput(Vec<u8>),
+    ManyBinOutputs(Vec<Vec<u8>>),
+    ManyStringOutputs(Vec<String>),
 }
 
 fn run_rendering (
@@ -83,9 +89,34 @@ fn run_rendering (
                 .map_err(crate::Error::from)?;
             RenderingOutput::LayoutInfo(layout)
         }
+        (None, "pdf") => {
+            let output = doc.render_pdf_to_mem(&resources.resources, options)
+                .map_err(crate::Error::from)?;
+            RenderingOutput::SingleBinOutput(output)
+        }
+        (None, "svg") => {
+            let output = doc.render_svg_to_vec(&resources.resources, options)
+                .map_err(crate::Error::from)?;
+            RenderingOutput::ManyStringOutputs(output)
+        }
+        (None, "png") => {
+            let output = doc.render_png_to_vec(&resources.resources, options)
+                .map_err(crate::Error::from)?;
+            RenderingOutput::ManyBinOutputs(output)
+        }
+
+        // (None, "png") => {
+        //     doc.render_png_to_dir(&resources.resources, options, std::path::Path::new(path))
+        //         .map_err(crate::Error::from)?;
+        //     RenderingOutput::None
+        // }
+        // (None, "svg") => {
+        //     doc.render_svg_to_dir(&resources.resources, options, std::path::Path::new(path))
+        //         .map_err(crate::Error::from)?;
+        //     RenderingOutput::None
+        // }
         _ => {
-            println!("TODO RENDER");
-            todo!()
+            return Err(PyException::new_err(format!("Invalid output format: {format}")))
         }
     })
 }
