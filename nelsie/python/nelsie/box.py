@@ -324,7 +324,7 @@ class BoxBuilderMixin:
         expr = LayoutExpr.inline_x(node_id, anchor_id)
         if width_fraction == 0:
             return expr
-        return expr + LayoutExpr.text_anchor_width(node_id, anchor_id, width_fraction)
+        return expr + LayoutExpr.inline_width(node_id, anchor_id, width_fraction)
 
     def inline_y(self, anchor_id: int, height_fraction: IntOrFloat = 0) -> LayoutExpr:
         """
@@ -336,7 +336,7 @@ class BoxBuilderMixin:
         expr = LayoutExpr.inline_y(node_id, anchor_id)
         if height_fraction == 0:
             return expr
-        return expr + LayoutExpr.text_anchor_height(node_id, anchor_id, height_fraction)
+        return expr + LayoutExpr.inline_height(node_id, anchor_id, height_fraction)
 
     def inline_p(self, anchor_id: int, x: IntOrFloat = 0, y: IntOrFloat = 0) -> Point:
         return Point(self.inline_x(anchor_id, x), self.inline_y(anchor_id, y))
