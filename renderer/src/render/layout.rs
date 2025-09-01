@@ -2,9 +2,9 @@ use crate::node::Node;
 use crate::render::context::RenderContext;
 use crate::render::text::RenderedText;
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
-use crate::{ContentId, NodeId, Page, Rectangle};
+use crate::{NodeId, Page, Rectangle};
 use itertools::Itertools;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::sync::Arc;
 use taffy::{AlignItems, Display, JustifyContent, prelude as tf};
 
@@ -26,7 +26,7 @@ impl ComputedLayout {
         }
     }
 
-    pub fn iter(&self) -> impl Iterator<Item=(&NodeId, &LayoutData)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&NodeId, &LayoutData)> {
         self.node_layout.iter()
     }
 
@@ -55,9 +55,10 @@ impl ComputedLayout {
             LayoutExpr::Mul { expressions } => {
                 self.eval(&expressions.0, parent_node) * self.eval(&expressions.1, parent_node)
             }
-            LayoutExpr::Max { expressions } => {
-                expressions.iter().map(|e| self.eval(e, parent_node)).fold(0.0, |a, b| a.max(b))
-            }
+            LayoutExpr::Max { expressions } => expressions
+                .iter()
+                .map(|e| self.eval(e, parent_node))
+                .fold(0.0, |a, b| a.max(b)),
             LayoutExpr::ParentX { shift } => self._rect(parent_node).x + shift,
             LayoutExpr::ParentY { shift } => self._rect(parent_node).y + shift,
             LayoutExpr::ParentWidth { fraction } => self._rect(parent_node).width * fraction,
@@ -402,7 +403,7 @@ fn compute_layout_helper(
         flex_wrap: node.flex_wrap,
         flex_grow: node.flex_grow,
         flex_shrink: node.flex_shrink,
-        align_items: node.align_items.or_else(|| {
+        align_items: node.align_items.or({
             if is_grid {
                 None
             } else {
@@ -412,7 +413,7 @@ fn compute_layout_helper(
         align_self: node.align_self,
         justify_self: node.justify_self,
         align_content: node.align_content,
-        justify_content: node.justify_content.or_else(|| {
+        justify_content: node.justify_content.or({
             if is_grid {
                 None
             } else {

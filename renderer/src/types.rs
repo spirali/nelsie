@@ -165,6 +165,7 @@ pub enum LayoutExpr {
     },
 }
 
+#[allow(clippy::should_implement_trait)]
 impl LayoutExpr {
     pub const ZERO: LayoutExpr = LayoutExpr::ConstValue { value: 0.0 };
 
@@ -182,9 +183,7 @@ impl LayoutExpr {
 
     #[inline]
     pub fn max(expressions: Vec<LayoutExpr>) -> LayoutExpr {
-        LayoutExpr::Max {
-            expressions,
-        }
+        LayoutExpr::Max { expressions }
     }
 
     #[inline]

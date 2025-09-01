@@ -1,18 +1,11 @@
 use crate::node::{Node, NodeChild};
 use crate::render::canvas::{Canvas, Link};
-use crate::render::context::RenderContext;
 use crate::render::draw::DrawItem;
-use crate::render::layout::{ComputedLayout, compute_page_layout};
+use crate::render::layout::ComputedLayout;
 use crate::shapes::FillAndStroke;
 use crate::{NodeId, Path, Shape, ShapeRect};
-use std::collections::BTreeSet;
 
-pub(crate) fn render_node(
-    render_ctx: &mut RenderContext,
-    node: &Node,
-    layout: &ComputedLayout,
-    canvas: &mut Canvas,
-) {
+pub(crate) fn render_node(node: &Node, layout: &ComputedLayout, canvas: &mut Canvas) {
     if !node.show {
         return;
     }
@@ -53,7 +46,7 @@ pub(crate) fn render_node(
 
     for child in &node.children {
         match child {
-            NodeChild::Node(node) => render_node(render_ctx, node, layout, canvas),
+            NodeChild::Node(node) => render_node(node, layout, canvas),
             NodeChild::Shape(shape) => match shape {
                 Shape::Rect(rect) => render_rect(canvas, rect, layout, node.node_id),
                 Shape::Oval(rect) => render_oval(canvas, rect, layout, node.node_id),

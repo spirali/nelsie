@@ -1,41 +1,49 @@
-use crate::NodeChild::Node;
+use crate::layout_info::{LayoutInfoComposer, PageLayout};
 use crate::node::ContentId;
 use crate::render::composer::{
     Composer, PngCollectingComposer, PngWriteComposer, SvgCollectingComposer, SvgWriteComposer,
 };
 use crate::render::composer_pdf::PdfComposer;
-use crate::render::content::{Content, ContentBody, ContentMap};
+use crate::render::content::{Content, ContentBody};
 use crate::render::context::RenderContext;
-use crate::render::text::{RenderedText, TextContext, render_text};
+use crate::render::layout::compute_page_layout;
+use crate::render::text::{TextContext, render_text};
 use crate::resources::Resources;
 use crate::text::Text;
 use crate::utils::fileutils::ensure_directory;
-use crate::{Color, InMemoryBinImage, InMemorySvgImage, NodeId, Page, Rectangle};
+use crate::{InMemoryBinImage, InMemorySvgImage, Page, Rectangle};
 use itertools::Itertools;
-use miniz_oxide::deflate::CompressionLevel;
-use parley::{FontContext, LayoutContext};
+use parley::FontContext;
+use pdf_writer::Finish;
 use rayon::iter::{IndexedParallelIterator, IntoParallelIterator};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use std::collections::HashMap;
-use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
-use pdf_writer::Finish;
-use crate::layout_info::{LayoutInfoComposer, PageLayout};
-use crate::render::layout::compute_page_layout;
+use std::sync::Arc;
+
+pub struct Composition {
+    content_id: ContentId,
+    width: f32,
+    height: f32,
+    items: Vec<(Rectangle, ContentId)>,
+}
 
 pub struct Register {
-    node_id_counter: NodeId,
     content_id_counter: ContentId,
     texts: HashMap<Text, (ContentId, u32)>,
     bin_images: HashMap<InMemoryBinImage, (ContentId, f32, f32)>,
     svg_images: HashMap<InMemorySvgImage, (ContentId, usize, f32, f32)>,
-    compositions: Vec<(ContentId, f32, f32, Vec<(Rectangle, ContentId)>)>,
+    compositions: Vec<Composition>,
+}
+
+impl Default for Register {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Register {
     pub fn new() -> Self {
         Self {
-            node_id_counter: NodeId::new(0),
             content_id_counter: ContentId::new(0),
             texts: HashMap::new(),
             bin_images: HashMap::new(),
@@ -87,7 +95,12 @@ impl Register {
         items: Vec<(Rectangle, ContentId)>,
     ) -> ContentId {
         let content_id = self.content_id_counter.bump();
-        self.compositions.push((content_id, width, height, items));
+        self.compositions.push(Composition {
+            content_id,
+            width,
+            height,
+            items,
+        });
         content_id
     }
 }
@@ -124,7 +137,10 @@ impl Document {
         }
         let thread_pool = thread_pool_builder.build().unwrap();
         let progressbar = options.progressbar.then(|| {
-            let total = self.register.texts.len() + self.register.bin_images.len() + self.register.svg_images.len() + self.pages.len();
+            let total = self.register.texts.len()
+                + self.register.bin_images.len()
+                + self.register.svg_images.len()
+                + self.pages.len();
             indicatif::ProgressBar::new(total as u64)
         });
         thread_pool.install(|| {
@@ -188,7 +204,8 @@ impl Document {
                         image_contents
                             .par_iter()
                             .try_for_each(|(content_id, content)| {
-                                let r = composer.preprocess_content(resources, *content_id, &content);
+                                let r =
+                                    composer.preprocess_content(resources, *content_id, content);
                                 if let Some(p) = &progressbar {
                                     p.inc(1);
                                 }
@@ -205,9 +222,14 @@ impl Document {
             let images = images?;
             let content_map: HashMap<_, _> = texts
                 .into_iter()
-                .chain(images.into_iter())
+                .chain(images)
                 .chain(self.register.compositions.iter().map(
-                    |(content_id, width, height, items)| {
+                    |Composition {
+                         content_id,
+                         width,
+                         height,
+                         items,
+                     }| {
                         (
                             *content_id,
                             Content::new(*width, *height, ContentBody::Composition(items.clone())),
@@ -218,16 +240,17 @@ impl Document {
 
             composer.preprocessing_finished();
 
-            let r = self.pages
+            let r = self
+                .pages
                 .par_iter()
                 .enumerate()
                 .try_for_each(|(page_idx, page)| {
                     let mut render_ctx = RenderContext {
                         content_map: &content_map,
                     };
-                    let layout = compute_page_layout(&mut render_ctx, &page);
-                    let canvas = page.render_to_canvas(&mut render_ctx, &layout);
-                    let r = composer.add_page(page_idx, canvas, &render_ctx.content_map, &layout);
+                    let layout = compute_page_layout(&mut render_ctx, page);
+                    let canvas = page.render_to_canvas(&layout);
+                    let r = composer.add_page(page_idx, canvas, render_ctx.content_map, &layout);
                     if let Some(p) = &progressbar {
                         p.inc(1);
                     }
@@ -303,7 +326,10 @@ impl Document {
         Ok(composer.finish())
     }
 
-    pub fn render_layout_info(&self, resources: &Resources, options: &RenderingOptions,
+    pub fn render_layout_info(
+        &self,
+        resources: &Resources,
+        options: &RenderingOptions,
     ) -> crate::Result<Vec<PageLayout>> {
         let mut composer = LayoutInfoComposer::new(self.pages.len());
         self.render(resources, options, &mut composer)?;

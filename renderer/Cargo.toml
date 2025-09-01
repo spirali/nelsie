@@ -44,10 +44,3 @@ serde = {  version = "1.0", features = ["derive"] }
 #chumsky = "0.9"
 #skrifa = "*" # Lets us give a version specified in parley
 #kurbo = "*" # Lets us give a version specified in parley -> penico -> kurbo
-
-
-[profile.release]
-lto = true
-codegen-units = 1
-panic = "abort"
-debug = "line-tables-only"

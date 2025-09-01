@@ -1,14 +1,11 @@
-use std::io::Read;
-use std::sync::Arc;
-use imagesize::blob_size;
-use pyo3::exceptions::PyException;
-use pyo3::PyResult;
-use resvg::usvg::roxmltree;
-use renderer::{InMemoryBinImage, Rectangle};
 use crate::common::steps::Step;
 use crate::parsers::steps::parse_bool_steps;
 use crate::pyinterface::image::{LoadedImage, LoadedImageData, OraLayer};
-
+use imagesize::blob_size;
+use renderer::{InMemoryBinImage, Rectangle};
+use resvg::usvg::roxmltree;
+use std::io::Read;
+use std::sync::Arc;
 
 fn read_archive_file_as_string<R: std::io::Seek + Read>(
     archive: &mut zip::ZipArchive<R>,
@@ -17,14 +14,14 @@ fn read_archive_file_as_string<R: std::io::Seek + Read>(
     Ok(std::io::read_to_string(archive.by_name(filename)?)?)
 }
 
-
 pub(crate) fn create_ora(data: Vec<u8>) -> crate::Result<LoadedImage> {
     let mut archive = zip::ZipArchive::new(std::io::Cursor::new(data))?;
     if read_archive_file_as_string(&mut archive, "mimetype")? != "image/openraster" {
         return Err(crate::Error::parsing_err("Not an ORA format"));
     }
     let stack_data = read_archive_file_as_string(&mut archive, "stack.xml")?;
-    let stack_doc = roxmltree::Document::parse(&stack_data).map_err(|e| crate::Error::parsing_err(format!("Invalid ORA stack.xml: {}", e)))?;
+    let stack_doc = roxmltree::Document::parse(&stack_data)
+        .map_err(|e| crate::Error::parsing_err(format!("Invalid ORA stack.xml: {}", e)))?;
     let image = option_unpack(stack_doc.root().first_child())?;
     let width: f32 = image
         .attribute("w")
@@ -45,7 +42,7 @@ pub(crate) fn create_ora(data: Vec<u8>) -> crate::Result<LoadedImage> {
         width,
         height,
         image_data: LoadedImageData::Ora(layers),
-        named_steps
+        named_steps,
     })
 }
 
@@ -71,7 +68,10 @@ fn load_ora_stack<R: std::io::Seek + Read>(
             }
             //#let visibility =
 
-            let steps = if let Some(step_def) = child.attribute("name").and_then(|v| v.rsplit_once("**").map(|x| x.1)) {
+            let steps = if let Some(step_def) = child
+                .attribute("name")
+                .and_then(|v| v.rsplit_once("**").map(|x| x.1))
+            {
                 let (steps, mut n_steps) = parse_bool_steps(step_def)?;
                 named_steps.append(&mut n_steps);
                 Some(steps)
@@ -89,16 +89,17 @@ fn load_ora_stack<R: std::io::Seek + Read>(
             layers.push(OraLayer {
                 steps,
                 rectangle: Rectangle::new(
-                child
-                    .attribute("x")
-                    .and_then(|v| str::parse(v).ok())
-                    .unwrap_or(0.0),
-                child
-                    .attribute("y")
-                    .and_then(|v| str::parse(v).ok())
-                    .unwrap_or(0.0),
-                width,
-                height),
+                    child
+                        .attribute("x")
+                        .and_then(|v| str::parse(v).ok())
+                        .unwrap_or(0.0),
+                    child
+                        .attribute("y")
+                        .and_then(|v| str::parse(v).ok())
+                        .unwrap_or(0.0),
+                    width,
+                    height,
+                ),
                 data: InMemoryBinImage::new_png(Arc::new(image_data)),
             });
         } else if tag == "stack" {

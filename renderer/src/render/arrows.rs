@@ -1,8 +1,6 @@
-use crate::{Arrow, Color, NodeId};
 use crate::render::draw::{DrawPath, DrawPathPart, PathBuilder};
-use crate::render::layout::ComputedLayout;
-use crate::shapes::{FillAndStroke, Path, PathPart, Stroke};
-
+use crate::shapes::{FillAndStroke, Stroke};
+use crate::{Arrow, Color};
 
 /*pub fn move_point_for_arrow(
     arrow: &Arrow,
@@ -55,9 +53,7 @@ fn arrow_direction(
             x,
             y,
         }
-        | DrawPathPart::Cubic { x2, y2, x, y, .. } => {
-            (*x, *y, x - x2, y - y2)
-        }
+        | DrawPathPart::Cubic { x2, y2, x, y, .. } => (*x, *y, x - x2, y - y2),
         DrawPathPart::Close => {
             return None;
         }
@@ -76,10 +72,7 @@ pub(crate) fn create_arrow(
     part2: Option<&DrawPathPart>,
     default_color: Option<Color>,
 ) -> Option<DrawPath> {
-    let color = arrow
-        .color
-        .clone()
-        .or(default_color)?;
+    let color = arrow.color.or(default_color)?;
     let (x, y, dx, dy) = arrow_direction(part1, part2)?;
     let angle = arrow.angle * std::f32::consts::PI / 180.0;
     let a = dx.atan2(dy) + std::f32::consts::PI;

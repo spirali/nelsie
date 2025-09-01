@@ -1,15 +1,10 @@
 use crate::shapes::Shape;
-use crate::text::Text;
 use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
 use crate::{Color, NodeId};
-use smallvec::SmallVec;
-use std::collections::{BTreeMap, BTreeSet};
-use std::sync::Arc;
 use taffy::{
     AlignContent, AlignItems, FlexWrap, GridPlacement, Line, NonRepeatedTrackSizingFunction,
 };
 
-#[allow(clippy::large_enum_variant)]
 #[derive(Debug)]
 pub enum NodeChild {
     Node(Node),

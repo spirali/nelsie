@@ -1,8 +1,7 @@
 use pyo3::exceptions::PyValueError;
-use pyo3::pybacked::PyBackedStr;
 use pyo3::types::PyAnyMethods;
-use pyo3::{intern, Bound, FromPyObject, PyAny, PyResult, Python};
-use renderer::{InlineId, LayoutExpr, LengthOrExpr, NodeId};
+use pyo3::{intern, Bound, PyAny, PyResult};
+use renderer::{InlineId, LayoutExpr, NodeId};
 
 // #[derive(Debug)]
 // pub(crate) struct PyLayoutExpr(LayoutExpr);
@@ -95,12 +94,12 @@ pub(crate) fn extract_layout_expr(obj: &Bound<PyAny>) -> PyResult<LayoutExpr> {
             inline_id: InlineId::new(v1.extract()?),
             fraction: obj.getattr(arg2)?.extract()?,
         }),
-        "max" => Ok(LayoutExpr::max(
-            {
-                let v: Vec<Bound<PyAny>> = v0.extract()?;
-                v.into_iter().map(|obj| extract_layout_expr(&obj)).collect::<PyResult<_>>()?
-            }
-        )),
+        "max" => Ok(LayoutExpr::max({
+            let v: Vec<Bound<PyAny>> = v0.extract()?;
+            v.into_iter()
+                .map(|obj| extract_layout_expr(&obj))
+                .collect::<PyResult<_>>()?
+        })),
         _ => Err(PyValueError::new_err("Invalid expression")),
     }
 }

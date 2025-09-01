@@ -1,21 +1,23 @@
-use std::collections::hash_map::Values;
 use crate::parsers::length::parse_string_length;
 use crate::pyinterface::common::PyColor;
-use crate::pyinterface::image::{LoadedImage, PyImage, PyImageData, PyImageFormat};
+use crate::pyinterface::image::{PyImage, PyImageData};
 use crate::pyinterface::layoutexpr::extract_layout_expr;
 use crate::pyinterface::shapes::{DimX, DimY, PyPath, PyPosition, PyRect};
 use crate::pyinterface::text::PyTextContent;
-use pyo3::conversion::FromPyObjectBound;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{intern, Bound, FromPyObject, PyAny, PyResult};
-use renderer::{Color, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page, Rectangle, Register, Resources, Text};
-use std::collections::HashMap;
-use std::marker::PhantomData;
-use std::sync::Arc;
-use renderer::taffy::{AlignContent, AlignItems, GridPlacement, Line, NonRepeatedTrackSizingFunction};
-use renderer::taffy::style_helpers::{FromFlex, FromLength, FromPercent, TaffyGridLine, TaffyGridSpan};
+use renderer::taffy::style_helpers::{
+    FromFlex, FromLength, FromPercent, TaffyGridLine, TaffyGridSpan,
+};
+use renderer::taffy::{
+    AlignContent, AlignItems, GridPlacement, Line, NonRepeatedTrackSizingFunction,
+};
+use renderer::{
+    Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page, Rectangle, Register,
+    Resources, Text,
+};
 
 #[derive(FromPyObject)]
 struct PyPage<'py> {
@@ -44,7 +46,7 @@ struct PyLength(Length);
 impl<'py> FromPyObject<'py> for PyLength {
     fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
         Ok(PyLength(if let Ok(value) = obj.extract::<f32>() {
-            Length::Points { value: value }
+            Length::Points { value }
         } else if let Ok(value) = obj.extract::<&str>() {
             parse_string_length(value)?
         } else {
@@ -72,18 +74,16 @@ struct PyAlignItems(AlignItems);
 impl<'py> FromPyObject<'py> for PyAlignItems {
     fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
         let s = obj.extract::<&str>()?;
-        Ok(
-            PyAlignItems(match s {
-                "start" => AlignItems::Start,
-                "end" => AlignItems::End,
-                "flex-start" => AlignItems::FlexStart,
-                "flex-end" => AlignItems::FlexEnd,
-                "center" => AlignItems::Center,
-                "stretch" => AlignItems::Stretch,
-                "baseline" => AlignItems::Baseline,
-                _ => return Err(PyValueError::new_err("Invalid AlignItems"))
-            }
-                ))
+        Ok(PyAlignItems(match s {
+            "start" => AlignItems::Start,
+            "end" => AlignItems::End,
+            "flex-start" => AlignItems::FlexStart,
+            "flex-end" => AlignItems::FlexEnd,
+            "center" => AlignItems::Center,
+            "stretch" => AlignItems::Stretch,
+            "baseline" => AlignItems::Baseline,
+            _ => return Err(PyValueError::new_err("Invalid AlignItems")),
+        }))
     }
 }
 
@@ -98,20 +98,18 @@ struct PyAlignContent(AlignContent);
 impl<'py> FromPyObject<'py> for PyAlignContent {
     fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
         let s = obj.extract::<&str>()?;
-        Ok(
-            PyAlignContent(match s {
-                "start" => AlignContent::Start,
-                "end" => AlignContent::End,
-                "flex-start" => AlignContent::FlexStart,
-                "flex-end" => AlignContent::FlexEnd,
-                "center" => AlignContent::Center,
-                "stretch" => AlignContent::Stretch,
-                "space-between" => AlignContent::SpaceBetween,
-                "space-evenly" => AlignContent::SpaceEvenly,
-                "space-around" => AlignContent::SpaceAround,
-                _ => return Err(PyValueError::new_err("Invalid AlignContent"))
-            }
-            ))
+        Ok(PyAlignContent(match s {
+            "start" => AlignContent::Start,
+            "end" => AlignContent::End,
+            "flex-start" => AlignContent::FlexStart,
+            "flex-end" => AlignContent::FlexEnd,
+            "center" => AlignContent::Center,
+            "stretch" => AlignContent::Stretch,
+            "space-between" => AlignContent::SpaceBetween,
+            "space-evenly" => AlignContent::SpaceEvenly,
+            "space-around" => AlignContent::SpaceAround,
+            _ => return Err(PyValueError::new_err("Invalid AlignContent")),
+        }))
     }
 }
 
@@ -125,24 +123,28 @@ struct PyGridTemplateItem(NonRepeatedTrackSizingFunction);
 
 impl<'py> FromPyObject<'py> for PyGridTemplateItem {
     fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
-        Ok(PyGridTemplateItem(if let Ok(value) = obj.extract::<f32>() {
-            NonRepeatedTrackSizingFunction::from_length(value)
-        } else if let Ok(value) = obj.extract::<&str>() {
-            let value = value.trim();
-            if let Some(value) = value.strip_suffix("%") {
-                let value = value.trim();
-                NonRepeatedTrackSizingFunction::from_percent(value.parse::<f32>()? / 100.0)
-            } else if let Some(value) = value.strip_suffix("fr") {
-                let value = value.trim();
-                NonRepeatedTrackSizingFunction::from_flex(value.parse::<f32>()?)
-            } else if let Ok(value) = value.parse::<f32>() {
+        Ok(PyGridTemplateItem(
+            if let Ok(value) = obj.extract::<f32>() {
                 NonRepeatedTrackSizingFunction::from_length(value)
+            } else if let Ok(value) = obj.extract::<&str>() {
+                let value = value.trim();
+                if let Some(value) = value.strip_suffix("%") {
+                    let value = value.trim();
+                    NonRepeatedTrackSizingFunction::from_percent(value.parse::<f32>()? / 100.0)
+                } else if let Some(value) = value.strip_suffix("fr") {
+                    let value = value.trim();
+                    NonRepeatedTrackSizingFunction::from_flex(value.parse::<f32>()?)
+                } else if let Ok(value) = value.parse::<f32>() {
+                    NonRepeatedTrackSizingFunction::from_length(value)
+                } else {
+                    return Err(PyValueError::new_err(format!(
+                        "Invalid grid template: {value}"
+                    )));
+                }
             } else {
-                return Err(PyValueError::new_err(format!("Invalid grid template: {value}")))
-            }
-        } else {
-            return Err(PyValueError::new_err("Invalid grid template"))
-        }))
+                return Err(PyValueError::new_err("Invalid grid template"));
+            },
+        ))
     }
 }
 
@@ -156,27 +158,25 @@ struct PyGridLinePlacement(Line<GridPlacement>);
 
 fn parse_grid_placement_item(obj: &Bound<PyAny>) -> PyResult<GridPlacement> {
     if obj.is_none() {
-        return Ok(GridPlacement::Auto)
+        return Ok(GridPlacement::Auto);
     }
     if let Ok(value) = obj.extract::<&str>() {
         let value = value.trim();
         if value == "auto" {
-            return Ok(GridPlacement::Auto)
+            return Ok(GridPlacement::Auto);
         }
         if let Some(value) = value.strip_prefix("span ") {
             let value: u16 = value.trim().parse()?;
-            return Ok(GridPlacement::from_span(value))
+            return Ok(GridPlacement::from_span(value));
         }
         if let Ok(value) = value.parse() {
-            return Ok(GridPlacement::from_line_index(value))
+            return Ok(GridPlacement::from_line_index(value));
         }
-        Err(PyValueError::new_err(
-            "Invalid grid placement"))
+        Err(PyValueError::new_err("Invalid grid placement"))
     } else if let Ok(value) = obj.extract::<i16>() {
         Ok(GridPlacement::from_line_index(value))
     } else {
-        Err(PyValueError::new_err(
-            "Invalid grid placement"))
+        Err(PyValueError::new_err("Invalid grid placement"))
     }
 }
 
@@ -186,14 +186,12 @@ impl<'py> FromPyObject<'py> for PyGridLinePlacement {
             return Ok(PyGridLinePlacement(Line {
                 start: value,
                 end: GridPlacement::Auto,
-            }))
-        } else if let Ok((value1, value2)) = obj.extract::<(Bound<'py, PyAny>, Bound<'py, PyAny>)>() {
+            }));
+        } else if let Ok((value1, value2)) = obj.extract::<(Bound<'py, PyAny>, Bound<'py, PyAny>)>()
+        {
             if let Ok(start) = parse_grid_placement_item(&value1) {
                 if let Ok(end) = parse_grid_placement_item(&value2) {
-                    return Ok(PyGridLinePlacement(Line {
-                        start,
-                        end
-                    }))
+                    return Ok(PyGridLinePlacement(Line { start, end }));
                 }
             }
         }
@@ -251,18 +249,6 @@ struct PyNode<'py> {
     url: Option<String>,
 }
 
-fn get<'a, 'py, T1: FromPyObjectBound<'a, 'py>, T2, F: FnOnce(T1) -> PyResult<T2>>(
-    obj: &'a Bound<'py, PyAny>,
-    name: &str,
-    class: &str,
-) -> PyResult<Bound<'py, PyAny>> {
-    obj.getattr(name).map_err(|_| {
-        PyValueError::new_err(format!(
-            "Cannot found attribute '{name}' when extracting class '{class}'."
-        ))
-    })
-}
-
 fn check_font_or_fail(font: &str, resources: &mut Resources) -> PyResult<()> {
     if !resources.check_font(font) {
         return Err(PyValueError::new_err(format!("Font '{font}' not found.")));
@@ -285,7 +271,7 @@ fn obj_to_node(
                     text.style
                         .font
                         .as_ref()
-                        .map(|f| check_font_or_fail(&f, resources))
+                        .map(|f| check_font_or_fail(f, resources))
                         .transpose()?;
                     Some(register.register_text(text))
                 }
@@ -327,7 +313,7 @@ fn obj_to_node(
                                     items,
                                 ))
                             }
-                        },
+                        }
                         PyImageData::Ora(img) => {
                             let items: Vec<_> = img
                                 .iter()
@@ -362,17 +348,28 @@ fn obj_to_node(
     let i_node_id = intern!(obj.py(), "node_id");
     let i_shape = intern!(obj.py(), "shape");
 
-    let (grid_template_rows, grid_template_columns, grid_row, grid_column) = if let Some(o) = node.grid {
-        (o.template_rows.into_iter().map(|x| x.into()).collect(),
-         o.template_columns.into_iter().map(|x| x.into()).collect(),
-         o.row.0,
-         o.column.0)
-    } else {
-        (Default::default(), Default::default(), Default::default(), Default::default())
-    };
+    let (grid_template_rows, grid_template_columns, grid_row, grid_column) =
+        if let Some(o) = node.grid {
+            (
+                o.template_rows.into_iter().map(|x| x.into()).collect(),
+                o.template_columns.into_iter().map(|x| x.into()).collect(),
+                o.row.0,
+                o.column.0,
+            )
+        } else {
+            (
+                Default::default(),
+                Default::default(),
+                Default::default(),
+                Default::default(),
+            )
+        };
 
     Ok(Node {
-        grid_template_rows, grid_template_columns, grid_row, grid_column,
+        grid_template_rows,
+        grid_template_columns,
+        grid_row,
+        grid_column,
         node_id: NodeId::new(node.node_id),
         width: node.width.map(|x| x.0),
         height: node.height.map(|x| x.0),

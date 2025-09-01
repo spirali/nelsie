@@ -1,4 +1,4 @@
-use crate::{PathPart, Rectangle};
+use crate::Rectangle;
 use crate::shapes::FillAndStroke;
 
 #[derive(Debug)]

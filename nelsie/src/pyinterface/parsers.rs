@@ -1,11 +1,6 @@
-use crate::common::steps::Step;
-use pyo3::exceptions::PyException;
-use pyo3::types::{PyAnyMethods, PyDict, PyDictMethods, PyList, PyTuple};
-use pyo3::{
-    pyfunction, Borrowed, Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr,
-    PyResult, Python,
-};
-use std::collections::{BTreeMap, HashMap};
+use pyo3::types::{PyDict, PyDictMethods, PyList};
+use pyo3::{pyfunction, Bound, IntoPyObject, IntoPyObjectExt, PyAny, PyResult, Python};
+use std::collections::BTreeMap;
 
 // fn step_to_pyobj<'py>(py: Python<'py>, step: &Step) -> PyResult<Bound<'py, PyAny>> {
 //     let indices = step.indices();
@@ -23,7 +18,7 @@ pub(crate) fn parse_bool_steps<'py>(
 ) -> PyResult<(Bound<'py, PyAny>, Bound<'py, PyAny>)> {
     let mut objs = BTreeMap::new();
     let (steps, named) = super::super::parsers::steps::parse_bool_steps(input)?;
-    let mut result = PyDict::new(py);
+    let result = PyDict::new(py);
     for (step, value) in steps {
         let s = step.into_pyobject(py)?.into_any();
         result.set_item(s.clone(), value.into_bound_py_any(py)?)?;

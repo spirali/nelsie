@@ -346,10 +346,10 @@ pub fn precompute_image_cache(pdf_writer: &PdfWriterData, progress_bar: Option<&
 */
 use crate::render::canvas::Canvas;
 use crate::render::content::{Content, ContentMap};
+use crate::render::layout::ComputedLayout;
 use crate::{ContentId, Resources};
 use resvg::{tiny_skia, usvg};
 use std::sync::Mutex;
-use crate::render::layout::ComputedLayout;
 
 pub(crate) trait Composer: Sync + Send {
     fn add_page(
@@ -361,9 +361,9 @@ pub(crate) trait Composer: Sync + Send {
     ) -> crate::Result<()>;
     fn preprocess_content(
         &self,
-        resources: &Resources,
-        content_id: ContentId,
-        content: &Content,
+        _resources: &Resources,
+        _content_id: ContentId,
+        _content: &Content,
     ) -> crate::Result<()> {
         Ok(())
     }
@@ -431,7 +431,7 @@ impl Composer for PngWriteComposer<'_> {
         _layout: &ComputedLayout,
     ) -> crate::Result<()> {
         let svg = canvas.as_svg(content_map)?;
-        let data = svg_to_png(&self.resources, &svg)?;
+        let data = svg_to_png(self.resources, &svg)?;
         let final_path = self.path.join(path_name(page_idx, "png", self.n_pages));
         std::fs::write(final_path, data)?;
         Ok(())
@@ -506,7 +506,7 @@ fn svg_to_png(resources: &Resources, svg: &str) -> crate::Result<Vec<u8>> {
         fontdb: resources.font_db.as_ref().unwrap().clone(),
         ..Default::default()
     };
-    let tree = usvg::Tree::from_str(&svg, &options)?;
+    let tree = usvg::Tree::from_str(svg, &options)?;
     let zoom = 1.0;
     let pixmap_size = tree.size().to_int_size().scale_by(zoom).unwrap();
     let mut pixmap = tiny_skia::Pixmap::new(pixmap_size.width(), pixmap_size.height()).unwrap();

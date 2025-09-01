@@ -1,4 +1,3 @@
-use crate::Error;
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
@@ -16,13 +15,6 @@ impl Hash for Color {
 impl Color {
     pub fn new(color: svgtypes::Color) -> Self {
         Color(color)
-    }
-
-    #[inline]
-    pub fn from_str(s: &str) -> Result<Self, Error> {
-        Ok(Color::new(svgtypes::Color::from_str(s).map_err(|_| {
-            Error::parsing_err(format!("Invalid color: '{s}'"))
-        })?))
     }
 
     pub fn as_f32s(&self) -> [f32; 3] {

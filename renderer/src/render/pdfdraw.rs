@@ -143,7 +143,7 @@ pub(crate) fn draw_item_to_pdf(pdf_writer: &mut PdfWriter, item: &DrawItem) {
 }
 
 pub fn pdf_rect(rect: &Rectangle) -> Rect {
-    Rect::new(rect.x, rect.y, rect.x + rect.width, (rect.y + rect.height))
+    Rect::new(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height)
 }
 
 pub(crate) fn annotations_to_pdf(
