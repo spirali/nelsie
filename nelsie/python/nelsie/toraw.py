@@ -60,9 +60,10 @@ class RawBox:
     justify_self: AlignItems = None
     align_content: AlignContent = None
     justify_content: AlignContent = None
-    gap_x: Sv[Length] = 0
-    gap_y: Sv[Length] = 0
+    gap_x: Length = 0
+    gap_y: Length = 0
     grid: GridOptions = None
+    border_radius: IntOrFloat = 0
 
 
 @dataclass
@@ -175,6 +176,7 @@ def box_to_raw(box: "Box", step: Step, ctx: ToRawContext) -> RawBox:
         justify_content=get_step(box._justify_content, step),
         gap_x=get_step(box._gap_x, step),
         gap_y=get_step(box._gap_y, step),
+        border_radius=get_step(box._border_radius, step),
         grid=grid,
     )
 
