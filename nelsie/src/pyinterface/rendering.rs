@@ -31,7 +31,7 @@ pub(crate) fn render<'py>(
         n_threads,
         progressbar,
     };
-    let result = py.allow_threads(|| run_rendering(resources, &options, path, format, doc))?;
+    let result = py.detach(|| run_rendering(resources, &options, path, format, doc))?;
     Ok(match result {
         RenderingOutput::None => py.None().into_bound(py),
         RenderingOutput::LayoutInfo(info) => {

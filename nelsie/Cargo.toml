@@ -15,9 +15,9 @@ thiserror = { workspace = true }
 xmltree = { workspace = true }
 smallvec = { workspace = true }
 
-pyo3 = { version = "0.25", features = ["abi3-py311", "extension-module"] }
+pyo3 = { version = "0.26", features = ["abi3-py311", "extension-module"] }
 itertools = "0.14"
 strict-num = "*"
 imagesize = { version = "0.14", default-features = false, features = ["jpeg", "png"] }
-zip = { version = "2", default-features = false, features = ["deflate"] }
+zip = { version = "4.6", default-features = false, features = ["deflate"] }
 notify = "8"
