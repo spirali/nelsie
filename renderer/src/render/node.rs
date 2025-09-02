@@ -20,25 +20,6 @@ pub(crate) fn render_node(node: &Node, layout: &ComputedLayout, canvas: &mut Can
         canvas.add_content(node.z_level, rect, *content_id);
     }
 
-    /*if let Some(content) = &node.content {
-        let rect = layout.node_layout(node.node_id).unwrap().rect;
-        match content {
-            NodeContent::Text(_) => {
-                self.canvas.add_text(
-                    config.text_cache.get(node.node_id).unwrap().clone(),
-                    rect.x,
-                    rect.y,
-                );
-            }
-            NodeContent::Image(image) => {
-                render_image_to_canvas(image, step, rect, self.canvas)
-            }
-            NodeContent::Video(video) => {
-                self.canvas.add_video(rect.clone(), video.video.clone());
-            }
-        }
-    }*/
-
     if let Some(url) = &node.url {
         let rect = &layout.node_layout(node.node_id).unwrap().rect;
         canvas.add_link(Link::new(rect.clone(), url.clone()));

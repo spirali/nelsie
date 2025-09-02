@@ -58,42 +58,6 @@ impl Canvas {
         self.items.sort_by_key(|item| item.0);
     }
 
-    /*pub fn add_jpeg_image(&mut self, z_level: i32, rect: Rectangle, data: Arc<Vec<u8>>) {
-        self.items
-            .push((z_level, CanvasItem::JpegImage { rect, data }));
-    }*/
-
-    // pub fn add_video(&mut self, rect: Rectangle, video: Arc<Video>) {
-    //     self.items.push(CanvasItem::Video { rect, video });
-    // }
-    //
-    // pub fn add_png_image(&mut self, rect: Rectangle, data: Arc<Vec<u8>>) {
-    //     self.items.push(CanvasItem::PngImage { rect, data });
-    // }
-    //
-    // pub fn add_text(&mut self, text: Arc<RenderedText>, x: f32, y: f32) {
-    //     self.items.push(CanvasItem::Text { text, x, y })
-    // }
-
-    /*pub fn add_svg_image(
-        &mut self,
-        z_level: i32,
-        rect: Rectangle,
-        data: String,
-        width: f32,
-        height: f32,
-    ) {
-        self.items.push((
-            z_level,
-            CanvasItem::SvgImage {
-                rect,
-                data,
-                width,
-                height,
-            },
-        ))
-    }*/
-
     pub fn add_content(&mut self, z_level: i32, rect: Rectangle, content_id: ContentId) {
         self.items
             .push((z_level, CanvasItem::Content { rect, content_id }))
