@@ -227,50 +227,6 @@ impl From<&LengthOrExpr> for tf::Dimension {
     }
 }
 
-// fn compute_content_default_size(
-//     render_ctx: &mut RenderContext,
-//     node: &Node,
-//     content_id: &ContentId,
-// ) -> (f32, f32) {
-//     match content {
-//         NodeContent::Text(text_id) => {
-//             todo!()
-//         }
-//         NodeContent::Image(images) => {
-//             todo!()
-//         } /*let mut t = text.styled_text_at_step(step);
-//           let tmp;
-//
-//           if text.parse_counters {
-//               // Here we do not "step" but "self.config.step" as we want to escape "replace_steps"
-//               // for counters
-//               let mut text = t.clone();
-//               replace_counters(
-//                   config.counter_values,
-//                   &mut text,
-//                   config.slide_id,
-//                   config.step,
-//               );
-//               tmp = Some(text);
-//               t = tmp.as_ref().unwrap();
-//           }
-//           let rtext = config.text_cache.get_or_create(
-//               node.node_id,
-//               &mut config.thread_resources.text_context,
-//               t,
-//           );
-//           rtext.size()*/
-//     }
-//     /*        NodeContent::Image(image) => image
-//             .loaded_image
-//             .at_step(step)
-//             .as_ref()
-//             .map(|img| (img.width, img.height))
-//             .unwrap_or((0.0, 0.0)),
-//         NodeContent::Video(_video) => (0.0, 0.0),
-//     }*/
-// }
-
 fn gather_taffy_layout<'b>(
     node: &'b Node,
     parent: Option<&Node>,

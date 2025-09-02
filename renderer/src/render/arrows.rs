@@ -2,41 +2,6 @@ use crate::render::draw::{DrawPath, DrawPathPart, PathBuilder};
 use crate::shapes::{FillAndStroke, Stroke};
 use crate::{Arrow, Color};
 
-/*pub fn move_point_for_arrow(
-    arrow: &Arrow,
-    part1: &mut PathPart,
-    part2: Option<&mut PathPart>,
-) -> Option<(f32, f32)> {
-        let mut parts = path.parts.iter().rev();
-        if let Some((_, _, dx, dy)) =
-            arrow_direction(parts.next()?, parts.next())
-        {
-            let arrow = path.arrow_end.as_ref().unwrap();
-            let len = if let Some(w) = arrow.stroke_width {
-                w / 2.0
-            } else {
-                arrow.size * arrow.inner_point.unwrap_or(1.0) / 2.0
-            };
-            return Some((-dx * len, -dy * len));
-        }
-    }
-    if path.arrow_start.is_some() && index == 0 {
-        let mut parts = path.parts.iter();
-        if let Some((_, _, dx, dy)) =
-            arrow_direction(layout, parent_id, parts.next()?, parts.next())
-        {
-            let arrow = path.arrow_start.as_ref().unwrap();
-            let len = if let Some(w) = arrow.stroke_width {
-                w / 2.0
-            } else {
-                arrow.size * arrow.inner_point.unwrap_or(1.0) / 2.0
-            };
-            return Some((-dx * len, -dy * len));
-        }
-    }
-    None
-}
-*/
 fn arrow_direction(
     part1: &DrawPathPart,
     part2: Option<&DrawPathPart>,

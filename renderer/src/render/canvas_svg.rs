@@ -21,36 +21,10 @@ impl Canvas {
 
         for item in self.items() {
             match item {
-                /*CanvasItem::PngImage { rect, data } => {
-                    write_raster_image_to_svg(&rect, "png", &data, &mut writer)
-                }
-                CanvasItem::JpegImage { rect, data } => {
-                    write_raster_image_to_svg(&rect, "jpeg", &data, &mut writer)
-                }
-                CanvasItem::SvgImage {
-                    rect,
-                    data,
-                    width,
-                    height,
-                } => render_svg_image_into_svg(&mut writer, data.as_str(), &rect, *width, *height),*/
-                /*CanvasItem::Text { text, x, y } => render_text_into_svg(&mut writer, &text, x, y),*/
                 CanvasItem::Content { rect, content_id } => {
                     render_content_to_svg(&mut writer, content_map, rect, *content_id);
                 }
                 CanvasItem::DrawItem(item) => write_draw_item_to_svg(&mut writer, item),
-                /*CanvasItem::Video { rect, video } => {
-                    if let Some(image) = &video.cover_image {
-                        match &image.data {
-                            LoadedImageData::Png(data) => {
-                                write_raster_image_to_svg(&rect, "png", data, &mut writer)
-                            }
-                            LoadedImageData::Jpeg(data) => {
-                                write_raster_image_to_svg(&rect, "jpeg", data, &mut writer)
-                            }
-                            LoadedImageData::Svg(_) | LoadedImageData::Ora(_) => unreachable!(),
-                        }
-                    }
-                }*/
             }
         }
         writer.end("svg");
