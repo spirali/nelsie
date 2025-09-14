@@ -97,9 +97,10 @@ It basically adds a constant to all step definitions in an image.
 ```nelsie
 @deck.slide()
 def image_demo(slide):
-
-    # The first image will be shown at step 3
-    slide.image("./imgs/stepped_logo.ora", shift_steps=2)
+    slide.text("Step 1", show=1)
+    slide.text("Step 2", show=2)
+    # The first image will be shown at step 2
+    slide.image("./imgs/stepped_logo.ora", shift_steps=1)
 ```
 
 ### Directly passing image data

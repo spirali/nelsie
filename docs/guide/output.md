@@ -52,12 +52,15 @@ The allowed values are integer numbers 0-10.
 
 ## In-memory rendering
 
-If the first parameter of the `.render()` method is `None` then Nelsie does not create files but returns
-the images as Python objects. It returns a list of triplets (`slide_id`, `step`, `data`) where `data` are
-`bytes` instance with the image.
+If the first parameter of the `.render()` method is `None` then Nelsie does not create files but returns the output as Python objects.
+The returned object depends on output format:
+
+* "pdf" => `bytes`
+* "png" => `list[bytes]`
+* "svg" => `list[str]`
 
 ```python
 pages = deck.render(None, "png")
 
-print(pages)  # Print returned triplets with pages
+print(pages)
 ```

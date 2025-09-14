@@ -24,7 +24,7 @@ nav:
       - guide/layoutexpr.md
       - guide/rendering.md
       - guide/insert.md
-      - guide/counters.md
+      - guide/postprocessing.md
       - guide/output.md
       - guide/debug_layout.md
       - guide/resources.md

@@ -8,7 +8,18 @@ from nelsie.utils import check_is_int_or_float, check_is_type, check_is_str
 from .box import BoxBuilderMixin, Box, traverse_children
 from .counters import CounterStorage
 from .resources import Resources
-from .steps import Step, Sv, get_step, Sn, StepVal, sn_apply, step_compare_key, is_visible
+from .steps import (
+    Step,
+    Sv,
+    get_step,
+    Sn,
+    StepVal,
+    sn_apply,
+    step_compare_key,
+    is_visible,
+    BoolStepDef,
+    parse_bool_steps,
+)
 from . import nelsie as nelsie_rs
 from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, merge_in_step, check_is_text_style
 from .shapes import Path, Rect, Oval
@@ -43,6 +54,7 @@ class Slide(BoxBuilderMixin):
 
         self._text_styles = None
         self._extra_steps = None
+        self._ignore_steps = None
 
     def add(self, box):
         self.children.append(box)
@@ -88,6 +100,9 @@ class Slide(BoxBuilderMixin):
         if self._extra_steps is None:
             self._extra_steps = set()
         self._extra_steps.add(step)
+
+    def ignore_steps(self, ignored_steps: BoolStepDef):
+        self._ignore_steps = parse_bool_steps(ignored_steps)
 
     def _set_style(self, name: str, style: Sn[TextStyle]):
         if self._text_styles is None:
@@ -285,7 +300,7 @@ class SlideDeck:
                 steps.update(slide.subslides.keys())
             if slide._extra_steps:
                 steps.update(slide._extra_steps)
-            steps = [s for s in steps if is_visible(s)]
+            steps = [s for s in steps if is_visible(s, slide._ignore_steps)]
             steps.sort(key=step_compare_key)
             slide_steps[slide] = steps
             total_counter.increment_page(slide.counters, len(steps))

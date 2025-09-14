@@ -20,5 +20,6 @@ Nelsie supports Linux, Windows, and MacOS X on all major platforms.
   ```commandline
   $ python3 -m venv venv
   $ source venv/bin/activate
+  $ cd nelsie/nelsie
   $ maturin build --release
   ```

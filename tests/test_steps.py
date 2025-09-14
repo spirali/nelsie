@@ -215,7 +215,7 @@ def test_step_other_counter(deck):
 
 
 def test_slide_counter(deck):
-    c = SlideCounter()
+    c = StepCounter()
     assert c.last() == 1
     assert c.last() == 1
     assert c.last_p() == "1+"
@@ -269,3 +269,14 @@ def test_debug_steps(deck):
     slide = deck.new_slide(debug_steps=True, width=300, height=300)
     slide.text("Hello", show="2+")
     slide.text("World", show="22, 3, 111")
+
+
+@check(n_slides=2)
+def test_ignore_steps(deck):
+    slide = deck.new_slide(width=20, height=20)
+    slide.box(
+        width=20,
+        height=20,
+        bg_color=StepVal("red").at(2, "green").at(3, "blue").at(5, "magenta"),
+    )
+    slide.ignore_steps("2-4")

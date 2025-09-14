@@ -32,7 +32,7 @@ def text_style_demo(slide):
 The `TextStyle` constructor has the following parameters; each parameter can be `None', which means that the parameter
 will not be overridden by this style.
 
-* `font_family`: `str` - Name of the font or a generic family: `sans-serif`, `monospace`, `serif`
+* `family`: `str` - Name of the font or a generic family: `sans-serif`, `monospace`, `serif`
 * `color`: `str` - Color of the text
 * `size`: `float` - Size of the font
 * `line_spacing`: `float` - Line spacing relative to `size`
@@ -80,7 +80,6 @@ deck.set_slide("my-style", TextStyle(size=100, color="red"))
 There are three predefined text styles:
 
 * `"default"`
-* `"monospace"`
 * `"code"`
 
 Style `"default"` is special and is used as a source of default values for drawing fonts when values are not overridden
@@ -97,10 +96,8 @@ def default_style_demo(slide):
     slide.text("Hello world!", TextStyle(size=100))
 ```
 
-Style `"monospace"` sets the font family to a monospace font.
-
-Style `"code"` is used as a default style in `.code()` method. See [Code](code.md) for more details. By default is have
-the same effect as style `"monospace"`.
+Style `"code"` is used as a default style in `.code()` method. See [Code](code.md) for more details.
+It has set `monospace` font family by default.
 
 ## Inline styles
 
@@ -111,30 +108,21 @@ TEXT is the styled text.
 ```nelsie
 @deck.slide()
 def inline_style_demo(slide):
-
     slide.set_style("red", TextStyle(color="red"))
     slide.set_style("big", TextStyle(size=64))
+    slide.set_style("mono", TextStyle(font="monospace"))
 
-    slide.text("~red{Hello} world!\n~monospace{github.com/spirali/~big{nelsie}}")
+    slide.text("~red{Hello} world!\n~mono{github.com/spirali/~big{nelsie}}")
 ```
 
 ## Fonts
 
-A font can be specified by the `font_family` parameter of `TextStyle`.
-All system fonts are available by default. You can add more fonts via [Resources](resources.md).
+A font can be specified by the `font` parameter of `TextStyle`.
 
-Nelsie is not shipped with a built-in font and tries to automatically detect a sans-serif font as `font_family` for
-the `"default"` style and a monospace font for the `"monospace"` style.
+Nelsie is shipped with a built-in font `Dejavu Sans` as default.
+You can add more fonts via [Resources](resources.md).
 
-You can override this behavior by setting
-
-```python
-deck = SlideDeck(default_font="Helvetica", default_monospace_font="Ubuntu Mono")
-```
-
-!!! note "Robust slide rendering across systems"
-
-    For robust cross-platform slide rendering, it is recommended to include all used fonts along with the slide source code.
+You can set a different font by setting `font` in text style.
 
 ## Text alignment
 
@@ -147,7 +135,7 @@ def text_align_demo(slide):
 
     TEXT = "Line 1\nLooooong line\nThird line"
 
-    box = slide.box(gap=(0, 50))
+    box = slide.box(gap_y=50)
     box.text(TEXT, align="start")
     box.text(TEXT, align="center")
     box.text(TEXT, align="end")
@@ -162,7 +150,7 @@ underlying box.
 @deck.slide()
 def text_box_demo(slide):
     box = slide.box(bg_color="gray")
-    box.text("Hello world!", bg_color="orange", m_x=50, m_y=30)
+    box.text("Hello world!", bg_color="orange", m_left=50, m_top=30)
 ```
 
 ## Updating style
@@ -200,36 +188,38 @@ def text_style_demo(slide):
     There is an exception for style `"default"` as it always needs to define all attributes.
     Hence `.set_style()` for `"default"` style always behaves as `.update_style()`.
 
-## Text and `InSteps`
+## Text and `StepVal`
 
-You may use `InSteps` in `.text()`:
-
-```nelsie
-@deck.slide()
-def text_style_demo(slide):
-    slide.set_style("default", TextStyle(size=80))
-    slide.text(InSteps({1: "Hello world!", 2: "Hello Nelsie!"}))
-```
-
-You can also provide an array of strings and `InSteps`. String in the array is concatenated for each step:
+You may use `StepVal` in `.text()`:
 
 ```nelsie
 @deck.slide()
 def text_style_demo(slide):
     slide.set_style("default", TextStyle(size=80))
-    slide.text(["Hello ", InSteps({1: "world", 2: "Nelsie"}), "!"])
+    slide.text(StepVal("Hello world!").at(2, "Hello Nelsie!"))
 ```
 
-## Text styles and `InSteps`
+## Text styles and `StepVal`
 
-When a style is set through `set_style` an instance of `InSteps` can be used:
+When a style is set through `set_style` an instance of `StepVal` can be used:
 
 ```nelsie
 @deck.slide()
 def text_style_demo(slide):
     slide.set_style("default", TextStyle(size=80))
     slide.set_style("my-style",
-                    InSteps({1: TextStyle(color="red"), 2: TextStyle(color="green")}))
+                    StepVal(TextStyle(color="orange")).at(2, TextStyle(color="blue")))
+    slide.text("Hello world!", "my-style")
+```
+
+or it is also possible to set individual values of `TextStyle`:
+
+```nelsie
+@deck.slide()
+def text_style_demo2(slide):
+    slide.set_style("default", TextStyle(size=80))
+    slide.set_style("my-style",
+                    TextStyle(color=StepVal("orange").at(2, "blue")))
     slide.text("Hello world!", "my-style")
 ```
 

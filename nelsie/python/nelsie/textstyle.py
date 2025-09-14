@@ -1,8 +1,8 @@
 from dataclasses import dataclass, InitVar
 from enum import IntEnum
 
-from .steps import Sn, Step, get_step
-from .utils import unpack_dataclass, check_is_type
+from .steps import Sn, Step, get_step, sn_check
+from .utils import unpack_dataclass, check_is_type, check_is_int, check_is_int_or_float
 from .nelsie import check_color
 
 
@@ -16,6 +16,18 @@ class FontStretch(IntEnum):
     Expanded = 7
     ExtraExpanded = 8
     UltraExpanded = 9
+
+
+def check_is_non_negative_int_or_float(obj):
+    check_is_int_or_float(obj)
+    if obj < 0:
+        raise Exception("Value has to be non-negative")
+
+
+def check_is_weight(obj):
+    check_is_int_or_float(obj)
+    if obj < 1 or obj > 1000:
+        raise Exception("Weight has to be in range 1..1000")
 
 
 @dataclass(frozen=True)
@@ -36,14 +48,10 @@ class TextStyle:
     bold: Sn[bool] = None
 
     def __post_init__(self):
-        if self.color is not None:
-            check_color(self.color)
-        if self.size is not None:
-            assert self.size >= 0
-        if self.line_spacing is not None:
-            assert self.line_spacing >= 0
-        if self.weight is not None:
-            assert 1 <= self.weight <= 1000
+        sn_check(self.color, check_color)
+        sn_check(self.size, check_is_non_negative_int_or_float)
+        sn_check(self.line_spacing, check_is_non_negative_int_or_float)
+        sn_check(self.weight, check_is_weight)
 
     def merge(self, other: "TextStyle") -> "TextStyle":
         check_is_text_style(other)
@@ -52,7 +60,7 @@ class TextStyle:
         )
 
     def get_step(self, step: Step) -> "TextStyle":
-        TextStyle(
+        return TextStyle(
             font=get_step(self.font, step),
             color=get_step(self.color, step),
             size=get_step(self.size, step),

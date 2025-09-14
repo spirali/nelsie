@@ -143,7 +143,7 @@ def get_step(obj: Sn[T], step: Step, default_value: T | None = None) -> T:
         return obj
 
 
-type BoolStepDef = bool | StepVal[bool] | str | int
+type BoolStepDef = bool | StepVal[bool] | str | int | tuple[int]
 
 
 def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
@@ -193,12 +193,14 @@ def unshift_step(step: Step, shift: Step) -> Step | None:
         return shift[:-1] + (s,) + step[1:]
 
 
-def is_visible(step: Step) -> bool:
+def is_visible(step: Step, ignored_steps=None) -> bool:
     if isinstance(step, int):
         if step < 1:
             return False
     elif step[0] < 1:
         return False
+    if ignored_steps is not None:
+        return not get_step(ignored_steps, step, False)
     return True
 
 
