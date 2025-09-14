@@ -11,7 +11,9 @@ There are three of type of layout expressions:
 
 * **Box layout expressions**: They refer to a box layout properties. They are created by calling `.x()`, `.y()`, `.width()`, `.height()` on a box coordines and width.
 * **Line expressions**: They refer to a line of a text. They are created by calling `.line_x(line_idx)`, `.line_y(line_idx)`, `.line_width(line_idx)`, `.line_height(line_idx)` on a box with a text.
-* **Text anchor expressions**: They refer to a part of a text. They are created by calling `.text_anchor_x(anchor_id)`, `.text_anchor_y(anchor_id)`, `.text_anchor_width(anchor_id)`, `.text_anchor_height(anchor_id)` on a box with a text.
+* **Text anchor expressions**: They refer to a part of a text. They are created by calling `.inline_x(anchor_id)`, `.inline_y(anchor_id)`, `.inline_width(anchor_id)`, `.inline_height(anchor_id)` on a box with a text.
+
+There are also three shortcuts `box.p(a, b)`, `box.line_p(a, b)`, and `box.inline_p(a, b)` that are shorcuts for `Point(box.x(a), box.y(b))`, resp. `Point(box.line_x(a), box.line_y(b))`, `Point(box.inline_x(a), box.inliney(b))`.
 
 ## Box layout expressions
 
@@ -64,17 +66,17 @@ consectetuer adipiscing elit.
 interdum id, felis.
     """)
 
-    slide.box(x=box.text_anchor_x(42),
-              y=box.text_anchor_y(42),
-              width=box.text_anchor_width(42),
-              height=box.text_anchor_height(42),
+    slide.box(x=box.inline_x(42),
+              y=box.inline_y(42),
+              width=box.inline_width(42),
+              height=box.inline_height(42),
               bg_color="lightgreen",
               z_level=-1)  # Set z-level to draw the box below the text
 
-    slide.box(x=box.text_anchor_x(105),
-              y=box.text_anchor_y(105),
-              width=box.text_anchor_width(105),
-              height=box.text_anchor_height(105),
+    slide.box(x=box.inline_x(105),
+              y=box.inline_y(105),
+              width=box.inline_width(105),
+              height=box.inline_height(105),
               bg_color="#ff99ff",
               z_level=-1)  # Set z-level to draw the box below the text
 
@@ -83,7 +85,7 @@ interdum id, felis.
 !!! note "Text anchor and `.code()`"
 
     Parsing text anchors is done through the same mechanism as text styles. You need to enable
-    style parsing `parse_styles=True` in .code() for using text anchor in code.
+    style parsing `parse_styles=True` in `.code()` for using text anchor in code.
 
 
 ## Box creation shortcuts
@@ -97,13 +99,13 @@ box.box(x=box.line_x(line_idx),
         height=box.line_height(line_idx))`.
 ```
 
-`box.text_anchor_box(anchor_id)` is shortcut for
+`box.inline_box(anchor_id)` is shortcut for
 
 ```python
-box.box(x=box.text_anchor_x(anchor_id),
-        y=box.text_anchor_y(text_anchor_idy),
-        width=box.text_anchor_width(anchor_id),
-        height=text_anchor_height(anchor_id))`.
+box.box(x=box.inline_x(anchor_id),
+        y=box.inline_y(text_anchor_idy),
+        width=box.inline_width(anchor_id),
+        height=box.inline_height(anchor_id))
 ```
 
 ## Modifying value of a layout expression
@@ -152,7 +154,7 @@ The same principle holds for other layout expressions:
 * `.line_height(line_idx, v)` = h * `.line_height(line_idx)`
 
 
-* `.text_anchor_x(anchor_id, v)` = `.text_anchor_x(anchor_id)` + v * `.text_anchor_width(anchor_id)`
-* `.text_anchor_y(anchor_id, v)` = `.text_anchor_y(anchor_id)` + v * `.text_anchor_height(anchor_id)`
-* `.text_anchor_width(anchor_id, v)` = v * `.text_anchor_width(anchor_id)`
-* `.text_anchor_height(anchor_id, v)` = h * `.text_anchor_height(anchor_id)`
+* `.inline_x(anchor_id, v)` = `.inline_x(anchor_id)` + v * `.inline_width(anchor_id)`
+* `.inline_y(anchor_id, v)` = `.inline_y(anchor_id)` + v * `.inline_height(anchor_id)`
+* `.inline_width(anchor_id, v)` = v * `.inline_width(anchor_id)`
+* `.inline_height(anchor_id, v)` = h * `.inline_height(anchor_id)`

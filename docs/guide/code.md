@@ -1,10 +1,11 @@
 # Syntax highlighting
 
-Nelsie supports syntax highlighting for many common languages ([The list of supported syntaxes](#the-list-of-supported-syntaxes)).
+Nelsie supports syntax highlighting for many common
+languages ([The list of supported syntaxes](#the-list-of-supported-syntaxes)).
 
 The `.code()` method creates a box with syntax highlighted text. It works similar to the `.text()` method.
 except that it takes a name for the syntax highlighter. You can use the name of the language or a filename extension
-for the language
+for the language.
 
 ```nelsie
 @deck.slide()
@@ -15,11 +16,9 @@ fn main() {
 }""", "Rust")
 ```
 
-
 ## Default syntax language for syntax highlighting
 
 If you use mostly a single programming through the slides, you can set the default language for syntax highlighting.
-
 
 ```nelsie
 deck = SlideDeck(default_code_language="Rust")
@@ -32,7 +31,6 @@ fn main() {
 }""")
 ```
 
-
 ## Styling code
 
 You can change the style by passing the parameter `style`:
@@ -43,7 +41,6 @@ def code_demo(slide):
     slide.code("print('Hello world!')", "Python", style=TextStyle(size=60))
 ```
 
-
 ## Named style `"code"`.
 
 The `.code()` method uses the named style `"code"` as the default style.
@@ -52,7 +49,6 @@ This allows you to change the code style globally or locally per slide.
 ```python
 deck.update_style("code", TextStyle(size=60))
 ```
-
 
 ## Inline text styles
 
@@ -75,9 +71,10 @@ you can change it by the `style_delimiters` parameter.
 def code_demo(slide):
     slide.set_style("big", TextStyle(size=80, color="orange"))
     slide.code("print('$big<Hello> world!')", "Python",
-               style=TextStyle(size=60), parse_styles=True, style_delimiters="$<>")
+               style=TextStyle(size=60),
+               parse_styles=True,
+               style_delimiters="$<>")
 ```
-
 
 ## Syntax highlighting color themes
 
@@ -119,7 +116,8 @@ This list is also programmatically available through [`Resources`](resources.md)
 * AppleScript (applescript, script editor)
 * Batch File (bat, cmd)
 * BibTeX (bib)
-* Bourne Again Shell (bash) (sh, bash, zsh, fish, .bash_aliases, .bash_completions, .bash_functions, .bash_login, .bash_logout, .bash_profile, .bash_variables, .bashrc, .profile, .textmate_init)
+* Bourne Again Shell (bash) (sh, bash, zsh, fish, .bash_aliases, .bash_completions, .bash_functions, .bash_login,
+  .bash_logout, .bash_profile, .bash_variables, .bashrc, .profile, .textmate_init)
 * C (c, h)
 * C# (cs, csx)
 * C++ (cpp, cc, cp, cxx, c++, C, h, hh, hpp, hxx, h++, inl, ipp)
@@ -138,7 +136,8 @@ This list is also programmatically available through [`Resources`](resources.md)
 * HTML (Rails) (rails, rhtml, erb, html.erb)
 * HTML (Tcl) (adp)
 * Haskell (hs)
-* JSON (json, sublime-settings, sublime-menu, sublime-keymap, sublime-mousemap, sublime-theme, sublime-build, sublime-project, sublime-completions, sublime-commands, sublime-macro, sublime-color-scheme)
+* JSON (json, sublime-settings, sublime-menu, sublime-keymap, sublime-mousemap, sublime-theme, sublime-build,
+  sublime-project, sublime-completions, sublime-commands, sublime-macro, sublime-color-scheme)
 * Java (java, bsh)
 * Java Properties (properties)
 * Java Server Page (JSP) (jsp)
@@ -166,14 +165,17 @@ This list is also programmatically available through [`Resources`](resources.md)
 * Pascal (pas, p, dpr)
 * Perl (pl, pm, pod, t, PL)
 * Plain Text (txt)
-* Python (py, py3, pyw, pyi, pyx, pyx.in, pxd, pxd.in, pxi, pxi.in, rpy, cpy, SConstruct, Sconstruct, sconstruct, SConscript, gyp, gypi, Snakefile, wscript)
+* Python (py, py3, pyw, pyi, pyx, pyx.in, pxd, pxd.in, pxi, pxi.in, rpy, cpy, SConstruct, Sconstruct, sconstruct,
+  SConscript, gyp, gypi, Snakefile, wscript)
 * R (R, r, s, S, Rprofile)
 * R Console ()
 * Rd (R Documentation) (rd)
 * Regular Expression (re)
 * Regular Expressions (Javascript) ()
 * Regular Expressions (Python) ()
-* Ruby (rb, Appfile, Appraisals, Berksfile, Brewfile, capfile, cgi, Cheffile, config.ru, Deliverfile, Fastfile, fcgi, Gemfile, gemspec, Guardfile, irbrc, jbuilder, podspec, prawn, rabl, rake, Rakefile, Rantfile, rbx, rjs, ruby.rail, Scanfile, simplecov, Snapfile, thor, Thorfile, Vagrantfile)
+* Ruby (rb, Appfile, Appraisals, Berksfile, Brewfile, capfile, cgi, Cheffile, config.ru, Deliverfile, Fastfile, fcgi,
+  Gemfile, gemspec, Guardfile, irbrc, jbuilder, podspec, prawn, rabl, rake, Rakefile, Rantfile, rbx, rjs, ruby.rail,
+  Scanfile, simplecov, Snapfile, thor, Thorfile, Vagrantfile)
 * Ruby Haml (haml, sass)
 * Ruby on Rails (rxml, builder)
 * Rust (rs)
@@ -190,7 +192,7 @@ This list is also programmatically available through [`Resources`](resources.md)
 * commands-builtin-shell-bash ()
 * reStructuredText (rst, rest)
 
-
 ## Empty language
 
-Language for syntax highlighting can be se to `None`. In such case, no syntax highlighting is used while all other `.code()` properties are used.
+Language for syntax highlighting can be se to `None`. In such case, no syntax highlighting is used while all other
+`.code()` properties are used.

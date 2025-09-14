@@ -1,16 +1,4 @@
-from nelsie import (
-    Arrow,
-    Path,
-    SlideDeck,
-    TextStyle,
-    Resources,
-    Stroke,
-    StepVal,
-    Point,
-    Oval,
-    Rect,
-    GridOptions
-)
+from nelsie import Arrow, Path, SlideDeck, TextStyle, Resources, Stroke, StepVal, Point, Oval, Rect, GridOptions
 
 resources = Resources()
 resources.load_fonts_dir("karla_font")
@@ -244,15 +232,15 @@ deck.render("slides.pdf")
 
     arrow = Arrow(size=15)
     slide.add(
-        
-            Path(stroke=Stroke(color="green", width=5), arrow_end=arrow)
-            .move_to(text.inline_p(2, 0, 1).move_by(-20, 20))
-            .line_to(text.inline_p(2, 0, 1)))
+        Path(stroke=Stroke(color="green", width=5), arrow_end=arrow)
+        .move_to(text.inline_p(2, 0, 1).move_by(-20, 20))
+        .line_to(text.inline_p(2, 0, 1))
+    )
     slide.add(
-            Path(stroke=Stroke(color="green", width=5), arrow_end=arrow)
-            .move_to(text.inline_p(2, 1, 1).move_by(20, 20))
-            .line_to(text.inline_p(2, 1, 1)))
-        
+        Path(stroke=Stroke(color="green", width=5), arrow_end=arrow)
+        .move_to(text.inline_p(2, 1, 1).move_by(20, 20))
+        .line_to(text.inline_p(2, 1, 1))
+    )
 
 
 # Overwriting styles in syntax highlight #################################
@@ -333,11 +321,16 @@ def shapes(slide):
 
     box = slide.box(width=700, height=70, m_bottom=60)
     box.add(Path(stroke=Stroke(color="black", width=10, dash_array=[10])).move_to(Point(0, 0)).line_to(Point(700, 0)))
-    box.add(Path(stroke=Stroke(color="black", width=10, dash_array=[10, 20], dash_offset=15))
-            .move_to(Point(0, 30))
-            .line_to(Point(700, 30)))
-    box.add(Path(stroke=Stroke(color="black", width=10, dash_array=[30, 10, 5, 10])).move_to(Point(0, 60)).line_to(Point(700, 60)))
-    
+    box.add(
+        Path(stroke=Stroke(color="black", width=10, dash_array=[10, 20], dash_offset=15))
+        .move_to(Point(0, 30))
+        .line_to(Point(700, 30))
+    )
+    box.add(
+        Path(stroke=Stroke(color="black", width=10, dash_array=[30, 10, 5, 10]))
+        .move_to(Point(0, 60))
+        .line_to(Point(700, 60))
+    )
 
     box = slide.box(width=700, height=220)
     arrow1 = Arrow(size=30)
@@ -347,48 +340,50 @@ def shapes(slide):
     arrow5 = Arrow(size=30, stroke_width=5)
 
     box.add(
-        
-            Path(
-                stroke=Stroke(color="black", width=5),
-                arrow_start=arrow1,
-                arrow_end=arrow1,
-            )
-            .move_to(Point(0, 0))
-            .line_to(Point(700, 0)))
-    box.add(
-            Path(
-                stroke=Stroke(color="black", width=5),
-                arrow_start=arrow2,
-                arrow_end=arrow2,
-            )
-            .move_to(Point(0, 50))
-            .line_to(Point(700, 50)))
-    box.add(
-            Path(
-                stroke=Stroke(color="black", width=5),
-                arrow_start=arrow3,
-                arrow_end=arrow3,
-            )
-            .move_to(Point(0, 100))
-            .line_to(Point(700, 100)))
-    box.add(
-            Path(
-                stroke=Stroke(color="black", width=5),
-                arrow_start=arrow4,
-                arrow_end=arrow4,
-            )
-            .move_to(Point(0, 150))
-            .line_to(Point(700, 150))
+        Path(
+            stroke=Stroke(color="black", width=5),
+            arrow_start=arrow1,
+            arrow_end=arrow1,
+        )
+        .move_to(Point(0, 0))
+        .line_to(Point(700, 0))
     )
     box.add(
-            Path(
-                stroke=Stroke(color="black", width=5),
-                arrow_start=arrow5,
-                arrow_end=arrow5,
-            )
-            .move_to(Point(0, 200))
-            .line_to(Point(700, 200)))
-    
+        Path(
+            stroke=Stroke(color="black", width=5),
+            arrow_start=arrow2,
+            arrow_end=arrow2,
+        )
+        .move_to(Point(0, 50))
+        .line_to(Point(700, 50))
+    )
+    box.add(
+        Path(
+            stroke=Stroke(color="black", width=5),
+            arrow_start=arrow3,
+            arrow_end=arrow3,
+        )
+        .move_to(Point(0, 100))
+        .line_to(Point(700, 100))
+    )
+    box.add(
+        Path(
+            stroke=Stroke(color="black", width=5),
+            arrow_start=arrow4,
+            arrow_end=arrow4,
+        )
+        .move_to(Point(0, 150))
+        .line_to(Point(700, 150))
+    )
+    box.add(
+        Path(
+            stroke=Stroke(color="black", width=5),
+            arrow_start=arrow5,
+            arrow_end=arrow5,
+        )
+        .move_to(Point(0, 200))
+        .line_to(Point(700, 200))
+    )
 
 
 # Path demo ##########################################
@@ -438,19 +433,17 @@ def path_demo(slide):
     b = child1.p(0.5, 0)
 
     slide.add(
-        
-            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
-            .move_to(p0)
-            .cubic_to(p0.move_by(300, 0), p1.move_by(-300, 0), p1))
-    slide.add(
-            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow).move_to(p0).quad_to(p2.move_by(-100, 0), p2))
-    slide.add(
-            Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
-            .move_to(a)
-            .quad_to(a.move_by(50, 0), a.move_by(50, -50))
-            .cubic_to(a.move_by(50, -100), b.move_by(0, -100), b),
+        Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
+        .move_to(p0)
+        .cubic_to(p0.move_by(300, 0), p1.move_by(-300, 0), p1)
     )
-    
+    slide.add(Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow).move_to(p0).quad_to(p2.move_by(-100, 0), p2))
+    slide.add(
+        Path(stroke=Stroke(color="#777", width=2), arrow_end=arrow)
+        .move_to(a)
+        .quad_to(a.move_by(50, 0), a.move_by(50, -50))
+        .cubic_to(a.move_by(50, -100), b.move_by(0, -100), b),
+    )
 
     box = slide.box(x=680, y="50%")
     box.add(
@@ -482,9 +475,7 @@ def grid_demo(slide):
     # Draw the table
     table = slide.box(
         width="70%",
-        grid=GridOptions(
-        template_columns=["2fr", "1fr", 130],
-        template_rows=[50] + [40] * (len(data) - 1)),
+        grid=GridOptions(template_columns=["2fr", "1fr", 130], template_rows=[50] + [40] * (len(data) - 1)),
         bg_color="#ddd",
     )
     header_style = TextStyle(weight=800)

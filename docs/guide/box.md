@@ -55,21 +55,9 @@ A new box is created by calling the `.box()` method on an existing box or a slid
 * `justify_self` -
 * `align_content` -
 * `justify_content` -
-* `gap` -
-* `grid_template_rows` - Grid layout definition, see CSS grid for semantics
-    - `int` - Size of row in pixels
-    - `str` 
-      - `"X"` if X is integer -- size in pixels
-      - `"X%"` size in percent
-      - `"X fr"` size in fractions   
-* `grid_template_columns` - Same as `grid_template_rows`
-* `grid_row` - Grid layout definition, see CSS grid for semantics.
-    - `"auto"` - Automatic position
-    - `"span X"` - Span over more rows 
-    - `int` - Specific row, indexed from 1, negative allowed
-    - `(int, int)` - Spans over more rows; first number is start is starting row index, the second number is end row index
-    - `(int, "span X")` - Spans over more rows; first number is start is starting row index, X is how many rows it spans over
-* `grid_column` - Same as `grid_row`
+* `gap_x` -
+* `gap_y` -
+
 
 ### Padding parameters
 
@@ -77,8 +65,7 @@ A new box is created by calling the `.box()` method on an existing box or a slid
 * `p_right` - Right padding
 * `p_top` - Top padding
 * `p_bottom` - Bottom padding
-* `p_x` - Shortcut for setting `p_left` and `p_right` to the same value
-* `p_y` - Shortcut for setting `p_top` and `p_bottom` to the same value
+
 
 ### Margin parameters
 
@@ -86,8 +73,29 @@ A new box is created by calling the `.box()` method on an existing box or a slid
 * `m_right` - Right margin
 * `m_top` - Top margin
 * `m_bottom` - Bottom margin
-* `m_x` - Shortcut for setting `m_left` and `m_right` to the same value
-* `m_y` - Shortcut for setting `m_top` and `m_bottom` to the same value
+
+
+### Grid
+
+* `grid` - Allows to set `GridOptions`, see below.
+
+#### Class `GridOptions`
+
+* `template_rows` - Grid layout definition, see CSS grid for semantics
+    - `int` - Size of row in pixels
+    - `str`
+      - `"X"` if X is integer -- size in pixels
+      - `"X%"` size in percent
+      - `"X fr"` size in fractions
+* `template_columns` - Same as `grid_template_rows`.
+* `row` - Grid layout definition, see CSS grid for semantics.
+    - `"auto"` - Automatic position
+    - `"span X"` - Span over more rows
+    - `int` - Specific row, indexed from 1, negative allowed
+    - `(int, int)` - Spans over more rows; first number is start is starting row index, the second number is end row index
+    - `(int, "span X")` - Spans over more rows; first number is start is starting row index, X is how many rows it spans over
+* `column` - Same as `grid_row`.
+
 
 
 ### Debugging parameters

@@ -589,38 +589,6 @@ class Box(BoxBuilderMixin):
             self._p_bottom = bottom
         return self
 
-    #
-    # """
-    #     def x(self, x: Sn[Position]):
-    #         check_position(x)
-    #         self._x = x
-    #
-    #     def y(self, y: Sn[Position]):
-    #         check_position(y)
-    #         self._y = y
-    #
-    #     def z_level(self, z_level: Sn[int]):
-    #         check_is_int(z_level)
-    #         self._z_level = z_level
-    #
-    #     def row(self, row: Sv[bool]):
-    #         sv_check(row, check_is_bool)
-    #         self._row = row
-    #
-    #     def width(self, width: Sn[Size]):
-    #         check_size(width)
-    #         self._width = width
-    #
-    #     def height(self, height: Sn[Size]):
-    #         check_size(height)
-    #         self._height = height
-    #
-    #     def bg_color(self, bg_color: Sn[str]):
-    #         if bg_color:
-    #             check_color(bg_color)
-    #         self._bg_color = bg_color
-    #     """
-
     def draw_line(self, p1, p2, **path_args):
         path = Path(**path_args)
         path.move_to(p1)

@@ -86,7 +86,7 @@ class ToRawContext:
                     result = get_step(s, step)
                 else:
                     result = merge_in_step(result, s, step)
-        return result
+        return result.get_step(step)
 
     def get_style_names(self) -> set[str]:
         result = set()

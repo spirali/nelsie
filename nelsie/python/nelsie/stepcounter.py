@@ -1,4 +1,4 @@
-class SlideCounter:
+class StepCounter:
     def __init__(self, init_value=1):
         self.step = init_value
 

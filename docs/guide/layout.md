@@ -7,7 +7,7 @@ A box can contain other boxes or content (a text or an image).
 Each Nelsie slide contains a hierarchical tree of boxes.
 Boxes usually do not produce visual output directly, but they dictate how their children are arranged on a slide.
 
-## Creating a box
+## Creating a box (via `.box()`)
 
 A new box is created by calling the `.box()` method on an existing box or a slide. This will return a new box that will be a child of the element on which you call the box method.
 
@@ -35,6 +35,26 @@ def three_boxes(slide):
 ```
 
 The full reference on `.box()` parameters is in the section [Box](box.md)
+
+## Creating a box (standalone)
+
+A box can be also created as a stand-alone method and attached into
+the another box later. The following code is eqivalent to the example above:
+
+```nelsie
+from nelsie import Box
+
+@deck.slide()
+def three_boxes(slide):
+    b1 = Box(width=600, height=200, bg_color="red")
+    b2 = Box(width=600, height=200, bg_color="green")
+    b3 = Box(width=600, height=200, bg_color="blue")
+
+    slide.add(b1)
+    slide.add(b2)
+    slide.add(b3)
+```
+
 
 ## Debugging layout
 
@@ -134,22 +154,36 @@ def flex_grow_demo(slide):
     my_box.box(width=200, height=200, bg_color="green")
 ```
 
-There are also the following parameters for setting more padding/margin parameters at once:
+There are also methods `padding` and `margin` that allows to set padding/margin later.
 
-* `p_x` that sets `p_left` and `p_right`
-* `p_y` that sets `p_top` and `p_bottom`
-* `m_x` that sets `m_left` and `m_right`
-* `m_y` that sets `m_top` and `m_bottom`
+```python
+slide.box(bg_color="red").padding(top=100, left=50)
+```
+
+This method also allows to set more padding/margin paramters at once:
+
+following parameters for setting more padding/margin parameters at once:
+
+* `all` that sets `left`, `right`, `top`, `bottom` to this value.
+* `y` that sets `top` and `bottom`
+* `x` that sets `left` and `right`
+
+Example:
+
+```python
+slide.box().padding(all=5).margin(x=5)
+```
+
 
 ## Arranging box children
 
-Nelsie provides a [flexbox layout system](https://css-tricks.com/snippets/css/a-guide-to-flexbox/)
+Nelsie provides a [flexbox layout system](https://css-tricks.com/snippets/css/a-guide-to-flexbox/).
 See [Flexbox froggy](https://flexboxfroggy.com/) for a nice tutorial.
 
 Most of the layouts can be done via flexbox; however,
 also supports grid layout, see [Grid layout](#grid-layout).
 
-Nelsie supports from flexbox: `justify_content`, `align_items`, `align_self`, `align_items`, `align_self`, `justify_self`, `align_content`, `justify_content` and `gap`.
+Nelsie supports from flexbox: `justify_content`, `align_items`, `align_self`, `align_items`, `align_self`, `justify_self`, `align_content`, `justify_content` and `gap_x` / `gap_y`.
 
 The default configuration is `"center"` for configurations `justify_content` and `align_items`, i.e. items are put in the center on both axes.
 
@@ -195,22 +229,25 @@ You can set parameters `x` and `y` to set a fix position of the box independantl
 Nelsie also supports [grid layout system](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_grid_layout/Basic_concepts_of_grid_layout); see [Grid garden](https://cssgridgarden.com/) for a nice tutorial.
 
 ```nelsie
+from nelsie import GridOptions
+
+
 @deck.slide()
 def justify_content_start(slide):
     b = slide.box(
         width="100%", height="100%",
-        grid_template_columns=("1 fr", "1fr"),
-        grid_template_rows=("1 fr", "1fr"))
-    b.box(grid_column=2, grid_row=2, bg_color="orange").text("Grid 2-2")
+        grid=GridOptions(template_rows=("1 fr", "1fr"),
+                         template_columns=("1 fr", "1fr")))
+    b.box(grid=GridOptions(column=2, row=2), bg_color="orange").text("Grid 2-2")
 ```
 
-Grid templates (`grid_template_rows` and `grid_template_columns`) may have values as follows:
+Grid templates (`template_rows` and `template_columns`) may have values as follows:
 
 * `200` or `"200"` - size of row/column in pixels
 * `"50%"` - size of row/column in percents
 * `"1 fr"` - size of row/column in fractions
 
-Grid positions (`grid_row` and `grid_column`) may have values as follows:
+Grid positions (`row` and `column`) may have values as follows:
 
 * `2` - box at row/column `2`
 * `(2, 5)` - box that spans from row/column 2 to row/column 5
@@ -220,6 +257,9 @@ Grid positions (`grid_row` and `grid_column`) may have values as follows:
 ### A rich table example
 
 ```nelsie
+
+from nelsie import GridOptions as G
+
 @deck.slide()
 def grid_demo(slide):
     data = [
@@ -234,30 +274,28 @@ def grid_demo(slide):
     # Draw the table
     table = slide.box(
         width="70%",
-        grid_template_columns=["2fr", "1fr", 130],
-        grid_template_rows=[50] + [40] * (len(data) - 1),
+        grid=G(template_columns=["2fr", "1fr", 130],
+               template_rows=[50] + [40] * (len(data) - 1)),
         bg_color="#ddd",
     )
     header_style = TextStyle(weight=800)
-    table.box(grid_column=(1, 4), grid_row=1, bg_color="#fbc")
+    table.box(grid=G(column=(1, 4), row=1), bg_color="#fbc")
     for i in range(2, len(data) + 1, 2):
-        table.box(grid_column=(1, 4), grid_row=i, bg_color="#eee")
-    column1 = table.box(grid_column=2, grid_row=(1, len(data) + 1))
+        table.box(grid=G(column=(1, 4), row=i), bg_color="#eee")
+    column1 = table.box(grid=G(column=2, row=(1, len(data) + 1)))
     stroke = Stroke(color="#888", width=2)
-    column1.draw(Path(stroke=stroke).move_to(0, 0).line_to(0, "100%"))
-    column1.draw(Path(stroke=stroke).move_to("100%", 0).line_to("100%", "100%"))
+    column1.add(Path(stroke=stroke).move_to(Point(0, 0)).line_to(Point(0, "100%")))
+    column1.add(Path(stroke=stroke).move_to(Point("100%", 0)).line_to(Point("100%", "100%")))
 
     # Fill the table with data
     for i, row in enumerate(data, 1):
         s = header_style if i == 1 else None
-        table.box(grid_column=1, grid_row=i).text(row[0], s)
-        table.box(grid_column=2, grid_row=i, row=True, justify_content="end", m_right=30).text(str(row[1]), s)
-        table.box(grid_column=3, grid_row=i, row=True, justify_content="start", m_left=30).text(row[2], s)
+        table.box(grid=G(column=1, row=i)).text(row[0], s)
+        table.box(grid=G(column=2, row=i), row=True, justify_content="end", m_right=30).text(str(row[1]), s)
+        table.box(grid=G(column=3, row=i), row=True, justify_content="start", m_left=30).text(row[2], s)
 ```
 
 ## Method `.overlay()`
 
 There is a `.overlay()` method that is a shortcut for `.box(x=0, y=0, width="100%", height="100%")`;
 it creates a box that spans over the whole parent box.
-
-

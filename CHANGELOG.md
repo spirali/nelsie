@@ -2,24 +2,29 @@
 
 ## New features
 
-* Most of Nelsie is rewritten from scratch. Render is now faster and produce smaller PDFs (especialy with repeated texts and fragmented SVGs).
+* Most of Nelsie is rewritten from scratch. Render is now faster and produce smaller PDFs (especialy with repeated texts
+  and fragmented SVGs).
 * `StepVal` (previously `InSteps`) could be used much more places, including paramters of `TextStyle` or `Stroke`, etc.
 * Class `Point` introduced as shortcut for two layout expressions for x and y.
 * Method of `.p` that returns `Point` in the box
 * Layout expressions now supports multiplication, subtraction and max operator
 * `line_box` now has an optinal parameter `n_lines`
 * Box can be created as stand-alone object later added into slide via .add(box)
-* Rect and Oval classes for simpler creating simple shapes
+* `Rect` and `Oval` classes for simpler creating simple shapes
+* `z_level` can be also set not only for boxes but also for `Path`, `Rect`, and `Oval`
+* Added postprocesing callback to make final modification of slides
 
 ## Changes
 
-* `.draw` is removed. Use `.add` to add shapes into box 
+* `.draw` is removed. Use `.add` to add shapes into box
 * `InSteps` replaced with new class `StepVal`
 * `text_anchor_*` renamed to `inline_*`
 * `Path` methods like `*_to` now takes `Point` instead of two parameters `x` and `y`
 * `TextStyle.font_family` renamed to `TextStyle.font`
 * Inserting video into slides is now disabled
-
+* Step removal method is now ".ignore_steps" and takes the same format of argument as "show"/"active"
+* "next" and "last" keywords were removed. Use `StepCounter`.
+* `parse_counters` removed, use postprocessing function instead
 
 # v0.16.0
 

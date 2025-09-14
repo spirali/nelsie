@@ -18,4 +18,4 @@ or simply manage which parts are highlighted.
 
 ## History
 
-Nelsie is a complete rewrite of the previous project [Elsie](https://github.com/spirali/elsie). Nelsie solves the biggest problems of Elsie: Dependency on Inkscape as a rendering engine (This makes Elsie difficult to install on some systems; performance issues and problems when Inkscape changes its programming API). This is solved by a own rendering engine (based on [resvg](https://github.com/RazrFalcon/resvg)) included in the Nelsie package. Nelsie also offers many API improvements, namely the introduction of InSteps and the Flexbox layout engine.
+Nelsie is a complete rewrite of the previous project [Elsie](https://github.com/spirali/elsie). Nelsie solves the biggest problems of Elsie: Dependency on Inkscape as a rendering engine (This makes Elsie difficult to install on some systems; performance issues and problems when Inkscape changes its programming API). This is solved by a own rendering engine included in the Nelsie package. Nelsie also offers many API improvements, namely the introduction of `StepVal`s and the Flexbox layout engine.
