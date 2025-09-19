@@ -1,7 +1,7 @@
 from nelsie.shapes import Point
 from testutils import check
 
-from nelsie import Arrow, Path, Stroke, TextStyle, Rect, Stroke, Oval, StepVal
+from nelsie import Arrow, Path, TextStyle, Rect, Stroke, Oval, StepVal
 
 
 @check(n_slides=2)

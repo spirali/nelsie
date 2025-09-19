@@ -3,7 +3,7 @@ from nelsie.steps import parse_bool_steps
 from nelsie.steps_extract import extract_steps
 from testutils import check
 
-from nelsie import TextStyle, StepVal, Box, SlideCounter
+from nelsie import TextStyle, StepVal, Box, StepCounter
 
 
 def test_step_value():

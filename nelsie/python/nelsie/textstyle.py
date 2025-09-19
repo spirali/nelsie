@@ -1,8 +1,8 @@
-from dataclasses import dataclass, InitVar
+from dataclasses import dataclass
 from enum import IntEnum
 
 from .steps import Sn, Step, get_step, sn_check
-from .utils import unpack_dataclass, check_is_type, check_is_int, check_is_int_or_float
+from .utils import unpack_dataclass, check_is_type, check_is_int_or_float
 from .nelsie import check_color
 
 

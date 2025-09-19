@@ -12,15 +12,13 @@ from .basictypes import (
     LengthAuto,
     AlignContent,
     AlignItems,
-    GridTemplate,
-    GridPosition,
 )
 from .image import RawImage
 from .shapes import RawRect, Stroke
-from .steps import Step, get_step, Sv, Sn, StepVal, step_to_str
+from .steps import Step, get_step, Sn, step_to_str
 from .text import RawText
 from .textstyle import TextStyle, merge_in_step
-from .box import Box, TextContent, GridOptions
+from .box import Box, GridOptions
 from .slidedeck import Slide
 from . import nelsie as nelsie_rs
 
@@ -232,7 +230,7 @@ def slide_to_raw(
     resources: Resources,
     slide: Slide,
     step: Step,
-    deck: "SlideDeck",
+    deck,
     shared_data: dict[int, bytes],
     current_counter: CounterStorage,
     total_counter: CounterStorage,
