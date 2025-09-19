@@ -346,5 +346,17 @@ class SlideDeck:
         n_threads: int | None = None,
         progressbar: bool = True,
     ):
+        """
+        Render slides
+
+        If format is "pdf" then a single PDF file is created. If format is "svg" or "png" then
+        `path` specifies a directory where the slides are created as an individual files.
+
+        If `path` is None then objects are not written to the file system, and they are returned as python objects
+        from the method call.
+
+        `compression_level` defines the level of compression for PDF, allowed ranges are 0-10
+        (0 = no compression, 1 = fast compression, 10 = maximal compression)
+        """
         doc = self._create_doc()
         return doc.render(path, format, compression_level, n_threads, progressbar)

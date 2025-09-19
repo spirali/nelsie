@@ -42,6 +42,9 @@ class GridOptions:
 
 class BoxBuilderMixin:
     def add(self, box: Union[Path, Rect, Oval, "Box"]):
+        """
+        Adds Box or a geometry item into the box
+        """
         raise NotImplementedError
 
     def _set_style(self, name: str, style: Sn[TextStyle]):
@@ -86,6 +89,9 @@ class BoxBuilderMixin:
         name: str = "",
         debug_layout: bool | str | None = None,
     ):
+        """
+        Create a new child box. See [Box reference](https://spirali.github.io/nelsie/guide/box/) for documentation
+        """
         box = Box(
             x=x,
             y=y,
@@ -429,6 +435,9 @@ class Box(BoxBuilderMixin):
         name: str = "",
         debug_layout: bool | str | None = None,
     ):
+        """
+        Create a new box. See [Box reference](https://spirali.github.io/nelsie/guide/box/) for documentation.
+        """
         sn_check(x, check_position)
         sn_check(y, check_position)
         sn_check(z_level, check_is_int)
@@ -510,6 +519,9 @@ class Box(BoxBuilderMixin):
         top: Sn[LengthAuto] = None,
         bottom: Sn[LengthAuto] = None,
     ):
+        """
+        Sets box's margin
+        """
         if all is not None:
             sn_check(all, check_length_auto)
             self._m_top = all
@@ -555,6 +567,9 @@ class Box(BoxBuilderMixin):
         top: Sn[LengthAuto] = None,
         bottom: Sn[LengthAuto] = None,
     ):
+        """
+        Sets box's padding.
+        """
         if all is not None:
             sn_check(all, check_length)
             self._p_top = all
@@ -589,14 +604,20 @@ class Box(BoxBuilderMixin):
             self._p_bottom = bottom
         return self
 
-    def draw_line(self, p1, p2, **path_args):
+    def draw_line(self, p1: Point, p2: Point, **path_args):
+        """
+        Shortcut for drawing a simple line
+        """
         path = Path(**path_args)
         path.move_to(p1)
         path.line_to(p2)
         return self.add(path)
 
-    def add(self, box):
-        self._children.append(box)
+    def add(self, item):
+        """
+        Adds Box or a geometry item into the box
+        """
+        self._children.append(item)
 
     def traverse_tree(self, shared_data, steps):
         if self._content is not None:
