@@ -1,7 +1,7 @@
-from conftest import ASSETS_DIR
-from testutils import check
-import os
-import pytest
+# from conftest import ASSETS_DIR
+# from testutils import check
+# import os
+# import pytest
 
 # Temporarily disabled
 # @check()

@@ -5,7 +5,6 @@ import pytest
 from conftest import new_resources
 from testutils import check
 
-import nelsie
 from nelsie import FontStretch, TextStyle, StepVal
 
 

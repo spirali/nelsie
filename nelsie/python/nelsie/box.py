@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from copy import copy
-from typing import Union, Sequence
+from typing import Union
 
 from .image import PathOrImageData, ImageContent, check_image_path_or_data, normalize_and_watch_image_path
-from .steps import Sn, Step, get_step, Sv, sv_check, sn_check, parse_bool_steps, sn_map, BoolStepDef, StepVal, sn_apply
+from .steps import Sn, Sv, sv_check, sn_check, parse_bool_steps, sn_map, BoolStepDef, StepVal, sn_apply
 
 from .basictypes import (
     Position,
@@ -26,7 +25,7 @@ from .basictypes import (
 )
 from .nelsie import check_color
 from .text import TextContent
-from .textstyle import TextStyle, merge_in_step, check_is_text_style, check_is_str_or_text_style
+from .textstyle import TextStyle, check_is_text_style, check_is_str_or_text_style
 from .utils import check_is_str, check_is_bool, check_is_int, check_is_int_or_float
 from .layoutexpr import LayoutExpr
 from .shapes import Rect, Oval, Path, Point

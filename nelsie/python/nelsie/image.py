@@ -2,7 +2,7 @@ import os.path
 from dataclasses import dataclass
 from typing import Literal
 
-from .steps import Sv, Sn, Step, get_step, sn_apply, shift_step, unshift_step
+from .steps import Sn, Step, get_step, sn_apply, shift_step, unshift_step
 from . import nelsie as nelsie_rs
 from .watch import watch_path
 

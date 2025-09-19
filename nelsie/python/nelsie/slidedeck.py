@@ -1,28 +1,22 @@
 from copy import copy
-from dataclasses import dataclass
-from functools import cmp_to_key
 from typing import Literal, Iterable, Sequence, Callable
 
 from nelsie.utils import check_is_int_or_float, check_is_type, check_is_str
 
-from .box import BoxBuilderMixin, Box, traverse_children
+from .box import BoxBuilderMixin, traverse_children
 from .counters import CounterStorage
 from .resources import Resources
 from .steps import (
     Step,
     Sv,
-    get_step,
     Sn,
-    StepVal,
-    sn_apply,
     step_compare_key,
     is_visible,
     BoolStepDef,
     parse_bool_steps,
 )
 from . import nelsie as nelsie_rs
-from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, merge_in_step, check_is_text_style
-from .shapes import Path, Rect, Oval
+from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, check_is_text_style
 
 type SlideCallback = Callable[["Slide", CounterStorage, CounterStorage], "Slide"]
 

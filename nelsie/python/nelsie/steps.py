@@ -1,8 +1,7 @@
-from typing import TypeVar, Generic, Sequence
+from typing import TypeVar, Generic
 
 from .utils import check_is_bool
 from . import nelsie as nelsie_rs
-from functools import cmp_to_key
 from copy import copy
 
 LoadedImage = nelsie_rs.LoadedImage
@@ -94,7 +93,7 @@ class StepVal(Generic[T]):
         return False
 
     def __repr__(self):
-        v = f"<StepVal "
+        v = "<StepVal "
         for step, value in sorted(self.values.items(), key=step_compare_key):
             v += f"{step}={value!r}, "
         v += ">"

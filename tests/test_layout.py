@@ -1,7 +1,6 @@
 from nelsie import Stroke, Path, TextStyle, GridOptions as G, Point
 from testutils import check
 
-from nelsie.layoutexpr import LayoutExpr
 
 
 @check()
