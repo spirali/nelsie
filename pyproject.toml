@@ -5,7 +5,7 @@ build-backend = "maturin"
 [project]
 name = "nelsie"
 authors = [{name = "Ada Böhm", email = "ada@kreatrix.org"}]
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -16,3 +16,6 @@ dynamic = ["version"]
 [tool.maturin]
 features = ["pyo3/extension-module"]
 python-source = "python"
+
+[tool.ruff]
+target-version = "py312"
