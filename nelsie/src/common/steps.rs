@@ -23,14 +23,6 @@ impl Step {
         }
     }
 
-    #[cfg(test)]
-    pub fn from_slice(indices: &[StepIndex]) -> Step {
-        assert!(!indices.is_empty());
-        Step {
-            indices: indices.into(),
-        }
-    }
-
     pub fn from_vec(indices: Vec<StepIndex>) -> Step {
         assert!(!indices.is_empty());
         Step {
