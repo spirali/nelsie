@@ -7,7 +7,17 @@ from .slidedeck import Slide
 from .shapes import Path, Rect, Oval, Stroke, Arrow
 
 containers = (list, tuple, set)
-known_classes = (Box, TextContent, TextStyle, ImageContent, Path, Rect, Oval, Stroke, Arrow)
+known_classes = (
+    Box,
+    TextContent,
+    TextStyle,
+    ImageContent,
+    Path,
+    Rect,
+    Oval,
+    Stroke,
+    Arrow,
+)
 
 
 def extract_steps(obj, out: set[Step]):

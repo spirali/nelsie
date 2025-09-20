@@ -74,7 +74,16 @@ AlignItems = Literal[
     "baseline",
 ]
 
-ALIGN_ITEMS = ("start", "end", "flex-start", "flex-end", "flex-end", "center", "stretch", "baseline")
+ALIGN_ITEMS = (
+    "start",
+    "end",
+    "flex-start",
+    "flex-end",
+    "flex-end",
+    "center",
+    "stretch",
+    "baseline",
+)
 
 
 def check_align_items(align):

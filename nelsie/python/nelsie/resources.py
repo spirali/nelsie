@@ -18,7 +18,10 @@ class Resources:
         default_code_themes: bool = True,
     ):
         self._resources = nelsie_rs.Resources(
-            system_fonts, system_fonts_for_svg, default_code_syntaxes, default_code_themes
+            system_fonts,
+            system_fonts_for_svg,
+            default_code_syntaxes,
+            default_code_themes,
         )
         if builtin_fonts:
             self._resources.load_fonts_dir(BUILTIN_FONTS_DIR)

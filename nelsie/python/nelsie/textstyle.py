@@ -56,7 +56,10 @@ class TextStyle:
     def merge(self, other: "TextStyle") -> "TextStyle":
         check_is_text_style(other)
         return TextStyle(
-            *[b if b is not None else a for (a, b) in zip(unpack_dataclass(self), unpack_dataclass(other))]
+            *[
+                b if b is not None else a
+                for (a, b) in zip(unpack_dataclass(self), unpack_dataclass(other))
+            ]
         )
 
     def get_step(self, step: Step) -> "TextStyle":
@@ -74,7 +77,9 @@ class TextStyle:
         )
 
 
-def merge_in_step(text_style: Sn[TextStyle], other: Sn[TextStyle], step: Step) -> TextStyle:
+def merge_in_step(
+    text_style: Sn[TextStyle], other: Sn[TextStyle], step: Step
+) -> TextStyle:
     text_style = get_step(text_style, step)
     other = get_step(other, step)
     if other is None:

@@ -16,7 +16,11 @@ def check_step(obj):
         if obj < 1:
             raise Exception("Invalid step; must be >= 1")
         return
-    if isinstance(obj, tuple) and len(obj) and all(isinstance(i, int) and i >= 0 for i in obj):
+    if (
+        isinstance(obj, tuple)
+        and len(obj)
+        and all(isinstance(i, int) and i >= 0 for i in obj)
+    ):
         return
     raise Exception("Invalid step")
 
@@ -73,7 +77,9 @@ class StepVal(Generic[T]):
         return StepVal(values, self.named_steps)
 
     def copy(self):
-        return StepVal(init_values=self.values.copy(), named_steps=copy(self.named_steps))
+        return StepVal(
+            init_values=self.values.copy(), named_steps=copy(self.named_steps)
+        )
 
     def get_step(self, step: Step, default_value: T | None = None) -> T | None:
         if step in self.values:
@@ -155,7 +161,9 @@ def parse_bool_steps(value: BoolStepDef) -> Sn[bool]:
         value.call(check_is_bool)
         return value
     if isinstance(value, int):
-        return StepVal(init_values={value: True, value + 1: False}, named_steps=(value,))
+        return StepVal(
+            init_values={value: True, value + 1: False}, named_steps=(value,)
+        )
     raise Exception(f"Invalid bool step definition: {value!r}")
 
 
