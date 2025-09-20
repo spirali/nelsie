@@ -58,8 +58,12 @@ class TextContent:
             text=get_step(self.text, step),
             style=style,
             align=get_step(self.align, step),
-            syntax_language=get_step(self.syntax_language, step, ctx.code_language) if self.is_code else None,
-            syntax_theme=get_step(self.syntax_theme, step, ctx.code_theme) if self.is_code else None,
+            syntax_language=get_step(self.syntax_language, step, ctx.code_language)
+            if self.is_code
+            else None,
+            syntax_theme=get_step(self.syntax_theme, step, ctx.code_theme)
+            if self.is_code
+            else None,
             named_styles=text_styles,
             style_delimiters=self.style_delimiters if self.parse_styles else None,
         )

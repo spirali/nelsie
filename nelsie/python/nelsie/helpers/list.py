@@ -53,7 +53,9 @@ class ListBox(BoxBuilderMixin):
         if isinstance(self.list_type, Callable):
             self.list_type(box1)
         elif self.list_type == "unordered":
-            box1.text(DEFAULT_BULLETS[self.level % len(DEFAULT_BULLETS)], style=self.style)
+            box1.text(
+                DEFAULT_BULLETS[self.level % len(DEFAULT_BULLETS)], style=self.style
+            )
         elif self.list_type == "1":
             box1.text(f"{counter}.", style=self.style)
         elif self.list_type == "a":

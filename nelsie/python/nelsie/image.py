@@ -48,7 +48,9 @@ def normalize_and_watch_image_path(path):
     return path
 
 
-def _put_into_shared_data(path_or_data: PathOrImageData | None, content, shared_data, steps):
+def _put_into_shared_data(
+    path_or_data: PathOrImageData | None, content, shared_data, steps
+):
     if path_or_data is None:
         return
     check_image_path_or_data(path_or_data)
@@ -67,7 +69,9 @@ def _put_into_shared_data(path_or_data: PathOrImageData | None, content, shared_
     if content.enable_steps:
         image_steps = image.named_steps()
         if content.shift_steps != 0:
-            image_steps = [shift_step(step, content.shift_steps) for step in image_steps]
+            image_steps = [
+                shift_step(step, content.shift_steps) for step in image_steps
+            ]
         steps.update(image_steps)
 
 
@@ -78,7 +82,12 @@ class ImageContent:
     shift_steps: int
 
     def traverse_tree(self, shared_data, steps: set[Step]):
-        sn_apply(self.path_or_data, lambda path_or_data: _put_into_shared_data(path_or_data, self, shared_data, steps))
+        sn_apply(
+            self.path_or_data,
+            lambda path_or_data: _put_into_shared_data(
+                path_or_data, self, shared_data, steps
+            ),
+        )
 
     def to_raw(self, step: Step, ctx):
         path_or_data = get_step(self.path_or_data, step)

@@ -1,8 +1,23 @@
 from dataclasses import dataclass
 from typing import Union
 
-from .image import PathOrImageData, ImageContent, check_image_path_or_data, normalize_and_watch_image_path
-from .steps import Sn, Sv, sv_check, sn_check, parse_bool_steps, sn_map, BoolStepDef, StepVal, sn_apply
+from .image import (
+    PathOrImageData,
+    ImageContent,
+    check_image_path_or_data,
+    normalize_and_watch_image_path,
+)
+from .steps import (
+    Sn,
+    Sv,
+    sv_check,
+    sn_check,
+    parse_bool_steps,
+    sn_map,
+    BoolStepDef,
+    StepVal,
+    sn_apply,
+)
 
 from .basictypes import (
     Position,
@@ -201,7 +216,12 @@ class BoxBuilderMixin:
         return box
 
     def image(
-        self, path_or_data: Sn[PathOrImageData], *, enable_steps: Sv[bool] = True, shift_steps: int = 0, **box_args
+        self,
+        path_or_data: Sn[PathOrImageData],
+        *,
+        enable_steps: Sv[bool] = True,
+        shift_steps: int = 0,
+        **box_args,
     ):
         sn_check(path_or_data, check_image_path_or_data)
         sv_check(enable_steps, check_is_bool)
@@ -228,7 +248,9 @@ class BoxBuilderMixin:
         elif isinstance(old_style, TextStyle):
             self._set_style(name, old_style.merge(style))
         else:
-            raise Exception("Non-primitive style cannot be updated; use set_style instead")
+            raise Exception(
+                "Non-primitive style cannot be updated; use set_style instead"
+            )
 
     def x(self, width_fraction: IntOrFloat = 0) -> LayoutExpr:
         """
@@ -372,7 +394,9 @@ class BoxBuilderMixin:
         if n_lines != 1:
             check_is_int(line_idx)
             height = height * n_lines
-            width = LayoutExpr.max([self.line_width(line_idx + i) for i in range(n_lines)])
+            width = LayoutExpr.max(
+                [self.line_width(line_idx + i) for i in range(n_lines)]
+            )
         else:
             width = self.line_width(line_idx)
         return self.box(
@@ -639,4 +663,9 @@ def traverse_children(children, shared_data, steps):
         if isinstance(child, Box):
             child.traverse_tree(shared_data, steps)
         elif isinstance(child, StepVal):
-            sn_apply(child, lambda c: c.traverse_tree(shared_data, steps) if isinstance(c, Box) else None)
+            sn_apply(
+                child,
+                lambda c: c.traverse_tree(shared_data, steps)
+                if isinstance(c, Box)
+                else None,
+            )

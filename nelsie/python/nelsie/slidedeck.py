@@ -16,7 +16,12 @@ from .steps import (
     parse_bool_steps,
 )
 from . import nelsie as nelsie_rs
-from .textstyle import DEFAULT_TEXT_STYLE, TextStyle, DEFAULT_CODE_STYLE, check_is_text_style
+from .textstyle import (
+    DEFAULT_TEXT_STYLE,
+    TextStyle,
+    DEFAULT_CODE_STYLE,
+    check_is_text_style,
+)
 
 type SlideCallback = Callable[["Slide", CounterStorage, CounterStorage], "Slide"]
 
@@ -81,7 +86,17 @@ class Slide(BoxBuilderMixin):
             height = self.height
         if bg_color is None:
             bg_color = self.bg_color
-        slide = Slide(width, height, bg_color, name, init_steps, counters, postprocess_fn, debug_steps, debug_layout)
+        slide = Slide(
+            width,
+            height,
+            bg_color,
+            name,
+            init_steps,
+            counters,
+            postprocess_fn,
+            debug_steps,
+            debug_layout,
+        )
         if self.subslides is None:
             self.subslides = {}
         if step not in self.subslides:
@@ -220,7 +235,17 @@ class SlideDeck:
             height = self.height
         if bg_color is None:
             bg_color = self.bg_color
-        slide = Slide(width, height, bg_color, name, init_steps, counters, postprocess_fn, debug_steps, debug_layout)
+        slide = Slide(
+            width,
+            height,
+            bg_color,
+            name,
+            init_steps,
+            counters,
+            postprocess_fn,
+            debug_steps,
+            debug_layout,
+        )
         self.slides.append(slide)
         return slide
 
@@ -313,12 +338,26 @@ class SlideDeck:
                                 parent_inserted = True
                                 current_counter.increment_page(slide.counters)
                                 page = slide_to_raw(
-                                    self.resources, slide, step, self, shared_data, current_counter, total_counter
+                                    self.resources,
+                                    slide,
+                                    step,
+                                    self,
+                                    shared_data,
+                                    current_counter,
+                                    total_counter,
                                 )
                                 raw_pages.append(page)
                             process_slide(s)
                 current_counter.increment_page(slide.counters)
-                page = slide_to_raw(self.resources, slide, step, self, shared_data, current_counter, total_counter)
+                page = slide_to_raw(
+                    self.resources,
+                    slide,
+                    step,
+                    self,
+                    shared_data,
+                    current_counter,
+                    total_counter,
+                )
                 raw_pages.append(page)
 
         for slide in self.slides:

@@ -2,7 +2,6 @@ from nelsie import Stroke, Path, TextStyle, GridOptions as G, Point
 from testutils import check
 
 
-
 @check()
 def test_fix_sizes(deck):
     slide = deck.new_slide()

@@ -205,7 +205,13 @@ class Document:
         if path is not None:
             path = str(path)
         return nelsie_rs.render(
-            self.resources._resources, self.pages, path, format, compression_level, n_threads, progressbar
+            self.resources._resources,
+            self.pages,
+            path,
+            format,
+            compression_level,
+            n_threads,
+            progressbar,
         )
 
 
@@ -303,7 +309,9 @@ def debug_steps_frame(step: Step) -> RawBox:
     )
 
 
-def insert_debug_layout_frame(ctx: ToRawContext, box: Box, layout: dict, target_box: RawBox):
+def insert_debug_layout_frame(
+    ctx: ToRawContext, box: Box, layout: dict, target_box: RawBox
+):
     box_layout = layout[id(box)]
     x = box_layout["x"]
     y = box_layout["y"]

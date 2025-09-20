@@ -24,7 +24,9 @@ def get_system_modules() -> Set[str]:
     return set(modules.keys())
 
 
-def reload_and_get_watched_files(filenames: List[str], system_modules: Set[str]) -> List[str]:
+def reload_and_get_watched_files(
+    filenames: List[str], system_modules: Set[str]
+) -> List[str]:
     """
     Executes the first passed Python script from the `filenames` list
     and gathers all files that should be watched.
@@ -34,7 +36,11 @@ def reload_and_get_watched_files(filenames: List[str], system_modules: Set[str])
     # Try to reload non-system modules, to refresh Python imports from the main file
     # We need to skip some system modules, otherwise reloading them could break Python
     for name, module in dict(sys.modules).items():
-        if name in sys.builtin_module_names or name in system_modules or name.startswith("nelsie."):
+        if (
+            name in sys.builtin_module_names
+            or name in system_modules
+            or name.startswith("nelsie.")
+        ):
             continue
         try:
             importlib.reload(module)

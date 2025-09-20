@@ -4,7 +4,16 @@ from nelsie.nelsie import check_color
 
 from .basictypes import check_position
 from .layoutexpr import LayoutExpr, IntOrFloatOrLayoutExpr
-from .steps import Sv, Sn, get_step, Step, sv_check, sn_check, BoolStepDef, parse_bool_steps
+from .steps import (
+    Sv,
+    Sn,
+    get_step,
+    Step,
+    sv_check,
+    sn_check,
+    BoolStepDef,
+    parse_bool_steps,
+)
 from .utils import check_is_int_or_float, check_is_type, check_is_int
 
 PathValue = int | float | LayoutExpr
