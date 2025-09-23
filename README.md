@@ -56,10 +56,10 @@ Nelsie allows you to easily reveal parts of slides:
 def steps_demo(slide):
     semaphore = slide.box(width=100, height=300, bg_color="gray")
     semaphore.box(
-        y=InSteps([20, 110, 210]),  # Set "y" coordinate for each step
+        y=StepVal(20).at(2, 110).at(3, 210),  # Set "y" coordinate for each step
         width=80,
         height=80,
-        bg_color=InSteps(["red", "orange", "green"]),  # Set color for each step
+        bg_color=StepVal("red").at(2, "orange").at(3, "green"),  # Set color for each step
     )
 
     slide.code(
