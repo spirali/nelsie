@@ -273,4 +273,4 @@ jobs:
         with:
           body: "See [CHANGELOG](https://github.com/spirali/nelsie/blob/main/CHANGELOG.md)."
           prerelease: false
-          artifacts: "*.whl"
+          artifacts: "wheels/*.whl"
