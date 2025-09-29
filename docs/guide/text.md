@@ -188,6 +188,7 @@ def text_style_demo(slide):
     There is an exception for style `"default"` as it always needs to define all attributes.
     Hence `.set_style()` for `"default"` style always behaves as `.update_style()`.
 
+
 ## Text and `StepVal`
 
 You may use `StepVal` in `.text()`:
@@ -222,6 +223,42 @@ def text_style_demo2(slide):
                     TextStyle(color=StepVal("orange").at(2, "blue")))
     slide.text("Hello world!", "my-style")
 ```
+
+## Line steps
+
+You may define showing and hiding individual lines directly into the text.
+It is enabled by `parse_steps=True`. It seaches for "**" that
+is a delimiter for step definition. You may the delimiter via. `parse_steps=<NEW_DELIMITER>`.
+
+```nelsie
+@deck.slide()
+def text_style_demo(slide):
+    slide.set_style("default", TextStyle(size=80))
+    slide.text("""
+line1
+line2 **2,4+
+line3 **3""", parse_steps=True)
+```
+
+There are two configuration options:
+
+* `e` - when line is not shown it is replaced by an empty line
+* `n` - it negates the step expression, i.e. the line is shown in the steps NOT defined in the expression.
+
+The configuration is given immediately after "**" and followed by `;`.
+
+```nelsie
+@deck.slide()
+def text_style_demo(slide):
+    slide.set_style("default", TextStyle(size=80))
+    slide.text("""
+line1 **3+
+line2 **n; 3+
+line3 **e; 2,4
+line4 **en; 4+
+line5""", parse_steps=True)
+```
+
 
 ## Automatic text stripping
 

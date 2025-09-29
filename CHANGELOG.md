@@ -1,3 +1,8 @@
+# Unreleased
+
+* Line revelaing DSL
+* Fixed managed layout detection
+
 # v0.21.1
 
 * No changes changes, just for sake of fixing release process.
