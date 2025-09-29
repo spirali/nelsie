@@ -179,10 +179,14 @@ impl ComputedLayout {
 
 fn is_layout_managed(node: &Node, parent: Option<&Node>) -> bool {
     parent
-        .map(|p| node.main_axis_position(p.row).is_none())
+        .map(|p| {
+            node.main_axis_position(p.row).is_none()
+                && node
+                    .main_axis_size(p.row)
+                    .map(|v| !v.is_expr())
+                    .unwrap_or(true)
+        })
         .unwrap_or(true)
-        && node.width.as_ref().map(|v| !v.is_expr()).unwrap_or(true)
-        && node.height.as_ref().map(|v| !v.is_expr()).unwrap_or(true)
 }
 
 impl From<Length> for tf::Dimension {
