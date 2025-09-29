@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from .textstyle import TextStyle, merge_in_step
-from .steps import Sv, Sn, Step, get_step
+from .steps import Sv, Sn, Step, get_step, parse_bool_steps
 from .basictypes import TextAlign
 
 

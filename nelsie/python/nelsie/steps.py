@@ -47,7 +47,12 @@ def step_to_str(step: Step) -> str:
 
 
 class StepVal(Generic[T]):
-    def __init__(self, init_value: T | None = None, named_steps=None, init_values=None):
+    def __init__(
+        self,
+        init_value: T | None = None,
+        named_steps: list[Step] | None = None,
+        init_values=None,
+    ):
         if init_values is not None:
             self.values = init_values
         elif init_value is not None:
@@ -98,11 +103,17 @@ class StepVal(Generic[T]):
                 return True
         return False
 
+    def bool_inverse(self):
+        """Negate all values. Has meaningful output only when values are boolean."""
+        self.values[1] = self.values.get(1, False)
+        for step in self.values:
+            self.values[step] = not self.values[step]
+
     def __repr__(self):
         v = "<StepVal "
         for step, value in sorted(self.values.items(), key=step_compare_key):
             v += f"{step}={value!r}, "
-        v += ">"
+        v += f"ns={self.named_steps!r}>"
         return v
 
 

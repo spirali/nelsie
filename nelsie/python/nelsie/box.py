@@ -40,6 +40,7 @@ from .basictypes import (
 )
 from .nelsie import check_color
 from .text import TextContent
+from .textsteps import text_step_parser
 from .textstyle import TextStyle, check_is_text_style, check_is_str_or_text_style
 from .utils import check_is_str, check_is_bool, check_is_int, check_is_int_or_float
 from .layoutexpr import LayoutExpr
@@ -162,10 +163,13 @@ class BoxBuilderMixin:
         strip: bool = True,
         parse_styles: bool = True,
         style_delimiters: str = "~{}",
+        parse_steps: bool | str = False,
         **box_args,
     ):
         if strip and isinstance(text, str):
             text = text.strip()
+        if parse_steps:
+            text = parse_steps_helper(text, parse_steps)
         sv_check(text, check_is_str)
         sv_check(align, check_text_align)
         sn_check(style, check_is_str_or_text_style)
@@ -193,10 +197,13 @@ class BoxBuilderMixin:
         theme: Sn[str] = None,
         parse_styles: bool = False,
         style_delimiters: str = "~{}",
+        parse_steps: bool | str = False,
         **box_args,
     ):
         if strip and isinstance(text, str):
             text = text.strip()
+        if parse_steps:
+            text = parse_steps_helper(text, parse_steps)
         sv_check(text, check_is_str)
         sv_check(align, check_text_align)
         sn_check(style, check_is_str_or_text_style)
@@ -669,3 +676,11 @@ def traverse_children(children, shared_data, steps):
                 if isinstance(c, Box)
                 else None,
             )
+
+
+def parse_steps_helper(text, parse_steps):
+    if isinstance(text, str):
+        delimiter = "**" if parse_steps is True else parse_steps
+        return text_step_parser(text, delimiter=delimiter)
+    else:
+        raise Exception("When parse_steps is enabled, text has to be a string")
