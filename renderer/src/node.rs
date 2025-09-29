@@ -106,6 +106,14 @@ impl Node {
         }
     }
 
+    pub fn main_axis_size(&self, has_row_parent: bool) -> Option<&LengthOrExpr> {
+        if has_row_parent {
+            self.width.as_ref()
+        } else {
+            self.height.as_ref()
+        }
+    }
+
     pub fn add_child_node(&mut self, node: Node) {
         self.children.push(NodeChild::Node(node));
     }
