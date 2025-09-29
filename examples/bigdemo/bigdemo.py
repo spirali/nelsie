@@ -269,6 +269,39 @@ def hello_world(~1{slide}):
     )
 
 
+# Showing/hiding lines #################################
+
+@deck.slide()
+def show_hide_line(slide):
+    slide.text("Line hiding/showing", "title", m_bottom=30)
+    slide.set_style("hl", TextStyle(color="orange", weight=700))
+
+    bb = slide.box(align_items="start")
+    top_b = bb.box(bg_color="#eee").padding(x=20, y=10)
+    top_b.text("Definition (step definition after **)", m_bottom=20, x=20)
+
+
+    x = "\"\"\""
+    top_b.code(f"""
+@deck.slide()
+def line_demo(slide):
+    slide.code({x}
+def compute_somehing(x): ~hl[**1]
+def compute_somehing(x, y): ~hl[**2+]
+    print("Computing...") ~hl[**e; 3+]
+    return x * y ~hl[**e; 4+]
+{x})
+""", language="py", parse_styles=True, style_delimiters="~[]", style=TextStyle(size=24))
+
+    bot_b = bb.box(bg_color="#eee", width=top_b.width()).padding(x=20, y=10).margin(top=40)
+    bot_b.text("Result", m_bottom=20, x=20)
+    demo = """def compute_somehing(x): **1
+def compute_somehing(x, y): **2+
+    print("Computing...") **e; 3+
+    return x * y **e; 4+"""
+    bot_b.code(demo, language="py", parse_steps=True, style=TextStyle(size=24))
+
+
 # Console demo ############################################
 
 

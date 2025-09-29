@@ -196,3 +196,9 @@ This list is also programmatically available through [`Resources`](resources.md)
 
 Language for syntax highlighting can be se to `None`. In such case, no syntax highlighting is used while all other
 `.code()` properties are used.
+
+
+## Line steps
+
+`.code()` supports `parse_steps` as `.text()`.
+See [the documentation for line steps](text.md#line-steps)
