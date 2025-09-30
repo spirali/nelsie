@@ -188,7 +188,6 @@ def text_style_demo(slide):
     There is an exception for style `"default"` as it always needs to define all attributes.
     Hence `.set_style()` for `"default"` style always behaves as `.update_style()`.
 
-
 ## Text and `StepVal`
 
 You may use `StepVal` in `.text()`:
@@ -259,6 +258,18 @@ line4 **en; 4+
 line5""", parse_steps=True)
 ```
 
+You may also skip the step expression after "**"; Nelsie then uses the previously defined step expression.
+
+```nelsie
+@deck.slide()
+def text_style_demo(slide):
+    slide.set_style("default", TextStyle(size=80))
+    slide.text("""
+line1 ** 2+
+line2 **
+line3 ** 
+""", parse_steps=True)
+```
 
 ## Automatic text stripping
 

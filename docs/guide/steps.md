@@ -33,7 +33,7 @@ Parameter `show` in `.box()` defines the steps in which the box (its contents an
 affects the drawing itself, but not the layout. The layout is always calculated, i.e. the space is reserved for the box
 and its children, even in the steps where it is not painted.
 
-### Example 1 (showing new content and hinding old content)
+### Example 1 (showing new content and hiding old content)
 
 ```nelsie
 @deck.slide()

@@ -4,33 +4,51 @@ from nelsie.textsteps import text_step_parser
 
 
 def test_text_step_parser():
-    r = text_step_parser("abc**2-3", "**")
+    r = text_step_parser("abc@2-3", "@")
     assert sorted(r.named_steps) == [2, 3]
     assert r.values == {1: "", 2: "abc", 4: ""}
 
-    r = text_step_parser("abc", "**")
+    r = text_step_parser("abc", "@")
     assert sorted(r.named_steps) == []
     assert r.values == {1: "abc"}
 
-    r = text_step_parser("abc\nxyz", "**")
+    r = text_step_parser("abc\nxyz", "@")
     assert sorted(r.named_steps) == []
     assert r.values == {1: "abc\nxyz"}
 
-    r = text_step_parser("line1 ** 3+\nline2\nline3 ** 1\nline4**4+", "**")
+    r = text_step_parser("line1 @ 3+\nline2\nline3 @ 1\nline4@4+", "@")
     assert sorted(r.named_steps) == [1, 3, 4]
     assert r.values == {1: "line2\nline3 ", 2: "line2", 3: "line1 \nline2", 4: "line1 \nline2\nline4"}
 
-    r = text_step_parser("line1 ** e; 2\nline 2", "**")
+    r = text_step_parser("line1 @ e; 2\nline 2", "@")
     assert sorted(r.named_steps) == [2]
     assert r.values == {1: "\nline 2", 2: "line1 \nline 2", 3: "\nline 2"}
 
-    r = text_step_parser("line1 ** n; 2-3", "**")
+    r = text_step_parser("line1 @ n; 2-3", "@")
     assert sorted(r.named_steps) == [2, 3]
     assert r.values == {1: "line1 ", 2: "", 4: "line1 "}
 
-    r = text_step_parser("line1 ** en; 2-3\nx", "**")
+    r = text_step_parser("line1 @ en; 2-3\nx", "@")
     assert sorted(r.named_steps) == [2, 3]
     assert r.values == {1: "line1 \nx", 2: "\nx", 4: "line1 \nx"}
+
+    r = text_step_parser("line1@2-3\nline2@line3@", "@")
+    assert sorted(r.named_steps) == [2, 3]
+    assert r.values == {1: "", 2: 'line1\nline2@line3', 4: ""}
+
+    r = text_step_parser("a@e;2\nb@e;2\n;c@e;2", "@")
+    assert r.values == {1: '\n\n', 2: 'a\nb\n;c', 3: '\n\n'}
+
+    r = text_step_parser("a@b@", "@")
+    assert r.values == {1: "a@b"}
+
+    r = text_step_parser("line1@2-3\nline2@line3@", "@")
+    assert sorted(r.named_steps) == [2, 3]
+    assert r.values == {1: "", 2: 'line1\nline2@line3', 4: ""}
+
+    r = text_step_parser("line1@e;2-3\nline2@\nline3@", "@")
+    assert sorted(r.named_steps) == [2, 3]
+    assert r.values == {1: "\n\n", 2: 'line1\nline2\nline3', 4: "\n\n"}
 
 
 @check(3)
