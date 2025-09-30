@@ -226,7 +226,7 @@ def text_style_demo2(slide):
 ## Line steps
 
 You may define showing and hiding individual lines directly into the text.
-It is enabled by `parse_steps=True`. It seaches for "**" that
+It is enabled by `parse_steps=True`. It seaches for "@" that
 is a delimiter for step definition. You may the delimiter via. `parse_steps=<NEW_DELIMITER>`.
 
 ```nelsie
@@ -235,8 +235,8 @@ def text_style_demo(slide):
     slide.set_style("default", TextStyle(size=80))
     slide.text("""
 line1
-line2 **2,4+
-line3 **3""", parse_steps=True)
+line2 @2,4+
+line3 @3""", parse_steps=True)
 ```
 
 There are two configuration options:
@@ -251,10 +251,10 @@ The configuration is given immediately after "**" and followed by `;`.
 def text_style_demo(slide):
     slide.set_style("default", TextStyle(size=80))
     slide.text("""
-line1 **3+
-line2 **n; 3+
-line3 **e; 2,4
-line4 **en; 4+
+line1 @3+
+line2 @n; 3+
+line3 @e; 2,4
+line4 @en; 4+
 line5""", parse_steps=True)
 ```
 
@@ -265,9 +265,9 @@ You may also skip the step expression after "**"; Nelsie then uses the previousl
 def text_style_demo(slide):
     slide.set_style("default", TextStyle(size=80))
     slide.text("""
-line1 ** 2+
-line2 **
-line3 ** 
+line1 @ 2+
+line2 @
+line3 @
 """, parse_steps=True)
 ```
 

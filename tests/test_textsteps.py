@@ -34,21 +34,21 @@ def test_text_step_parser():
 
     r = text_step_parser("line1@2-3\nline2@line3@", "@")
     assert sorted(r.named_steps) == [2, 3]
-    assert r.values == {1: "", 2: 'line1\nline2@line3', 4: ""}
+    assert r.values == {1: "", 2: "line1\nline2@line3", 4: ""}
 
     r = text_step_parser("a@e;2\nb@e;2\n;c@e;2", "@")
-    assert r.values == {1: '\n\n', 2: 'a\nb\n;c', 3: '\n\n'}
+    assert r.values == {1: "\n\n", 2: "a\nb\n;c", 3: "\n\n"}
 
     r = text_step_parser("a@b@", "@")
     assert r.values == {1: "a@b"}
 
     r = text_step_parser("line1@2-3\nline2@line3@", "@")
     assert sorted(r.named_steps) == [2, 3]
-    assert r.values == {1: "", 2: 'line1\nline2@line3', 4: ""}
+    assert r.values == {1: "", 2: "line1\nline2@line3", 4: ""}
 
     r = text_step_parser("line1@e;2-3\nline2@\nline3@", "@")
     assert sorted(r.named_steps) == [2, 3]
-    assert r.values == {1: "\n\n", 2: 'line1\nline2\nline3', 4: "\n\n"}
+    assert r.values == {1: "\n\n", 2: "line1\nline2\nline3", 4: "\n\n"}
 
 
 @check(3)
@@ -56,12 +56,12 @@ def test_parse_steps_in_and_code_text(deck):
     deck.set_style("default", TextStyle(size=12))
 
     slide = deck.new_slide(width=250, height=100)
-    slide.text("Line 1\nLine **2+", parse_steps=True)
+    slide.text("Line 1\nLine @2+", parse_steps=True)
     slide.code(
         """
-def do_something(): **1-2
-def do_something():  # Tada! **3+
-    println("Hello")** 2+    
+def do_something(): @ 1-2
+def do_something():  # Tada! @ 3+
+    println("Hello")** @ 2+
     """,
         "py",
         parse_steps=True,
