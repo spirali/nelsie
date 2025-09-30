@@ -680,7 +680,7 @@ def traverse_children(children, shared_data, steps):
 
 def parse_steps_helper(text, parse_steps):
     if isinstance(text, str):
-        delimiter = "**" if parse_steps is True else parse_steps
+        delimiter = "@" if parse_steps is True else parse_steps
         return text_step_parser(text, delimiter=delimiter)
     else:
         raise Exception("When parse_steps is enabled, text has to be a string")
