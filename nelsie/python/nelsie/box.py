@@ -169,7 +169,7 @@ class BoxBuilderMixin:
         if strip and isinstance(text, str):
             text = text.strip()
         if parse_steps:
-            text = parse_steps_helper(text, parse_steps)
+            text = parse_steps_helper(text, parse_steps, strip)
         sv_check(text, check_is_str)
         sv_check(align, check_text_align)
         sn_check(style, check_is_str_or_text_style)
@@ -203,7 +203,7 @@ class BoxBuilderMixin:
         if strip and isinstance(text, str):
             text = text.strip()
         if parse_steps:
-            text = parse_steps_helper(text, parse_steps)
+            text = parse_steps_helper(text, parse_steps, strip)
         sv_check(text, check_is_str)
         sv_check(align, check_text_align)
         sn_check(style, check_is_str_or_text_style)
@@ -678,9 +678,9 @@ def traverse_children(children, shared_data, steps):
             )
 
 
-def parse_steps_helper(text, parse_steps):
+def parse_steps_helper(text, parse_steps, strip):
     if isinstance(text, str):
         delimiter = "@" if parse_steps is True else parse_steps
-        return text_step_parser(text, delimiter=delimiter)
+        return text_step_parser(text, delimiter=delimiter, rstrip=strip)
     else:
         raise Exception("When parse_steps is enabled, text has to be a string")

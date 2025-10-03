@@ -4,11 +4,16 @@ from .steps import StepVal
 MODES = ("e", "n", "en")
 
 
-def process_step_line(line: str, delimiter: str, prev_steps, prev_add_empty):
+def process_step_line(
+    line: str, delimiter: str, rstrip: bool, prev_steps, prev_add_empty
+):
     s = line.rsplit(delimiter, 1)
     if len(s) == 1:
         return line, None, False
     line, rest = s
+
+    if rstrip:
+        line = line.rstrip()
 
     if ";" in rest:
         mode, step_def = rest.split(";", 1)
@@ -30,14 +35,16 @@ def process_step_line(line: str, delimiter: str, prev_steps, prev_add_empty):
     return line, step_val, "e" in mode
 
 
-def text_step_parser(text: str, delimiter: str):
+def text_step_parser(text: str, delimiter: str, rstrip: bool = False):
     steps = set()
     named_steps = set()
     lines = []
     prev_step_val = None
     prev_add_empty = False
     for line in text.split("\n"):
-        line_data = process_step_line(line, delimiter, prev_step_val, prev_add_empty)
+        line_data = process_step_line(
+            line, delimiter, rstrip, prev_step_val, prev_add_empty
+        )
         if line_data[1] is not None:
             prev_step_val = line_data[1]
             prev_add_empty = line_data[2]
