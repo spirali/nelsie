@@ -50,6 +50,10 @@ def test_text_step_parser():
     assert sorted(r.named_steps) == [2, 3]
     assert r.values == {1: "\n\n", 2: "line1\nline2\nline3", 4: "\n\n"}
 
+    r = text_step_parser("a @1+\nb @\nc", "@", rstrip=True)
+    assert sorted(r.named_steps) == [1]
+    assert r.values == {1: "a\nb\nc"}
+
 
 @check(3)
 def test_parse_steps_in_and_code_text(deck):
