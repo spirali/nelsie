@@ -1,3 +1,7 @@
+# Unreleased
+
+* When strip=True in code/text, then text steps line are rstripped
+
 # v0.21.2
 
 ## New features
