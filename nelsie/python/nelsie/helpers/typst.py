@@ -12,7 +12,7 @@ class Typst:
         self.typst_path = typst_path
         self.cache_path = cache_path
 
-        self.default_header = "#set page(width: auto, height: auto, margin: (x: 0pt, y: 0pt))"
+        self.default_header = self.get_header()
         self.version = self._call_typst(["--version"])
         hasher = hashlib.sha1()
         hasher.update(self.version)
@@ -21,6 +21,9 @@ class Typst:
     def _call_typst(self, args: list[str]):
         r = subprocess.run([self.typst_path, *args], check=True, stdout=subprocess.PIPE)
         return r.stdout
+
+    def get_header(self, width="auto", height="auto", margin_x="0pt", margin_y="0pt"):
+        return f"#set page(width: {width}, height: {height}, margin: (x: {margin_x}, y: {margin_y}))\n"
 
     def get_path(self, text: str, use_header: bool = True):
         if use_header:
