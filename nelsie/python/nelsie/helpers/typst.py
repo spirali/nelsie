@@ -17,6 +17,7 @@ class Typst:
         hasher = hashlib.sha1()
         hasher.update(self.version)
         self.hasher = hasher
+        self.generated = set()
 
     def _call_typst(self, args: list[str]):
         r = subprocess.run([self.typst_path, *args], check=True, stdout=subprocess.PIPE)
@@ -30,10 +31,12 @@ class Typst:
             text = f"{self.default_header}\n{text}"
         hasher = self.hasher.copy()
         hasher.update(text.encode())
-        output_path = os.path.join(self.cache_path, f"{hasher.digest().hex()}.svg")
+        hex = hasher.digest().hex()
+        self.generated.add(hex)
+        output_path = os.path.join(self.cache_path, f"{hex}.svg")
         if os.path.isfile(output_path):
             return output_path
-        input_path = os.path.join(self.cache_path, f"{hasher.digest().hex()}.typ")
+        input_path = os.path.join(self.cache_path, f"{hex}.typ")
         with open(input_path, "w") as f:
             f.write(text)
         self._call_typst(["compile", "--format=svg", input_path])
@@ -41,3 +44,11 @@ class Typst:
 
     def render(self, slide, text: str, use_header: bool = True, **kwargs):
         slide.image(self.get_path(text, use_header), **kwargs)
+
+    def clean_cache(self):
+        for path in os.listdir(self.cache_path):
+            if not path.endswith(".typ") and not path.endswith(".svg"):
+                continue
+            base = path[:-4]
+            if base not in self.generated:
+                os.unlink(os.path.join(self.cache_path, path))
