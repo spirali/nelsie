@@ -10,7 +10,7 @@ use crate::render::layout::compute_page_layout;
 use crate::render::text::{TextContext, render_text};
 use crate::resources::Resources;
 use crate::text::Text;
-use crate::utils::fileutils::ensure_directory;
+use crate::utils::fileutils::{ensure_directory, safe_write};
 use crate::{InMemoryBinImage, InMemorySvgImage, Page, Rectangle};
 use itertools::Itertools;
 use parley::FontContext;
@@ -270,7 +270,7 @@ impl Document {
         path: &std::path::Path,
     ) -> crate::Result<()> {
         let data = self.render_pdf_to_mem(resources, options)?;
-        std::fs::write(path, data)?;
+        safe_write(path, &data)?;
         Ok(())
     }
 
