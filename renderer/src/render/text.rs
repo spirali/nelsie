@@ -3,10 +3,7 @@ use crate::shapes::{FillAndStroke, Stroke};
 use crate::text::{InlineId, Text, TextAlign, TextStyle};
 use crate::textutils::StyledText;
 use crate::{Color, Rectangle, Resources};
-use parley::{
-    Alignment, AlignmentOptions, FontContext, FontStack, FontStyle, FontWeight, FontWidth,
-    GlyphRun, InlineBox, Layout, LayoutContext, PositionedLayoutItem, RangedBuilder, StyleProperty,
-};
+use parley::{Alignment, AlignmentOptions, FontContext, FontStack, FontStyle, FontWeight, FontWidth, GlyphRun, InlineBox, Layout, LayoutContext, LineHeight, PositionedLayoutItem, RangedBuilder, StyleProperty};
 use resvg::usvg::FontStretch;
 use skrifa::instance::{LocationRef, NormalizedCoord, Size};
 use skrifa::outline::{DrawSettings, OutlinePen};
@@ -55,7 +52,7 @@ pub fn render_text(
         None,
         match text.text_align {
             TextAlign::Start => Alignment::Start,
-            TextAlign::Center => Alignment::Middle,
+            TextAlign::Center => Alignment::Center,
             TextAlign::End => Alignment::End,
         },
         AlignmentOptions::default(),
@@ -116,7 +113,7 @@ fn styled_text_to_parley(
     let mut builder =
         text_context
             .layout_cx
-            .ranged_builder(&mut text_context.font_cx, &styled_text.text, 1.0);
+            .ranged_builder(&mut text_context.font_cx, &styled_text.text, 1.0, false);
     let TextStyle {
         font,
         color,
@@ -136,7 +133,7 @@ fn styled_text_to_parley(
         (*size).map(|x| x.get()).unwrap_or(16.0),
     ));
     builder.push_default(StyleProperty::LineHeight(
-        (*line_spacing).map(|x| x.get()).unwrap_or(1.0),
+        LineHeight::MetricsRelative((*line_spacing).map(|x| x.get()).unwrap_or(1.0)),
     ));
     builder.push_default(StyleProperty::FontWeight(FontWeight::new(
         (*weight).unwrap_or(400) as f32,
@@ -334,7 +331,7 @@ fn set_text_style_to_parley(
     }
 
     if let Some(line_spacing) = line_spacing {
-        builder.push_default(StyleProperty::LineHeight(line_spacing.get()));
+        builder.push_default(StyleProperty::LineHeight(LineHeight::MetricsRelative(line_spacing.get())));
     }
 
     if let Some(weight) = weight {

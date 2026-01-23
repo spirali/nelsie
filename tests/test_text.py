@@ -111,7 +111,7 @@ def test_text_lines(deck):
 
 @check()
 def test_text_color_opacity(deck):
-    slide = deck.new_slide(width=220, height=50)
+    slide = deck.new_slide(width=220, height=70)
     slide.set_style("one", TextStyle(color="#ff00ff50"))
     slide.box(x=0, y=0, width=60, height="100%", bg_color="green")
     slide.box(x=60, y=0, width="30%", height="100%", bg_color="blue")
@@ -220,7 +220,7 @@ def test_line_box(deck):
 def test_text_line_points1(deck):
     deck.set_style("default", TextStyle(size=12))
     deck.set_style("big", TextStyle(size=18))
-    slide = deck.new_slide(width=150, height=130)
+    slide = deck.new_slide(width=150, height=190)
     t1 = slide.text("x\nyy\nzzzzz", z_level=1, align="start")
     t2 = slide.text("x\nyy\nzzzzz", z_level=1, align="center")
     t3 = slide.text("x\nyy\nzzzzz", z_level=1, align="end")
@@ -350,7 +350,7 @@ def test_text_anchors_styled_space_prefix(deck):
     deck.update_style("code", TextStyle(size=22))
     deck.set_style("s1", TextStyle(size=2))
     deck.set_style("s2", TextStyle(size=44))
-    slide = deck.new_slide(width=200, height=120)
+    slide = deck.new_slide(width=200, height=150)
     t = slide.text("""~s1{   }~s2{ }~11{C}""", z_level=3)
     t.line_box(0, bg_color="blue", z_level=0)
     t.inline_box(11, bg_color="orange", z_level=1)
