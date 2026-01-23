@@ -1,6 +1,7 @@
 # Unreleased
 
 * When strip=True in code/text, then text steps line are rstripped
+* "typst" extension for writing mathematical expressions
 
 # v0.21.2
 
