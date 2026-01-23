@@ -1,4 +1,4 @@
-use parley::fontique::{Collection, CollectionOptions, SourceCache};
+use parley::fontique::{Blob, Collection, CollectionOptions, SourceCache};
 use parley::{FontContext, GenericFamily};
 use resvg::usvg::fontdb;
 use std::path::Path;
@@ -106,7 +106,7 @@ impl Resources {
             }
             log::debug!("Loading font {}", path.display());
             let font_data = std::fs::read(&path)?;
-            self.font_context.collection.register_fonts(font_data);
+            self.font_context.collection.register_fonts(Blob::from(font_data), None);
         }
         let font_db = std::mem::take(&mut self.font_db).unwrap();
         let mut font_db = Arc::unwrap_or_clone(font_db);
