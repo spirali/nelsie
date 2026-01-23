@@ -48,6 +48,12 @@ def normalize_and_watch_image_path(path):
     return path
 
 
+def normalize_image_path(path):
+    if isinstance(path, str):
+        path = os.path.abspath(path)
+    return path
+
+
 def _put_into_shared_data(
     path_or_data: PathOrImageData | None, content, shared_data, steps
 ):

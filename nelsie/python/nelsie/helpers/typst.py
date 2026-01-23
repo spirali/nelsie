@@ -4,7 +4,6 @@ import os
 
 
 class Typst:
-
     def __init__(self, typst_path="typst", cache_path="./typst_cache"):
         cache_path = os.path.abspath(cache_path)
         if not os.path.isdir(cache_path):
@@ -43,6 +42,7 @@ class Typst:
         return output_path
 
     def render(self, slide, text: str, use_header: bool = True, **kwargs):
+        kwargs.setdefault("watch", False)
         slide.image(self.get_path(text, use_header), **kwargs)
 
     def clean_cache(self):
