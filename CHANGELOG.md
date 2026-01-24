@@ -2,6 +2,7 @@
 
 * When strip=True in code/text, then text steps line are rstripped
 * "typst" extension for writing mathematical expressions
+* Migrate to parle 0.7
 
 # v0.21.2
 

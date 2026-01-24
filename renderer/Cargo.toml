@@ -14,14 +14,14 @@ xmltree = { workspace = true }
 
 
 taffy = "0.7"
-svgtypes = "0.15" # Not necessary same as resvg but nice to be a same as in resvg
+svgtypes = "0.16" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
 pdf-writer = "0.12"
 itertools = "0.14"
 rayon = "1.10"
 parley = { version = "0.7" }
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
-miniz_oxide = "0.8"
+miniz_oxide = "0.9"
 base64 = "0.22"
 syntect = { version = "5", default-features = false, features = ["default-fancy"] }
 skrifa = "*" # Lets us give a version specified in parley
