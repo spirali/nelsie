@@ -231,7 +231,7 @@ def test_slide_counter(deck):
 def test_subslides(deck):
     deck.set_style("default", TextStyle(size=8))
 
-    slide = deck.new_slide(width=40, height=70, postprocess_fn=add_global_counter, name="main")
+    slide = deck.new_slide(width=40, height=90, postprocess_fn=add_global_counter, name="main")
     slide.box(width=20, height=20, bg_color="red")
     slide.box(width=20, height=20, bg_color="orange", show="2+")
     slide.box(width=20, height=20, bg_color="green", show="3+")

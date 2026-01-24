@@ -274,6 +274,7 @@ def slide_to_raw(
             insert_debug_layout_frame(ctx, box, layout, root)
     if slide.debug_steps:
         height += DEBUG_STEPS_FRAME_HEIGHT
+        page.height += DEBUG_STEPS_FRAME_HEIGHT
         page.root = RawBox(
             node_id=0,
             width=width,
