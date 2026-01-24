@@ -5,7 +5,7 @@ from testutils import check
 
 @check()
 def test_list(deck):
-    slide = deck.new_slide(width=200, height=300)
+    slide = deck.new_slide(width=200, height=350)
     slide.set_style("default", TextStyle(size=12))
     lst = ListBox(slide)
     lst.text("One")

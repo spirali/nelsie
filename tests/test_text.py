@@ -154,7 +154,7 @@ def test_text_align(deck):
 
 @check()
 def test_text_descent_ascent1(deck):
-    slide = deck.new_slide(width=200, height=325)
+    slide = deck.new_slide(width=200, height=395)
     slide.set_style("default", TextStyle(size=24))
     slide.set_style("monospace", TextStyle(font="monospace"))
     box = slide.box(row=True)
@@ -174,7 +174,7 @@ def test_text_descent_ascent1(deck):
 
 @check()
 def test_text_descent_ascent2(deck):
-    slide = deck.new_slide(width=20, height=380)
+    slide = deck.new_slide(width=20, height=460)
     slide.set_style("default", TextStyle(size=12, line_spacing=1.5))
     slide.text("g\n" * 20, bg_color="red")
 

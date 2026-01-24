@@ -40,7 +40,7 @@ def test_code_syntax_highlight_with_styles(deck):
     deck.update_style("code", TextStyle(size=12))
     deck.set_style("s1", TextStyle(size=16, color="green"))
     deck.set_style("s2", TextStyle(size=16, color="orange"))
-    slide = deck.new_slide(width=300, height=210)
+    slide = deck.new_slide(width=300, height=240)
     slide.code(
         """
 /*

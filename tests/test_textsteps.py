@@ -65,7 +65,7 @@ def test_parse_steps_in_and_code_text(deck):
         """
 def do_something(): @ 1-2
 def do_something():  # Tada! @ 3+
-    println("Hello")** @ 2+
+    println("Hello") @ 2+
     """,
         "py",
         parse_steps=True,
