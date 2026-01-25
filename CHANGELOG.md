@@ -1,8 +1,8 @@
-# Unreleased
+# v0.22.0
 
 * When strip=True in code/text, then text steps line are rstripped
 * "typst" extension for writing mathematical expressions
-* Migrate to parle 0.7
+* Migrate to parley 0.7
 
 # v0.21.2
 
