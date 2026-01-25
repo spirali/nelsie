@@ -3,7 +3,7 @@ use crate::pyinterface::common::PyColor;
 use crate::pyinterface::layoutexpr::extract_layout_expr;
 use pyo3::exceptions::PyValueError;
 use pyo3::types::{PyAnyMethods, PyIterator, PyList};
-use pyo3::{Bound, FromPyObject, PyAny, PyResult};
+use pyo3::{Borrowed, Bound, FromPyObject, PyAny, PyErr, PyResult};
 use renderer::Path;
 use renderer::{Arrow, FillAndStroke, LayoutExpr, Length, PathPart, Shape, ShapeRect, Stroke};
 use std::marker::PhantomData;
@@ -41,8 +41,9 @@ pub(crate) struct PyPosition<D: Dimension> {
     _dim: PhantomData<D>,
 }
 
-impl<'py, D: Dimension> FromPyObject<'py> for PyPosition<D> {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py, D: Dimension> FromPyObject<'_, 'py> for PyPosition<D> {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         Ok(PyPosition {
             expr: if let Ok(value) = obj.extract::<f32>() {
                 D::parent_pos(value)

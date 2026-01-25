@@ -1,7 +1,6 @@
 use crate::pyinterface::common::PyColor;
 use pyo3::exceptions::PyValueError;
-use pyo3::types::PyAnyMethods;
-use pyo3::{Bound, FromPyObject, PyAny, PyErr, PyResult};
+use pyo3::{Borrowed, FromPyObject, PyAny, PyErr, PyResult};
 use renderer::{
     FontStretch, ParsingChars, SyntaxHighlightSettings, Text, TextAlign, TextStyle, TextStyling,
 };
@@ -84,8 +83,9 @@ impl TryFrom<PyTextStyle> for TextStyle {
 
 pub(crate) struct PyTextAlign(TextAlign);
 
-impl<'py> FromPyObject<'py> for PyTextAlign {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyTextAlign {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         let s: &str = ob.extract()?;
         Ok(PyTextAlign(match s {
             "start" => TextAlign::Start,

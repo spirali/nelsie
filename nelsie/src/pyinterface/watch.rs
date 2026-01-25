@@ -1,6 +1,6 @@
 use notify::{Config, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use pyo3::exceptions::PyException;
-use pyo3::{pyfunction, PyResult, Python};
+use pyo3::{PyResult, Python, pyfunction};
 use std::thread::sleep;
 use std::time::Duration;
 

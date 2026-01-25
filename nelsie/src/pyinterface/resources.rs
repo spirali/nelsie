@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use pyo3::{pyclass, pymethods, PyResult};
+use pyo3::{PyResult, pyclass, pymethods};
 use std::path::Path;
 
 #[pyclass]

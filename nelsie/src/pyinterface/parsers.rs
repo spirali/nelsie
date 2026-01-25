@@ -1,5 +1,5 @@
 use pyo3::types::{PyDict, PyDictMethods, PyList};
-use pyo3::{pyfunction, Bound, IntoPyObject, IntoPyObjectExt, PyAny, PyResult, Python};
+use pyo3::{Bound, IntoPyObject, IntoPyObjectExt, PyAny, PyResult, Python, pyfunction};
 use std::collections::BTreeMap;
 
 // fn step_to_pyobj<'py>(py: Python<'py>, step: &Step) -> PyResult<Bound<'py, PyAny>> {
