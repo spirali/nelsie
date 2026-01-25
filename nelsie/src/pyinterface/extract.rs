@@ -7,7 +7,7 @@ use crate::pyinterface::text::PyTextContent;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
-use pyo3::{intern, Bound, FromPyObject, PyAny, PyResult};
+use pyo3::{Borrowed, Bound, FromPyObject, PyAny, PyErr, PyResult, intern};
 use renderer::taffy::style_helpers::{
     FromFlex, FromLength, FromPercent, TaffyGridLine, TaffyGridSpan,
 };
@@ -29,8 +29,9 @@ struct PyPage<'py> {
 
 struct PyLengthOrExpr(LengthOrExpr);
 
-impl<'py> FromPyObject<'py> for PyLengthOrExpr {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyLengthOrExpr {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         Ok(PyLengthOrExpr(if let Ok(value) = obj.extract::<f32>() {
             LengthOrExpr::points(value)
         } else if let Ok(value) = obj.extract::<&str>() {
@@ -43,8 +44,9 @@ impl<'py> FromPyObject<'py> for PyLengthOrExpr {
 
 struct PyLength(Length);
 
-impl<'py> FromPyObject<'py> for PyLength {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyLength {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         Ok(PyLength(if let Ok(value) = obj.extract::<f32>() {
             Length::Points { value }
         } else if let Ok(value) = obj.extract::<&str>() {
@@ -57,8 +59,9 @@ impl<'py> FromPyObject<'py> for PyLength {
 
 struct PyLengthOrAuto(LengthOrAuto);
 
-impl<'py> FromPyObject<'py> for PyLengthOrAuto {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyLengthOrAuto {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         Ok(PyLengthOrAuto(if let Ok(value) = obj.extract::<f32>() {
             LengthOrAuto::Length(Length::Points { value })
         } else if let Ok(value) = obj.extract::<&str>() {
@@ -71,8 +74,9 @@ impl<'py> FromPyObject<'py> for PyLengthOrAuto {
 
 struct PyAlignItems(AlignItems);
 
-impl<'py> FromPyObject<'py> for PyAlignItems {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyAlignItems {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         let s = obj.extract::<&str>()?;
         Ok(PyAlignItems(match s {
             "start" => AlignItems::Start,
@@ -95,8 +99,9 @@ impl From<PyAlignItems> for AlignItems {
 
 struct PyAlignContent(AlignContent);
 
-impl<'py> FromPyObject<'py> for PyAlignContent {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyAlignContent {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         let s = obj.extract::<&str>()?;
         Ok(PyAlignContent(match s {
             "start" => AlignContent::Start,
@@ -121,8 +126,9 @@ impl From<PyAlignContent> for AlignContent {
 
 struct PyGridTemplateItem(NonRepeatedTrackSizingFunction);
 
-impl<'py> FromPyObject<'py> for PyGridTemplateItem {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyGridTemplateItem {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         Ok(PyGridTemplateItem(
             if let Ok(value) = obj.extract::<f32>() {
                 NonRepeatedTrackSizingFunction::from_length(value)
@@ -156,7 +162,7 @@ impl From<PyGridTemplateItem> for NonRepeatedTrackSizingFunction {
 
 struct PyGridLinePlacement(Line<GridPlacement>);
 
-fn parse_grid_placement_item(obj: &Bound<PyAny>) -> PyResult<GridPlacement> {
+fn parse_grid_placement_item(obj: Borrowed<'_, '_, PyAny>) -> PyResult<GridPlacement> {
     if obj.is_none() {
         return Ok(GridPlacement::Auto);
     }
@@ -180,20 +186,19 @@ fn parse_grid_placement_item(obj: &Bound<PyAny>) -> PyResult<GridPlacement> {
     }
 }
 
-impl<'py> FromPyObject<'py> for PyGridLinePlacement {
-    fn extract_bound(obj: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyGridLinePlacement {
+    type Error = PyErr;
+    fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         if let Ok(value) = parse_grid_placement_item(obj) {
             return Ok(PyGridLinePlacement(Line {
                 start: value,
                 end: GridPlacement::Auto,
             }));
         } else if let Ok((value1, value2)) = obj.extract::<(Bound<'py, PyAny>, Bound<'py, PyAny>)>()
+            && let Ok(start) = parse_grid_placement_item(value1.as_borrowed())
+            && let Ok(end) = parse_grid_placement_item(value2.as_borrowed())
         {
-            if let Ok(start) = parse_grid_placement_item(&value1) {
-                if let Ok(end) = parse_grid_placement_item(&value2) {
-                    return Ok(PyGridLinePlacement(Line { start, end }));
-                }
-            }
+            return Ok(PyGridLinePlacement(Line { start, end }));
         }
         Err(PyValueError::new_err("Invalid grid placement"))
     }

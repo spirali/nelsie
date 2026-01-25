@@ -1,11 +1,12 @@
 use super::ora::create_ora;
-use crate::common::steps::{bool_at_step, Step};
+use crate::common::steps::{Step, bool_at_step};
 use crate::parsers::steps::parse_bool_steps;
 use itertools::Itertools;
 use pyo3::exceptions::{PyException, PyValueError};
 use pyo3::types::PyAnyMethods;
 use pyo3::{
-    pyclass, pyfunction, pymethods, Bound, FromPyObject, IntoPyObject, PyAny, PyResult, Python,
+    Borrowed, Bound, FromPyObject, IntoPyObject, PyAny, PyErr, PyResult, Python, pyclass,
+    pyfunction, pymethods,
 };
 use renderer::{InMemoryBinImage, InMemorySvgImage, Rectangle};
 use resvg::usvg::roxmltree;
@@ -292,8 +293,9 @@ pub(crate) enum PyImageFormat {
     Svg,
 }
 
-impl<'py> FromPyObject<'py> for PyImageFormat {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PyImageFormat {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         let s: &str = ob.extract()?;
         Ok(match s {
             "png" => Self::Png,

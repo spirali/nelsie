@@ -1,7 +1,9 @@
 use pyo3::exceptions::PyException;
-use pyo3::types::{PyAnyMethods, PyTuple};
-use pyo3::{Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python};
-use smallvec::{smallvec, SmallVec};
+use pyo3::types::PyTuple;
+use pyo3::{
+    Borrowed, Bound, FromPyObject, IntoPyObject, IntoPyObjectExt, PyAny, PyErr, PyResult, Python,
+};
+use smallvec::{SmallVec, smallvec};
 use std::cmp::Ordering;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -94,8 +96,9 @@ impl<'py> IntoPyObject<'py> for &Step {
     }
 }
 
-impl<'py> FromPyObject<'py> for Step {
-    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for Step {
+    type Error = PyErr;
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         if let Ok(v) = ob.extract::<u32>() {
             return Ok(Step::from_int(v));
         }

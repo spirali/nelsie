@@ -2,7 +2,7 @@ use crate::pyinterface::extract::obj_to_page;
 use crate::pyinterface::resources::Resources;
 use pyo3::exceptions::PyException;
 use pyo3::types::{PyDict, PyDictMethods, PyList};
-use pyo3::{pyfunction, Bound, IntoPyObjectExt, PyAny, PyResult, Python};
+use pyo3::{Bound, IntoPyObjectExt, PyAny, PyResult, Python, pyfunction};
 use renderer::{Document, PageLayout, Register, RenderingOptions};
 use std::collections::HashMap;
 
@@ -128,7 +128,7 @@ fn run_rendering(
         _ => {
             return Err(PyException::new_err(format!(
                 "Invalid output format: {format}"
-            )))
+            )));
         }
     })
 }

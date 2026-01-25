@@ -1,6 +1,6 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::types::PyAnyMethods;
-use pyo3::{intern, Bound, PyAny, PyResult};
+use pyo3::{Borrowed, Bound, PyAny, PyResult, intern};
 use renderer::{InlineId, LayoutExpr, NodeId};
 
 // #[derive(Debug)]
@@ -21,7 +21,7 @@ use renderer::{InlineId, LayoutExpr, NodeId};
 //     }
 // }
 
-pub(crate) fn extract_layout_expr(obj: &Bound<PyAny>) -> PyResult<LayoutExpr> {
+pub(crate) fn extract_layout_expr(obj: Borrowed<'_, '_, PyAny>) -> PyResult<LayoutExpr> {
     if let Ok(value) = obj.extract() {
         return Ok(LayoutExpr::const_value(value));
     }
@@ -35,8 +35,8 @@ pub(crate) fn extract_layout_expr(obj: &Bound<PyAny>) -> PyResult<LayoutExpr> {
     let name: &str = op.extract()?;
     match name {
         "+" | "-" | "*" => {
-            let expr_a = extract_layout_expr(&v0)?;
-            let expr_b = extract_layout_expr(&v1)?;
+            let expr_a = extract_layout_expr(v0.as_borrowed())?;
+            let expr_b = extract_layout_expr(v1.as_borrowed())?;
             Ok(match name {
                 "+" => LayoutExpr::add(expr_a, expr_b),
                 "-" => LayoutExpr::sub(expr_a, expr_b),
@@ -97,7 +97,7 @@ pub(crate) fn extract_layout_expr(obj: &Bound<PyAny>) -> PyResult<LayoutExpr> {
         "max" => Ok(LayoutExpr::max({
             let v: Vec<Bound<PyAny>> = v0.extract()?;
             v.into_iter()
-                .map(|obj| extract_layout_expr(&obj))
+                .map(|obj| extract_layout_expr(obj.as_borrowed()))
                 .collect::<PyResult<_>>()?
         })),
         _ => Err(PyValueError::new_err("Invalid expression")),
