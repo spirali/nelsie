@@ -279,7 +279,7 @@ def show_hide_line(slide):
 
     bb = slide.box(align_items="start")
     top_b = bb.box(bg_color="#eee").padding(x=20, y=10)
-    top_b.text("Definition (step definition after ~hl{@})", m_bottom=20, x=20)
+    top_b.text("Definition (step definition after ~hl{$})", m_bottom=20, x=20)
 
     x = '"""'
     top_b.code(
@@ -287,11 +287,11 @@ def show_hide_line(slide):
 @deck.slide()
 def line_demo(slide):
     slide.code({x}
-def compute_somehing(x): ~hl[@1]
-def compute_somehing(x, y): ~hl[@2+]
-    print("Computing...") ~hl[@e; 3+]
-    return x * y ~hl[@e; 4+]
-{x})
+def compute_somehing(x): ~hl[$1]
+def compute_somehing(x, y): ~hl[$2+]
+    print("Computing...") ~hl[$e; 3+]
+    return x * y ~hl[$; 4+]
+{x}, parse_steps="$")
 """,
         language="py",
         parse_styles=True,
