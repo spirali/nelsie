@@ -677,9 +677,9 @@ def traverse_children(children, shared_data, steps):
         elif isinstance(child, StepVal):
             sn_apply(
                 child,
-                lambda c: c.traverse_tree(shared_data, steps)
-                if isinstance(c, Box)
-                else None,
+                lambda c: (
+                    c.traverse_tree(shared_data, steps) if isinstance(c, Box) else None
+                ),
             )
 
 
