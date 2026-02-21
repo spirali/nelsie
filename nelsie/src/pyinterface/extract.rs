@@ -8,12 +8,9 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::PyAnyMethods;
 use pyo3::types::PyList;
 use pyo3::{Borrowed, Bound, FromPyObject, PyAny, PyErr, PyResult, intern};
-use renderer::taffy::style_helpers::{
-    FromFlex, FromLength, FromPercent, TaffyGridLine, TaffyGridSpan,
-};
-use renderer::taffy::{
-    AlignContent, AlignItems, GridPlacement, Line, NonRepeatedTrackSizingFunction,
-};
+use renderer::GridTrackSize;
+use renderer::taffy::style_helpers::{TaffyGridLine, TaffyGridSpan};
+use renderer::taffy::{AlignContent, AlignItems, GridPlacement, Line};
 use renderer::{
     Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, NodeUncommon, Page, Rectangle,
     Register, Resources, Text,
@@ -124,24 +121,24 @@ impl From<PyAlignContent> for AlignContent {
     }
 }
 
-struct PyGridTemplateItem(NonRepeatedTrackSizingFunction);
+struct PyGridTemplateItem(GridTrackSize);
 
 impl<'py> FromPyObject<'_, 'py> for PyGridTemplateItem {
     type Error = PyErr;
     fn extract(obj: Borrowed<'_, 'py, PyAny>) -> PyResult<Self> {
         Ok(PyGridTemplateItem(
             if let Ok(value) = obj.extract::<f32>() {
-                NonRepeatedTrackSizingFunction::from_length(value)
+                GridTrackSize::Points(value)
             } else if let Ok(value) = obj.extract::<&str>() {
                 let value = value.trim();
                 if let Some(value) = value.strip_suffix("%") {
                     let value = value.trim();
-                    NonRepeatedTrackSizingFunction::from_percent(value.parse::<f32>()? / 100.0)
+                    GridTrackSize::Percent(value.parse::<f32>()? / 100.0)
                 } else if let Some(value) = value.strip_suffix("fr") {
                     let value = value.trim();
-                    NonRepeatedTrackSizingFunction::from_flex(value.parse::<f32>()?)
+                    GridTrackSize::Fraction(value.parse::<f32>()?)
                 } else if let Ok(value) = value.parse::<f32>() {
-                    NonRepeatedTrackSizingFunction::from_length(value)
+                    GridTrackSize::Points(value)
                 } else {
                     return Err(PyValueError::new_err(format!(
                         "Invalid grid template: {value}"
@@ -154,7 +151,7 @@ impl<'py> FromPyObject<'_, 'py> for PyGridTemplateItem {
     }
 }
 
-impl From<PyGridTemplateItem> for NonRepeatedTrackSizingFunction {
+impl From<PyGridTemplateItem> for GridTrackSize {
     fn from(value: PyGridTemplateItem) -> Self {
         value.0
     }

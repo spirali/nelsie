@@ -192,8 +192,8 @@ fn is_layout_managed(node: &Node, parent: Option<&Node>) -> bool {
 impl From<Length> for tf::Dimension {
     fn from(value: Length) -> Self {
         match value {
-            Length::Points { value } => tf::Dimension::Length(value),
-            Length::Fraction { value } => tf::Dimension::Percent(value),
+            Length::Points { value } => tf::Dimension::length(value),
+            Length::Fraction { value } => tf::Dimension::percent(value),
         }
     }
 }
@@ -201,8 +201,8 @@ impl From<Length> for tf::Dimension {
 impl From<Length> for tf::LengthPercentage {
     fn from(value: Length) -> Self {
         match value {
-            Length::Points { value } => tf::LengthPercentage::Length(value),
-            Length::Fraction { value } => tf::LengthPercentage::Percent(value),
+            Length::Points { value } => tf::LengthPercentage::length(value),
+            Length::Fraction { value } => tf::LengthPercentage::percent(value),
         }
     }
 }
@@ -211,12 +211,12 @@ impl From<LengthOrAuto> for tf::LengthPercentageAuto {
     fn from(value: LengthOrAuto) -> Self {
         match value {
             LengthOrAuto::Length(Length::Points { value }) => {
-                tf::LengthPercentageAuto::Length(value)
+                tf::LengthPercentageAuto::length(value)
             }
             LengthOrAuto::Length(Length::Fraction { value }) => {
-                tf::LengthPercentageAuto::Percent(value)
+                tf::LengthPercentageAuto::percent(value)
             }
-            LengthOrAuto::Auto => tf::LengthPercentageAuto::Auto,
+            LengthOrAuto::Auto => tf::LengthPercentageAuto::auto(),
         }
     }
 }
@@ -224,9 +224,9 @@ impl From<LengthOrAuto> for tf::LengthPercentageAuto {
 impl From<&LengthOrExpr> for tf::Dimension {
     fn from(value: &LengthOrExpr) -> Self {
         match value {
-            LengthOrExpr::Length(Length::Points { value }) => tf::Dimension::Length(*value),
-            LengthOrExpr::Length(Length::Fraction { value }) => tf::Dimension::Percent(*value),
-            LengthOrExpr::Expr(_) => tf::Dimension::Auto,
+            LengthOrExpr::Length(Length::Points { value }) => tf::Dimension::length(*value),
+            LengthOrExpr::Length(Length::Fraction { value }) => tf::Dimension::percent(*value),
+            LengthOrExpr::Expr(_) => tf::Dimension::auto(),
         }
     }
 }
@@ -278,8 +278,8 @@ fn compute_layout_helper(
             let (content_w, content_h) = render_ctx.content_map.get(content).unwrap().size();
             if w.is_none() && h.is_none() {
                 (
-                    Some(tf::Dimension::Length(content_w)),
-                    Some(tf::Dimension::Length(content_h)),
+                    Some(tf::Dimension::length(content_w)),
+                    Some(tf::Dimension::length(content_h)),
                     None,
                 )
             } else {
@@ -296,12 +296,12 @@ fn compute_layout_helper(
         .as_ref()
         .map(|v| (*v).into())
         .or(content_w)
-        .unwrap_or(tf::Dimension::Auto);
+        .unwrap_or(tf::Dimension::auto());
     let height = h
         .as_ref()
         .map(|v| (*v).into())
         .or(content_h)
-        .unwrap_or(tf::Dimension::Auto);
+        .unwrap_or(tf::Dimension::auto());
 
     let flex_direction = match (node.row, node.reverse()) {
         (false, false) => tf::FlexDirection::Column,
@@ -339,12 +339,12 @@ fn compute_layout_helper(
     let grid_template_rows = node
         .grid_template_rows()
         .iter()
-        .map(|x| tf::TrackSizingFunction::Single(*x))
+        .map(|x| tf::GridTemplateComponent::Single(x.as_taffy()))
         .collect_vec();
     let grid_template_columns = node
         .grid_template_columns()
         .iter()
-        .map(|x| tf::TrackSizingFunction::Single(*x))
+        .map(|x| tf::GridTemplateComponent::Single(x.as_taffy()))
         .collect_vec();
     let is_grid = !grid_template_rows.is_empty() || !grid_template_columns.is_empty();
 

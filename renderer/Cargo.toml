@@ -13,7 +13,7 @@ svg2pdf = { workspace = true }
 xmltree = { workspace = true }
 
 
-taffy = "0.7"
+taffy = "0.9"
 svgtypes = "0.16" # Not necessary same as resvg but nice to be a same as in resvg
 log = "0.4"
 pdf-writer = "0.12"

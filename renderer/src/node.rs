@@ -1,9 +1,7 @@
 use crate::shapes::Shape;
-use crate::types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
+use crate::types::{GridTrackSize, LayoutExpr, Length, LengthOrAuto, LengthOrExpr};
 use crate::{Color, NodeId};
-use taffy::{
-    AlignContent, AlignItems, FlexWrap, GridPlacement, Line, NonRepeatedTrackSizingFunction,
-};
+use taffy::{AlignContent, AlignItems, FlexWrap, GridPlacement, Line};
 
 #[derive(Debug)]
 pub enum NodeChild {
@@ -35,8 +33,8 @@ impl ContentId {
 pub struct NodeUncommon {
     pub flex_shrink: f32,
     pub flex_wrap: FlexWrap,
-    pub grid_template_rows: Vec<NonRepeatedTrackSizingFunction>,
-    pub grid_template_columns: Vec<NonRepeatedTrackSizingFunction>,
+    pub grid_template_rows: Vec<GridTrackSize>,
+    pub grid_template_columns: Vec<GridTrackSize>,
     pub grid_row: Line<GridPlacement>,
     pub grid_column: Line<GridPlacement>,
     pub reverse: bool,
@@ -123,14 +121,14 @@ impl Node {
     }
 
     #[inline]
-    pub fn grid_template_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
+    pub fn grid_template_rows(&self) -> &[GridTrackSize] {
         self.uncommon
             .as_ref()
             .map_or(&[], |u| &u.grid_template_rows)
     }
 
     #[inline]
-    pub fn grid_template_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
+    pub fn grid_template_columns(&self) -> &[GridTrackSize] {
         self.uncommon
             .as_ref()
             .map_or(&[], |u| &u.grid_template_columns)
@@ -140,14 +138,14 @@ impl Node {
     pub fn grid_row(&self) -> Line<GridPlacement> {
         self.uncommon
             .as_ref()
-            .map_or_else(Line::default, |u| u.grid_row)
+            .map_or_else(Line::default, |u| u.grid_row.clone())
     }
 
     #[inline]
     pub fn grid_column(&self) -> Line<GridPlacement> {
         self.uncommon
             .as_ref()
-            .map_or_else(Line::default, |u| u.grid_column)
+            .map_or_else(Line::default, |u| u.grid_column.clone())
     }
 
     #[inline]
