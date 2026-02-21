@@ -15,8 +15,8 @@ use renderer::taffy::{
     AlignContent, AlignItems, GridPlacement, Line, NonRepeatedTrackSizingFunction,
 };
 use renderer::{
-    Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, Page, Rectangle, Register,
-    Resources, Text,
+    Length, LengthOrAuto, LengthOrExpr, Node, NodeChild, NodeId, NodeUncommon, Page, Rectangle,
+    Register, Resources, Text,
 };
 
 #[derive(FromPyObject)]
@@ -370,11 +370,25 @@ fn obj_to_node(
             )
         };
 
+    let uncommon = {
+        let u = NodeUncommon {
+            flex_shrink: node.flex_shrink,
+            flex_wrap: Default::default(),
+            grid_template_rows,
+            grid_template_columns,
+            grid_row,
+            grid_column,
+            reverse: node.reverse,
+            url: node.url,
+        };
+        if u.is_default() {
+            None
+        } else {
+            Some(Box::new(u))
+        }
+    };
+
     Ok(Node {
-        grid_template_rows,
-        grid_template_columns,
-        grid_row,
-        grid_column,
         node_id: NodeId::new(node.node_id),
         width: node.width.map(|x| x.0),
         height: node.height.map(|x| x.0),
@@ -383,10 +397,7 @@ fn obj_to_node(
         y: node.y.map(|x| x.expr),
         border_radius: node.border_radius,
         row: node.row,
-        reverse: node.reverse,
-        flex_wrap: Default::default(),
         flex_grow: node.flex_grow,
-        flex_shrink: node.flex_shrink,
         align_items: node.align_items.map(|x| x.into()),
         align_self: node.align_self.map(|x| x.into()),
         justify_self: node.justify_self.map(|x| x.into()),
@@ -405,7 +416,7 @@ fn obj_to_node(
         bg_color: node.bg_color.map(|x| x.into()),
         z_level: node.z_level,
         content,
-        url: node.url,
+        uncommon,
         children: node
             .children
             .try_iter()?

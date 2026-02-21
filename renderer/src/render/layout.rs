@@ -303,7 +303,7 @@ fn compute_layout_helper(
         .or(content_h)
         .unwrap_or(tf::Dimension::Auto);
 
-    let flex_direction = match (node.row, node.reverse) {
+    let flex_direction = match (node.row, node.reverse()) {
         (false, false) => tf::FlexDirection::Column,
         (true, false) => tf::FlexDirection::Row,
         (false, true) => tf::FlexDirection::ColumnReverse,
@@ -337,12 +337,12 @@ fn compute_layout_helper(
     dbg!(node.justify_content.at_step(self.step));*/
 
     let grid_template_rows = node
-        .grid_template_rows
+        .grid_template_rows()
         .iter()
         .map(|x| tf::TrackSizingFunction::Single(*x))
         .collect_vec();
     let grid_template_columns = node
-        .grid_template_columns
+        .grid_template_columns()
         .iter()
         .map(|x| tf::TrackSizingFunction::Single(*x))
         .collect_vec();
@@ -360,9 +360,9 @@ fn compute_layout_helper(
         aspect_ratio: content_aspect_ratio,
         padding,
         margin,
-        flex_wrap: node.flex_wrap,
+        flex_wrap: node.flex_wrap(),
         flex_grow: node.flex_grow,
-        flex_shrink: node.flex_shrink,
+        flex_shrink: node.flex_shrink(),
         align_items: node.align_items.or({
             if is_grid {
                 None
@@ -386,8 +386,8 @@ fn compute_layout_helper(
         },
         grid_template_rows,
         grid_template_columns,
-        grid_row: node.grid_row,
-        grid_column: node.grid_column,
+        grid_row: node.grid_row(),
+        grid_column: node.grid_column(),
         ..Default::default()
     };
     taffy.new_with_children(style, &tf_children).unwrap()

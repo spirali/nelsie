@@ -19,7 +19,7 @@ pub use document::{Document, Register, RenderingOptions};
 pub use error::RendererError as Error;
 pub use image::{InMemoryBinImage, InMemorySvgImage};
 pub use layout_info::PageLayout;
-pub use node::{ContentId, Node, NodeChild};
+pub use node::{ContentId, Node, NodeChild, NodeUncommon};
 pub use page::Page;
 pub use rectangle::Rectangle;
 pub use resources::Resources;

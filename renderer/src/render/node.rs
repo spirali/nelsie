@@ -20,9 +20,9 @@ pub(crate) fn render_node(node: &Node, layout: &ComputedLayout, canvas: &mut Can
         canvas.add_content(node.z_level, rect, *content_id);
     }
 
-    if let Some(url) = &node.url {
+    if let Some(url) = node.url() {
         let rect = &layout.node_layout(node.node_id).unwrap().rect;
-        canvas.add_link(Link::new(rect.clone(), url.clone()));
+        canvas.add_link(Link::new(rect.clone(), url.to_owned()));
     }
 
     for child in &node.children {
