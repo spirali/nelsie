@@ -29,6 +29,33 @@ impl ContentId {
     }
 }
 
+/// Fields that are rarely non-default; boxed behind an `Option` to keep `Node` small.
+/// When all fields hold their default values the `uncommon` field in `Node` is `None`.
+#[derive(Debug)]
+pub struct NodeUncommon {
+    pub flex_shrink: f32,
+    pub flex_wrap: FlexWrap,
+    pub grid_template_rows: Vec<NonRepeatedTrackSizingFunction>,
+    pub grid_template_columns: Vec<NonRepeatedTrackSizingFunction>,
+    pub grid_row: Line<GridPlacement>,
+    pub grid_column: Line<GridPlacement>,
+    pub reverse: bool,
+    pub url: Option<String>,
+}
+
+impl NodeUncommon {
+    pub fn is_default(&self) -> bool {
+        self.flex_shrink == 1.0
+            && self.flex_wrap == FlexWrap::default()
+            && self.grid_template_rows.is_empty()
+            && self.grid_template_columns.is_empty()
+            && self.grid_row == Line::default()
+            && self.grid_column == Line::default()
+            && !self.reverse
+            && self.url.is_none()
+    }
+}
+
 #[derive(Debug)]
 pub struct Node {
     pub node_id: NodeId,
@@ -47,13 +74,7 @@ pub struct Node {
 
     pub row: bool,
 
-    pub reverse: bool,
-
-    pub flex_wrap: FlexWrap,
-
     pub flex_grow: f32,
-
-    pub flex_shrink: f32,
 
     pub align_items: Option<AlignItems>,
     pub align_self: Option<AlignItems>,
@@ -63,13 +84,6 @@ pub struct Node {
 
     pub column_gap: Length,
     pub row_gap: Length,
-
-    pub grid_template_rows: Vec<NonRepeatedTrackSizingFunction>,
-
-    pub grid_template_columns: Vec<NonRepeatedTrackSizingFunction>,
-
-    pub grid_row: Line<GridPlacement>,
-    pub grid_column: Line<GridPlacement>,
 
     pub p_top: Length,
     pub p_bottom: Length,
@@ -87,10 +101,60 @@ pub struct Node {
 
     pub content: Option<ContentId>,
 
-    pub url: Option<String>,
+    pub uncommon: Option<Box<NodeUncommon>>,
 }
 
 impl Node {
+    #[inline]
+    pub fn reverse(&self) -> bool {
+        self.uncommon.as_ref().is_some_and(|u| u.reverse)
+    }
+
+    #[inline]
+    pub fn flex_shrink(&self) -> f32 {
+        self.uncommon.as_ref().map_or(1.0, |u| u.flex_shrink)
+    }
+
+    #[inline]
+    pub fn flex_wrap(&self) -> FlexWrap {
+        self.uncommon
+            .as_ref()
+            .map_or_else(FlexWrap::default, |u| u.flex_wrap)
+    }
+
+    #[inline]
+    pub fn grid_template_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
+        self.uncommon
+            .as_ref()
+            .map_or(&[], |u| &u.grid_template_rows)
+    }
+
+    #[inline]
+    pub fn grid_template_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
+        self.uncommon
+            .as_ref()
+            .map_or(&[], |u| &u.grid_template_columns)
+    }
+
+    #[inline]
+    pub fn grid_row(&self) -> Line<GridPlacement> {
+        self.uncommon
+            .as_ref()
+            .map_or_else(Line::default, |u| u.grid_row)
+    }
+
+    #[inline]
+    pub fn grid_column(&self) -> Line<GridPlacement> {
+        self.uncommon
+            .as_ref()
+            .map_or_else(Line::default, |u| u.grid_column)
+    }
+
+    #[inline]
+    pub fn url(&self) -> Option<&str> {
+        self.uncommon.as_ref().and_then(|u| u.url.as_deref())
+    }
+
     pub fn child_nodes(&self) -> impl Iterator<Item = &Node> {
         self.children.iter().filter_map(|child| match child {
             NodeChild::Node(node) => Some(node),
@@ -117,11 +181,4 @@ impl Node {
     pub fn add_child_node(&mut self, node: Node) {
         self.children.push(NodeChild::Node(node));
     }
-
-    // fn collect_z_levels(&self, out: &mut BTreeSet<i32>) {
-    //     out.insert(self.z_level);
-    //     for child in self.child_nodes() {
-    //         child.collect_z_levels(out);
-    //     }
-    // }
 }
