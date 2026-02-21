@@ -29,5 +29,5 @@ pub use text::{
     FontStretch, InlineId, ParsingChars, SyntaxHighlightSettings, Text, TextAlign, TextStyle,
     TextStyling,
 };
-pub use types::{LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId};
+pub use types::{GridTrackSize, LayoutExpr, Length, LengthOrAuto, LengthOrExpr, NodeId};
 pub type Result<T> = std::result::Result<T, Error>;

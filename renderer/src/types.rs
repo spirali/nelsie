@@ -1,4 +1,6 @@
 use crate::text::InlineId;
+use taffy::prelude as tf;
+use taffy::style_helpers::{FromFr, FromLength, FromPercent};
 
 #[derive(Debug, Copy, Clone, Hash, PartialOrd, PartialEq, Ord, Eq)]
 pub struct NodeId(usize);
@@ -80,6 +82,26 @@ impl LengthOrExpr {
         match self {
             LengthOrExpr::Length(_) => None,
             LengthOrExpr::Expr(e) => Some(e),
+        }
+    }
+}
+
+/// A grid track sizing value. Stored in `Node` instead of taffy's `TrackSizingFunction`
+/// so that `Node` (and `Page`) remain `Send + Sync` despite taffy's tagged-pointer types
+/// being `!Send + !Sync` since taffy 0.8.
+#[derive(Debug, Copy, Clone)]
+pub enum GridTrackSize {
+    Points(f32),
+    Percent(f32),
+    Fraction(f32),
+}
+
+impl GridTrackSize {
+    pub(crate) fn as_taffy(&self) -> tf::TrackSizingFunction {
+        match self {
+            GridTrackSize::Points(v) => tf::TrackSizingFunction::from_length(*v),
+            GridTrackSize::Percent(v) => tf::TrackSizingFunction::from_percent(*v),
+            GridTrackSize::Fraction(v) => tf::TrackSizingFunction::from_fr(*v),
         }
     }
 }
